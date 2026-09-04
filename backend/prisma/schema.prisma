@@ -1,0 +1,588 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PRESIDENCE
+  ETABLISSEMENT
+  DECIDEUR
+}
+
+enum Visibilite {
+  PUBLIC
+  PRIVE
+}
+
+enum StatutPartenaire {
+  ACTIF
+  SUSPENDU
+}
+
+enum DomainePartenariat {
+  RECHERCHE
+  FORMATION
+  INNOVATION
+  DEVELOPPEMENT
+  COOPERATION_INSTITUTIONNELLE
+  AUTRE
+}
+
+enum StatutPartenariat {
+  BROUILLON
+  EN_ATTENTE
+  EN_COURS
+  SUSPENDU
+  TERMINE
+}
+
+enum StatutProjet {
+  BROUILLON
+  EN_ATTENTE
+  EN_COURS
+  SUSPENDU
+  EXPIRE
+  TERMINE
+}
+
+enum TypeCotutelle {
+  COTUTELLE
+  COENCADREMENT
+}
+
+enum StatutConvention {
+  BROUILLON
+  EN_ATTENTE_SIGNATURE
+  SIGNEE
+  ACTIVE
+  SUSPENDUE
+  EXPIREE
+}
+
+enum EtapeCircuit {
+  REDACTION
+  TRANSMISSION
+  VERIFICATION_DAJ
+  ATTENTE_SIGNATURE
+  SIGNEE
+}
+
+enum TypeDocument {
+  TDR
+  DESCRIPTION
+  CONVENTION
+  AUTRE
+}
+
+enum StatutPublication {
+  BROUILLON
+  PUBLIEE
+}
+
+enum TypeNotification {
+  PROJET_SOUMIS
+  PARTENARIAT_SOUMIS
+  EXPIRATION_CONVENTION
+  CONVENTION_EXPIREE
+  ACTIVITE_ECHEANCE
+  ACTIVITE_RETARD
+  PROJET_RETARD
+  DOCUMENT_AJOUTE
+  DOCUMENT_MODIFIE
+  CHANGEMENT_STATUT
+}
+
+enum PrioriteNotification {
+  BASSE
+  MOYENNE
+  HAUTE
+}
+
+model Etablissement {
+  id          String   @id @default(uuid())
+  nom         String
+  sigle       String?
+  logo_url    String?
+  description String?
+
+  utilisateurs    Utilisateur[]
+  partenaires     Partenaire[]
+  partenariats    PartenariatEtablissement[]
+  projets         Projet[]
+  cotutelles      CotutelleThese[]
+  synthese_items  SyntheseItem[]
+  synthese_partenaires_strategiques SynthesePartenaireStrategique[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([nom])
+}
+
+model Utilisateur {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  password_hash     String
+  role              Role
+  etablissement_id  String?
+  actif             Boolean  @default(true)
+  derniere_connexion DateTime?
+
+  etablissement Etablissement? @relation(fields: [etablissement_id], references: [id], onDelete: SetNull)
+
+  notifications Notification[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([etablissement_id])
+  @@index([role])
+  @@index([actif])
+}
+
+model Partenaire {
+  id              String   @id @default(uuid())
+  nom             String
+  type            String
+  pays            String
+  adresse         String?
+  telephone       String?
+  email           String?
+  site_web        String?
+  description     String?
+  statut          StatutPartenaire @default(ACTIF)
+  visibilite      Visibilite       @default(PRIVE)
+  est_strategique Boolean          @default(false)
+  logo_url        String?
+  archive         Boolean          @default(false)
+
+  etablissement_id String
+  etablissement    Etablissement @relation(fields: [etablissement_id], references: [id], onDelete: Cascade)
+
+  contacts        Contact[]
+  partenariats    PartenariatPartenaire[]
+  cotutelles      CotutelleThese[]
+  projets         ProjetPartenaire[]
+  synthese_partenaires_strategiques SynthesePartenaireStrategique[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([etablissement_id])
+  @@index([archive])
+  @@index([nom])
+  @@index([statut])
+}
+
+model Contact {
+  id             String   @id @default(uuid())
+  nom            String
+  fonction       String?
+  email          String?
+  telephone      String?
+
+  partenaire_id String
+  partenaire    Partenaire @relation(fields: [partenaire_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Partenariat {
+  id             String   @id @default(uuid())
+  intitule       String
+  objet          String?
+  domaine        DomainePartenariat
+  date_debut     DateTime
+  date_fin       DateTime?
+  statut         StatutPartenariat @default(BROUILLON)
+
+  actions_realisees              String?
+  actions_en_cours               String?
+  actions_prevues                String?
+  resultats_obtenus              String?
+  difficultes_contraintes        String?
+  perspectives_recommandations   String?
+
+  archive Boolean @default(false)
+
+  etablissements PartenariatEtablissement[]
+  partenaires    PartenariatPartenaire[]
+  projets        Projet[]
+  conventions    Convention[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([archive])
+  @@index([statut])
+  @@index([date_debut, date_fin])
+}
+
+model PartenariatEtablissement {
+  id               String @id @default(uuid())
+  partenariat_id   String
+  etablissement_id String
+
+  partenariat  Partenariat  @relation(fields: [partenariat_id], references: [id], onDelete: Cascade)
+  etablissement Etablissement @relation(fields: [etablissement_id], references: [id], onDelete: Cascade)
+
+  @@unique([partenariat_id, etablissement_id])
+}
+
+model PartenariatPartenaire {
+  id             String @id @default(uuid())
+  partenariat_id String
+  partenaire_id  String
+
+  partenariat Partenariat @relation(fields: [partenariat_id], references: [id], onDelete: Cascade)
+  partenaire  Partenaire @relation(fields: [partenaire_id], references: [id], onDelete: Cascade)
+
+  @@unique([partenariat_id, partenaire_id])
+}
+
+model CotutelleThese {
+  id                      String   @id @default(uuid())
+  nom_doctorant           String
+  specialite              String?
+  directeur_these_local   String?
+  directeur_these_partenaire String?
+  type                    TypeCotutelle
+  date_debut              DateTime
+  date_prevue_soutenance  DateTime?
+  financement_bourse      String?
+  mobilite_realisee       String?
+  publications_produites  String?
+  etat_avancement         String?
+  difficultes_rencontrees String?
+  perspectives            String?
+  archive                 Boolean @default(false)
+
+  etablissement_id String
+  partenaire_id    String
+  convention_id    String?
+
+  etablissement Etablissement @relation(fields: [etablissement_id], references: [id], onDelete: Cascade)
+  partenaire    Partenaire    @relation(fields: [partenaire_id], references: [id], onDelete: Cascade)
+  convention    Convention?   @relation(fields: [convention_id], references: [id], onDelete: SetNull)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([etablissement_id])
+  @@index([partenaire_id])
+  @@index([archive])
+}
+
+model Projet {
+  id               String   @id @default(uuid())
+  nom              String
+  intitule_officiel String?
+  type             String
+  domaine          String?
+  budget           Decimal? @db.Decimal(12, 2)
+  date_debut       DateTime
+  date_fin_prevue  DateTime
+  statut           StatutProjet @default(BROUILLON)
+  archive          Boolean      @default(false)
+
+  etablissement_id String
+  partenariat_id   String?
+  porteur_id       String?
+
+  etablissement Etablissement @relation(fields: [etablissement_id], references: [id], onDelete: Cascade)
+  partenariat  Partenariat?  @relation(fields: [partenariat_id], references: [id], onDelete: SetNull)
+  porteur      Porteur?      @relation(fields: [porteur_id], references: [id], onDelete: SetNull)
+
+  activites      Activite[]
+  partenaires    ProjetPartenaire[]
+  beneficiaires  ProjetBeneficiaire[]
+  bailleurs      ProjetBailleur[]
+  sites          ProjetSite[]
+  documents      Document[]
+  publication    Publication?
+  conventions    Convention[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([etablissement_id])
+  @@index([statut])
+  @@index([archive])
+  @@index([date_debut, date_fin_prevue])
+  @@index([partenariat_id])
+}
+
+model ProjetPartenaire {
+  id           String @id @default(uuid())
+  projet_id    String
+  partenaire_id String
+
+  projet    Projet    @relation(fields: [projet_id], references: [id], onDelete: Cascade)
+  partenaire Partenaire @relation(fields: [partenaire_id], references: [id], onDelete: Cascade)
+
+  @@unique([projet_id, partenaire_id])
+}
+
+model ProjetBeneficiaire {
+  id             String @id @default(uuid())
+  projet_id      String
+  beneficiaire_id String
+
+  projet       Projet       @relation(fields: [projet_id], references: [id], onDelete: Cascade)
+  beneficiaire Beneficiaire @relation(fields: [beneficiaire_id], references: [id], onDelete: Cascade)
+
+  @@unique([projet_id, beneficiaire_id])
+}
+
+model ProjetBailleur {
+  id          String @id @default(uuid())
+  projet_id   String
+  bailleur_id String
+
+  projet   Projet   @relation(fields: [projet_id], references: [id], onDelete: Cascade)
+  bailleur Bailleur @relation(fields: [bailleur_id], references: [id], onDelete: Cascade)
+
+  @@unique([projet_id, bailleur_id])
+}
+
+model ProjetSite {
+  id        String @id @default(uuid())
+  projet_id String
+  site_id   String
+
+  projet Projet @relation(fields: [projet_id], references: [id], onDelete: Cascade)
+  site   Site   @relation(fields: [site_id], references: [id], onDelete: Cascade)
+
+  @@unique([projet_id, site_id])
+}
+
+model Porteur {
+  id                     String @id @default(uuid())
+  nom                    String
+  institution_rattachement String?
+
+  projets Projet[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Bailleur {
+  id          String @id @default(uuid())
+  nom         String
+  description String?
+
+  projets ProjetBailleur[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Beneficiaire {
+  id          String @id @default(uuid())
+  nom         String
+  categorie   String?
+  description String?
+
+  projets ProjetBeneficiaire[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Site {
+  id          String @id @default(uuid())
+  nom         String
+  description String?
+
+  projets ProjetSite[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Activite {
+  id            String   @id @default(uuid())
+  intitule      String
+  ordre         Int
+  terminee      Boolean  @default(false)
+  date_echeance DateTime?
+
+  projet_id String
+  projet    Projet @relation(fields: [projet_id], references: [id], onDelete: Cascade)
+
+  chronogrammes Chronogramme[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([projet_id])
+  @@index([terminee])
+  @@index([date_echeance])
+}
+
+model Chronogramme {
+  id            String  @id @default(uuid())
+  annee         Int
+  trimestre     Int
+  mois          Int
+  nombre_jours  Decimal @db.Decimal(6, 1)
+
+  activite_id String
+  activite    Activite @relation(fields: [activite_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([activite_id, annee, trimestre, mois])
+  @@index([activite_id])
+}
+
+model Convention {
+  id                 String   @id @default(uuid())
+  reference          String   @unique
+  titre              String
+  date_signature     DateTime?
+  date_debut         DateTime?
+  date_fin           DateTime?
+  statut             StatutConvention @default(BROUILLON)
+  etape_circuit      EtapeCircuit     @default(REDACTION)
+  date_derniere_etape DateTime?
+  description        String?
+  archive            Boolean @default(false)
+
+  partenariat_id String?
+  projet_id      String?
+
+  partenariat Partenariat? @relation(fields: [partenariat_id], references: [id], onDelete: SetNull)
+  projet      Projet?      @relation(fields: [projet_id], references: [id], onDelete: SetNull)
+
+  documents Document[]
+  cotutelles CotutelleThese[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([reference])
+  @@index([statut])
+  @@index([date_debut, date_fin])
+  @@index([archive])
+  @@index([partenariat_id])
+  @@index([projet_id])
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  nom_fichier  String
+  url_fichier  String
+  type         TypeDocument
+  version      Int      @default(1)
+  est_archive  Boolean  @default(false)
+
+  projet_id    String?
+  convention_id String?
+
+  projet    Projet?    @relation(fields: [projet_id], references: [id], onDelete: SetNull)
+  convention Convention? @relation(fields: [convention_id], references: [id], onDelete: SetNull)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([projet_id])
+  @@index([convention_id])
+  @@index([est_archive])
+}
+
+model Publication {
+  id                 String   @id @default(uuid())
+  titre              String
+  description_publique String?
+  date_publication   DateTime?
+  statut             StatutPublication @default(BROUILLON)
+  resultats          String?
+
+  projet_id String @unique
+  projet    Projet @relation(fields: [projet_id], references: [id], onDelete: Cascade)
+
+  photos PhotoPublication[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([statut])
+}
+
+model PhotoPublication {
+  id             String @id @default(uuid())
+  url_fichier    String
+  legende        String?
+  ordre          Int    @default(0)
+
+  publication_id String
+  publication    Publication @relation(fields: [publication_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([publication_id, ordre])
+}
+
+model Notification {
+  id             String   @id @default(uuid())
+  titre          String
+  message        String
+  type           TypeNotification
+  priorite       PrioriteNotification @default(MOYENNE)
+  date_creation  DateTime @default(now())
+  est_lue        Boolean  @default(false)
+
+  utilisateur_id String
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade)
+
+  reference_type String
+  reference_id   String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([utilisateur_id])
+  @@index([est_lue])
+  @@index([reference_type, reference_id])
+}
+
+model SyntheseItem {
+  id                String @id @default(uuid())
+  etablissement_id  String
+  annee             Int
+  type              String
+  valeur            String
+
+  etablissement Etablissement @relation(fields: [etablissement_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([etablissement_id, annee, type])
+  @@index([etablissement_id, annee])
+}
+
+model SynthesePartenaireStrategique {
+  id               String @id @default(uuid())
+  etablissement_id String
+  annee            Int
+  partenaire_id    String
+
+  etablissement Etablissement @relation(fields: [etablissement_id], references: [id], onDelete: Cascade)
+  partenaire    Partenaire    @relation(fields: [partenaire_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([etablissement_id, annee, partenaire_id])
+  @@index([etablissement_id, annee])
+}
