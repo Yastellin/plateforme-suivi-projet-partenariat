@@ -1,0 +1,14 @@
+# Docker volumes locaux
+postgres_data/
+
+# Environnement global
+.env
+*.env.local
+
+# IDE global
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
