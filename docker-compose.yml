@@ -1,40 +1,48 @@
+# docker-compose.yml
+# Fichier definitif - completer les sections marquees "A CONFIRMER"
+# une fois le backend disponible.
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: uf_db
-    environment:
-      POSTGRES_DB: db_gestion_projet_partenariat
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+  frontend:
+    build:
+      context: ./frontend
+      target: development
     ports:
-      - "5432:5432"
+      - "5173:5173"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3000/api   # A CONFIRMER : vrai port backend
+    depends_on:
+      - backend
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: uf_backend
+      context: ./backend                          # A CONFIRMER : chemin du Dockerfile backend
     ports:
-      - "3000:3000"
+      - "3000:3000"                                # A CONFIRMER : vrai port d'ecoute
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/plateforme_partenariat
+      - JWT_SECRET=change-moi-en-dev              # A CONFIRMER : nom exact de la variable
     depends_on:
       db:
         condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
     environment:
-      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/db_gestion_projet_partenariat?schema=public
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      NODE_ENV: development
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=plateforme_partenariat
+    ports:
+      - "5432:5432"
     volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: sh -c "npx prisma migrate deploy && npx prisma db seed && npm run start:dev"
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  postgres_data:
+  db_data:
