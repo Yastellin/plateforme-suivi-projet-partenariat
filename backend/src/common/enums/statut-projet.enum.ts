@@ -1,0 +1,8 @@
+export enum StatutProjet {
+  BROUILLON = 'BROUILLON',
+  EN_ATTENTE = 'EN_ATTENTE',
+  EN_COURS = 'EN_COURS',
+  SUSPENDU = 'SUSPENDU',
+  EXPIRE = 'EXPIRE',
+  TERMINE = 'TERMINE',
+}

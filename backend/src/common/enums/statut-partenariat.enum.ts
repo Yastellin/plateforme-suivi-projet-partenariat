@@ -1,0 +1,7 @@
+export enum StatutPartenariat {
+  BROUILLON = 'BROUILLON',
+  EN_ATTENTE = 'EN_ATTENTE',
+  EN_COURS = 'EN_COURS',
+  SUSPENDU = 'SUSPENDU',
+  TERMINE = 'TERMINE',
+}
