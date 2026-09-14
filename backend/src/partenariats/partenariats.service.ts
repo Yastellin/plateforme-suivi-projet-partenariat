@@ -252,37 +252,41 @@ export class PartenariatsService {
     return this.mapToResponse(updated);
   }
 
-  async archiver(id: string, etablissementId?: string) {
-    const partenariat = await this.findOne(id, etablissementId);
+async archiver(id: string) {
+  const partenariat = await this.prisma.partenariat.findUnique({
+    where: { id, archive: false },
+    include: {
+      etablissements: { include: { etablissement: true } },
+      partenaires: { include: { partenaire: true } },
+    },
+  });
+  if (!partenariat) throw new NotFoundException('Partenariat non trouvé');
 
-    // Vérifier qu'il n'y a pas de projet actif associé (RG archivage)
-    const projetsActifs = await this.prisma.projet.count({
-      where: {
-        partenariat_id: id,
-        archive: false,
-        statut: { notIn: ['TERMINE', 'EXPIRE'] },
-      },
-    });
+  const projetsActifs = await this.prisma.projet.count({
+    where: {
+      partenariat_id: id,
+      archive: false,
+      statut: { notIn: ['TERMINE', 'EXPIRE'] },
+    },
+  });
 
-    if (projetsActifs > 0) {
-      throw new ConflictException('Impossible d\'archiver un partenariat avec des projets actifs');
-    }
-
-    const archived = await this.prisma.partenariat.update({
-      where: { id },
-      data: { archive: true },
-      include: {
-        etablissements: {
-          include: { etablissement: true },
-        },
-        partenaires: {
-          include: { partenaire: true },
-        },
-      },
-    });
-
-    return this.mapToResponse(archived);
+  if (projetsActifs > 0) {
+    throw new ConflictException(
+      'Impossible d\'archiver un partenariat avec des projets actifs',
+    );
   }
+
+  const archived = await this.prisma.partenariat.update({
+    where: { id },
+    data: { archive: true },
+    include: {
+      etablissements: { include: { etablissement: true } },
+      partenaires: { include: { partenaire: true } },
+    },
+  });
+
+  return this.mapToResponse(archived);
+}
 
   private mapToResponse(data: any): PartenariatResponseDto {
     return {
