@@ -7,7 +7,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true,}));
   app.setGlobalPrefix('api');
-  app.enableCors();
+  // Autoriser l'origine et les cookies (avec Credentials) afin que le
+  // frontend puisse envoyer/recevoir le cookie HttpOnly JWT.
+  app.enableCors({ origin: true, credentials: true });
 
   const config = new DocumentBuilder()
     .setTitle('Plateforme gestion projets et partenariats')
