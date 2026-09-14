@@ -11,4 +11,11 @@ export default defineConfig({
       "cn": path.resolve(import.meta.dirname, "./src/lib/utils.ts"),
     },
   },
+  server: {
+    host: true,
+    watch: {
+      usePolling: true,
+      interval: 300,
+    },
+  },
 })

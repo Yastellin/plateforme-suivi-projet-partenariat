@@ -38,12 +38,12 @@ export function LoginForm() {
 
   const onSubmit = (valeurs: ConnexionFormValues) => {
     connexion.mutate(valeurs, {
-      onSuccess: (utilisateur) => {
-        connecter(utilisateur)
-        navigate(cheminTableauDeBord(utilisateur.role))
+      onSuccess: (reponse) => {
+        connecter(reponse.utilisateur, reponse.access_token)
+        navigate(cheminTableauDeBord(reponse.utilisateur.role))
       },
       onError: (erreur) => {
-        toast.error(erreur.message || "Identifiant ou mot de passe incorrect")
+        toast.error(erreur.message || "Email ou mot de passe incorrect")
         declencherSecousse()
       },
     })
@@ -58,30 +58,30 @@ export function LoginForm() {
       noValidate
     >
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="identifiant">Identifiant</Label>
+        <Label htmlFor="email">Email</Label>
         <Input
-          id="identifiant"
-          type="text"
+          id="email"
+          type="email"
           autoComplete="username"
-          aria-invalid={!!errors.identifiant}
-          {...register("identifiant")}
+          aria-invalid={!!errors.email}
+          {...register("email")}
         />
-        {errors.identifiant && (
-          <p className="text-sm text-destructive">{errors.identifiant.message}</p>
+        {errors.email && (
+          <p className="text-sm text-destructive">{errors.email.message}</p>
         )}
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="motDePasse">Mot de passe</Label>
+        <Label htmlFor="mot_de_passe">Mot de passe</Label>
         <Input
-          id="motDePasse"
+          id="mot_de_passe"
           type="password"
           autoComplete="current-password"
-          aria-invalid={!!errors.motDePasse}
-          {...register("motDePasse")}
+          aria-invalid={!!errors.mot_de_passe}
+          {...register("mot_de_passe")}
         />
-        {errors.motDePasse && (
-          <p className="text-sm text-destructive">{errors.motDePasse.message}</p>
+        {errors.mot_de_passe && (
+          <p className="text-sm text-destructive">{errors.mot_de_passe.message}</p>
         )}
       </div>
 

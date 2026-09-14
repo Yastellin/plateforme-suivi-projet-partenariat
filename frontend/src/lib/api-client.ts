@@ -2,12 +2,24 @@
 import axios, { type AxiosError } from "axios"
 import type { ReponseApi } from "@/types/api"
 
-// Le token JWT est stocke en cookie httpOnly pose par le backend (section 11
-// du prompt) : rien a injecter manuellement dans les headers ici, le
-// navigateur envoie le cookie automatiquement grace a withCredentials.
+// Le backend utilise un schema Bearer token (pas de cookie httpOnly) :
+// le token est garde en memoire ici et injecte manuellement sur chaque
+// requete via l'intercepteur de requete ci-dessous.
+let accessToken: string | null = null
+
+export function definirAccessToken(token: string | null) {
+  accessToken = token
+}
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true,
+})
+
+apiClient.interceptors.request.use((config) => {
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`
+  }
+  return config
 })
 
 apiClient.interceptors.response.use(
@@ -19,9 +31,14 @@ apiClient.interceptors.response.use(
     return { ...reponse, data: enveloppe.data }
   },
   (erreur: AxiosError<ReponseApi<unknown>>) => {
-    if (erreur.response?.status === 401) {
+    const estVerificationSession = erreur.config?.url?.includes("/auth/me")
+    const estDejaSurConnexion = window.location.pathname === "/connexion"
+
+    if (erreur.response?.status === 401 && !estVerificationSession && !estDejaSurConnexion) {
+      definirAccessToken(null)
       window.location.assign("/connexion")
     }
+
     const message = erreur.response?.data?.message ?? erreur.message
     return Promise.reject(new Error(message))
   }

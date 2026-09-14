@@ -3,9 +3,17 @@ export type RoleUtilisateur = "PRESIDENCE" | "ETABLISSEMENT" | "DECIDEUR"
 
 export interface Utilisateur {
   id: string
-  identifiant: string
+  email: string
   role: RoleUtilisateur
-  etablissementId: string | null
+  etablissement_id?: string
+  etablissement_nom?: string
+}
+
+export interface ReponseConnexion {
+  access_token: string
+  refresh_token: string
+  expires_in: number
+  utilisateur: Utilisateur
 }
 
 export interface ReponseApi<T> {

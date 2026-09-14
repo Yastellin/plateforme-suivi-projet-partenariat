@@ -1,12 +1,12 @@
-﻿// src/hooks/useAuth.ts
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import apiClient from "@/lib/api-client"
+﻿// src/hooks/useAuth.tsx
+import { createContext, useContext, useState, type ReactNode } from "react"
+import { definirAccessToken } from "@/lib/api-client"
 import type { Utilisateur } from "@/types/api"
 
 interface AuthContextValue {
   utilisateur: Utilisateur | null
   estCharge: boolean
-  connecter: (utilisateur: Utilisateur) => void
+  connecter: (utilisateur: Utilisateur, accessToken: string) => void
   deconnecter: () => void
 }
 
@@ -14,20 +14,20 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null)
-  const [estCharge, setEstCharge] = useState(true)
+  // Pas de cookie httpOnly a verifier au demarrage : sans persistance,
+  // il n'y a pas de session a restaurer, on considere le chargement termine
+  // immediatement (a ameliorer plus tard avec un vrai flux de refresh token
+  // stocke de facon securisee).
+  const [estCharge] = useState(false)
 
-  useEffect(() => {
-    apiClient
-      .get<Utilisateur>("/auth/me")
-      .then((reponse) => setUtilisateur(reponse.data))
-      .catch(() => setUtilisateur(null))
-      .finally(() => setEstCharge(false))
-  }, [])
-
-  const connecter = (nouvelUtilisateur: Utilisateur) => setUtilisateur(nouvelUtilisateur)
+  const connecter = (nouvelUtilisateur: Utilisateur, accessToken: string) => {
+    definirAccessToken(accessToken)
+    setUtilisateur(nouvelUtilisateur)
+  }
 
   const deconnecter = () => {
-    apiClient.post("/auth/logout").finally(() => setUtilisateur(null))
+    definirAccessToken(null)
+    setUtilisateur(null)
   }
 
   return (
