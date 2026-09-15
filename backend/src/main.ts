@@ -16,7 +16,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // Configuration CORS pour autoriser le frontend
+  // Authentification par Bearer token (header Authorization).
   const corsOrigins = process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(',')
     : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];

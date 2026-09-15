@@ -4,6 +4,7 @@ postgres_data/
 # Environnement global
 .env
 *.env.local
+*.zip
 
 # IDE global
 .vscode/
