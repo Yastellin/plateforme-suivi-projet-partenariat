@@ -8,6 +8,8 @@ import { LoginPage } from "@/features/auth/pages/LoginPage"
 import { TableauDeBordPresidence } from "@/features/tableau-de-bord/pages/TableauDeBordPresidence"
 import { TableauDeBordEtablissement } from "@/features/tableau-de-bord/pages/TableauDeBordEtablissement"
 import { TableauDeBordDecideur } from "@/features/tableau-de-bord/pages/TableauDeBordDecideur"
+import { PartenairesListePage } from "@/features/partenaires/pages/PartenairesListePage"
+import { PartenaireDetailPage } from "@/features/partenaires/pages/PartenaireDetailPage"
 import { ForbiddenPage } from "@/components/shared/ForbiddenPage"
 import { NotFoundPage } from "@/components/shared/NotFoundPage"
 import { SidebarInterne } from "@/components/layout/SidebarInterne"
@@ -94,6 +96,57 @@ const router = createBrowserRouter([
         element: (
           <RouteProtegee rolesAutorises={["DECIDEUR"]}>
             <TableauDeBordDecideur />
+          </RouteProtegee>
+        ),
+      },
+
+      // Partenaires - meme pages pour les 3 roles : le backend filtre deja
+      // les donnees par etablissement cote serveur (RG05, RG07).
+      {
+        path: "/presidence/partenaires-partenariats/partenaires",
+        element: (
+          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
+            <PartenairesListePage />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/presidence/partenaires-partenariats/partenaires/:id",
+        element: (
+          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
+            <PartenaireDetailPage />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/etablissement/partenaires-partenariats/partenaires",
+        element: (
+          <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}>
+            <PartenairesListePage />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/etablissement/partenaires-partenariats/partenaires/:id",
+        element: (
+          <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}>
+            <PartenaireDetailPage />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/decideur/partenaires-partenariats/partenaires",
+        element: (
+          <RouteProtegee rolesAutorises={["DECIDEUR"]}>
+            <PartenairesListePage />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/decideur/partenaires-partenariats/partenaires/:id",
+        element: (
+          <RouteProtegee rolesAutorises={["DECIDEUR"]}>
+            <PartenaireDetailPage />
           </RouteProtegee>
         ),
       },
