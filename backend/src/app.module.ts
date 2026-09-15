@@ -11,6 +11,8 @@ import { PartenariatsModule } from './partenariats/partenariats.module';
 import { ProjetsModule } from './projets/projets.module';
 import { CotutellesModule } from './cotutelles/cotutelles.module';
 import { EtablissementsModule } from './etablissements/etablissements.module';
+import { StorageModule } from './storage/storage.module';
+import { DocumentsModule } from './documents/documents.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -27,6 +29,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     PartenariatsModule,
     ProjetsModule,
     CotutellesModule,
+    StorageModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [
