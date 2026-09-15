@@ -8,6 +8,7 @@ import {
   Query,
   ParseUUIDPipe,
   UseGuards,
+  HttpCode,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
@@ -90,27 +91,22 @@ async findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) 
   return this.partenariatsService.update(id, dto, etablissementId, user.role);
   }
 
-  @Post(':id/soumettre')
-  @Roles(Role.ETABLISSEMENT, Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence' })
-  @ApiResponse({ status: 200, type: PartenariatResponseDto })
-  soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
-    let etablissementId: string | undefined;
-    if (user.role === Role.ETABLISSEMENT) {
-      etablissementId = user.etablissement_id;
-    }
-    return this.partenariatsService.soumettre(id, etablissementId);
-  }
+@Post(':id/soumettre')
+@HttpCode(200)
+@Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+@ApiOperation({ summary: 'Soumettre un partenariat à la Présidence' })
+@ApiResponse({ status: 200, type: PartenariatResponseDto })
+soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+  const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+  return this.partenariatsService.soumettre(id, etablissementId);
+}
 
-  @Post(':id/archiver')
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Archiver un partenariat' })
-  @ApiResponse({ status: 200, type: PartenariatResponseDto })
-  archiver(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
-    let etablissementId: string | undefined;
-    if (user.role === Role.ETABLISSEMENT) {
-      etablissementId = user.etablissement_id;
-    }
-    return this.partenariatsService.archiver(id, etablissementId);
-  }
+@Post(':id/archiver')
+@HttpCode(200)
+@Roles(Role.PRESIDENCE)
+@ApiOperation({ summary: 'Archiver un partenariat (Présidence uniquement)' })
+@ApiResponse({ status: 200, type: PartenariatResponseDto })
+archiver(@Param('id', ParseUUIDPipe) id: string) {
+  return this.partenariatsService.archiver(id);
+}
 }
