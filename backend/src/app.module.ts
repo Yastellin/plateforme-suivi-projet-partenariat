@@ -9,6 +9,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { PartenairesModule } from './partenaires/partenaires.module';
 import { PartenariatsModule } from './partenariats/partenariats.module';
 import { ProjetsModule } from './projets/projets.module';
+import { CotutellesModule } from './cotutelles/cotutelles.module';
 import { EtablissementsModule } from './etablissements/etablissements.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -25,6 +26,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     PartenairesModule,
     PartenariatsModule,
     ProjetsModule,
+    CotutellesModule,
   ],
   controllers: [AppController],
   providers: [
