@@ -118,34 +118,38 @@ export class PartenairesService {
   return partenaire;
 }
 
-  async archiver(id: string, etablissementId?: string) {
-    await this.findOne(id, etablissementId);
+async archiver(id: string) {
+  const partenaire = await this.prisma.partenaire.findUnique({
+    where: { id, archive: false },
+  });
+  if (!partenaire) throw new NotFoundException('Partenaire non trouvé');
 
-    // Vérifier que le partenaire n'est pas utilisé dans un projet ou partenariat actif
-    const projetsActifs = await this.prisma.projet.count({
-      where: {
-        partenaires: { some: { partenaire_id: id } },
-        archive: false,
-        statut: { notIn: ['TERMINE', 'EXPIRE'] },
-      },
-    });
-    const partenariatsActifs = await this.prisma.partenariat.count({
-      where: {
-        partenaires: { some: { partenaire_id: id } },
-        archive: false,
-        statut: { notIn: ['TERMINE'] },
-      },
-    });
+  const projetsActifs = await this.prisma.projet.count({
+    where: {
+      partenaires: { some: { partenaire_id: id } },
+      archive: false,
+      statut: { notIn: ['TERMINE', 'EXPIRE'] },
+    },
+  });
+  const partenariatsActifs = await this.prisma.partenariat.count({
+    where: {
+      partenaires: { some: { partenaire_id: id } },
+      archive: false,
+      statut: { notIn: ['TERMINE'] },
+    },
+  });
 
-    if (projetsActifs > 0 || partenariatsActifs > 0) {
-      throw new ConflictException('Impossible d archiver un partenaire associé à un projet ou partenariat actif.');
-    }
-
-    return this.prisma.partenaire.update({
-      where: { id },
-      data: { archive: true },
-    });
+  if (projetsActifs > 0 || partenariatsActifs > 0) {
+    throw new ConflictException(
+      'Impossible d archiver un partenaire associé à un projet ou partenariat actif.',
+    );
   }
+
+  return this.prisma.partenaire.update({
+    where: { id },
+    data: { archive: true },
+  });
+}
 
   async rechercherDoublon(nom: string, etablissementId: string) {
     const existant = await this.prisma.partenaire.findFirst({

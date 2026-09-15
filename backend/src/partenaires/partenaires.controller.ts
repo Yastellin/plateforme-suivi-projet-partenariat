@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  HttpCode
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
@@ -94,12 +95,12 @@ export class PartenairesController {
     return this.partenairesService.update(id, dto, etablissementId);
   }
 
-  @Post(':id/archiver')
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Archiver un partenaire' })
-  @ApiResponse({ status: 200 })
-  archiver(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
-    const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-    return this.partenairesService.archiver(id, etablissementId);
-  }
+@Post(':id/archiver')
+@HttpCode(200)
+@Roles(Role.PRESIDENCE)
+@ApiOperation({ summary: 'Archiver un partenaire (Présidence uniquement)' })
+@ApiResponse({ status: 200 })
+archiver(@Param('id', ParseUUIDPipe) id: string) {
+  return this.partenairesService.archiver(id);
+}
 }

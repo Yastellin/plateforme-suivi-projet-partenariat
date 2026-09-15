@@ -1,0 +1,107 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  ParseUUIDPipe,
+  UseGuards,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ProjetsService } from './projets.service';
+import { CreateProjetDto } from './dto/create-projet.dto';
+import { UpdateProjetDto } from './dto/update-projet.dto';
+import { QueryProjetDto } from './dto/query-projet.dto';
+import { ProjetResponseDto } from './dto/projet-response.dto';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
+import { OwnEtablissementGuard } from '../common/guards/own-etablissement.guard';
+
+@ApiTags('Projets')
+@ApiBearerAuth()
+@Controller('projets')
+@UseGuards(OwnEtablissementGuard)
+export class ProjetsController {
+  constructor(private projetsService: ProjetsService) {}
+
+  @Post()
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Créer un projet' })
+  @ApiResponse({ status: 201, type: ProjetResponseDto })
+  create(@CurrentUser() user: any, @Body() dto: CreateProjetDto) {
+    let etablissementId: string;
+    if (user.role === Role.ETABLISSEMENT) {
+      etablissementId = user.etablissement_id;
+      if (!etablissementId) {
+        throw new BadRequestException('Aucun établissement associé à ce compte.');
+      }
+    } else if (user.role === Role.PRESIDENCE) {
+      if (!dto.etablissement_id) {
+        throw new BadRequestException('Pour la PRÉSIDENCE, l\'ID de l\'établissement est requis.');
+      }
+      etablissementId = dto.etablissement_id;
+    } else {
+      throw new ForbiddenException('Rôle non autorisé pour cette action.');
+    }
+    return this.projetsService.create(etablissementId, dto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Lister les projets' })
+  findAll(@CurrentUser() user: any, @Query() query: QueryProjetDto) {
+    const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.projetsService.findAll(query, etablissementId);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtenir un projet par ID' })
+  @ApiResponse({ status: 200, type: ProjetResponseDto })
+  findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.projetsService.findOne(id, etablissementId);
+  }
+
+  @Get(':id/avancement')
+  @ApiOperation({ summary: 'Calculer l\'avancement d\'un projet' })
+  getAvancement(@Param('id', ParseUUIDPipe) id: string) {
+    return this.projetsService.getAvancement(id);
+  }
+
+  @Patch(':id')
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Mettre à jour un projet' })
+  @ApiResponse({ status: 200, type: ProjetResponseDto })
+  update(
+    @CurrentUser() user: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateProjetDto,
+  ) {
+    const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.projetsService.update(id, dto, etablissementId);
+  }
+
+@Post(':id/soumettre')
+@HttpCode(200)
+@Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+@ApiOperation({ summary: 'Soumettre un projet à la Présidence' })
+@ApiResponse({ status: 200, type: ProjetResponseDto })
+soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+  const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+  return this.projetsService.soumettre(id, etablissementId);
+}
+
+@Post(':id/archiver')
+@HttpCode(200)
+@Roles(Role.PRESIDENCE)
+@ApiOperation({ summary: 'Archiver un projet (Présidence uniquement)' })
+@ApiResponse({ status: 200, type: ProjetResponseDto })
+archiver(@Param('id', ParseUUIDPipe) id: string) {
+  return this.projetsService.archiver(id);
+}
+}
