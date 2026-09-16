@@ -63,14 +63,6 @@ enum StatutConvention {
   EXPIREE
 }
 
-enum EtapeCircuit {
-  REDACTION
-  TRANSMISSION
-  VERIFICATION_DAJ
-  ATTENTE_SIGNATURE
-  SIGNEE
-}
-
 enum TypeDocument {
   TDR
   DESCRIPTION
@@ -451,8 +443,6 @@ model Convention {
   date_debut         DateTime?
   date_fin           DateTime?
   statut             StatutConvention @default(BROUILLON)
-  etape_circuit      EtapeCircuit     @default(REDACTION)
-  date_derniere_etape DateTime?
   description        String?
   archive            Boolean @default(false)
 
