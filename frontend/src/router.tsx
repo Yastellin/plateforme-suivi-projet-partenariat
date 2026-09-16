@@ -22,6 +22,7 @@ import { ConventionDetailPage } from "@/features/conventions/pages/ConventionDet
 import { ConventionsListePage } from "@/features/conventions/pages/ConventionsListePage"
 import { ProjetsListePage } from "@/features/projets/pages/ProjetsListePage"
 import { ProjetDetailPage } from "@/features/projets/pages/ProjetDetailPage"
+import { ArchivesPage } from "./features/archives/pages/ArchivesPage"
 
 export function cheminTableauDeBord(role: RoleUtilisateur): string {
   switch (role) {
@@ -98,10 +99,26 @@ const router = createBrowserRouter([
       {
         path: "/presidence/conventions/:id",
         element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ConventionDetailPage /></RouteProtegee>,
-},
+      },
+      {
+      path: "/presidence/archives",
+      element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ArchivesPage /></RouteProtegee>,
+      },
+      {
+        path: "/presidence/notifications",
+        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><NotificationsPage /></RouteProtegee>,
+      },
+      {
+        path: "/etablissement/notifications",
+        element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><NotificationsPage /></RouteProtegee>,
+      },
       {
         path: "/presidence/projets",
         element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ProjetsListePage /></RouteProtegee>,
+      },
+      {
+        path: "/presidence/publications/:projetId",
+        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><PublicationEditPage /></RouteProtegee>,
       },
       {
         path: "/presidence/projets/:id",

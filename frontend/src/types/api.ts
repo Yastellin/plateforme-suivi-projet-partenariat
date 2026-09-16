@@ -182,6 +182,63 @@ export interface Etablissement {
   logo_url?: string
   description?: string
 }
+export type TypeDocument = "TDR" | "DESCRIPTION" | "CONVENTION" | "AUTRE"
+
+export interface DocumentFichier {
+  id: string
+  nom_fichier: string
+  url_fichier: string
+  type: TypeDocument
+  version: number
+  est_archive: boolean
+  projet_id?: string
+  convention_id?: string
+  created_at: string
+  updated_at: string
+}
+export type StatutPublication = "BROUILLON" | "PUBLIEE"
+
+export interface PhotoPublication {
+  id: string
+  url_fichier: string
+  legende?: string
+  ordre: number
+  publication_id: string
+}
+
+export interface Publication {
+  id: string
+  titre: string
+  description_publique?: string
+  date_publication?: string
+  statut: StatutPublication
+  resultats?: string
+  projet_id: string
+  photos?: PhotoPublication[]
+  created_at: string
+  updated_at: string
+}
+// à ajouter dans src/types/api.ts
+export type TypeNotification =
+  | "PROJET_SOUMIS" | "PARTENARIAT_SOUMIS" | "EXPIRATION_CONVENTION" | "CONVENTION_EXPIREE"
+  | "ACTIVITE_ECHEANCE" | "ACTIVITE_RETARD" | "PROJET_RETARD" | "DOCUMENT_AJOUTE"
+  | "DOCUMENT_MODIFIE" | "CHANGEMENT_STATUT"
+
+export type PrioriteNotification = "BASSE" | "MOYENNE" | "HAUTE"
+
+export interface Notification {
+  id: string
+  titre: string
+  message: string
+  type: TypeNotification
+  priorite: PrioriteNotification
+  date_creation: string
+  est_lue: boolean
+  reference_type: string
+  reference_id: string
+}
+
+export type TypeArchive = "partenaires" | "partenariats" | "projets" | "conventions" | "cotutelles"
 export type DomainePartenariat =
   | "RECHERCHE" | "FORMATION" | "INNOVATION"
   | "DEVELOPPEMENT" | "COOPERATION_INSTITUTIONNELLE" | "AUTRE"
