@@ -14,6 +14,7 @@ import { EtablissementsModule } from './etablissements/etablissements.module';
 import { StorageModule } from './storage/storage.module';
 import { DocumentsModule } from './documents/documents.module';
 import { ConventionsModule } from './conventions/conventions.module';
+import { PublicationsModule } from './publications/publications.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -33,6 +34,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     StorageModule,
     DocumentsModule,
     ConventionsModule,
+    PublicationsModule,
   ],
   controllers: [AppController],
   providers: [
