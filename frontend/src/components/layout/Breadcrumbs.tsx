@@ -8,6 +8,7 @@ const LIBELLES: Record<string, string> = {
   etablissement: "Etablissement",
   decideur: "Decideur",
   "partenaires-partenariats": "Partenaires & partenariats",
+  partenaires: "Partenaires",
   cotutelles: "Cotutelles",
   projets: "Projets",
   activites: "Activites",
