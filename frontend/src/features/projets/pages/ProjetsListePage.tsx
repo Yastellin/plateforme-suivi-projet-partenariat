@@ -2,13 +2,7 @@
 import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Plus, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle,} from "@/components/ui/dialog"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { SkeletonCard } from "@/components/shared/SkeletonCard"
 import { ProjetFiltres } from "@/features/projets/components/ProjetFiltres"
@@ -16,10 +10,15 @@ import { ProjetForm } from "@/features/projets/components/ProjetForm"
 import { useProjets } from "@/features/projets/api/useProjets"
 import { useDebounce } from "@/hooks/useDebounce"
 import { toast } from "sonner"
+import { Link } from "react-router-dom"
+import { StatusBadge } from "@/components/shared/StatusBadge"
+import { useAuth } from "@/hooks/useAuth"
 
 const LIMITE_PAR_PAGE = 20
 
 export function ProjetsListePage() {
+  const { utilisateur } = useAuth()
+  const baseChemin = utilisateur?.role === "PRESIDENCE" ? "/presidence" : "/etablissement"
   
   const [recherche, setRecherche] = useState("")
   const [statut, setStatut] = useState<string[]>([])
@@ -91,21 +90,18 @@ export function ProjetsListePage() {
             </div>
           ) : data && data.data.length > 0 ? (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {data.data.map((projet) => (
-                // TODO: Remplacer par la carte de projet appropriée lorsqu'elle existe
-                <div
+            {data.data.map((projet) => (
+                <Link
                   key={projet.id}
-                  className="group rounded-md border border-border p-4 hover:bg-sidebar-accent transition-colors"
+                  to={`${baseChemin}/projets/${projet.id}`}
+                  className="group rounded-md border border-border p-4 transition-colors hover:bg-sidebar-accent"
                 >
-                  <h3 className="font-heading text-sm font-semibold truncate">
-                    {projet.nom}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {projet.bailleur || projet.beneficiaire
-                      ? `${projet.bailleur || ""} / ${projet.beneficiaire || ""}`
-                      : ""}
-                  </p>
-                </div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="truncate font-heading text-sm font-semibold">{projet.nom}</h3>
+                    <StatusBadge statut={projet.statut} />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{projet.type}</p>
+                </Link>
               ))}
             </div>
           ) : (
@@ -131,6 +127,7 @@ export function ProjetsListePage() {
               }
             />
           )}
+          
 
           {data && data.meta.totalPages > 1 && (
             <div className="mt-4 flex items-center justify-end gap-2 text-sm text-muted-foreground">

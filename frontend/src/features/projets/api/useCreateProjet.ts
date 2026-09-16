@@ -1,23 +1,15 @@
 ﻿// src/features/projets/api/useCreateProjet.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
-
-export interface PayloadProjet {
-  nom: string
-  description?: string
-  bailleur?: string
-  beneficiaire?: string
-  site?: string
-  etablissement_id: string
-}
+import type { ProjetFormValues } from "@/lib/validators/projet.schema"
+import type { Projet } from "@/types/api"
 
 export function useCreateProjet() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (payload: PayloadProjet) => {
-      const reponse = await apiClient.post<Partenaire>("/projets", payload)
+    mutationFn: async (valeurs: ProjetFormValues) => {
+      const reponse = await apiClient.post<Projet>("/projets", valeurs)
       return reponse.data
     },
     onSuccess: () => {

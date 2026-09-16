@@ -2,14 +2,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { PayloadCotutelle } from "./useCreateCotutelle"
 import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
+import type { CotutelleThese } from "@/types/api"
 
 export function useUpdateCotutelle(id: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (payload: Partial<PayloadCotutelle>) => {
-      const reponse = await apiClient.patch<Partenaire>(`/cotutelles/${id}`, payload)
+      const reponse = await apiClient.patch<CotutelleThese>(`/cotutelles/${id}`, payload)
       return reponse.data
     },
     onSuccess: (cotutelle) => {

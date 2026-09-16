@@ -1,5 +1,30 @@
 ﻿// src/types/api.ts
 export type RoleUtilisateur = "PRESIDENCE" | "ETABLISSEMENT" | "DECIDEUR"
+export type TypeCotutelle = "COTUTELLE" | "COENCADREMENT"
+
+
+export interface CotutelleThese {
+  id: string
+  nom_doctorant: string
+  specialite?: string
+  directeur_these_local?: string
+  directeur_these_partenaire?: string
+  type: TypeCotutelle
+  date_debut: string
+  date_prevue_soutenance?: string
+  financement_bourse?: string
+  mobilite_realisee?: string
+  publications_produites?: string
+  etat_avancement?: string
+  difficultes_rencontrees?: string
+  perspectives?: string
+  archive: boolean
+  etablissement_id: string
+  partenaire_id: string
+  convention_id?: string
+  created_at: string
+  updated_at: string
+}
 
 export interface Utilisateur {
   id: string
@@ -41,14 +66,81 @@ export type Visibilite = "PUBLIC" | "PRIVE"
 
 export type StatutPartenariat = "BROUILLON" | "EN_ATTENTE" | "EN_COURS" | "SUSPENDU" | "TERMINE"
 export type StatutProjet = "BROUILLON" | "EN_ATTENTE" | "EN_COURS" | "SUSPENDU" | "EXPIRE" | "TERMINE"
-export type StatutConvention =
-  | "BROUILLON"
-  | "EN_ATTENTE_SIGNATURE"
-  | "SIGNEE"
-  | "ACTIVE"
-  | "SUSPENDUE"
-  | "EXPIREE"
+export interface Porteur {
+  id: string
+  nom: string
+  institution_rattachement?: string
+}
+
+export interface Bailleur {
+  id: string
+  nom: string
+  description?: string
+}
+
+export interface Beneficiaire {
+  id: string
+  nom: string
+  categorie?: string
+}
+
+export interface Site {
+  id: string
+  nom: string
+  description?: string
+}
+
+export interface Activite {
+  id: string
+  intitule: string
+  ordre: number
+  terminee: boolean
+  date_echeance?: string
+  projet_id: string
+}
+
+export interface Projet {
+  id: string
+  nom: string
+  intitule_officiel?: string
+  type: string
+  domaine?: string
+  budget?: number
+  date_debut: string
+  date_fin_prevue: string
+  statut: StatutProjet
+  archive: boolean
+  etablissement_id: string
+  partenariat_id?: string
+  porteur_id?: string
+  porteur?: Porteur
+  bailleurs?: { bailleur_id: string; bailleur?: Bailleur }[]
+  beneficiaires?: { beneficiaire_id: string; beneficiaire?: Beneficiaire }[]
+  sites?: { site_id: string; site?: Site }[]
+  activites?: Activite[]
+  created_at: string
+  updated_at: string
+}
+export type StatutConvention = "BROUILLON"| "EN_ATTENTE_SIGNATURE"| "SIGNEE"| "ACTIVE"| "SUSPENDUE"| "EXPIREE"
 export type EtapeCircuit = "REDACTION" | "TRANSMISSION" | "VERIFICATION_DAJ" | "ATTENTE_SIGNATURE" | "SIGNEE"
+export interface Convention {
+  id: string
+  reference: string
+  titre: string
+  etablissement_nom?: string
+  date_signature?: string
+  date_debut?: string
+  date_fin?: string
+  statut: StatutConvention
+  etape_circuit: EtapeCircuit
+  date_derniere_etape?: string
+  description?: string
+  archive: boolean
+  partenariat_id?: string
+  projet_id?: string
+  created_at: string
+  updated_at: string
+}
 
 export interface Contact {
   id: string
@@ -89,4 +181,30 @@ export interface Etablissement {
   sigle?: string
   logo_url?: string
   description?: string
+}
+export type DomainePartenariat =
+  | "RECHERCHE" | "FORMATION" | "INNOVATION"
+  | "DEVELOPPEMENT" | "COOPERATION_INSTITUTIONNELLE" | "AUTRE"
+
+export interface Partenariat {
+  id: string
+  intitule: string
+  nom?: string
+  type?: string
+  objet?: string
+  domaine: DomainePartenariat
+  date_debut: string
+  date_fin?: string
+  statut: StatutPartenariat
+  actions_realisees?: string
+  actions_en_cours?: string
+  actions_prevues?: string
+  resultats_obtenus?: string
+  difficultes_contraintes?: string
+  perspectives_recommandations?: string
+  archive: boolean
+  etablissements?: { etablissement_id: string; etablissement?: { id: string; nom: string } }[]
+  partenaires?: { partenaire_id: string; partenaire?: Partenaire }[]
+  created_at: string
+  updated_at: string
 }

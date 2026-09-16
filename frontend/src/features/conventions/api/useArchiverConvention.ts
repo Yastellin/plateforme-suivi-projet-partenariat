@@ -7,8 +7,7 @@ export function useArchiverConvention(id: string) {
 
   return useMutation({
     mutationFn: async () => {
-      const reponse = await apiClient.post(`/conventions/${id}/archiver`)
-      return reponse.data
+      await apiClient.post(`/conventions/${id}/archiver`)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conventions"] })

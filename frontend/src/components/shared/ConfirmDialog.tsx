@@ -11,30 +11,41 @@ import {
 import { Button } from "@/components/ui/button"
 
 interface ConfirmDialogProps {
-  ouvert: boolean
+  ouvert?: boolean
+  open?: boolean
   onOpenChange: (ouvert: boolean) => void
   titre: string
   description: string
-  libelleConfirmation: string
+  libelleConfirmation?: string
   variante?: "default" | "destructive"
+  destructif?: boolean
   enCours?: boolean
-  onConfirmer: () => void
+  onConfirmer?: () => void
+  onConfirm?: () => void
 }
 
 // Modal de confirmation obligatoire avant toute action critique
 // (archivage, soumission, publication, changement d'etape - section 8).
 export function ConfirmDialog({
   ouvert,
+  open,
   onOpenChange,
   titre,
   description,
   libelleConfirmation,
-  variante = "default",
+  variante,
+  destructif,
   enCours,
   onConfirmer,
+  onConfirm,
 }: ConfirmDialogProps) {
+  const estOuvert = ouvert ?? open ?? false
+  const confirmationLabel = libelleConfirmation ?? "Confirmer"
+  const varianteFinale = destructif ? "destructive" : variante ?? "default"
+  const onValider = onConfirmer ?? onConfirm ?? (() => undefined)
+
   return (
-    <Dialog open={ouvert} onOpenChange={onOpenChange}>
+    <Dialog open={estOuvert} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{titre}</DialogTitle>
@@ -44,9 +55,9 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={enCours}>
             Annuler
           </Button>
-          <Button variant={variante} onClick={onConfirmer} disabled={enCours}>
+          <Button variant={varianteFinale} onClick={onValider} disabled={enCours}>
             {enCours && <LoaderCircle className="animate-spin" />}
-            {libelleConfirmation}
+            {confirmationLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

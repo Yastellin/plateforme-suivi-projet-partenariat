@@ -93,7 +93,7 @@ export function ConventionsListePage() {
                   className="rounded-md border border-border p-4 hover:bg-sidebar-accent transition-colors"
                 >
                   <h3 className="font-heading text-sm font-semibold truncate">
-                    {convention.nom}
+                    {convention.titre}
                   </h3>
                   <p className="text-xs text-muted-foreground">
                     {convention.etablissement_nom || "Non rattaché"}

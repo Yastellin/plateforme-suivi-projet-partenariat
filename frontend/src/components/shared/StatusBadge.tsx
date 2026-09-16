@@ -51,12 +51,12 @@ const CLASSES_NIVEAU: Record<NiveauStatut, string> = {
 }
 
 interface StatusBadgeProps {
-  statut: StatutMetier
+  statut: string
   className?: string
 }
 
 export function StatusBadge({ statut, className }: StatusBadgeProps) {
-  const niveau = TABLEAU_STATUTS[statut]
+  const niveau = TABLEAU_STATUTS[statut as StatutMetier] ?? "actif"
 
   return (
     <Badge className={cn(CLASSES_NIVEAU[niveau], className)}>

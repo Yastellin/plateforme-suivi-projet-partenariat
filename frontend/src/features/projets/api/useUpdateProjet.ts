@@ -1,15 +1,15 @@
 ﻿// src/features/projets/api/useUpdateProjet.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import type { PayloadProjet } from "./useCreateProjet"
 import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
+import type { ProjetFormValues } from "@/lib/validators/projet.schema"
+import type { Projet } from "@/types/api"
 
 export function useUpdateProjet(id: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (payload: Partial<PayloadProjet>) => {
-      const reponse = await apiClient.patch<Partenaire>(`/projets/${id}`, payload)
+    mutationFn: async (valeurs: Partial<ProjetFormValues>) => {
+      const reponse = await apiClient.patch<Projet>(`/projets/${id}`, valeurs)
       return reponse.data
     },
     onSuccess: (projet) => {

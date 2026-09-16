@@ -1,23 +1,15 @@
 ﻿// src/features/conventions/api/useCreateConvention.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
-
-export interface PayloadConvention {
-  nom: string
-  description?: string
-  etablissement_id: string
-  statut: string
-  visibilite: string
-  etape_circuit: string
-}
+import type { ConventionFormValues } from "@/lib/validators/convention.schema"
+import type { Convention } from "@/types/api"
 
 export function useCreateConvention() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (payload: PayloadConvention) => {
-      const reponse = await apiClient.post<Partenaire>("/conventions", payload)
+    mutationFn: async (valeurs: ConventionFormValues) => {
+      const reponse = await apiClient.post<Convention>("/conventions", valeurs)
       return reponse.data
     },
     onSuccess: () => {

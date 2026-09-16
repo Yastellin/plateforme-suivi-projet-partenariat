@@ -1,15 +1,20 @@
 ﻿// src/features/projets/api/useAvancement.ts
 import { useQuery } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
 
-export function useAvancement(id: string | undefined) {
+interface Avancement {
+  pourcentage: number
+  activites_terminees: number
+  activites_total: number
+}
+
+export function useAvancement(projetId: string | undefined) {
   return useQuery({
-    queryKey: ["projets", id, "avancement"],
+    queryKey: ["projets", projetId, "avancement"],
     queryFn: async () => {
-      const reponse = await apiClient.get<Partenaire>(`/projets/${id}/avancement`)
+      const reponse = await apiClient.get<Avancement>(`/projets/${projetId}/avancement`)
       return reponse.data
     },
-    enabled: !!id,
+    enabled: !!projetId,
   })
 }

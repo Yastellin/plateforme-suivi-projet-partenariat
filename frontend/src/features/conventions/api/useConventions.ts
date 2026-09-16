@@ -1,24 +1,22 @@
 ﻿// src/features/conventions/api/useConventions.ts
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { PageServeur, Partenaire } from "@/types/api"
+import type { PageServeur, Convention } from "@/types/api"
 
 export interface FiltresConventions {
   page?: number
   limit?: number
-  nom?: string
+  reference?: string
   statut?: string
-  etablissement_id?: string
+  partenariat_id?: string
+  projet_id?: string
 }
 
-// Liste paginee cote serveur : une seule requete pour toute la page
 export function useConventions(filtres: FiltresConventions) {
   return useQuery({
     queryKey: ["conventions", filtres],
     queryFn: async () => {
-      const reponse = await apiClient.get<PageServeur<Partenaire>>("/conventions", {
-        params: filtres,
-      })
+      const reponse = await apiClient.get<PageServeur<Convention>>("/conventions", { params: filtres })
       return reponse.data
     },
     placeholderData: keepPreviousData,

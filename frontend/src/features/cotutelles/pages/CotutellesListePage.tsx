@@ -83,10 +83,10 @@ export function CotutellesListePage() {
                   className="rounded-md border border-border p-4 hover:bg-sidebar-accent transition-colors"
                 >
                   <h3 className="font-heading text-sm font-semibold truncate">
-                    {cotutelle.nom}
+                    {cotutelle.nom_doctorant}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Non rattaché à un établissement spécifique
+                    {cotutelle.specialite || "Non rattaché à un établissement spécifique"}
                   </p>
                 </div>
               ))}

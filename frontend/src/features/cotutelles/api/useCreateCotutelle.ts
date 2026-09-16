@@ -1,21 +1,17 @@
 ﻿// src/features/cotutelles/api/useCreateCotutelle.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
+import type { CotutelleThese } from "@/types/api"
+import type { CotutelleFormValues } from "@/lib/validators/cotutelle.schema"
 
-export interface PayloadCotutelle {
-  nom: string
-  etablissement_id: string
-  convention_id?: string
-  statut: string
-}
+export type PayloadCotutelle = CotutelleFormValues
 
 export function useCreateCotutelle() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (payload: PayloadCotutelle) => {
-      const reponse = await apiClient.post<Partenaire>("/cotutelles", payload)
+      const reponse = await apiClient.post<CotutelleThese>("/cotutelles", payload)
       return reponse.data
     },
     onSuccess: () => {

@@ -15,6 +15,13 @@ import { NotFoundPage } from "@/components/shared/NotFoundPage"
 import { SidebarInterne } from "@/components/layout/SidebarInterne"
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { ParametresCompte } from "@/features/comptes/pages/ParametresCompte"
+import { CotutellesListePage } from "@/features/cotutelles/pages/CotutellesListePage"
+import { CotutelleDetailPage } from "@/features/cotutelles/pages/CotutelleDetailPage"
+import { ConventionDetailPage } from "@/features/conventions/pages/ConventionDetailPage"
+import { ConventionsListePage } from "@/features/conventions/pages/ConventionsListePage"
+import { ProjetsListePage } from "@/features/projets/pages/ProjetsListePage"
+import { ProjetDetailPage } from "@/features/projets/pages/ProjetDetailPage"
 
 export function cheminTableauDeBord(role: RoleUtilisateur): string {
   switch (role) {
@@ -69,6 +76,7 @@ function LayoutInterne() {
   )
 }
 
+
 const router = createBrowserRouter([
   { path: "/", element: <RedirectionAccueil /> },
   { path: "/connexion", element: <LoginPage /> },
@@ -80,6 +88,70 @@ const router = createBrowserRouter([
         element: (
           <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
             <TableauDeBordPresidence />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/presidence/conventions",
+        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ConventionsListePage /></RouteProtegee>,
+      },
+      {
+        path: "/presidence/conventions/:id",
+        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ConventionDetailPage /></RouteProtegee>,
+},
+      {
+        path: "/presidence/projets",
+        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ProjetsListePage /></RouteProtegee>,
+      },
+      {
+        path: "/presidence/projets/:id",
+        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ProjetDetailPage /></RouteProtegee>,
+      },
+      {
+        path: "/etablissement/projets",
+        element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><ProjetsListePage /></RouteProtegee>,
+      },
+      {
+        path: "/etablissement/projets/:id",
+        element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><ProjetDetailPage /></RouteProtegee>,
+      },
+      {
+        path: "/presidence/parametres",
+        element: (
+          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
+            <ParametresCompte />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/presidence/cotutelles",
+        element: (
+          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
+            <CotutellesListePage />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/presidence/cotutelles/:id",
+        element: (
+          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
+            <CotutelleDetailPage />
+          </RouteProtegee>
+        ),
+  },
+      {
+        path: "/etablissement/parametres",
+        element: (
+          <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}>
+            <ParametresCompte />
+          </RouteProtegee>
+        ),
+      },
+      {
+        path: "/decideur/parametres",
+        element: (
+          <RouteProtegee rolesAutorises={["DECIDEUR"]}>
+            <ParametresCompte />
           </RouteProtegee>
         ),
       },

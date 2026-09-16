@@ -1,15 +1,15 @@
 ﻿// src/features/partenariats/api/useUpdatePartenariat.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import type { PayloadPartenariat } from "./useCreatePartenariat"
 import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
+import type { PartenariatFormValues } from "@/lib/validators/partenariat.schema"
+import type { Partenariat } from "@/types/api"
 
 export function useUpdatePartenariat(id: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (payload: Partial<PayloadPartenariat>) => {
-      const reponse = await apiClient.patch<Partenaire>(`/partenariats/${id}`, payload)
+    mutationFn: async (valeurs: Partial<PartenariatFormValues>) => {
+      const reponse = await apiClient.patch<Partenariat>(`/partenariats/${id}`, valeurs)
       return reponse.data
     },
     onSuccess: (partenariat) => {
