@@ -3,7 +3,6 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePartenariatDto } from './dto/create-partenariat.dto';
@@ -86,18 +85,6 @@ export class PartenariatsService {
           include: { partenaire: true },
         },
       },
-    });
-
-    // Notification RG34 : ajout d'un nouveau partenariat
-    this.eventEmitter.emit('partenariat.ajoute', {
-      type: TypeNotification.PARTENARIAT_SOUMIS,
-      priorite: PrioriteNotification.MOYENNE,
-      titre: `Nouveau partenariat : ${dto.intitule}`,
-      message: `L'établissement ${etablissement.nom} a ajouté un nouveau partenariat : ${dto.intitule}`,
-      utilisateur_id: null, // Envoyer à la Présidence (géré par le listener)
-      reference_type: 'Partenariat',
-      reference_id: partenariat.id,
-      etablissement_id: etablissementId,
     });
 
     return this.mapToResponse(partenariat);

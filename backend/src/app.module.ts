@@ -19,6 +19,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ScheduleModule } from '@nestjs/schedule';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -35,6 +37,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     DocumentsModule,
     ConventionsModule,
     PublicationsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -66,16 +66,6 @@ export class ProjetsService {
       },
     });
 
-    this.eventEmitter.emit('projet.ajoute', {
-      type: TypeNotification.PROJET_SOUMIS,
-      priorite: PrioriteNotification.MOYENNE,
-      titre: `Nouveau projet : ${dto.nom}`,
-      message: `L'établissement ${etablissement.nom} a ajouté un nouveau projet : ${dto.nom}`,
-      reference_type: 'Projet',
-      reference_id: projet.id,
-      etablissement_id: etablissementId,
-    });
-
     return this.findOne(projet.id, etablissementId);
   }
 
