@@ -19,8 +19,9 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
+import { TableauDeBordModule } from './tableau-de-bord/tableau-de-bord.module';
+import { StatistiquesModule } from './statistiques/statistiques.module';
 
 @Module({
   imports: [
@@ -38,6 +39,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     ConventionsModule,
     PublicationsModule,
     NotificationsModule,
+    TableauDeBordModule,
+    StatistiquesModule,
   ],
   controllers: [AppController],
   providers: [
