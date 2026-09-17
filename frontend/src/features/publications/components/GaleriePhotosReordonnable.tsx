@@ -7,14 +7,12 @@ import { useSupprimerPhoto } from "@/features/publications/api/usePhotosPublicat
 import type { PhotoPublication } from "@/types/api"
 
 export function GaleriePhotosReordonnable({
-  publicationId,
   photos,
 }: {
-  publicationId: string
   photos: PhotoPublication[]
 }) {
   const [ordre, setOrdre] = useState(photos)
-  const suppression = useSupprimerPhoto(publicationId)
+  const suppression = useSupprimerPhoto()
 
   return (
     <Reorder.Group axis="y" values={ordre} onReorder={setOrdre} className="flex flex-col gap-2">

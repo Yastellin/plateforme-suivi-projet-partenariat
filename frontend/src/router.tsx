@@ -22,7 +22,17 @@ import { ConventionDetailPage } from "@/features/conventions/pages/ConventionDet
 import { ConventionsListePage } from "@/features/conventions/pages/ConventionsListePage"
 import { ProjetsListePage } from "@/features/projets/pages/ProjetsListePage"
 import { ProjetDetailPage } from "@/features/projets/pages/ProjetDetailPage"
+import { PublicationEditPage } from "@/features/publications/pages/PublicationEditPage"
+import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage"
 import { ArchivesPage } from "./features/archives/pages/ArchivesPage"
+import { TopbarPublique } from "@/components/layout/TopbarPublique"
+import { AccueilPage } from "@/features/espace-public/pages/AccueilPage"
+import { AProposPage } from "@/features/espace-public/pages/AProposPage"
+import { EtablissementsPage } from "@/features/espace-public/pages/EtablissementsPage"
+import { PartenairesPubliquePage } from "@/features/espace-public/pages/PartenairesPubliquePage"
+import { ProjetsPartenariatsPubliquePage } from "@/features/espace-public/pages/ProjetsPartenariatsPubliquePage"
+import { PublicationDetailPage } from "@/features/espace-public/pages/PublicationDetailPage"
+import { ContactPage } from "@/features/espace-public/pages/ContactPage"
 
 export function cheminTableauDeBord(role: RoleUtilisateur): string {
   switch (role) {
@@ -38,7 +48,9 @@ export function cheminTableauDeBord(role: RoleUtilisateur): string {
 function RedirectionAccueil() {
   const { utilisateur, estCharge } = useAuth()
   if (estCharge) return null
-  if (!utilisateur) return <Navigate to="/connexion" replace />
+  // Les utilisateurs non connectes voient la page d'accueil publique.
+  // Seuls les utilisateurs connectes sont rediriges vers leur tableau de bord.
+  if (!utilisateur) return <AccueilPage />
   return <Navigate to={cheminTableauDeBord(utilisateur.role)} replace />
 }
 
@@ -56,6 +68,26 @@ function RouteProtegee({
   if (!rolesAutorises.includes(utilisateur.role)) return <ForbiddenPage />
 
   return <>{children}</>
+}
+
+// Mise en page de l'espace public (section 6.2) : barre de navigation
+// horizontale fixe + pied de page.
+function LayoutPublic() {
+  return (
+    <div className="flex min-h-screen flex-col">
+      <TopbarPublique />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <footer className="border-t border-border bg-muted/50 py-8">
+        <div className="mx-auto max-w-7xl px-4 text-center text-sm text-muted-foreground sm:px-6 lg:px-8">
+          <p>
+            &copy; {new Date().getFullYear()} Université de Fianarantsoa — Plateforme de suivi des projets et partenariats
+          </p>
+        </div>
+      </footer>
+    </div>
+  )
 }
 
 // Mise en page commune a tout l'espace interne (section 6.1) :
@@ -79,7 +111,18 @@ function LayoutInterne() {
 
 
 const router = createBrowserRouter([
-  { path: "/", element: <RedirectionAccueil /> },
+  {
+    element: <LayoutPublic />,
+    children: [
+      { path: "/", element: <RedirectionAccueil /> },
+      { path: "/a-propos", element: <AProposPage /> },
+      { path: "/etablissements", element: <EtablissementsPage /> },
+      { path: "/partenaires", element: <PartenairesPubliquePage /> },
+      { path: "/projets-partenariats", element: <ProjetsPartenariatsPubliquePage /> },
+      { path: "/projets-partenariats/publication/:id", element: <PublicationDetailPage /> },
+      { path: "/contact", element: <ContactPage /> },
+    ],
+  },
   { path: "/connexion", element: <LoginPage /> },
   {
     element: <LayoutInterne />,

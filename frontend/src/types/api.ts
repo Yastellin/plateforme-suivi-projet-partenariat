@@ -237,6 +237,60 @@ export interface Notification {
   reference_type: string
   reference_id: string
 }
+// à ajouter dans src/types/api.ts
+export interface SyntheseItem {
+  id: string
+  etablissement_id: string
+  annee: number
+  type: string
+  valeur: string
+}
+
+export interface SynthesePartenaireStrategique {
+  id: string
+  etablissement_id: string
+  annee: number
+  partenaire_id: string
+  partenaire?: Partenaire
+}
+
+export interface SyntheseEtablissement {
+  etablissement_id: string
+  etablissement_nom: string
+  annee: number
+  nombre_partenaires: number
+  conventions_actives: number
+  conventions_expirees: number
+  nombre_cotutelles: number
+  projets_actifs: number
+  items_narratifs: SyntheseItem[]
+  partenaires_strategiques: SynthesePartenaireStrategique[]
+}
+
+export interface CompteursTableauDeBord {
+  nombre_partenaires: number
+  nombre_partenariats: number
+  nombre_cotutelles: number
+  projets_par_statut: Record<string, number>
+  conventions_actives: number
+  conventions_expirees: number
+  conventions_bientot_expirees: number
+}
+
+export interface EcheanceProchaine {
+  id: string
+  type: "convention" | "activite" | "projet"
+  titre: string
+  date_echeance: string
+}
+
+export interface ComparatifEtablissement {
+  etablissement_id: string
+  etablissement_nom: string
+  nombre_projets: number
+  nombre_partenaires: number
+  nombre_conventions: number
+}
 
 export type TypeArchive = "partenaires" | "partenariats" | "projets" | "conventions" | "cotutelles"
 export type DomainePartenariat =

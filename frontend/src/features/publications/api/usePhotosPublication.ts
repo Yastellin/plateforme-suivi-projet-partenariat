@@ -21,7 +21,7 @@ export function useAjouterPhoto(publicationId: string) {
   })
 }
 
-export function useSupprimerPhoto(publicationId: string) {
+export function useSupprimerPhoto() {
   const queryClient = useQueryClient()
 
   return useMutation({

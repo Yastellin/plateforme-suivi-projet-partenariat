@@ -95,7 +95,7 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
           <DocumentDropzone projetId={projetId} />
           {publication.photos && publication.photos.length > 0 && (
             <div className="mt-3">
-              <GaleriePhotosReordonnable publicationId={publication.id} photos={publication.photos} />
+              <GaleriePhotosReordonnable photos={publication.photos} />
             </div>
           )}
         </div>
