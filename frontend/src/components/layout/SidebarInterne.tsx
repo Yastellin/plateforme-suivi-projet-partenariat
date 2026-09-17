@@ -43,7 +43,7 @@ function menuPourRole(role: RoleUtilisateur): GroupeMenu[] {
   if (role === "PRESIDENCE") {
     return [
       { label: "Partenaires & partenariats", icon: Handshake, liens: [
-        { label: "Vue d'ensemble", href: "/presidence/partenaires-partenariats", icon: Handshake },
+        { label: "Partenaires", href: "/presidence/partenaires-partenariats/partenaires", icon: Handshake },
       ]},
       { label: "Cotutelles", icon: Users, liens: [
         { label: "Liste des cotutelles", href: "/presidence/cotutelles", icon: Users },
@@ -81,7 +81,7 @@ function menuPourRole(role: RoleUtilisateur): GroupeMenu[] {
   if (role === "ETABLISSEMENT") {
     return [
       { label: "Mes partenaires & partenariats", icon: Handshake, liens: [
-        { label: "Vue d'ensemble", href: "/etablissement/partenaires-partenariats", icon: Handshake },
+        { label: "Partenaires", href: "/etablissement/partenaires-partenariats/partenaires", icon: Handshake },
       ]},
       { label: "Mes projets", icon: FolderKanban, liens: [
         { label: "Liste", href: "/etablissement/projets", icon: FolderKanban },
@@ -100,7 +100,7 @@ function menuPourRole(role: RoleUtilisateur): GroupeMenu[] {
   // (repartition des fonctionnalites) : pas de Notifications, pas de gestion.
   return [
     { label: "Partenaires & partenariats", icon: Handshake, liens: [
-      { label: "Consultation", href: "/decideur/partenaires-partenariats", icon: Handshake },
+      { label: "Partenaires", href: "/decideur/partenaires-partenariats/partenaires", icon: Handshake },
     ]},
     { label: "Projets", icon: FolderKanban, liens: [
       { label: "Consultation", href: "/decideur/projets", icon: FolderKanban },

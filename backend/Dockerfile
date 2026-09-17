@@ -3,7 +3,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps
+# Improve npm network resilience inside the container (retries / timeouts)
+RUN npm config set fetch-retries 5 \
+ && npm config set fetch-retry-factor 10 \
+ && npm config set fetch-retry-maxtimeout 60000 \
+ && npm config set fetch-retry-mintimeout 1000 \
+ && npm ci --legacy-peer-deps
 
 # Copier tout le code source (y compris prisma/schema.prisma)
 COPY . .
