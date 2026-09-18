@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+      expect(appController.getHello()).toBe("Bienvenue sur la plateforme de gestion des projets et partenariats de l'Université de Fianarantsoa");
     });
   });
 });
