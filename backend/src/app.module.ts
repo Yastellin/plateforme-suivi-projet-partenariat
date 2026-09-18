@@ -22,6 +22,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TableauDeBordModule } from './tableau-de-bord/tableau-de-bord.module';
 import { StatistiquesModule } from './statistiques/statistiques.module';
+import { ReferentielsModule } from './referentiels/referentiels.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { StatistiquesModule } from './statistiques/statistiques.module';
     NotificationsModule,
     TableauDeBordModule,
     StatistiquesModule,
+    ReferentielsModule,
   ],
   controllers: [AppController],
   providers: [
