@@ -9,12 +9,13 @@ import { useMarquerToutLu } from "@/features/notifications/api/useMarquerLue"
 export function NotificationsPage() {
   const { data: notifications, isLoading } = useNotifications()
   const marquerToutLu = useMarquerToutLu()
+  
 
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-heading text-2xl font-semibold text-foreground">Notifications</h1>
-        {notifications && notifications.some((n) => !n.est_lue) && (
+        {notifications && notifications?.some?.((n) => !n.est_lue) && (
           <Button variant="outline" onClick={() => marquerToutLu.mutate()}>
             Tout marquer comme lu
           </Button>
