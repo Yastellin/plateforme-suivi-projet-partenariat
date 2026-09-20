@@ -22,7 +22,9 @@ export class ProjetsService {
   ) {}
 
   async create(etablissementId: string, dto: CreateProjetDto): Promise<ProjetResponseDto> {
-    const etablissement = await this.prisma.etablissement.findUnique({
+  // Transaction : les verifications et la creation sont atomiques.
+  const projetId = await this.prisma.$transaction(async (tx) => {
+    const etablissement = await tx.etablissement.findUnique({
       where: { id: etablissementId },
     });
     if (!etablissement) {
@@ -30,7 +32,7 @@ export class ProjetsService {
     }
 
     if (dto.partenariat_id) {
-      const partenariat = await this.prisma.partenariat.findUnique({
+      const partenariat = await tx.partenariat.findUnique({
         where: { id: dto.partenariat_id, archive: false },
       });
       if (!partenariat) {
@@ -38,7 +40,7 @@ export class ProjetsService {
       }
     }
 
-    const projet = await this.prisma.projet.create({
+    const projet = await tx.projet.create({
       data: {
         nom: dto.nom,
         intitule_officiel: dto.intitule_officiel,
@@ -66,8 +68,13 @@ export class ProjetsService {
       },
     });
 
-    return this.findOne(projet.id, etablissementId);
-  }
+    return projet.id;
+  });
+
+  // Lecture enrichie hors transaction (evite de bloquer la transaction
+  // pendant les comptages d'activites).
+  return this.findOne(projetId, etablissementId);
+}
 
   async findAll(query: QueryProjetDto, etablissementId?: string) {
     const { page = 1, limit = 20, nom, type, statut, partenariat_id, partenaire_id, archive } = query;
@@ -104,7 +111,7 @@ export class ProjetsService {
     const where: any = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
-    const projet = await this.prisma.projet.findUnique({ where });
+    const projet = await this.prisma.projet.findFirst({ where });   // findFirst
     if (!projet) {
       throw new NotFoundException('Projet non trouvé');
     }

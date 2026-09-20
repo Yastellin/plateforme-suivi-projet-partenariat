@@ -72,10 +72,11 @@ export class PartenariatsController {
 @Get(':id')
 @ApiOperation({ summary: 'Obtenir un partenariat par ID' })
 @ApiResponse({ status: 200, type: PartenariatResponseDto })
-async findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
   const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-  const includeArchived = user.role === Role.PRESIDENCE; // Présidence voit tout
-  return this.partenariatsService.findOne(id, etablissementId, includeArchived);
+  // includeArchived reste a false : un element archive n'est pas accessible
+  // via GET /:id, il faut passer par GET /?archive=true ou /archives/...
+  return this.partenariatsService.findOne(id, etablissementId, false);
 }
 
   @Patch(':id')

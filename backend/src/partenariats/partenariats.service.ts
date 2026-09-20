@@ -23,71 +23,72 @@ export class PartenariatsService {
   ) {}
 
   async create(etablissementId: string, dto: CreatePartenariatDto): Promise<PartenariatResponseDto> {
-    // Vérifier que l'établissement existe
-    const etablissement = await this.prisma.etablissement.findUnique({
-      where: { id: etablissementId },
-    });
-    if (!etablissement) {
-      throw new NotFoundException('Établissement non trouvé');
-    }
-
-    // Vérifier que tous les établissements associés existent (RG17)
-    for (const etabId of dto.etablissements_ids) {
-      const etab = await this.prisma.etablissement.findUnique({
-        where: { id: etabId },
+    // Transaction : les verifications et la creation sont atomiques.
+    // Evite qu'un etablissement ou partenaire soit supprime entre la
+    // verification et l'insertion (race condition TOCTOU).
+    return this.prisma.$transaction(async (tx) => {
+      const etablissement = await tx.etablissement.findUnique({
+        where: { id: etablissementId },
       });
-      if (!etab) {
-        throw new NotFoundException(`Établissement ${etabId} non trouvé`);
+      if (!etablissement) {
+        throw new NotFoundException('Établissement non trouvé');
       }
-    }
 
-    // Vérifier que tous les partenaires associés existent
-    for (const partId of dto.partenaires_ids) {
-      const part = await this.prisma.partenaire.findUnique({
-        where: { id: partId },
+      for (const etabId of dto.etablissements_ids) {
+        const etab = await tx.etablissement.findUnique({
+          where: { id: etabId },
+        });
+        if (!etab) {
+          throw new NotFoundException(`Établissement ${etabId} non trouvé`);
+        }
+      }
+
+      for (const partId of dto.partenaires_ids) {
+        const part = await tx.partenaire.findUnique({
+          where: { id: partId },
+        });
+        if (!part) {
+          throw new NotFoundException(`Partenaire ${partId} non trouvé`);
+        }
+      }
+
+      const partenariat = await tx.partenariat.create({
+        data: {
+          intitule: dto.intitule,
+          objet: dto.objet,
+          domaine: dto.domaine,
+          date_debut: new Date(dto.date_debut),
+          date_fin: dto.date_fin ? new Date(dto.date_fin) : undefined,
+          statut: dto.statut || StatutPartenariat.BROUILLON,
+          actions_realisees: dto.actions_realisees,
+          actions_en_cours: dto.actions_en_cours,
+          actions_prevues: dto.actions_prevues,
+          resultats_obtenus: dto.resultats_obtenus,
+          difficultes_contraintes: dto.difficultes_contraintes,
+          perspectives_recommandations: dto.perspectives_recommandations,
+          etablissements: {
+            create: dto.etablissements_ids.map((id) => ({
+              etablissement_id: id,
+            })),
+          },
+          partenaires: {
+            create: dto.partenaires_ids.map((id) => ({
+              partenaire_id: id,
+            })),
+          },
+        },
+        include: {
+          etablissements: {
+            include: { etablissement: true },
+          },
+          partenaires: {
+            include: { partenaire: true },
+          },
+        },
       });
-      if (!part) {
-        throw new NotFoundException(`Partenaire ${partId} non trouvé`);
-      }
-    }
 
-    // Créer le partenariat (RG06 : rattachement automatique à l'établissement connecté)
-    const partenariat = await this.prisma.partenariat.create({
-      data: {
-        intitule: dto.intitule,
-        objet: dto.objet,
-        domaine: dto.domaine,
-        date_debut: new Date(dto.date_debut),
-        date_fin: dto.date_fin ? new Date(dto.date_fin) : undefined,
-        statut: dto.statut || StatutPartenariat.BROUILLON,
-        actions_realisees: dto.actions_realisees,
-        actions_en_cours: dto.actions_en_cours,
-        actions_prevues: dto.actions_prevues,
-        resultats_obtenus: dto.resultats_obtenus,
-        difficultes_contraintes: dto.difficultes_contraintes,
-        perspectives_recommandations: dto.perspectives_recommandations,
-        etablissements: {
-          create: dto.etablissements_ids.map((id) => ({
-            etablissement_id: id,
-          })),
-        },
-        partenaires: {
-          create: dto.partenaires_ids.map((id) => ({
-            partenaire_id: id,
-          })),
-        },
-      },
-      include: {
-        etablissements: {
-          include: { etablissement: true },
-        },
-        partenaires: {
-          include: { partenaire: true },
-        },
-      },
+      return this.mapToResponse(partenariat);
     });
-
-    return this.mapToResponse(partenariat);
   }
 
   async findAll(query: QueryPartenariatDto, etablissementId?: string) {
@@ -141,13 +142,15 @@ export class PartenariatsService {
   async findOne(id: string, etablissementId?: string, includeArchived = false) {
     const where: any = { id };
     if (!includeArchived) {
-        where.archive = false;
+      where.archive = false;
     }
     if (etablissementId) {
       where.etablissements = { some: { etablissement_id: etablissementId } };
     }
 
-    const partenariat = await this.prisma.partenariat.findUnique({
+    // findFirst au lieu de findUnique : findUnique n'applique pas
+    // de maniere fiable les filtres sur des champs non-uniques (archive).
+    const partenariat = await this.prisma.partenariat.findFirst({
       where,
       include: {
         etablissements: {

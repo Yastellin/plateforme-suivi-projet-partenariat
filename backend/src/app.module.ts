@@ -18,13 +18,13 @@ import { PublicationsModule } from './publications/publications.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TableauDeBordModule } from './tableau-de-bord/tableau-de-bord.module';
 import { StatistiquesModule } from './statistiques/statistiques.module';
 import { ReferentielsModule } from './referentiels/referentiels.module';
 import { ArchivesModule } from './archives/archives.module';
-
+import { RechercheModule } from './recherche/recherche.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -45,14 +45,15 @@ import { ArchivesModule } from './archives/archives.module';
     StatistiquesModule,
     ReferentielsModule,
     ArchivesModule,
+    RechercheModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
-    { provide: APP_GUARD, useClass: RolesGuard },   // <-- Ajouté
+    { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
-    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
 export class AppModule {}
