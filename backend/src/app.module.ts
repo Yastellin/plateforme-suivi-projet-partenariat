@@ -23,6 +23,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { TableauDeBordModule } from './tableau-de-bord/tableau-de-bord.module';
 import { StatistiquesModule } from './statistiques/statistiques.module';
 import { ReferentielsModule } from './referentiels/referentiels.module';
+import { ArchivesModule } from './archives/archives.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ReferentielsModule } from './referentiels/referentiels.module';
     TableauDeBordModule,
     StatistiquesModule,
     ReferentielsModule,
+    ArchivesModule,
   ],
   controllers: [AppController],
   providers: [
