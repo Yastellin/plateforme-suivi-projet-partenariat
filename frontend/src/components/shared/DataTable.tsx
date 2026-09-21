@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MetaPagination } from "@/types/api"
 
@@ -18,10 +18,11 @@ export interface Colonne<T> {
   header: string
   cell: (ligne: T) => ReactNode
   className?: string
-  // Sur mobile, le tableau devient une pile de cartes : la colonne
-  // primaire sert de titre de carte, les suivantes de lignes d'information.
   primaire?: boolean
+  triable?: boolean
 }
+
+export type DensiteTable = "compact" | "confortable"
 
 interface DataTableProps<T> {
   colonnes: Colonne<T>[]
@@ -30,6 +31,14 @@ interface DataTableProps<T> {
   onPageChange?: (page: number) => void
   onLigneClick?: (ligne: T) => void
   enChargement?: boolean
+  colonnesVisibles?: string[]
+  onColonnesChange?: (colonnes: string[]) => void
+  densite?: DensiteTable
+  onDensiteChange?: (densite: DensiteTable) => void
+  selection?: string[]
+  onSelectionChange?: (selection: string[]) => void
+  tri?: { colonne: string; direction: "asc" | "desc" }
+  onTriChange?: (tri: { colonne: string; direction: "asc" | "desc" }) => void
 }
 
 export function DataTable<T extends { id: string }>({
@@ -39,7 +48,16 @@ export function DataTable<T extends { id: string }>({
   onPageChange,
   onLigneClick,
   enChargement,
+  colonnesVisibles,
+  onColonnesChange,
+  densite = "confortable",
+  onDensiteChange,
+  selection = [],
+  onSelectionChange,
+  tri,
+  onTriChange,
 }: DataTableProps<T>) {
+  const colonnesFiltrees = colonnesVisibles ? colonnes.filter((c) => colonnesVisibles.includes(c.id)) : colonnes
   const plage = useMemo(() => {
     if (!meta || meta.total === 0) return null
     const debut = (meta.page - 1) * meta.limit + 1
@@ -47,15 +65,66 @@ export function DataTable<T extends { id: string }>({
     return { debut, fin }
   }, [meta])
 
+  const estCompact = densite === "compact"
+
   return (
     <div className="flex flex-col gap-3">
+      {(onColonnesChange || onDensiteChange) && (
+        <div className="flex items-center gap-2">
+          {onDensiteChange && (
+            <div className="flex rounded-lg border border-border">
+              <button onClick={() => onDensiteChange("compact")} className={cn("px-2 py-1 text-[11px] font-medium", estCompact && "bg-primary text-primary-foreground rounded-l-lg")}>Compact</button>
+              <button onClick={() => onDensiteChange("confortable")} className={cn("px-2 py-1 text-[11px] font-medium", !estCompact && "bg-primary text-primary-foreground rounded-r-lg")}>Confortable</button>
+            </div>
+          )}
+          {onColonnesChange && (
+            <div className="flex items-center gap-1">
+              {colonnes.map((col) => (
+                <button key={col.id} onClick={() => {
+                  const visibles = colonnesVisibles ?? colonnes.map((c) => c.id)
+                  onColonnesChange(visibles.includes(col.id) ? visibles.filter((v) => v !== col.id) : [...visibles, col.id])
+                }} className={cn("rounded border px-1.5 py-0.5 text-[10px] font-medium transition-colors", (colonnesVisibles ?? colonnes.map((c) => c.id)).includes(col.id) ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>
+                  {col.header}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {selection.length > 0 && (
+        <div className="flex items-center gap-2 rounded-lg border border-primary bg-primary/5 px-3 py-2 text-[12px] text-primary">
+          <span className="font-medium">{selection.length} selectionne{selection.length > 1 ? "s" : ""}</span>
+          <Button variant="ghost" size="sm" className="ml-auto h-6 text-[11px]" onClick={() => onSelectionChange?.([])}>Effacer</Button>
+        </div>
+      )}
       <div className="hidden overflow-hidden rounded-xl border border-border md:block">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
-              {colonnes.map((colonne) => (
-                <TableHead key={colonne.id} className={colonne.className}>
-                  {colonne.header}
+              {onSelectionChange && (
+                <TableHead className="w-10">
+                  <input type="checkbox" className="h-4 w-4" checked={selection.length === donnees.length && donnees.length > 0} onChange={(e) => onSelectionChange(e.target.checked ? donnees.map((d) => d.id) : [])} />
+                </TableHead>
+              )}
+              {colonnesFiltrees.map((colonne) => (
+                <TableHead
+                  key={colonne.id}
+                  className={cn(colonne.className, colonne.triable && onTriChange && "cursor-pointer select-none hover:bg-muted/80")}
+                  onClick={colonne.triable && onTriChange ? () => {
+                    const memeColonne = tri?.colonne === colonne.id
+                    onTriChange({ colonne: colonne.id, direction: memeColonne && tri?.direction === "asc" ? "desc" : "asc" })
+                  } : undefined}
+                >
+                  <span className="flex items-center gap-1">
+                    {colonne.header}
+                    {colonne.triable && onTriChange && (
+                      tri?.colonne === colonne.id ? (
+                        tri.direction === "asc" ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+                      ) : (
+                        <ArrowUpDown size={12} className="text-muted-foreground/50" />
+                      )
+                    )}
+                  </span>
                 </TableHead>
               ))}
             </TableRow>
@@ -64,7 +133,8 @@ export function DataTable<T extends { id: string }>({
             {enChargement
               ? Array.from({ length: 6 }).map((_, i) => (
                   <TableRow key={i}>
-                    {colonnes.map((colonne) => (
+                    {onSelectionChange && <TableCell className="w-10"><div className="h-4 w-4 animate-pulse rounded bg-muted" /></TableCell>}
+                    {colonnesFiltrees.map((colonne) => (
                       <TableCell key={colonne.id}>
                         <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
                       </TableCell>
@@ -75,10 +145,18 @@ export function DataTable<T extends { id: string }>({
                   <TableRow
                     key={ligne.id}
                     onClick={onLigneClick ? () => onLigneClick(ligne) : undefined}
-                    className={cn(onLigneClick && "cursor-pointer")}
+                    className={cn(onLigneClick && "cursor-pointer", estCompact && "text-[12px]")}
                   >
-                    {colonnes.map((colonne) => (
-                      <TableCell key={colonne.id} className={colonne.className}>
+                    {onSelectionChange && (
+                      <TableCell className="w-10">
+                        <input type="checkbox" className="h-4 w-4" checked={selection.includes(ligne.id)} onChange={(e) => {
+                          e.stopPropagation()
+                          onSelectionChange(selection.includes(ligne.id) ? selection.filter((s) => s !== ligne.id) : [...selection, ligne.id])
+                        }} />
+                      </TableCell>
+                    )}
+                    {colonnesFiltrees.map((colonne) => (
+                      <TableCell key={colonne.id} className={cn(colonne.className, estCompact && "py-1.5")}>
                         {colonne.cell(ligne)}
                       </TableCell>
                     ))}

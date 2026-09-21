@@ -1,43 +1,37 @@
 // src/components/shared/ErrorBoundary.tsx
 import { Component, type ErrorInfo, type ReactNode } from "react"
-import { TriangleAlert } from "lucide-react"
+import { AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-interface ErrorBoundaryProps {
+interface Props {
   children: ReactNode
 }
-
-interface ErrorBoundaryState {
-  erreur: Error | null
+interface State {
+  aPlante: boolean
 }
 
-// Error Boundary global (section 1) : intercepte toute erreur de rendu
-// pour afficher un ecran de secours plutot qu'une page blanche.
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { erreur: null }
+export class ErrorBoundary extends Component<Props, State> {
+  state: State = { aPlante: false }
 
-  static getDerivedStateFromError(erreur: Error): ErrorBoundaryState {
-    return { erreur }
+  static getDerivedStateFromError(): State {
+    return { aPlante: true }
   }
 
-  componentDidCatch(erreur: Error, infos: ErrorInfo) {
-    console.error("Erreur de rendu interceptee:", erreur, infos.componentStack)
+  componentDidCatch(erreur: Error, info: ErrorInfo) {
+    console.error("Erreur interceptee par ErrorBoundary", erreur, info)
   }
 
   render() {
-    if (this.state.erreur) {
+    if (this.state.aPlante) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-4 text-center">
-          <TriangleAlert size={48} className="text-destructive" strokeWidth={1.5} />
+        <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
+          <AlertTriangle size={48} className="text-muted-foreground" />
           <h1 className="font-heading text-xl font-semibold">Une erreur est survenue</h1>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Une erreur inattendue s'est produite. Vous pouvez recharger la page pour reessayer.
-          </p>
-          <Button onClick={() => window.location.reload()}>Recharger la page</Button>
+          <p className="text-muted-foreground">Merci de recharger la page.</p>
+          <Button onClick={() => window.location.reload()}>Recharger</Button>
         </div>
       )
     }
-
     return this.props.children
   }
 }
