@@ -26,6 +26,7 @@ import { StatistiquesModule } from './statistiques/statistiques.module';
 import { ReferentielsModule } from './referentiels/referentiels.module';
 import { ArchivesModule } from './archives/archives.module';
 import { RechercheModule } from './recherche/recherche.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { RechercheModule } from './recherche/recherche.module';
       ],
     }),
     EventEmitterModule.forRoot(),
+    HealthModule,
     PrismaModule,
     AuthModule,
     EtablissementsModule,
