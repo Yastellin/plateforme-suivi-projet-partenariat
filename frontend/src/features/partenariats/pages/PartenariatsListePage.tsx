@@ -93,10 +93,10 @@ export function PartenariatsListePage() {
                   className="rounded-md border border-border p-4 hover:bg-sidebar-accent transition-colors"
                 >
                   <h3 className="font-heading text-sm font-semibold truncate">
-                    {partenariat.nom}
+                    {partenariat.intitule}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Type: {partenariat.type}
+                    {partenariat.domaine}
                   </p>
                 </div>
               ))}

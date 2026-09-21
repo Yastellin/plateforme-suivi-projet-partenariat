@@ -20,6 +20,7 @@ import { WizardProgressBar } from "@/components/forms/wizard/WizardProgressBar"
 import { SelectionEtablissements } from "@/features/partenariats/components/SelectionEtablissements"
 import { SelectionPartenaires } from "@/features/partenariats/components/SelectionPartenaires"
 import { useCreatePartenariat } from "@/features/partenariats/api/useCreatePartenariat"
+import { useWizardDraft } from "@/components/forms/wizard/useWizardDraft"
 import {
   schemaPartenariat,
   type PartenariatFormValues,
@@ -85,6 +86,14 @@ export function PartenariatWizard({ onSucces, onAnnuler }: PartenariatWizardProp
   const valeurs = watch()
   const derniereEtape = etapeActive === ETAPES.length - 1
 
+  const { viderBrouillon } = useWizardDraft({
+    cle: "partenariat-wizard",
+    donnees: { ...valeurs, etapeActive },
+    onRestaurer: (d) => {
+      if (d.etapeActive !== undefined) setEtapeActive(d.etapeActive as number)
+    },
+  })
+
   const suivant = () => {
     if (derniereEtape) {
       handleSubmit(onSubmit)()
@@ -98,6 +107,7 @@ export function PartenariatWizard({ onSucces, onAnnuler }: PartenariatWizardProp
   function onSubmit(valeurs: PartenariatFormValues) {
     creation.mutate(valeurs, {
       onSuccess: (partenariat) => {
+        viderBrouillon()
         toast.success("Partenariat cree avec succes !")
         onSucces(partenariat)
       },

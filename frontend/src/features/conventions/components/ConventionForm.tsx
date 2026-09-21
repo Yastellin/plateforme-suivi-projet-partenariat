@@ -49,7 +49,6 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
       date_debut: convention?.date_debut?.slice(0, 10) ?? "",
       date_fin: convention?.date_fin?.slice(0, 10) ?? "",
       statut: convention?.statut ?? "BROUILLON",
-      etape_circuit: convention?.etape_circuit ?? "REDACTION",
       description: convention?.description ?? "",
       partenariat_id: convention?.partenariat_id ?? "",
       projet_id: convention?.projet_id ?? "",
@@ -127,10 +126,6 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         <Label htmlFor="projet_id">Projet lie (optionnel)</Label>
         <Input id="projet_id" {...register("projet_id")} />
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        L'etape du circuit de traitement se met a jour depuis la fiche detail, via le stepper dedie.
-      </p>
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>Annuler</Button>

@@ -2,11 +2,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
 
-export function useArchiverPartenariat(id: string) {
+export function useArchiverPartenariat() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (id: string) => {
       const reponse = await apiClient.post(`/partenariats/${id}/archiver`)
       return reponse.data
     },

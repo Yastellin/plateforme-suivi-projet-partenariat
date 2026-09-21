@@ -1,25 +1,24 @@
 // src/App.tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { Toaster } from "@/components/ui/sonner"
-import { AuthProvider } from "@/hooks/useAuth"
+import { queryClient } from "@/lib/query-client"
+import { AuthProvider } from "@/features/auth/AuthProvider"
 import { ThemeProvider } from "@/hooks/useTheme"
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary"
 import { AppRouter } from "@/router"
 
-const queryClient = new QueryClient()
-
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <ErrorBoundary>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
             <AppRouter />
-          </ErrorBoundary>
-          <Toaster richColors position="top-right" />
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+            <Toaster richColors position="top-right" />
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }
 
