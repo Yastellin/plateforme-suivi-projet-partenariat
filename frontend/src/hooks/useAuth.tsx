@@ -1,12 +1,13 @@
 ﻿// src/hooks/useAuth.tsx
-import { createContext, useContext, useState, type ReactNode } from "react"
-import { definirAccessToken } from "@/lib/api-client"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import apiClient, { definirAccessToken } from "@/lib/api-client"
+import { tokenStorage } from "@/lib/token-storage"
 import type { Utilisateur } from "@/types/api"
 
 interface AuthContextValue {
   utilisateur: Utilisateur | null
   estCharge: boolean
-  connecter: (utilisateur: Utilisateur, accessToken: string) => void
+  connecter: (utilisateur: Utilisateur, accessToken: string, refreshToken: string) => void
   deconnecter: () => void
 }
 
@@ -14,20 +15,44 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null)
-  // Pas de cookie httpOnly a verifier au demarrage : sans persistance,
-  // il n'y a pas de session a restaurer, on considere le chargement termine
-  // immediatement (a ameliorer plus tard avec un vrai flux de refresh token
-  // stocke de facon securisee).
-  const [estCharge] = useState(false)
+  const [estCharge, setEstCharge] = useState(true)
 
-  const connecter = (nouvelUtilisateur: Utilisateur, accessToken: string) => {
+  useEffect(() => {
+    async function restaurerSession() {
+      const refreshToken = tokenStorage.getRefreshToken()
+      if (!refreshToken) {
+        setEstCharge(false)
+        return
+      }
+
+      try {
+        const res = await apiClient.post<{ access_token: string }>("/auth/refresh", {
+          refresh_token: refreshToken,
+        })
+        definirAccessToken(res.data.access_token)
+
+        const me = await apiClient.get<Utilisateur>("/auth/me")
+        setUtilisateur(me.data)
+      } catch {
+        tokenStorage.clearRefreshToken()
+      } finally {
+        setEstCharge(false)
+      }
+    }
+    restaurerSession()
+  }, [])
+
+  function connecter(user: Utilisateur, accessToken: string, refreshToken: string) {
     definirAccessToken(accessToken)
-    setUtilisateur(nouvelUtilisateur)
+    tokenStorage.setRefreshToken(refreshToken)
+    setUtilisateur(user)
   }
 
-  const deconnecter = () => {
+  function deconnecter() {
     definirAccessToken(null)
+    tokenStorage.clearRefreshToken()
     setUtilisateur(null)
+    window.location.assign("/connexion")
   }
 
   return (

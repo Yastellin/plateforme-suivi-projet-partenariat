@@ -8,8 +8,7 @@ import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { FloatingLabelInput } from "@/components/forms/inputs/FloatingLabelInput"
 import { schemaConnexion, type ConnexionFormValues } from "@/lib/validators/auth.schema"
 import { useLogin } from "@/features/auth/api/useLogin"
 import { useAuth } from "@/hooks/useAuth"
@@ -39,7 +38,7 @@ export function LoginForm() {
   const onSubmit = (valeurs: ConnexionFormValues) => {
     connexion.mutate(valeurs, {
       onSuccess: (reponse) => {
-        connecter(reponse.utilisateur, reponse.access_token)
+        connecter(reponse.utilisateur, reponse.access_token, reponse.refresh_token)
         navigate(cheminTableauDeBord(reponse.utilisateur.role))
       },
       onError: (erreur) => {
@@ -57,33 +56,21 @@ export function LoginForm() {
       className="flex flex-col gap-4"
       noValidate
     >
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="username"
-          aria-invalid={!!errors.email}
-          {...register("email")}
-        />
-        {errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
-        )}
-      </div>
+      <FloatingLabelInput
+        label="Adresse e-mail"
+        type="email"
+        autoComplete="username"
+        erreur={errors.email?.message}
+        {...register("email")}
+      />
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="mot_de_passe">Mot de passe</Label>
-        <Input
-          id="mot_de_passe"
-          type="password"
-          autoComplete="current-password"
-          aria-invalid={!!errors.mot_de_passe}
-          {...register("mot_de_passe")}
-        />
-        {errors.mot_de_passe && (
-          <p className="text-sm text-destructive">{errors.mot_de_passe.message}</p>
-        )}
-      </div>
+      <FloatingLabelInput
+        label="Mot de passe"
+        type="password"
+        autoComplete="current-password"
+        erreur={errors.mot_de_passe?.message}
+        {...register("mot_de_passe")}
+      />
 
       <Button type="submit" disabled={connexion.isPending} className="mt-2">
         {connexion.isPending && <LoaderCircle className="animate-spin" />}
