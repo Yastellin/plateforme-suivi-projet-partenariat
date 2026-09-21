@@ -15,13 +15,13 @@ export class CotutellesService {
     });
     if (!etablissement) throw new NotFoundException('Etablissement non trouve');
 
-    const partenaire = await this.prisma.partenaire.findUnique({
+    const partenaire = await this.prisma.partenaire.findFirst({
       where: { id: dto.partenaire_id, archive: false },
     });
     if (!partenaire) throw new NotFoundException('Partenaire non trouve');
 
     if (dto.convention_id) {
-      const convention = await this.prisma.convention.findUnique({
+      const convention = await this.prisma.convention.findFirst({
         where: { id: dto.convention_id, archive: false },
       });
       if (!convention) throw new NotFoundException('Convention non trouvee');
@@ -79,7 +79,7 @@ export class CotutellesService {
   }
 
   async findOne(id: string): Promise<CotutelleResponseDto> {
-    const cotutelle = await this.prisma.cotutelleThese.findUnique({
+    const cotutelle = await this.prisma.cotutelleThese.findFirst({
       where: { id, archive: false },
     });
     if (!cotutelle) throw new NotFoundException('Cotutelle non trouvee');

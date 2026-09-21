@@ -23,6 +23,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+      // Rate limiting : message francise
+    if (
+        exception instanceof HttpException &&
+        exception.getStatus() === HttpStatus.TOO_MANY_REQUESTS
+    ) {
+        return this.repondre(response, {
+        status: HttpStatus.TOO_MANY_REQUESTS,
+        message: 'Trop de requetes. Veuillez reessayer dans quelques instants.',
+        errors: [],
+        });
+    }
+
     // 1. Erreur HTTP explicite (NotFoundException, ConflictException, etc.)
     if (exception instanceof HttpException) {
       const mapped = this.mapperHttp(exception);
