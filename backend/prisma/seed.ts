@@ -196,8 +196,6 @@ async function main() {
       date_debut: new Date('2025-01-01'),
       date_fin: new Date('2027-01-01'),
       statut: 'EN_ATTENTE_SIGNATURE',
-      etape_circuit: 'VERIFICATION_DAJ',
-      date_derniere_etape: new Date(),
       description: 'Convention cadre pour les échanges académiques',
       partenariat_id: partenariat.id,
     },

@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { PrismaModule } from '../prisma/prisma.module';
+import { AuthSchedulerService } from './auth-scheduler.service';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
+  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, AuthSchedulerService],
   exports: [AuthService],
 })
 export class AuthModule {}
