@@ -22,11 +22,13 @@ const TABLEAU_STATUTS = {
   SUSPENDU: "expire",
   SUSPENDUE: "expire",
   EN_RETARD: "expire",
+  // Archive
+  ARCHIVE: "archive",
 } as const
 
 export type StatutMetier = keyof typeof TABLEAU_STATUTS
 
-type NiveauStatut = "brouillon" | "attente" | "actif" | "expire"
+type NiveauStatut = "brouillon" | "attente" | "actif" | "expire" | "archive"
 
 const LIBELLES: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -41,6 +43,7 @@ const LIBELLES: Record<string, string> = {
   EXPIREE: "Expiree",
   SUSPENDU: "Suspendu",
   SUSPENDUE: "Suspendue",
+  ARCHIVE: "Archive",
 }
 
 const CLASSES_NIVEAU: Record<NiveauStatut, string> = {
@@ -48,6 +51,7 @@ const CLASSES_NIVEAU: Record<NiveauStatut, string> = {
   attente: "bg-statut-attente-bg text-statut-attente-fg border-transparent",
   actif: "bg-statut-actif-bg text-statut-actif-fg border-transparent",
   expire: "bg-statut-expire-bg text-statut-expire-fg border-transparent",
+  archive: "bg-statut-archive-bg text-statut-archive-fg border-transparent",
 }
 
 interface StatusBadgeProps {
