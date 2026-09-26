@@ -1,0 +1,78 @@
+/* src/styles/design-tokens-uf.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
+:root {
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --fs-base: 14px;
+  --fs-kpi: 30px;
+  --fs-h1: 24px;
+
+  --color-surface: #FFFFFF;
+  --color-page-bg: #F7F7F5;
+
+  --color-chrome-bg: #FFFFFF;
+  --color-chrome-hover: #F2F3F1;
+  --color-chrome-border: #E3E4E0;
+
+  --color-text-primary: #1F2328;
+  --color-text-secondary: #5F6368;
+  --color-border: #E3E4E0;
+
+  --color-brand: #367D56;
+  --color-brand-hover: #266141;
+  --color-brand-text: #FFFFFF;
+  --color-brand-deep: #1B4D34;
+  --color-active-zone: #E8F0EA;
+  --color-brand-moment: #C89000;
+
+  --status-brouillon-bg: #F1F2F0; --status-brouillon-fg: #5F6368;
+  --status-attente-bg:   #FBF0D9; --status-attente-fg:   #8A5A00;
+  --status-actif-bg:     #E8F0EA; --status-actif-fg:     #1B4D34;
+  --status-expire-bg:    #FBE5E5; --status-expire-fg:    #A82A2A;
+  --status-archive-bg:   #F1F2F0; --status-archive-fg:   #5F6368;
+  --status-info-bg:      #E0E8F5; --status-info-fg:      #1E40AF;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 14px rgba(0,0,0,.06);
+
+  --layout-sidebar-width: 248px;
+  --layout-sidebar-width-collapsed: 72px;
+  --layout-topbar-height: 58px;
+}
+
+.dark {
+  --color-surface: #1B1F24;
+  --color-page-bg: #15181C;
+
+  --color-chrome-bg: #1F2328;
+  --color-chrome-hover: #2A2E34;
+  --color-chrome-border: #2C3138;
+
+  --color-text-primary: #E8E9EB;
+  --color-text-secondary: #9096A0;
+  --color-border: #2C3138;
+
+  --color-brand: #6BAF85;
+  --color-brand-hover: #82C198;
+  --color-brand-text: #0D2818;
+  --color-brand-deep: #A2D4B0;
+  --color-active-zone: #1F3A2A;
+  --color-brand-moment: #E5B84D;
+
+  --status-brouillon-bg: #24282E; --status-brouillon-fg: #9096A0;
+  --status-attente-bg:   #3D2E08; --status-attente-fg:   #FCD34D;
+  --status-actif-bg:     #1F3A2A; --status-actif-fg:     #A2D4B0;
+  --status-expire-bg:    #3A1818; --status-expire-fg:    #E8A5A5;
+  --status-archive-bg:   #1E2227; --status-archive-fg:   #6E747E;
+  --status-info-bg:      #1E2A50; --status-info-fg:      #93B4F7;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.35);
+  --shadow-md: 0 4px 14px rgba(0,0,0,.50);
+}
