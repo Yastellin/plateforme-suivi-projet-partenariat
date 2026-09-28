@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePartenaireDto } from './dto/create-partenaire.dto';
 import { UpdatePartenaireDto } from './dto/update-partenaire.dto';
@@ -11,7 +11,6 @@ export class PartenairesService {
   constructor(private prisma: PrismaService) {}
 
   async create(etablissementId: string, dto: CreatePartenaireDto): Promise<PartenaireResponseDto> {
-    // Vérification des doublons
     const existant = await this.prisma.partenaire.findFirst({
       where: {
         nom: dto.nom,
@@ -76,7 +75,9 @@ export class PartenairesService {
     const where: any = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
-    const partenaire = await this.prisma.partenaire.findUnique({
+    // findFirst au lieu de findUnique : findUnique n'applique pas de maniere
+    // fiable les filtres sur des champs non-uniques (archive, etablissement_id).
+    const partenaire = await this.prisma.partenaire.findFirst({
       where,
       include: { contacts: true },
     });
@@ -88,68 +89,68 @@ export class PartenairesService {
     return partenaire;
   }
 
-
-    async update(id: string, dto: UpdatePartenaireDto, etablissementId?: string) {
+  async update(id: string, dto: UpdatePartenaireDto, etablissementId?: string) {
     await this.findOne(id, etablissementId);
 
     // Exclure etablissement_id pour éviter toute tentative de modification
     const { etablissement_id, ...data } = dto;
 
     if (data.nom) {
-        const existant = await this.prisma.partenaire.findFirst({
+      const existant = await this.prisma.partenaire.findFirst({
         where: {
-            nom: data.nom,
-            etablissement_id: etablissementId,
-            id: { not: id },
-            archive: false,
+          nom: data.nom,
+          etablissement_id: etablissementId,
+          id: { not: id },
+          archive: false,
         },
-        });
-        if (existant) {
+      });
+      if (existant) {
         throw new ConflictException(`Un partenaire nommé "${data.nom}" existe déjà.`);
-        }
+      }
     }
 
-  const partenaire = await this.prisma.partenaire.update({
-    where: { id },
-    data,
-    include: { contacts: true },
-  });
+    const partenaire = await this.prisma.partenaire.update({
+      where: { id },
+      data,
+      include: { contacts: true },
+    });
 
-  return partenaire;
-}
-
-async archiver(id: string) {
-  const partenaire = await this.prisma.partenaire.findUnique({
-    where: { id, archive: false },
-  });
-  if (!partenaire) throw new NotFoundException('Partenaire non trouvé');
-
-  const projetsActifs = await this.prisma.projet.count({
-    where: {
-      partenaires: { some: { partenaire_id: id } },
-      archive: false,
-      statut: { notIn: ['TERMINE', 'EXPIRE'] },
-    },
-  });
-  const partenariatsActifs = await this.prisma.partenariat.count({
-    where: {
-      partenaires: { some: { partenaire_id: id } },
-      archive: false,
-      statut: { notIn: ['TERMINE'] },
-    },
-  });
-
-  if (projetsActifs > 0 || partenariatsActifs > 0) {
-    throw new ConflictException(
-      'Impossible d archiver un partenaire associé à un projet ou partenariat actif.',
-    );
+    return partenaire;
   }
 
-  return this.prisma.partenaire.update({
-    where: { id },
-    data: { archive: true },
-  });
-}
+  async archiver(id: string) {
+    // findFirst au lieu de findUnique pour garantir l'application du filtre archive.
+    const partenaire = await this.prisma.partenaire.findFirst({
+      where: { id, archive: false },
+    });
+    if (!partenaire) throw new NotFoundException('Partenaire non trouvé');
+
+    const projetsActifs = await this.prisma.projet.count({
+      where: {
+        partenaires: { some: { partenaire_id: id } },
+        archive: false,
+        statut: { notIn: ['TERMINE', 'EXPIRE'] },
+      },
+    });
+    const partenariatsActifs = await this.prisma.partenariat.count({
+      where: {
+        partenaires: { some: { partenaire_id: id } },
+        archive: false,
+        statut: { notIn: ['TERMINE'] },
+      },
+    });
+
+    if (projetsActifs > 0 || partenariatsActifs > 0) {
+      throw new ConflictException(
+        'Impossible d archiver un partenaire associé à un projet ou partenariat actif.',
+      );
+    }
+
+    return this.prisma.partenaire.update({
+      where: { id },
+      data: { archive: true },
+    });
+  }
 
   async rechercherDoublon(nom: string, etablissementId: string) {
     const existant = await this.prisma.partenaire.findFirst({

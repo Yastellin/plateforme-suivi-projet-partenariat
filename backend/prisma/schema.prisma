@@ -127,7 +127,7 @@ model Utilisateur {
   etablissement Etablissement? @relation(fields: [etablissement_id], references: [id], onDelete: SetNull)
 
   notifications Notification[]
-
+  refresh_tokens RefreshToken[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -575,4 +575,20 @@ model SynthesePartenaireStrategique {
 
   @@unique([etablissement_id, annee, partenaire_id])
   @@index([etablissement_id, annee])
+}
+
+model RefreshToken {
+  id             String   @id @default(uuid())
+  token_hash     String   @unique
+  utilisateur_id String
+  expires_at     DateTime
+  revoked_at     DateTime?
+
+  utilisateur Utilisateur @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@index([utilisateur_id])
+  @@index([expires_at])
+  @@index([revoked_at])
 }

@@ -22,14 +22,23 @@ export class OwnEtablissementGuard implements CanActivate {
 
     const routePath = request.route.path;
 
-    // Partenaire : champ direct
-    if (routePath.includes('/partenaires')) {
-      const entity = await this.prisma.partenaire.findUnique({
+    // Partenariat : relation via table d'association
+    if (routePath.includes('/partenariats')) {
+      const partenariat = await this.prisma.partenariat.findUnique({
         where: { id: resourceId },
-        select: { etablissement_id: true },
+        select: { id: true },
       });
-      if (!entity) throw new NotFoundException('Ressource non trouvée');
-      if (entity.etablissement_id !== user.etablissement_id) {
+      if (!partenariat) {
+        throw new NotFoundException('Partenariat non trouve');
+      }
+
+      const association = await this.prisma.partenariatEtablissement.findFirst({
+        where: {
+          partenariat_id: resourceId,
+          etablissement_id: user.etablissement_id,
+        },
+      });
+      if (!association) {
         throw new ForbiddenException('Vous ne pouvez accéder qu à vos propres données');
       }
       return true;

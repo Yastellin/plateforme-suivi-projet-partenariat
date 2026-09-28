@@ -1,12 +1,36 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
+import { validerEnvironnement } from './config/env.validation';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // 1. Validation des variables d environnement AVANT tout le reste.
+  // Si une variable critique manque, le serveur refuse de demarrer.
+  validerEnvironnement();
+
+  const logger = new Logger('Bootstrap');
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    // Desactive le header X-Powered-By (information disclosure)
+    // Helmet s en charge, mais on peut aussi le desactiver globalement.
+  });
+
+  // 2. Helmet : en-tetes de securite HTTP.
+  // contentSecurityPolicy desactive car l API sert Swagger UI (scripts inline).
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
+
+  // 3. Graceful shutdown : ferme proprement les connexions (Prisma, HTTP)
+  // lors d un SIGTERM ou SIGINT (docker stop, redemarrage).
+  app.enableShutdownHooks();
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -20,7 +44,7 @@ async function bootstrap() {
 
   // Authentification par Bearer token (header Authorization).
   const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',')
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
     : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
 
   app.enableCors({
@@ -48,7 +72,12 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`Application démarrée sur http://localhost:${port}`);
+  logger.log(`Application démarrée sur http://localhost:${port}`);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  const logger = new Logger('Bootstrap');
+  const message = err instanceof Error ? err.message : String(err);
+  logger.error(`Echec du demarrage : ${message}`);
+  process.exit(1);
+});
