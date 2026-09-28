@@ -1,24 +1,5 @@
 ﻿// src/features/partenariats/pages/PartenariatDetailPage.tsx
 
-<<<<<<< Updated upstream
-import { EmptyState } from "@/components/shared/EmptyState"
-import { StatusBadge } from "@/components/shared/StatusBadge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { PartenariatForm } from "@/features/partenariats/components/PartenariatForm"
-import { BoutonSoumettre } from "@/features/partenariats/components/BoutonSoumettre"
-import { usePartenariat } from "@/features/partenariats/api/usePartenariat"
-import { useAuth } from "@/hooks/useAuth"
-
-export function PartenariatDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const { utilisateur } = useAuth()
-  const [modificationOuverte, setModificationOuverte] = useState(false)
-
-  const { data: partenariat, isLoading } = usePartenariat(id)
-
-  if (isLoading) {
-    return <p className="p-6 text-muted-foreground">Chargement...</p>
-=======
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -83,20 +64,12 @@ export function PartenariatDetailPage() {
         <Skeleton className="h-64 w-full rounded-[var(--radius)]" />
       </div>
     );
->>>>>>> Stashed changes
   }
 
   if (!partenariat) {
     return <p className="text-[13.5px] text-[var(--color-text-secondary)]">Partenariat introuvable.</p>;
   }
 
-<<<<<<< Updated upstream
-  const modifiable = partenariat.statut === "BROUILLON" && utilisateur?.role === "ETABLISSEMENT"
-
-  return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-=======
   const info = LIBELLES_STATUT_PARTENARIAT[partenariat.statut];
   const estBrouillon = partenariat.statut === 'BROUILLON';
   const peutModifier = estPresidence || (role === 'ETABLISSEMENT' && estBrouillon);
@@ -106,7 +79,6 @@ export function PartenariatDetailPage() {
   return (
     <div>
       <div className="mb-[26px] flex flex-wrap items-start justify-between gap-5">
->>>>>>> Stashed changes
         <div>
           <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
             <h1 className="text-[24px] font-bold">{partenariat.intitule}</h1>
@@ -116,56 +88,6 @@ export function PartenariatDetailPage() {
             {LIBELLES_DOMAINE_PARTENARIAT[partenariat.domaine]}
           </p>
         </div>
-<<<<<<< Updated upstream
-        <div className="flex gap-2">
-          {modifiable && (
-            <button
-              onClick={() => setModificationOuverte(true)}
-              className="text-sm text-primary underline"
-            >
-              Modifier
-            </button>
-          )}
-          {/* Section 5 : uniquement l'Etablissement peut soumettre, uniquement en BROUILLON */}
-          {modifiable && <BoutonSoumettre partenariatId={partenariat.id} />}
-        </div>
-      </div>
-
-      {partenariat.objet && (
-        <p className="mb-4 text-sm text-muted-foreground">{partenariat.objet}</p>
-      )}
-
-      <div className="grid grid-cols-2 gap-6">
-        {partenariat.actions_realisees && (
-          <div>
-            <h3 className="font-heading text-sm font-semibold">Actions realisees</h3>
-            <p className="text-sm text-muted-foreground">{partenariat.actions_realisees}</p>
-          </div>
-        )}
-        {partenariat.actions_en_cours && (
-          <div>
-            <h3 className="font-heading text-sm font-semibold">Actions en cours</h3>
-            <p className="text-sm text-muted-foreground">{partenariat.actions_en_cours}</p>
-          </div>
-        )}
-      </div>
-
-      <Dialog open={modificationOuverte} onOpenChange={setModificationOuverte}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Modifier le partenariat</DialogTitle>
-          </DialogHeader>
-          <PartenariatForm
-            partenariat={partenariat}
-            onSucces={() => {
-              setModificationOuverte(false)
-              toast.success("Partenariat mis a jour")
-            }}
-            onAnnuler={() => setModificationOuverte(false)}
-          />
-        </DialogContent>
-      </Dialog>
-=======
 
         <div className="flex items-center gap-2.5">
           {peutSoumettre ? <BoutonSoumettre partenariatId={partenariat.id} intitule={partenariat.intitule} /> : null}
@@ -211,7 +133,6 @@ export function PartenariatDetailPage() {
           enCours={enCoursArchivage}
         />
       ) : null}
->>>>>>> Stashed changes
     </div>
   );
 }

@@ -1,21 +1,17 @@
 // src/lib/api-client.ts
-import axios, { type AxiosError } from "axios"
-import type { ReponseApi } from "@/types/api"
 
-// Le backend utilise un schema Bearer token (pas de cookie httpOnly) :
-// le token est garde en memoire ici et injecte manuellement sur chaque
-// requete via l'intercepteur de requete ci-dessous.
-let accessToken: string | null = null
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import type { ReponseApi } from '@/types/api';
+import { tokenStorage } from './token-storage';
 
-export function definirAccessToken(token: string | null) {
-  accessToken = token
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+let accessToken: string | null = null;
+
+export function definirAccessToken(token: string | null): void {
+  accessToken = token;
 }
 
-<<<<<<< Updated upstream
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-})
-=======
 export function obtenirAccessToken(): string | null {
   return accessToken;
 }
@@ -30,53 +26,86 @@ interface RafraichissementReponse {
 }
 
 const apiClient = axios.create({ baseURL: API_BASE_URL });
->>>>>>> Stashed changes
 
 apiClient.interceptors.request.use((config) => {
   if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
-<<<<<<< Updated upstream
-  return config
-})
-=======
   return config;
 });
 
-// Un seul refresh à la fois, même si plusieurs requêtes échouent en parallèle
+// Un seul rafraîchissement à la fois, même si plusieurs requêtes échouent en parallèle
 let refreshPromise: Promise<string> | null = null;
 
 async function rafraichirToken(refreshToken: string): Promise<string> {
-  const reponse = await axios.post<ReponseApi<RafraichissementReponse>>(
+  const reponse = await axios.post<ReponseApi<RafraichissementReponse | null>>(
     `${API_BASE_URL}/auth/refresh`,
     { refresh_token: refreshToken },
   );
-  const { access_token, refresh_token } = reponse.data.data;
-  tokenStorage.setRefreshToken(refresh_token);
-  return access_token;
+
+  const contenu = reponse.data.data;
+  if (!contenu) {
+    throw new Error('Réponse de rafraîchissement invalide.');
+  }
+
+  tokenStorage.setRefreshToken(contenu.refresh_token);
+  return contenu.access_token;
 }
->>>>>>> Stashed changes
 
 apiClient.interceptors.response.use(
   (reponse) => {
-    const enveloppe = reponse.data as ReponseApi<unknown>
-    if (enveloppe.status === "error") {
-      return Promise.reject(new Error(enveloppe.message))
+    const enveloppe = reponse.data as ReponseApi<unknown>;
+    if (enveloppe.status === 'error') {
+      return Promise.reject(new Error(enveloppe.message));
     }
-    return { ...reponse, data: enveloppe.data }
+    return { ...reponse, data: enveloppe.data };
   },
-  (erreur: AxiosError<ReponseApi<unknown>>) => {
-    const estVerificationSession = erreur.config?.url?.includes("/auth/me")
-    const estDejaSurConnexion = window.location.pathname === "/connexion"
+  async (erreur: AxiosError<ReponseApi<unknown>>) => {
+    const requeteOriginale = erreur.config as RequeteAvecRetry | undefined;
 
-    if (erreur.response?.status === 401 && !estVerificationSession && !estDejaSurConnexion) {
-      definirAccessToken(null)
-      window.location.assign("/connexion")
+    if (erreur.response?.status === 401 && requeteOriginale && !requeteOriginale._retry) {
+      const refreshToken = tokenStorage.getRefreshToken();
+      const estRequeteRefresh = requeteOriginale.url?.includes('/auth/refresh');
+
+      if (refreshToken && !estRequeteRefresh) {
+        requeteOriginale._retry = true;
+
+        if (!refreshPromise) {
+          refreshPromise = rafraichirToken(refreshToken)
+            .then((nouveauToken) => {
+              definirAccessToken(nouveauToken);
+              return nouveauToken;
+            })
+            .catch((erreurRefresh) => {
+              tokenStorage.clearRefreshToken();
+              definirAccessToken(null);
+              window.location.assign('/connexion');
+              throw erreurRefresh;
+            })
+            .finally(() => {
+              refreshPromise = null;
+            });
+        }
+
+        try {
+          const nouveauToken = await refreshPromise;
+          requeteOriginale.headers.set('Authorization', `Bearer ${nouveauToken}`);
+          return apiClient(requeteOriginale);
+        } catch {
+          return Promise.reject(new Error('Session expirée. Veuillez vous reconnecter.'));
+        }
+      }
+
+      definirAccessToken(null);
+      tokenStorage.clearRefreshToken();
+      if (window.location.pathname !== '/connexion') {
+        window.location.assign('/connexion');
+      }
     }
 
-    const message = erreur.response?.data?.message ?? erreur.message
-    return Promise.reject(new Error(message))
-  }
-)
+    const message = erreur.response?.data?.message ?? 'Une erreur réseau est survenue. Vérifiez votre connexion.';
+    return Promise.reject(new Error(message));
+  },
+);
 
-export default apiClient
+export default apiClient;

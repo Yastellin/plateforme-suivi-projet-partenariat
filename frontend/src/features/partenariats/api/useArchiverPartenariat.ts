@@ -9,22 +9,11 @@ async function archiverPartenariat(id: string): Promise<Partenariat> {
   return reponse.data;
 }
 
-<<<<<<< Updated upstream
-export function useArchiverPartenariat(id: string) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async () => {
-      const reponse = await apiClient.post(`/partenariats/${id}/archiver`)
-      return reponse.data
-    },
-=======
 export function useArchiverPartenariat() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: archiverPartenariat,
->>>>>>> Stashed changes
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['partenariats'] });
     },
