@@ -1,66 +1,27 @@
 // src/components/shared/StatusBadge.tsx
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 
-// Table de mapping unique des statuts metier (section 4.1 du prompt) :
-// aucune couleur de statut codee en dur ailleurs dans l'application.
-const TABLEAU_STATUTS = {
-  // Brouillon
-  BROUILLON: "brouillon",
-  // En attente / en preparation
-  EN_ATTENTE: "attente",
-  EN_ATTENTE_SIGNATURE: "attente",
-  // En cours / active / signee / termine
-  EN_COURS: "actif",
-  ACTIVE: "actif",
-  SIGNEE: "actif",
-  ACTIF: "actif",
-  TERMINE: "actif",
-  // Expiree / en retard / suspendu
-  EXPIRE: "expire",
-  EXPIREE: "expire",
-  SUSPENDU: "expire",
-  SUSPENDUE: "expire",
-  EN_RETARD: "expire",
-} as const
-
-export type StatutMetier = keyof typeof TABLEAU_STATUTS
-
-type NiveauStatut = "brouillon" | "attente" | "actif" | "expire"
-
-const LIBELLES: Record<string, string> = {
-  BROUILLON: "Brouillon",
-  EN_ATTENTE: "En attente",
-  EN_ATTENTE_SIGNATURE: "En attente de signature",
-  EN_COURS: "En cours",
-  ACTIVE: "Active",
-  SIGNEE: "Signee",
-  ACTIF: "Actif",
-  TERMINE: "Termine",
-  EXPIRE: "Expire",
-  EXPIREE: "Expiree",
-  SUSPENDU: "Suspendu",
-  SUSPENDUE: "Suspendue",
-}
-
-const CLASSES_NIVEAU: Record<NiveauStatut, string> = {
-  brouillon: "bg-statut-brouillon-bg text-statut-brouillon-fg border-transparent",
-  attente: "bg-statut-attente-bg text-statut-attente-fg border-transparent",
-  actif: "bg-statut-actif-bg text-statut-actif-fg border-transparent",
-  expire: "bg-statut-expire-bg text-statut-expire-fg border-transparent",
-}
+import type { ToneStatut } from '@/lib/status-mappings';
 
 interface StatusBadgeProps {
-  statut: string
-  className?: string
+  libelle: string;
+  tonalite: ToneStatut;
 }
 
-export function StatusBadge({ statut, className }: StatusBadgeProps) {
-  const niveau = TABLEAU_STATUTS[statut as StatutMetier] ?? "actif"
+const CLASSES_TONALITE: Record<ToneStatut, string> = {
+  brouillon: 'bg-[var(--status-brouillon-bg)] text-[var(--status-brouillon-fg)]',
+  attente: 'bg-[var(--status-attente-bg)] text-[var(--status-attente-fg)]',
+  actif: 'bg-[var(--status-actif-bg)] text-[var(--status-actif-fg)]',
+  expire: 'bg-[var(--status-expire-bg)] text-[var(--status-expire-fg)]',
+  archive: 'bg-[var(--status-archive-bg)] text-[var(--status-archive-fg)]',
+};
 
+export function StatusBadge({ libelle, tonalite }: StatusBadgeProps) {
   return (
-    <Badge className={cn(CLASSES_NIVEAU[niveau], className)}>
-      {LIBELLES[statut] ?? statut}
-    </Badge>
-  )
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-sm)] px-2.5 py-[3px] text-xs font-semibold ${CLASSES_TONALITE[tonalite]}`}
+    >
+      <span className="h-[5px] w-[5px] rounded-full bg-current" />
+      {libelle}
+    </span>
+  );
 }
