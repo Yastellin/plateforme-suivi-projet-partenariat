@@ -1,53 +1,82 @@
 // src/features/partenaires/api/useContacts.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
-import type { Contact } from "@/types/api"
 
-export interface PayloadContact {
-  nom: string
-  fonction?: string
-  email?: string
-  telephone?: string
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import { videsEnNull } from '@/lib/payload';
+import { normaliserTelephone } from '@/lib/validators/phone.schema';
+import type { Contact } from '@/types/api';
+import type { ContactFormValues } from '@/lib/validators/partenaire.schema';
+
+function preparerPayloadContact(valeurs: ContactFormValues): Record<string, unknown> {
+  const { telephone, ...reste } = valeurs;
+  return {
+    ...videsEnNull(reste),
+    telephone: telephone ? normaliserTelephone(telephone) : null,
+  };
 }
 
-// Un contact est rattache a un seul partenaire (RG28).
-export function useCreerContact(partenaireId: string) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (payload: PayloadContact) => {
-      const reponse = await apiClient.post<Contact>(`/partenaires/${partenaireId}/contacts`, payload)
-      return reponse.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["partenaires", partenaireId] })
-    },
-  })
+interface VariablesCreerContact {
+  partenaireId: string;
+  valeurs: ContactFormValues;
 }
 
-export function useModifierContact(partenaireId: string) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: PayloadContact }) => {
-      const reponse = await apiClient.patch<Contact>(`/contacts/${id}`, payload)
-      return reponse.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["partenaires", partenaireId] })
-    },
-  })
+async function creerContact({ partenaireId, valeurs }: VariablesCreerContact): Promise<Contact> {
+  const reponse = await apiClient.post<Contact>(
+    `/partenaires/${partenaireId}/contacts`,
+    preparerPayloadContact(valeurs),
+  );
+  return reponse.data;
 }
 
-export function useSupprimerContact(partenaireId: string) {
-  const queryClient = useQueryClient()
+export function useCreateContact() {
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await apiClient.delete(`/contacts/${id}`)
+    mutationFn: creerContact,
+    onSuccess: (_contact, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['partenaires', variables.partenaireId] });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["partenaires", partenaireId] })
+  });
+}
+
+interface VariablesModifierContact {
+  id: string;
+  partenaireId: string;
+  valeurs: ContactFormValues;
+}
+
+async function modifierContact({ id, valeurs }: VariablesModifierContact): Promise<Contact> {
+  const reponse = await apiClient.patch<Contact>(`/contacts/${id}`, preparerPayloadContact(valeurs));
+  return reponse.data;
+}
+
+export function useUpdateContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: modifierContact,
+    onSuccess: (_contact, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['partenaires', variables.partenaireId] });
     },
-  })
+  });
+}
+
+interface VariablesSupprimerContact {
+  id: string;
+  partenaireId: string;
+}
+
+async function supprimerContact({ id }: VariablesSupprimerContact): Promise<void> {
+  await apiClient.delete(`/contacts/${id}`);
+}
+
+export function useDeleteContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: supprimerContact,
+    onSuccess: (_reponse, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['partenaires', variables.partenaireId] });
+    },
+  });
 }
