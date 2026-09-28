@@ -1,84 +1,53 @@
 ﻿// src/features/tableau-de-bord/pages/TableauDeBordDecideur.tsx
-import { AlertTriangle, Clock, CheckCircle } from "lucide-react"
-import { CompteursGlobaux } from "@/features/tableau-de-bord/components/CompteursGlobaux"
-import { GraphiqueStatuts } from "@/features/tableau-de-bord/components/GraphiqueStatuts"
-import { GraphiqueComparatif } from "@/features/tableau-de-bord/components/GraphiqueComparatif"
-import { EcheancierListe } from "@/features/tableau-de-bord/components/EcheancierListe"
-import { StatusStrip } from "@/components/shared/StatusStrip"
-import { useTableauDeBord } from "@/features/tableau-de-bord/api/useTableauDeBord"
-import { Skeleton } from "@/components/ui/skeleton"
+<<<<<<< Updated upstream
+import { useAuth } from "@/hooks/useAuth"
+import { Button } from "@/components/ui/button"
 
-// Tableau de bord en lecture seule stricte (RG32) pour le role Decideur.
-// Aucune action de gestion : pas de boutons creer/modifier/supprimer.
-// Offre une vue synthetique globale pour l'aide a la decision.
+// Tableau de bord en lecture seule stricte (RG32) : aucune action de gestion.
 export function TableauDeBordDecideur() {
-  const { data: compteurs, isLoading } = useTableauDeBord()
-
-  if (isLoading || !compteurs) {
-    return (
-      <div className="flex flex-col gap-6 p-6">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-md" />
-          ))}
-        </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Skeleton className="h-64 rounded-md" />
-          <Skeleton className="h-64 rounded-md" />
-        </div>
-        <Skeleton className="h-48 rounded-md" />
-      </div>
-    )
-  }
+  const { utilisateur, deconnecter } = useAuth()
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-4 p-6">
+      <h1 className="font-heading text-xl font-semibold">Bienvenue, {utilisateur?.email}</h1>
+      <p className="text-sm text-muted-foreground">
+        Votre tableau de bord sera complete dans une prochaine etape.
+      </p>
       <div>
-        <h1 className="font-heading text-2xl font-semibold text-foreground">
-          Tableau de bord — Synthèse
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Vue consolidée des projets, partenariats et conventions.
-        </p>
+        <Button onClick={deconnecter} variant="outline">
+          Se deconnecter
+        </Button>
       </div>
-
-      <CompteursGlobaux compteurs={compteurs} />
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <GraphiqueStatuts compteurs={compteurs} />
-        <GraphiqueComparatif />
-      </div>
-
-      <div>
-        <h2 className="mb-3 font-heading text-sm font-semibold">
-          Échéances à venir
-        </h2>
-        <EcheancierListe />
-      </div>
-
-      <StatusStrip
-        items={[
-          {
-            icon: AlertTriangle,
-            titre: "Conventions bientôt expirées",
-            description: `${compteurs.conventions_bientot_expirees} convention${compteurs.conventions_bientot_expirees > 1 ? "s" : ""} nécessite une attention`,
-            variante: "alerte",
-          },
-          {
-            icon: Clock,
-            titre: "En attente de signature",
-            description: `${compteurs.projets_par_statut["EN_ATTENTE"] ?? 0} projet${(compteurs.projets_par_statut["EN_ATTENTE"] ?? 0) > 1 ? "s" : ""} en préparation`,
-            variante: "attente",
-          },
-          {
-            icon: CheckCircle,
-            titre: "Conventions actives",
-            description: `${compteurs.conventions_actives} convention${compteurs.conventions_actives > 1 ? "s" : ""} en cours de validité`,
-            variante: "succes",
-          },
-        ]}
-      />
     </div>
   )
+=======
+
+import { useTableauDeBord } from '../api/useTableauDeBord';
+import { useComparatifEtablissements } from '../api/useComparatifEtablissements';
+import { CompteursGlobaux } from '../components/CompteursGlobaux';
+import { GraphiqueComparatif } from '../components/GraphiqueComparatif';
+
+export function TableauDeBordDecideur() {
+  const { data: compteurs, isLoading: chargementCompteurs } = useTableauDeBord();
+  const { data: comparatif, isLoading: chargementComparatif } = useComparatifEtablissements();
+
+  return (
+    <div>
+      <div className="mb-[26px]">
+        <h1 className="text-[24px] font-bold">Tableau de bord</h1>
+      </div>
+
+      <CompteursGlobaux compteurs={compteurs} chargement={chargementCompteurs} />
+
+      <section className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
+        <div className="border-b border-[var(--color-border)] px-5 py-4">
+          <h3 className="text-[15px] font-bold">Comparatif par établissement</h3>
+        </div>
+        <div className="p-[18px_20px]">
+          <GraphiqueComparatif donnees={comparatif} chargement={chargementComparatif} />
+        </div>
+      </section>
+    </div>
+  );
+>>>>>>> Stashed changes
 }

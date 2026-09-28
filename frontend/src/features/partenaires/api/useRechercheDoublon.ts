@@ -1,19 +1,20 @@
 // src/features/partenaires/api/useRechercheDoublon.ts
-import { useQuery } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
 
-// Recherche d'un partenaire existant avant toute creation afin d'eviter
-// les doublons (cahier des charges 5.4). Renvoie le partenaire s'il existe.
-export function useRechercheDoublon(nom: string | undefined) {
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import type { Partenaire } from '@/types/api';
+
+async function rechercherDoublon(nom: string): Promise<Partenaire[]> {
+  const reponse = await apiClient.get<Partenaire[]>('/partenaires/recherche-doublon', {
+    params: { nom },
+  });
+  return reponse.data;
+}
+
+export function useRechercheDoublon(nom: string) {
   return useQuery({
-    queryKey: ["partenaires", "doublon", nom],
-    queryFn: async () => {
-      const reponse = await apiClient.get<Partenaire | null>("/partenaires/recherche-doublon", {
-        params: { nom },
-      })
-      return reponse.data
-    },
-    enabled: !!nom && nom.trim().length >= 2,
-  })
+    queryKey: ['partenaires', 'recherche-doublon', nom],
+    queryFn: () => rechercherDoublon(nom),
+    enabled: nom.trim().length >= 3,
+  });
 }

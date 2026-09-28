@@ -1,36 +1,51 @@
 // src/components/forms/inputs/PhoneInputSanitized.tsx
-import { forwardRef } from "react"
-import { TextInputSanitized } from "./TextInputSanitized"
 
-interface PhoneInputSanitizedProps extends Omit<React.ComponentProps<typeof TextInputSanitized>, "onChange"> {
-  onChange?: (valeur: string) => void
+import { forwardRef, type InputHTMLAttributes } from 'react';
+import { Phone } from 'lucide-react';
+import { FloatingLabelInput } from './FloatingLabelInput';
+
+interface PhoneInputSanitizedProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  label?: string;
+  aide?: string;
+  erreur?: string;
 }
 
-// N'autorise que chiffres, +, espaces, tirets et parentheses ; tout
-// autre caractere est supprime a la frappe.
-const AUTORISES = /[^0-9+\s()-]/g
-
 export const PhoneInputSanitized = forwardRef<HTMLInputElement, PhoneInputSanitizedProps>(
-  ({ onChange, maxLength = 20, ...props }, ref) => {
+  ({ label = 'Téléphone', aide, erreur, onChange, ...props }, ref) => {
+    function gererSaisie(e: React.ChangeEvent<HTMLInputElement>) {
+      let valeur = e.target.value;
+
+      valeur = valeur.replace(/[^\d+\s]/g, '');
+
+      if (valeur.indexOf('+') > 0) {
+        valeur = valeur.replace(/\+/g, '');
+      }
+
+      const parties = valeur.split('+');
+      if (parties.length > 2) {
+        valeur = '+' + parties.slice(1).join('');
+      }
+
+      e.target.value = valeur;
+      onChange?.(e);
+    }
+
     return (
-      <TextInputSanitized
+      <FloatingLabelInput
         ref={ref}
         type="tel"
-        maxLength={maxLength}
+        inputMode="tel"
         autoComplete="tel"
-        placeholder="+261 34 00 000 00"
-        onChange={(evenement) => {
-          const brut = evenement.target.value
-          const propre = brut.replace(AUTORISES, "")
-          if (propre !== brut) {
-            evenement.target.value = propre
-          }
-          onChange?.(propre)
-        }}
+        label={label}
+        aide={aide ?? 'Format : +261 32 12 345 67 ou 032 12 345 67'}
+        erreur={erreur}
+        icone={<Phone />}
+        placeholder="032 12 345 67"
+        onChange={gererSaisie}
         {...props}
       />
-    )
-  }
-)
+    );
+  },
+);
 
-PhoneInputSanitized.displayName = "PhoneInputSanitized"
+PhoneInputSanitized.displayName = 'PhoneInputSanitized';

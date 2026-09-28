@@ -14,6 +14,11 @@ export interface AuthContextValue {
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
+interface RafraichissementReponse {
+  access_token: string;
+  refresh_token: string;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
   const [estCharge, setEstCharge] = useState(true);
@@ -29,10 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const reponseRefresh = await apiClient.post<{ access_token: string }>('/auth/refresh', {
+        const reponseRefresh = await apiClient.post<RafraichissementReponse>('/auth/refresh', {
           refresh_token: refreshToken,
         });
         definirAccessToken(reponseRefresh.data.access_token);
+        tokenStorage.setRefreshToken(reponseRefresh.data.refresh_token);
 
         const reponseMe = await apiClient.get<Utilisateur>('/auth/me');
         if (!annule) {

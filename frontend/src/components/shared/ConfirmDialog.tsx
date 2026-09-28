@@ -1,5 +1,6 @@
 // src/components/shared/ConfirmDialog.tsx
-import { LoaderCircle } from "lucide-react"
+
+import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -7,60 +8,57 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dialog';
 
 interface ConfirmDialogProps {
-  ouvert?: boolean
-  open?: boolean
-  onOpenChange: (ouvert: boolean) => void
-  titre: string
-  description: string
-  libelleConfirmation?: string
-  variante?: "default" | "destructive"
-  destructif?: boolean
-  enCours?: boolean
-  onConfirmer?: () => void
-  onConfirm?: () => void
+  ouvert: boolean;
+  onFermer: () => void;
+  onConfirmer: () => void;
+  titre: string;
+  description: string;
+  libelleAction?: string;
+  libelleAnnulation?: string;
+  enCours?: boolean;
 }
 
-// Modal de confirmation obligatoire avant toute action critique
-// (archivage, soumission, publication, changement d'etape - section 8).
 export function ConfirmDialog({
   ouvert,
-  open,
-  onOpenChange,
+  onFermer,
+  onConfirmer,
   titre,
   description,
-  libelleConfirmation,
-  variante,
-  destructif,
-  enCours,
-  onConfirmer,
-  onConfirm,
+  libelleAction = 'Confirmer',
+  libelleAnnulation = 'Annuler',
+  enCours = false,
 }: ConfirmDialogProps) {
-  const estOuvert = ouvert ?? open ?? false
-  const confirmationLabel = libelleConfirmation ?? "Confirmer"
-  const varianteFinale = destructif ? "destructive" : variante ?? "default"
-  const onValider = onConfirmer ?? onConfirm ?? (() => undefined)
-
   return (
-    <Dialog open={estOuvert} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open={ouvert} onOpenChange={(valeur) => !valeur && onFermer()}>
+      <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
           <DialogTitle>{titre}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={enCours}>
-            Annuler
-          </Button>
-          <Button variant={varianteFinale} onClick={onValider} disabled={enCours}>
-            {enCours && <LoaderCircle className="animate-spin" />}
-            {confirmationLabel}
-          </Button>
+          <button
+            type="button"
+            onClick={onFermer}
+            disabled={enCours}
+            className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold hover:bg-[var(--color-chrome-hover)] disabled:opacity-60"
+          >
+            {libelleAnnulation}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirmer}
+            disabled={enCours}
+            className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-60"
+          >
+            {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {libelleAction}
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,17 +1,18 @@
 // src/features/etablissements/api/useEtablissements.ts
-import { useQuery } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
-import type { Etablissement } from "@/types/api"
 
-export function useEtablissements(filtres?: { page?: number; limit?: number; recherche?: string }) {
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import type { Etablissement } from '@/types/api';
+
+async function recupererEtablissements(): Promise<Etablissement[]> {
+  const reponse = await apiClient.get<Etablissement[]>('/etablissements');
+  return reponse.data;
+}
+
+export function useEtablissements(actif: boolean = true) {
   return useQuery({
-    queryKey: ["etablissements", filtres],
-    queryFn: async () => {
-      const reponse = await apiClient.get<{ data: Etablissement[]; meta: { page: number; limit: number; total: number; totalPages: number } }>(
-        "/etablissements",
-        { params: filtres },
-      )
-      return reponse.data
-    },
-  })
+    queryKey: ['etablissements'],
+    queryFn: recupererEtablissements,
+    enabled: actif,
+  });
 }

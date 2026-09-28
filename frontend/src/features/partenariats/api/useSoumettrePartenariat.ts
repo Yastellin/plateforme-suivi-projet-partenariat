@@ -1,17 +1,21 @@
 ﻿// src/features/partenariats/api/useSoumettrePartenariat.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
 
-export function useSoumettrePartenariat(id: string) {
-  const queryClient = useQueryClient()
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import type { Partenariat } from '@/types/api';
+
+async function soumettrePartenariat(id: string): Promise<Partenariat> {
+  const reponse = await apiClient.post<Partenariat>(`/partenariats/${id}/soumettre`);
+  return reponse.data;
+}
+
+export function useSoumettrePartenariat() {
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      const reponse = await apiClient.post(`/partenariats/${id}/soumettre`)
-      return reponse.data
-    },
+    mutationFn: soumettrePartenariat,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["partenariats"] })
+      queryClient.invalidateQueries({ queryKey: ['partenariats'] });
     },
-  })
+  });
 }

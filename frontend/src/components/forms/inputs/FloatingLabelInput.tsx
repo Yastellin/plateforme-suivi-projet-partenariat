@@ -9,10 +9,11 @@ interface FloatingLabelInputProps extends InputHTMLAttributes<HTMLInputElement> 
   erreur?: string;
   icone?: ReactNode;
   suffixe?: ReactNode;
+  libelleRemonte?: boolean;
 }
 
 export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInputProps>(
-  ({ label, aide, erreur, icone, suffixe, className, id, ...props }, ref) => {
+  ({ label, aide, erreur, icone, suffixe, libelleRemonte = false, className, id, placeholder, ...props }, ref) => {
     const idGenere = useId();
     const inputId = id ?? idGenere;
 
@@ -28,10 +29,11 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
           <input
             ref={ref}
             id={inputId}
-            placeholder=" "
+            placeholder={placeholder ?? ' '}
             className={cn(
               'peer w-full rounded-[var(--radius-sm)] border bg-[var(--color-surface)] pb-2 pt-4 text-[13.5px]',
               'text-[var(--color-text-primary)] outline-none transition-[border-color,box-shadow]',
+              'placeholder:text-transparent focus:placeholder:text-[var(--color-text-secondary)]',
               'border-[var(--color-border)] focus:border-[var(--color-brand)]',
               'focus:shadow-[0_0_0_3px_rgba(54,125,86,0.16)]',
               icone ? 'pl-10' : 'pl-[13px]',
@@ -52,6 +54,7 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
               icone && 'left-10',
               'peer-focus:left-[11px] peer-focus:top-[-8px] peer-focus:text-[11px] peer-focus:font-semibold peer-focus:text-[var(--color-brand)]',
               'peer-[&:not(:placeholder-shown)]:left-[11px] peer-[&:not(:placeholder-shown)]:top-[-8px] peer-[&:not(:placeholder-shown)]:text-[11px] peer-[&:not(:placeholder-shown)]:font-semibold',
+              libelleRemonte && 'left-[11px] top-[-8px] text-[11px] font-semibold',
             )}
           >
             {label}
