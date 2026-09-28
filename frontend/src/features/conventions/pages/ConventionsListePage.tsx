@@ -95,8 +95,8 @@ export function ConventionsListePage() {
                   <h3 className="font-heading text-sm font-semibold truncate">
                     {convention.titre}
                   </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {convention.etablissement_nom || "Non rattaché"}
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {convention.reference}
                   </p>
                 </div>
               ))}

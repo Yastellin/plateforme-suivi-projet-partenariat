@@ -21,6 +21,7 @@ import { SelectionBailleurs } from "@/features/projets/components/SelectionBaill
 import { SelectionBeneficiaires } from "@/features/projets/components/SelectionBeneficiaires"
 import { SelectionSites } from "@/features/projets/components/SelectionSites"
 import { useCreateProjet } from "@/features/projets/api/useCreateProjet"
+import { useWizardDraft } from "@/components/forms/wizard/useWizardDraft"
 import { schemaProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
 import type { Projet } from "@/types/api"
 
@@ -82,6 +83,15 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const valeurs = watch()
   const derniereEtape = etapeActive === ETAPES.length - 1
 
+  // Sauvegarde auto brouillon toutes les 30s (section 8.2)
+  const { viderBrouillon } = useWizardDraft({
+    cle: "projet-wizard",
+    donnees: { ...valeurs, etapeActive },
+    onRestaurer: (d) => {
+      if (d.etapeActive !== undefined) setEtapeActive(d.etapeActive as number)
+    },
+  })
+
   const suivant = () => {
     if (derniereEtape) {
       handleSubmit(onSubmit)()
@@ -95,6 +105,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   function onSubmit(valeurs: ProjetFormValues) {
     creation.mutate(valeurs, {
       onSuccess: (projet) => {
+        viderBrouillon()
         toast.success("Projet cree avec succes !")
         onSucces(projet)
       },

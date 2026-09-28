@@ -1,1 +1,67 @@
 ﻿/* src/styles/globals.css */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./design-tokens-uf.css";
+
+@theme inline {
+  --color-background: var(--color-page-bg);
+  --color-foreground: var(--color-text-primary);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text-primary);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-text-primary);
+  --color-primary: var(--color-brand);
+  --color-primary-foreground: var(--color-brand-text);
+  --color-secondary: var(--color-chrome-hover);
+  --color-secondary-foreground: var(--color-text-primary);
+  --color-muted: var(--color-chrome-hover);
+  --color-muted-foreground: var(--color-text-secondary);
+  --color-accent: var(--color-active-zone);
+  --color-accent-foreground: var(--color-brand-deep);
+  --color-destructive: #A82A2A;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: var(--color-border);
+  --color-input: var(--color-border);
+  --color-ring: var(--color-brand);
+
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+  --font-mono: var(--font-mono);
+
+  --radius-lg: var(--radius);
+  --radius-md: var(--radius-sm);
+  --radius-sm: 6px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background: var(--color-page-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+}
+
+.woven-accent {
+  height: 5px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-brand-moment) 0px, var(--color-brand-moment) 9px,
+    var(--color-brand) 9px, var(--color-brand) 18px
+  );
+  border-radius: var(--radius) var(--radius) 0 0;
+}/* src/styles/globals.css */
