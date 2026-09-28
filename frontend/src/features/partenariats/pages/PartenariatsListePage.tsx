@@ -124,91 +124,10 @@ export function PartenariatsListePage() {
                 </tbody>
               </table>
             </div>
-<<<<<<< Updated upstream
-          ) : data && data.data.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {data.data.map((partenariat) => (
-                <div
-                  key={partenariat.id}
-                  className="rounded-md border border-border p-4 hover:bg-sidebar-accent transition-colors"
-                >
-                  <h3 className="font-heading text-sm font-semibold truncate">
-                    {partenariat.intitule}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {partenariat.domaine}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon={recherche || statut.length > 0 || type.length > 0 ? Plus : UserPlus}
-              titre={
-                recherche || statut.length > 0 || type.length > 0
-                  ? "Aucun partenariat ne correspond aux filtres"
-                  : "Aucun partenariat pour le moment"
-              }
-              message={
-                recherche || statut.length > 0 || type.length > 0
-                  ? "Essayez de modifier la recherche ou de reinitialiser les filtres."
-                  : "Enregistrez votre premier partenariat avant de le créer."
-              }
-              action={
-                !recherche && statut.length === 0 && type.length === 0 ? (
-                  <Button onClick={() => setDialogueOuvert(true)}>
-                    <Plus />
-                    Nouveau partenariat
-                  </Button>
-                ) : undefined
-              }
-            />
-          )}
-
-          {data && data.meta.totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-end gap-2 text-sm text-muted-foreground">
-              <Button variant="outline" size="icon-sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                <ChevronLeft />
-              </Button>
-              <span>
-                Page {data.meta.page} sur {data.meta.totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                disabled={page >= data.meta.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                <ChevronRight />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <Dialog open={dialogueOuvert} onOpenChange={setDialogueOuvert}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Nouveau partenariat</DialogTitle>
-            <DialogDescription>
-              Remplissez le formulaire ci-dessous pour créer un nouveau partenariat.
-            </DialogDescription>
-          </DialogHeader>
-          <PartenariatForm
-            onSucces={() => {
-              setDialogueOuvert(false)
-              toast.success("Partenariat créé")
-            }}
-            onAnnuler={() => setDialogueOuvert(false)}
-          />
-        </DialogContent>
-      </Dialog>
-=======
             <TablePagination meta={data.meta} onChangerPage={setPage} />
           </>
         )}
       </section>
->>>>>>> Stashed changes
     </div>
   );
 }

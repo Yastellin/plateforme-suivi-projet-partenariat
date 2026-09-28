@@ -1,27 +1,5 @@
 // src/features/partenariats/components/PartenariatWizard.tsx
 
-<<<<<<< Updated upstream
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { WizardProgressBar } from "@/components/forms/wizard/WizardProgressBar"
-import { SelectionEtablissements } from "@/features/partenariats/components/SelectionEtablissements"
-import { SelectionPartenaires } from "@/features/partenariats/components/SelectionPartenaires"
-import { useCreatePartenariat } from "@/features/partenariats/api/useCreatePartenariat"
-import {
-  schemaPartenariat,
-  type PartenariatFormValues,
-} from "@/lib/validators/partenariat.schema"
-import type { Partenariat } from "@/types/api"
-=======
 import { useRef, useState, type ReactNode } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,7 +17,6 @@ import { useCreatePartenariat } from '../api/useCreatePartenariat';
 import { PartenariatChampsGeneraux } from './PartenariatChampsGeneraux';
 import { SelectionEtablissements } from './SelectionEtablissements';
 import { SelectionPartenaires } from './SelectionPartenaires';
->>>>>>> Stashed changes
 
 type CleEtape = 'partenaires' | 'etablissements' | 'informations' | 'recapitulatif';
 
@@ -146,13 +123,6 @@ export function PartenariatWizard() {
   const valeurs = watch();
   const { mutate: creer, isPending } = useCreatePartenariat();
 
-<<<<<<< Updated upstream
-  const suivant = () => {
-    if (derniereEtape) {
-      handleSubmit(onSubmit)()
-    } else {
-      setEtapeActive((e) => e + 1)
-=======
   const { effacerBrouillon } = useWizardDraft<BrouillonWizard>({
     cle: `uf_brouillon_partenariat_${utilisateur?.id ?? 'anonyme'}`,
     valeurs: { formulaire: valeurs, libelles, etape: index },
@@ -182,22 +152,16 @@ export function PartenariatWizard() {
     const valide = await trigger(etape.champs);
     if (valide) {
       setIndex((courant) => courant + 1);
->>>>>>> Stashed changes
     }
   }
 
   function creerPartenariat(valeursFormulaire: PartenariatFormValues) {
     creer(valeursFormulaire, {
       onSuccess: (partenariat) => {
-<<<<<<< Updated upstream
-        toast.success("Partenariat cree avec succes !")
-        onSucces(partenariat)
-=======
         effacerBrouillon();
         termineRef.current = true;
         toast.success('Partenariat créé en brouillon');
         navigate(`${cheminBase}/partenaires-partenariats/partenariats/${partenariat.id}`);
->>>>>>> Stashed changes
       },
       onError: (erreur) => toast.error(erreur.message),
     });
