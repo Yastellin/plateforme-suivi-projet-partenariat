@@ -1,20 +1,37 @@
 // src/features/partenaires/api/useUpdatePartenaire.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
-import type { Partenaire } from "@/types/api"
-import type { PayloadPartenaire } from "./useCreatePartenaire"
 
-export function useUpdatePartenaire(id: string) {
-  const queryClient = useQueryClient()
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import { videsEnNull } from '@/lib/payload';
+import { normaliserTelephone } from '@/lib/validators/phone.schema';
+import type { Partenaire } from '@/types/api';
+import type { PartenaireFormValues } from '@/lib/validators/partenaire.schema';
+
+interface VariablesUpdatePartenaire {
+  id: string;
+  valeurs: PartenaireFormValues;
+}
+
+async function mettreAJourPartenaire({ id, valeurs }: VariablesUpdatePartenaire): Promise<Partenaire> {
+  const { telephone, etablissement_id: _etablissementId, ...reste } = valeurs;
+
+  const payload = {
+    ...videsEnNull(reste),
+    telephone: telephone ? normaliserTelephone(telephone) : null,
+  };
+
+  const reponse = await apiClient.patch<Partenaire>(`/partenaires/${id}`, payload);
+  return reponse.data;
+}
+
+export function useUpdatePartenaire() {
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: Partial<PayloadPartenaire>) => {
-      const reponse = await apiClient.patch<Partenaire>(`/partenaires/${id}`, payload)
-      return reponse.data
-    },
+    mutationFn: mettreAJourPartenaire,
     onSuccess: (partenaire) => {
-      queryClient.setQueryData(["partenaires", id], partenaire)
-      queryClient.invalidateQueries({ queryKey: ["partenaires"] })
+      queryClient.invalidateQueries({ queryKey: ['partenaires'] });
+      queryClient.setQueryData(['partenaires', partenaire.id], partenaire);
     },
-  })
+  });
 }

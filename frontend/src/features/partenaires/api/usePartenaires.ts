@@ -1,29 +1,30 @@
 // src/features/partenaires/api/usePartenaires.ts
-import { useQuery, keepPreviousData } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
-import type { PageServeur, Partenaire } from "@/types/api"
 
-export interface FiltresPartenaires {
-  page?: number
-  limit?: number
-  nom?: string
-  type?: string
-  pays?: string
-  statut?: string
-  visibilite?: string
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import type { PageServeur, Partenaire } from '@/types/api';
+
+interface ParametresPartenaires {
+  page: number;
+  limit: number;
+  recherche?: string;
 }
 
-// Liste paginee cote serveur : une seule requete pour toute la page
-// (section 2 : hooks partages pour eviter les rafales d'appels API).
-export function usePartenaires(filtres: FiltresPartenaires) {
-  return useQuery({
-    queryKey: ["partenaires", filtres],
-    queryFn: async () => {
-      const reponse = await apiClient.get<PageServeur<Partenaire>>("/partenaires", {
-        params: filtres,
-      })
-      return reponse.data
+async function recupererPartenaires(parametres: ParametresPartenaires): Promise<PageServeur<Partenaire>> {
+  const reponse = await apiClient.get<PageServeur<Partenaire>>('/partenaires', {
+    params: {
+      page: parametres.page,
+      limit: parametres.limit,
+      nom: parametres.recherche || undefined,
     },
-    placeholderData: keepPreviousData,
-  })
+  });
+  return reponse.data;
+}
+
+export function usePartenaires(parametres: ParametresPartenaires) {
+  return useQuery({
+    queryKey: ['partenaires', parametres],
+    queryFn: () => recupererPartenaires(parametres),
+    placeholderData: (precedent) => precedent,
+  });
 }
