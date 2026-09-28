@@ -11,16 +11,51 @@ export function definirAccessToken(token: string | null) {
   accessToken = token
 }
 
+<<<<<<< Updated upstream
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 })
+=======
+export function obtenirAccessToken(): string | null {
+  return accessToken;
+}
+
+interface RequeteAvecRetry extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+interface RafraichissementReponse {
+  access_token: string;
+  refresh_token: string;
+}
+
+const apiClient = axios.create({ baseURL: API_BASE_URL });
+>>>>>>> Stashed changes
 
 apiClient.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`
   }
+<<<<<<< Updated upstream
   return config
 })
+=======
+  return config;
+});
+
+// Un seul refresh à la fois, même si plusieurs requêtes échouent en parallèle
+let refreshPromise: Promise<string> | null = null;
+
+async function rafraichirToken(refreshToken: string): Promise<string> {
+  const reponse = await axios.post<ReponseApi<RafraichissementReponse>>(
+    `${API_BASE_URL}/auth/refresh`,
+    { refresh_token: refreshToken },
+  );
+  const { access_token, refresh_token } = reponse.data.data;
+  tokenStorage.setRefreshToken(refresh_token);
+  return access_token;
+}
+>>>>>>> Stashed changes
 
 apiClient.interceptors.response.use(
   (reponse) => {

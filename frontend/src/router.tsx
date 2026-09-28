@@ -1,4 +1,9 @@
 ﻿// src/router.tsx
+<<<<<<< Updated upstream
+=======
+
+import { lazy, Suspense, useState, useEffect } from "react"
+>>>>>>> Stashed changes
 import { createBrowserRouter, Navigate, RouterProvider, Outlet } from "react-router-dom"
 import type { ReactNode } from "react"
 
@@ -12,6 +17,7 @@ import { PartenairesListePage } from "@/features/partenaires/pages/PartenairesLi
 import { PartenaireDetailPage } from "@/features/partenaires/pages/PartenaireDetailPage"
 import { ForbiddenPage } from "@/components/shared/ForbiddenPage"
 import { NotFoundPage } from "@/components/shared/NotFoundPage"
+<<<<<<< Updated upstream
 import { SidebarInterne } from "@/components/layout/SidebarInterne"
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
@@ -33,6 +39,66 @@ import { PartenairesPubliquePage } from "@/features/espace-public/pages/Partenai
 import { ProjetsPartenariatsPubliquePage } from "@/features/espace-public/pages/ProjetsPartenariatsPubliquePage"
 import { PublicationDetailPage } from "@/features/espace-public/pages/PublicationDetailPage"
 import { ContactPage } from "@/features/espace-public/pages/ContactPage"
+=======
+import { PageTransition } from "@/components/shared/PageTransition"
+import { Skeleton } from "@/components/ui/skeleton"
+
+const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage").then((m) => ({ default: m.LoginPage })))
+const TableauDeBordPresidence = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordPresidence").then((m) => ({ default: m.TableauDeBordPresidence })))
+const TableauDeBordEtablissement = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordEtablissement").then((m) => ({ default: m.TableauDeBordEtablissement })))
+const TableauDeBordDecideur = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordDecideur").then((m) => ({ default: m.TableauDeBordDecideur })))
+const PartenairesListePage = lazy(() => import("@/features/partenaires/pages/PartenairesListePage").then((m) => ({ default: m.PartenairesListePage })))
+const PartenaireCreatePage = lazy(() => import("@/features/partenaires/pages/PartenaireCreatePage").then((m) => ({ default: m.PartenaireCreatePage })))
+const PartenaireDetailPage = lazy(() => import("@/features/partenaires/pages/PartenaireDetailPage").then((m) => ({ default: m.PartenaireDetailPage })))
+const ConventionsListePage = lazy(() => import("@/features/conventions/pages/ConventionsListePage").then((m) => ({ default: m.ConventionsListePage })))
+const ConventionDetailPage = lazy(() => import("@/features/conventions/pages/ConventionDetailPage").then((m) => ({ default: m.ConventionDetailPage })))
+const ProjetsListePage = lazy(() => import("@/features/projets/pages/ProjetsListePage").then((m) => ({ default: m.ProjetsListePage })))
+const ProjetDetailPage = lazy(() => import("@/features/projets/pages/ProjetDetailPage").then((m) => ({ default: m.ProjetDetailPage })))
+const CotutellesListePage = lazy(() => import("@/features/cotutelles/pages/CotutellesListePage").then((m) => ({ default: m.CotutellesListePage })))
+const CotutelleDetailPage = lazy(() => import("@/features/cotutelles/pages/CotutelleDetailPage").then((m) => ({ default: m.CotutelleDetailPage })))
+const PublicationEditPage = lazy(() => import("@/features/publications/pages/PublicationEditPage").then((m) => ({ default: m.PublicationEditPage })))
+const NotificationsPage = lazy(() => import("@/features/notifications/pages/NotificationsPage").then((m) => ({ default: m.NotificationsPage })))
+const ArchivesPage = lazy(() => import("./features/archives/pages/ArchivesPage").then((m) => ({ default: m.ArchivesPage })))
+const ReferentielsPage = lazy(() => import("@/features/referentiels/pages/ReferentielsPage").then((m) => ({ default: m.ReferentielsPage })))
+const EtablissementsListePage = lazy(() => import("@/features/etablissements/pages/EtablissementsListePage").then((m) => ({ default: m.EtablissementsListePage })))
+const EtablissementDetailPage = lazy(() => import("@/features/etablissements/pages/EtablissementDetailPage").then((m) => ({ default: m.EtablissementDetailPage })))
+const ParametresCompte = lazy(() => import("@/features/comptes/pages/ParametresCompte").then((m) => ({ default: m.ParametresCompte })))
+const AccueilPage = lazy(() => import("@/features/espace-public/pages/AccueilPage").then((m) => ({ default: m.AccueilPage })))
+const AProposPage = lazy(() => import("@/features/espace-public/pages/AProposPage").then((m) => ({ default: m.AProposPage })))
+const EtablissementsPage = lazy(() => import("@/features/espace-public/pages/EtablissementsPage").then((m) => ({ default: m.EtablissementsPage })))
+const PartenairesPubliquePage = lazy(() => import("@/features/espace-public/pages/PartenairesPubliquePage").then((m) => ({ default: m.PartenairesPubliquePage })))
+const ProjetsPartenariatsPubliquePage = lazy(() => import("@/features/espace-public/pages/ProjetsPartenariatsPubliquePage").then((m) => ({ default: m.ProjetsPartenariatsPubliquePage })))
+const PublicationDetailPage = lazy(() => import("@/features/espace-public/pages/PublicationDetailPage").then((m) => ({ default: m.PublicationDetailPage })))
+const ContactPage = lazy(() => import("@/features/espace-public/pages/ContactPage").then((m) => ({ default: m.ContactPage })))
+const RecherchePage = lazy(() => import("@/features/recherche/pages/RecherchePage").then((m) => ({ default: m.RecherchePage })))
+const SynthesePage = lazy(() => import("@/features/synthese/pages/SynthesePage").then((m) => ({ default: m.SynthesePage })))
+const DocumentsListePage = lazy(() => import("@/features/documents/pages/DocumentsListePage").then((m) => ({ default: m.DocumentsListePage })))
+const PublicationsListePage = lazy(() => import("@/features/publications/pages/PublicationsListePage").then((m) => ({ default: m.PublicationsListePage })))
+const PartenariatsListePage = lazy(() => import("@/features/partenariats/pages/PartenariatsListePage").then((m) => ({ default: m.PartenariatsListePage })))
+const PartenariatCreatePage = lazy(() => import("@/features/partenariats/pages/PartenariatCreatePage").then((m) => ({ default: m.PartenariatCreatePage })))
+const PartenariatDetailPage = lazy(() => import("@/features/partenariats/pages/PartenariatDetailPage").then((m) => ({ default: m.PartenariatDetailPage })))
+const DocumentDetailPage = lazy(() => import("@/features/documents/pages/DocumentDetailPage").then((m) => ({ default: m.DocumentDetailPage })))
+const DocumentUploadPage = lazy(() => import("@/features/documents/pages/DocumentUploadPage").then((m) => ({ default: m.DocumentUploadPage })))
+const ExportPage = lazy(() => import("@/features/export/pages/ExportPage").then((m) => ({ default: m.ExportPage })))
+
+function ChargementRoute() {
+  return (
+    <div className="flex flex-col gap-4 p-6">
+      <Skeleton className="h-8 w-64" />
+      <Skeleton className="h-4 w-96" />
+      <Skeleton className="h-64 w-full rounded-xl" />
+    </div>
+  )
+}
+
+function Charge({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<ChargementRoute />}>
+      <PageTransition>{children}</PageTransition>
+    </Suspense>
+  )
+}
+>>>>>>> Stashed changes
 
 export function cheminTableauDeBord(role: RoleUtilisateur): string {
   switch (role) {
@@ -48,8 +114,6 @@ export function cheminTableauDeBord(role: RoleUtilisateur): string {
 function RedirectionAccueil() {
   const { utilisateur, estCharge } = useAuth()
   if (estCharge) return null
-  // Les utilisateurs non connectes voient la page d'accueil publique.
-  // Seuls les utilisateurs connectes sont rediriges vers leur tableau de bord.
   if (!utilisateur) return <AccueilPage />
   return <Navigate to={cheminTableauDeBord(utilisateur.role)} replace />
 }
@@ -70,8 +134,6 @@ function RouteProtegee({
   return <>{children}</>
 }
 
-// Mise en page de l'espace public (section 6.2) : barre de navigation
-// horizontale fixe + pied de page.
 function LayoutPublic() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -90,8 +152,11 @@ function LayoutPublic() {
   )
 }
 
+<<<<<<< Updated upstream
 // Mise en page commune a tout l'espace interne (section 6.1) :
 // sidebar retractable + fil d'Ariane + bascule theme.
+=======
+>>>>>>> Stashed changes
 function LayoutInterne() {
   return (
     <div className="flex h-screen overflow-hidden">
@@ -108,7 +173,6 @@ function LayoutInterne() {
     </div>
   )
 }
-
 
 const router = createBrowserRouter([
   {
@@ -232,6 +296,7 @@ const router = createBrowserRouter([
         ),
       },
 
+<<<<<<< Updated upstream
       // Partenaires - meme pages pour les 3 roles : le backend filtre deja
       // les donnees par etablissement cote serveur (RG05, RG07).
       {
@@ -282,6 +347,24 @@ const router = createBrowserRouter([
           </RouteProtegee>
         ),
       },
+=======
+      { path: "/presidence/partenaires-partenariats/partenaires", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenairesListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/partenaires-partenariats/partenaires/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenaireCreatePage /></Charge></RouteProtegee> },
+      { path: "/presidence/partenaires-partenariats/partenaires/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenaireDetailPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/partenaires-partenariats/partenaires", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenairesListePage /></Charge></RouteProtegee> },
+      { path: "/etablissement/partenaires-partenariats/partenaires/nouveau", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenaireCreatePage /></Charge></RouteProtegee> },
+      { path: "/etablissement/partenaires-partenariats/partenaires/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenaireDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/partenaires-partenariats/partenaires", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><PartenairesListePage /></Charge></RouteProtegee> },
+      { path: "/decideur/partenaires-partenariats/partenaires/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><PartenaireDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/partenaires-partenariats/partenariats", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><PartenariatsListePage /></Charge></RouteProtegee> },
+      { path: "/decideur/partenaires-partenariats/partenariats/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><PartenariatDetailPage /></Charge></RouteProtegee> },
+      { path: "/presidence/partenaires-partenariats/partenariats", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenariatsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/partenaires-partenariats/partenariats/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenariatCreatePage /></Charge></RouteProtegee> },
+      { path: "/presidence/partenaires-partenariats/partenariats/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenariatDetailPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/partenaires-partenariats/partenariats", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenariatsListePage /></Charge></RouteProtegee> },
+      { path: "/etablissement/partenaires-partenariats/partenariats/nouveau", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenariatCreatePage /></Charge></RouteProtegee> },
+      { path: "/etablissement/partenaires-partenariats/partenariats/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenariatDetailPage /></Charge></RouteProtegee> },
+>>>>>>> Stashed changes
     ],
   },
   { path: "*", element: <NotFoundPage /> },

@@ -1,236 +1,165 @@
 // src/features/partenariats/components/PartenariatForm.tsx
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { LoaderCircle } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { schemaPartenariat, type PartenariatFormValues } from "@/lib/validators/partenariat.schema"
-import { useCreatePartenariat } from "@/features/partenariats/api/useCreatePartenariat"
-import { useUpdatePartenariat } from "@/features/partenariats/api/useUpdatePartenariat"
-import { SelectionEtablissements } from "@/features/partenariats/components/SelectionEtablissements"
-import { SelectionPartenaires } from "@/features/partenariats/components/SelectionPartenaires"
-import type { Partenariat } from "@/types/api"
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2, Save } from 'lucide-react';
+import { GardeNavigation } from '@/components/shared/GardeNavigation';
+import { versChampDate } from '@/lib/format';
+import { creerSchemaPartenariat, type PartenariatFormValues } from '@/lib/validators/partenariat.schema';
+import type { Partenariat } from '@/types/api';
+import { CHAMPS_SUIVI } from '../lib/champs-suivi';
+import { PartenariatChampsGeneraux } from './PartenariatChampsGeneraux';
+import { SelectionEtablissements } from './SelectionEtablissements';
+import { SelectionPartenaires } from './SelectionPartenaires';
 
 interface PartenariatFormProps {
-  partenariat?: Partenariat
-  onSucces: (partenariat: Partenariat) => void
-  onAnnuler: () => void
+  partenariat: Partenariat;
+  estPresidence: boolean;
+  onSoumettre: (valeurs: PartenariatFormValues) => void;
+  enCours: boolean;
 }
 
-const DOMAINES = [
-  { value: "RECHERCHE", label: "Recherche" },
-  { value: "FORMATION", label: "Formation" },
-  { value: "INNOVATION", label: "Innovation" },
-  { value: "DEVELOPPEMENT", label: "Developpement" },
-  { value: "COOPERATION_INSTITUTIONNELLE", label: "Cooperation institutionnelle" },
-  { value: "AUTRE", label: "Autre" },
-]
+function valeursInitiales(partenariat: Partenariat, estPresidence: boolean): PartenariatFormValues {
+  return {
+    intitule: partenariat.intitule,
+    objet: partenariat.objet ?? '',
+    domaine: partenariat.domaine,
+    date_debut: versChampDate(partenariat.date_debut),
+    date_fin: partenariat.date_fin ? versChampDate(partenariat.date_fin) : '',
+    partenaires_ids: partenariat.partenaires.map((partenaire) => partenaire.id),
+    etablissements_ids: estPresidence ? partenariat.etablissements.map((etablissement) => etablissement.id) : [],
+    actions_realisees: estPresidence ? (partenariat.actions_realisees ?? '') : undefined,
+    actions_en_cours: estPresidence ? (partenariat.actions_en_cours ?? '') : undefined,
+    actions_prevues: estPresidence ? (partenariat.actions_prevues ?? '') : undefined,
+    resultats_obtenus: estPresidence ? (partenariat.resultats_obtenus ?? '') : undefined,
+    difficultes_contraintes: estPresidence ? (partenariat.difficultes_contraintes ?? '') : undefined,
+    perspectives_recommandations: estPresidence ? (partenariat.perspectives_recommandations ?? '') : undefined,
+  };
+}
 
-const STATUTS = [
-  { value: "BROUILLON", label: "Brouillon" },
-  { value: "EN_ATTENTE", label: "En attente" },
-  { value: "EN_COURS", label: "En cours" },
-  { value: "SUSPENDU", label: "Suspendu" },
-  { value: "TERMINE", label: "Termine" },
-]
+function libellesInitiaux(partenariat: Partenariat): Record<string, string> {
+  const libelles: Record<string, string> = {};
+  partenariat.partenaires.forEach((partenaire) => {
+    libelles[partenaire.id] = partenaire.nom;
+  });
+  partenariat.etablissements.forEach((etablissement) => {
+    libelles[etablissement.id] = etablissement.sigle ?? etablissement.nom;
+  });
+  return libelles;
+}
 
-export function PartenariatForm({ partenariat, onSucces, onAnnuler }: PartenariatFormProps) {
-  const creation = useCreatePartenariat()
-  const modification = useUpdatePartenariat(partenariat?.id ?? "")
-  const enCours = creation.isPending || modification.isPending
+function Bloc({ titre, children }: { titre: string; children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
+        <h3 className="text-[15px] font-bold">{titre}</h3>
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
+
+export function PartenariatForm({ partenariat, estPresidence, onSoumettre, enCours }: PartenariatFormProps) {
+  const [libelles, setLibelles] = useState<Record<string, string>>(() => libellesInitiaux(partenariat));
+  const premierRendu = useRef(true);
 
   const {
     register,
-    control,
     handleSubmit,
-    formState: { errors },
+    watch,
+    setValue,
+    reset,
+    formState: { errors, isDirty },
   } = useForm<PartenariatFormValues>({
-    resolver: zodResolver(schemaPartenariat),
-    mode: "onChange",
-    reValidateMode: "onChange",
-    defaultValues: {
-      intitule: partenariat?.intitule ?? "",
-      objet: partenariat?.objet ?? "",
-      domaine: partenariat?.domaine ?? "RECHERCHE",
-      date_debut: partenariat?.date_debut?.slice(0, 10) ?? "",
-      date_fin: partenariat?.date_fin?.slice(0, 10) ?? "",
-      statut: partenariat?.statut ?? "BROUILLON",
-      etablissement_ids: partenariat?.etablissements?.map((e) => e.etablissement_id) ?? [],
-      partenaire_ids: partenariat?.partenaires?.map((p) => p.partenaire_id) ?? [],
-      actions_realisees: partenariat?.actions_realisees ?? "",
-      actions_en_cours: partenariat?.actions_en_cours ?? "",
-      actions_prevues: partenariat?.actions_prevues ?? "",
-      resultats_obtenus: partenariat?.resultats_obtenus ?? "",
-      difficultes_contraintes: partenariat?.difficultes_contraintes ?? "",
-      perspectives_recommandations: partenariat?.perspectives_recommandations ?? "",
-    },
-  })
+    resolver: zodResolver(creerSchemaPartenariat(estPresidence)),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+    defaultValues: valeursInitiales(partenariat, estPresidence),
+  });
 
-  const onSubmit = (valeurs: PartenariatFormValues) => {
-    if (partenariat) {
-      modification.mutate(valeurs, { onSuccess: onSucces })
-    } else {
-      creation.mutate(valeurs, { onSuccess: onSucces })
+  useEffect(() => {
+    if (premierRendu.current) {
+      premierRendu.current = false;
+      return;
     }
+    reset(valeursInitiales(partenariat, estPresidence));
+    setLibelles(libellesInitiaux(partenariat));
+  }, [partenariat, estPresidence, reset]);
+
+  const valeurs = watch();
+
+  function mettreAJourSelection(
+    champ: 'partenaires_ids' | 'etablissements_ids',
+    ids: string[],
+    libellesAjoutes: Record<string, string>,
+  ) {
+    setValue(champ, ids, { shouldDirty: true, shouldValidate: true });
+    setLibelles((precedents) => ({ ...precedents, ...libellesAjoutes }));
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="intitule">Intitule</Label>
-        <Input id="intitule" aria-invalid={!!errors.intitule} {...register("intitule")} />
-        {errors.intitule && <p className="text-sm text-destructive">{errors.intitule.message}</p>}
-      </div>
+    <form onSubmit={handleSubmit(onSoumettre)} noValidate className="flex flex-col gap-5">
+      <GardeNavigation doitBloquer={() => isDirty} />
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="objet">Objet</Label>
-        <Textarea id="objet" {...register("objet")} />
-      </div>
+      <Bloc titre="Informations générales">
+        <PartenariatChampsGeneraux register={register} errors={errors} />
+      </Bloc>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label>Domaine</Label>
-          <Controller
-            control={control}
-            name="domaine"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger aria-invalid={!!errors.domaine}>
-                  <SelectValue placeholder="Selectionner un domaine" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DOMAINES.map((d) => (
-                    <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+      <div className={estPresidence ? 'grid grid-cols-1 gap-5 md:grid-cols-2' : ''}>
+        <Bloc titre="Partenaires concernés">
+          <SelectionPartenaires
+            selection={valeurs.partenaires_ids}
+            libelles={libelles}
+            onChange={(ids, ajoutes) => mettreAJourSelection('partenaires_ids', ids, ajoutes)}
+            erreur={errors.partenaires_ids?.message}
           />
-          {errors.domaine && <p className="text-sm text-destructive">{errors.domaine.message}</p>}
-        </div>
+        </Bloc>
 
-        <div className="flex flex-col gap-1.5">
-          <Label>Statut</Label>
-          <Controller
-            control={control}
-            name="statut"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger aria-invalid={!!errors.statut}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUTS.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
+        {estPresidence ? (
+          <Bloc titre="Établissements concernés">
+            <SelectionEtablissements
+              selection={valeurs.etablissements_ids}
+              libelles={libelles}
+              onChange={(ids, ajoutes) => mettreAJourSelection('etablissements_ids', ids, ajoutes)}
+              erreur={errors.etablissements_ids?.message}
+            />
+          </Bloc>
+        ) : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="date_debut">Date de debut</Label>
-          <Input id="date_debut" type="date" aria-invalid={!!errors.date_debut} {...register("date_debut")} />
-          {errors.date_debut && <p className="text-sm text-destructive">{errors.date_debut.message}</p>}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="date_fin">Date de fin</Label>
-          <Input id="date_fin" type="date" {...register("date_fin")} />
-        </div>
-      </div>
-      <div className="flex flex-col gap-1.5">
-  <Label>Etablissements concernes</Label>
-  <Controller
-    control={control}
-    name="etablissement_ids"
-    render={({ field }) => (
-      <SelectionEtablissements valeur={field.value} onChange={field.onChange} />
-    )}
-  />
-</div>
+      {estPresidence ? (
+        <Bloc titre="Suivi">
+          <div className="flex flex-col gap-4">
+            {CHAMPS_SUIVI.map((champ) => (
+              <div key={champ.cle}>
+                <label
+                  htmlFor={champ.cle}
+                  className="mb-1.5 block text-[12.5px] font-medium text-[var(--color-text-secondary)]"
+                >
+                  {champ.libelle}
+                </label>
+                <textarea
+                  id={champ.cle}
+                  rows={3}
+                  placeholder={champ.placeholder}
+                  className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-[13.5px] outline-none placeholder:text-[var(--color-text-secondary)] focus:border-[var(--color-brand)]"
+                  {...register(champ.cle)}
+                />
+              </div>
+            ))}
+          </div>
+        </Bloc>
+      ) : null}
 
-<div className="flex flex-col gap-1.5">
-  <Label>Partenaires concernes</Label>
-  <Controller
-    control={control}
-    name="partenaire_ids"
-    render={({ field }) => (
-      <SelectionPartenaires valeur={field.value} onChange={field.onChange} />
-    )}
-  />
-</div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label>Etablissements concernes</Label>
-        <Controller
-          control={control}
-          name="etablissement_ids"
-          render={({ field }) => (
-            <SelectionEtablissements valeur={field.value} onChange={field.onChange} />
-          )}
-        />
-        {errors.etablissement_ids && (
-          <p className="text-sm text-destructive">{errors.etablissement_ids.message}</p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label>Partenaires concernes</Label>
-        <Controller
-          control={control}
-          name="partenaire_ids"
-          render={({ field }) => (
-            <SelectionPartenaires valeur={field.value} onChange={field.onChange} />
-          )}
-        />
-        {errors.partenaire_ids && (
-          <p className="text-sm text-destructive">{errors.partenaire_ids.message}</p>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="actions_realisees">Actions realisees</Label>
-          <Textarea id="actions_realisees" {...register("actions_realisees")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="actions_en_cours">Actions en cours</Label>
-          <Textarea id="actions_en_cours" {...register("actions_en_cours")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="actions_prevues">Actions prevues</Label>
-          <Textarea id="actions_prevues" {...register("actions_prevues")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="resultats_obtenus">Resultats obtenus</Label>
-          <Textarea id="resultats_obtenus" {...register("resultats_obtenus")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="difficultes_contraintes">Difficultes / contraintes</Label>
-          <Textarea id="difficultes_contraintes" {...register("difficultes_contraintes")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="perspectives_recommandations">Perspectives / recommandations</Label>
-          <Textarea id="perspectives_recommandations" {...register("perspectives_recommandations")} />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>
-          Annuler
-        </Button>
-        <Button type="submit" disabled={enCours}>
-          {enCours && <LoaderCircle className="animate-spin" />}
-          {partenariat ? "Enregistrer les modifications" : "Creer le partenariat"}
-        </Button>
-      </div>
+      <button
+        type="submit"
+        disabled={enCours}
+        className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
+      >
+        {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        Enregistrer
+      </button>
     </form>
-  )
+  );
 }
