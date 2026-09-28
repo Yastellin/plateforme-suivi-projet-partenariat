@@ -1,45 +1,18 @@
 ﻿// src/router.tsx
-<<<<<<< Updated upstream
-=======
 
 import { lazy, Suspense, useState, useEffect } from "react"
->>>>>>> Stashed changes
 import { createBrowserRouter, Navigate, RouterProvider, Outlet } from "react-router-dom"
 import type { ReactNode } from "react"
 
 import { useAuth } from "@/hooks/useAuth"
 import type { RoleUtilisateur } from "@/types/api"
-import { LoginPage } from "@/features/auth/pages/LoginPage"
-import { TableauDeBordPresidence } from "@/features/tableau-de-bord/pages/TableauDeBordPresidence"
-import { TableauDeBordEtablissement } from "@/features/tableau-de-bord/pages/TableauDeBordEtablissement"
-import { TableauDeBordDecideur } from "@/features/tableau-de-bord/pages/TableauDeBordDecideur"
-import { PartenairesListePage } from "@/features/partenaires/pages/PartenairesListePage"
-import { PartenaireDetailPage } from "@/features/partenaires/pages/PartenaireDetailPage"
+import { SidebarInterne } from "@/components/layout/SidebarInterne"
+import { TopbarPublique } from "@/components/layout/TopbarPublique"
+import { TopbarInterne } from "@/components/layout/TopbarInterne"
+import { NotificationsDrawer } from "@/components/layout/NotificationsDrawer"
+import { CommandPalette } from "@/components/layout/CommandPalette"
 import { ForbiddenPage } from "@/components/shared/ForbiddenPage"
 import { NotFoundPage } from "@/components/shared/NotFoundPage"
-<<<<<<< Updated upstream
-import { SidebarInterne } from "@/components/layout/SidebarInterne"
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs"
-import { ThemeToggle } from "@/components/layout/ThemeToggle"
-import { ParametresCompte } from "@/features/comptes/pages/ParametresCompte"
-import { CotutellesListePage } from "@/features/cotutelles/pages/CotutellesListePage"
-import { CotutelleDetailPage } from "@/features/cotutelles/pages/CotutelleDetailPage"
-import { ConventionDetailPage } from "@/features/conventions/pages/ConventionDetailPage"
-import { ConventionsListePage } from "@/features/conventions/pages/ConventionsListePage"
-import { ProjetsListePage } from "@/features/projets/pages/ProjetsListePage"
-import { ProjetDetailPage } from "@/features/projets/pages/ProjetDetailPage"
-import { PublicationEditPage } from "@/features/publications/pages/PublicationEditPage"
-import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage"
-import { ArchivesPage } from "./features/archives/pages/ArchivesPage"
-import { TopbarPublique } from "@/components/layout/TopbarPublique"
-import { AccueilPage } from "@/features/espace-public/pages/AccueilPage"
-import { AProposPage } from "@/features/espace-public/pages/AProposPage"
-import { EtablissementsPage } from "@/features/espace-public/pages/EtablissementsPage"
-import { PartenairesPubliquePage } from "@/features/espace-public/pages/PartenairesPubliquePage"
-import { ProjetsPartenariatsPubliquePage } from "@/features/espace-public/pages/ProjetsPartenariatsPubliquePage"
-import { PublicationDetailPage } from "@/features/espace-public/pages/PublicationDetailPage"
-import { ContactPage } from "@/features/espace-public/pages/ContactPage"
-=======
 import { PageTransition } from "@/components/shared/PageTransition"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -98,7 +71,6 @@ function Charge({ children }: { children: ReactNode }) {
     </Suspense>
   )
 }
->>>>>>> Stashed changes
 
 export function cheminTableauDeBord(role: RoleUtilisateur): string {
   switch (role) {
@@ -152,24 +124,32 @@ function LayoutPublic() {
   )
 }
 
-<<<<<<< Updated upstream
-// Mise en page commune a tout l'espace interne (section 6.1) :
-// sidebar retractable + fil d'Ariane + bascule theme.
-=======
->>>>>>> Stashed changes
 function LayoutInterne() {
+  const [drawerNotifs, setDrawerNotifs] = useState(false)
+  const [paletteOuverte, setPaletteOuverte] = useState(false)
+
+  useEffect(() => {
+    function gererTouche(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        setPaletteOuverte((v) => !v)
+      }
+    }
+    document.addEventListener("keydown", gererTouche)
+    return () => document.removeEventListener("keydown", gererTouche)
+  }, [])
+
   return (
     <div className="flex h-screen overflow-hidden">
       <SidebarInterne />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex items-center justify-between border-b border-border px-6 py-3">
-          <Breadcrumbs />
-          <ThemeToggle />
-        </header>
-        <main className="flex-1 overflow-y-auto">
+        <TopbarInterne onOuvrirRecherche={() => setPaletteOuverte(true)} onOuvrirNotifications={() => setDrawerNotifs(true)} />
+        <main className="flex-1 overflow-y-auto p-[28px_32px_52px]">
           <Outlet />
         </main>
       </div>
+      <NotificationsDrawer ouvert={drawerNotifs} onFermer={() => setDrawerNotifs(false)} />
+      <CommandPalette ouvert={paletteOuverte} onFermer={() => setPaletteOuverte(false)} />
     </div>
   )
 }
@@ -178,176 +158,60 @@ const router = createBrowserRouter([
   {
     element: <LayoutPublic />,
     children: [
-      { path: "/", element: <RedirectionAccueil /> },
-      { path: "/a-propos", element: <AProposPage /> },
-      { path: "/etablissements", element: <EtablissementsPage /> },
-      { path: "/partenaires", element: <PartenairesPubliquePage /> },
-      { path: "/projets-partenariats", element: <ProjetsPartenariatsPubliquePage /> },
-      { path: "/projets-partenariats/publication/:id", element: <PublicationDetailPage /> },
-      { path: "/contact", element: <ContactPage /> },
+      { path: "/", element: <Charge><RedirectionAccueil /></Charge> },
+      { path: "/a-propos", element: <Charge><AProposPage /></Charge> },
+      { path: "/etablissements", element: <Charge><EtablissementsPage /></Charge> },
+      { path: "/partenaires", element: <Charge><PartenairesPubliquePage /></Charge> },
+      { path: "/projets-partenariats", element: <Charge><ProjetsPartenariatsPubliquePage /></Charge> },
+      { path: "/projets-partenariats/publication/:id", element: <Charge><PublicationDetailPage /></Charge> },
+      { path: "/contact", element: <Charge><ContactPage /></Charge> },
     ],
   },
-  { path: "/connexion", element: <LoginPage /> },
+  { path: "/connexion", element: <Charge><LoginPage /></Charge> },
   {
     element: <LayoutInterne />,
     children: [
-      {
-        path: "/presidence",
-        element: (
-          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
-            <TableauDeBordPresidence />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/presidence/conventions",
-        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ConventionsListePage /></RouteProtegee>,
-      },
-      {
-        path: "/presidence/conventions/:id",
-        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ConventionDetailPage /></RouteProtegee>,
-      },
-      {
-      path: "/presidence/archives",
-      element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ArchivesPage /></RouteProtegee>,
-      },
-      {
-        path: "/presidence/notifications",
-        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><NotificationsPage /></RouteProtegee>,
-      },
-      {
-        path: "/etablissement/notifications",
-        element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><NotificationsPage /></RouteProtegee>,
-      },
-      {
-        path: "/presidence/projets",
-        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ProjetsListePage /></RouteProtegee>,
-      },
-      {
-        path: "/presidence/publications/:projetId",
-        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><PublicationEditPage /></RouteProtegee>,
-      },
-      {
-        path: "/presidence/projets/:id",
-        element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><ProjetDetailPage /></RouteProtegee>,
-      },
-      {
-        path: "/etablissement/projets",
-        element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><ProjetsListePage /></RouteProtegee>,
-      },
-      {
-        path: "/etablissement/projets/:id",
-        element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><ProjetDetailPage /></RouteProtegee>,
-      },
-      {
-        path: "/presidence/parametres",
-        element: (
-          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
-            <ParametresCompte />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/presidence/cotutelles",
-        element: (
-          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
-            <CotutellesListePage />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/presidence/cotutelles/:id",
-        element: (
-          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
-            <CotutelleDetailPage />
-          </RouteProtegee>
-        ),
-  },
-      {
-        path: "/etablissement/parametres",
-        element: (
-          <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}>
-            <ParametresCompte />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/decideur/parametres",
-        element: (
-          <RouteProtegee rolesAutorises={["DECIDEUR"]}>
-            <ParametresCompte />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/etablissement",
-        element: (
-          <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}>
-            <TableauDeBordEtablissement />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/decideur",
-        element: (
-          <RouteProtegee rolesAutorises={["DECIDEUR"]}>
-            <TableauDeBordDecideur />
-          </RouteProtegee>
-        ),
-      },
+      { path: "/presidence", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><TableauDeBordPresidence /></Charge></RouteProtegee> },
+      { path: "/presidence/conventions", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ConventionsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/conventions/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ConventionDetailPage /></Charge></RouteProtegee> },
+      { path: "/presidence/referentiels", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ReferentielsPage /></Charge></RouteProtegee> },
+      { path: "/presidence/etablissements", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><EtablissementsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/etablissements/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><EtablissementDetailPage /></Charge></RouteProtegee> },
+      { path: "/presidence/archives", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ArchivesPage /></Charge></RouteProtegee> },
+      { path: "/presidence/export", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ExportPage /></Charge></RouteProtegee> },
+      { path: "/presidence/recherche", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><RecherchePage /></Charge></RouteProtegee> },
+      { path: "/presidence/synthese", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><SynthesePage /></Charge></RouteProtegee> },
+      { path: "/presidence/documents", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/documents/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentUploadPage /></Charge></RouteProtegee> },
+      { path: "/presidence/documents/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentDetailPage /></Charge></RouteProtegee> },
+      { path: "/presidence/publications", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PublicationsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/notifications", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><NotificationsPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/notifications", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><NotificationsPage /></Charge></RouteProtegee> },
+      { path: "/presidence/projets", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ProjetsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/publications/:projetId", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PublicationEditPage /></Charge></RouteProtegee> },
+      { path: "/presidence/projets/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ProjetDetailPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/projets", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ProjetsListePage /></Charge></RouteProtegee> },
+      { path: "/etablissement/projets/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ProjetDetailPage /></Charge></RouteProtegee> },
+      { path: "/presidence/parametres", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ParametresCompte /></Charge></RouteProtegee> },
+      { path: "/presidence/cotutelles", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><CotutellesListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/cotutelles/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><CotutelleDetailPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/parametres", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ParametresCompte /></Charge></RouteProtegee> },
+      { path: "/decideur/parametres", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ParametresCompte /></Charge></RouteProtegee> },
+      { path: "/etablissement", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><TableauDeBordEtablissement /></Charge></RouteProtegee> },
+      { path: "/decideur", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><TableauDeBordDecideur /></Charge></RouteProtegee> },
+      { path: "/etablissement/cotutelles", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><CotutellesListePage /></Charge></RouteProtegee> },
+      { path: "/etablissement/cotutelles/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><CotutelleDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/projets", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ProjetsListePage /></Charge></RouteProtegee> },
+      { path: "/decideur/projets/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ProjetDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/conventions", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ConventionsListePage /></Charge></RouteProtegee> },
+      { path: "/decideur/conventions/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ConventionDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/cotutelles", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><CotutellesListePage /></Charge></RouteProtegee> },
+      { path: "/decideur/cotutelles/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><CotutelleDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/documents", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><DocumentsListePage /></Charge></RouteProtegee> },
+      { path: "/decideur/documents/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><DocumentDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/etablissements", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><EtablissementsListePage /></Charge></RouteProtegee> },
+      { path: "/decideur/etablissements/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><EtablissementDetailPage /></Charge></RouteProtegee> },
 
-<<<<<<< Updated upstream
-      // Partenaires - meme pages pour les 3 roles : le backend filtre deja
-      // les donnees par etablissement cote serveur (RG05, RG07).
-      {
-        path: "/presidence/partenaires-partenariats/partenaires",
-        element: (
-          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
-            <PartenairesListePage />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/presidence/partenaires-partenariats/partenaires/:id",
-        element: (
-          <RouteProtegee rolesAutorises={["PRESIDENCE"]}>
-            <PartenaireDetailPage />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/etablissement/partenaires-partenariats/partenaires",
-        element: (
-          <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}>
-            <PartenairesListePage />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/etablissement/partenaires-partenariats/partenaires/:id",
-        element: (
-          <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}>
-            <PartenaireDetailPage />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/decideur/partenaires-partenariats/partenaires",
-        element: (
-          <RouteProtegee rolesAutorises={["DECIDEUR"]}>
-            <PartenairesListePage />
-          </RouteProtegee>
-        ),
-      },
-      {
-        path: "/decideur/partenaires-partenariats/partenaires/:id",
-        element: (
-          <RouteProtegee rolesAutorises={["DECIDEUR"]}>
-            <PartenaireDetailPage />
-          </RouteProtegee>
-        ),
-      },
-=======
       { path: "/presidence/partenaires-partenariats/partenaires", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenairesListePage /></Charge></RouteProtegee> },
       { path: "/presidence/partenaires-partenariats/partenaires/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenaireCreatePage /></Charge></RouteProtegee> },
       { path: "/presidence/partenaires-partenariats/partenaires/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenaireDetailPage /></Charge></RouteProtegee> },
@@ -364,7 +228,6 @@ const router = createBrowserRouter([
       { path: "/etablissement/partenaires-partenariats/partenariats", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenariatsListePage /></Charge></RouteProtegee> },
       { path: "/etablissement/partenaires-partenariats/partenariats/nouveau", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenariatCreatePage /></Charge></RouteProtegee> },
       { path: "/etablissement/partenaires-partenariats/partenariats/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenariatDetailPage /></Charge></RouteProtegee> },
->>>>>>> Stashed changes
     ],
   },
   { path: "*", element: <NotFoundPage /> },
