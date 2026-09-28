@@ -27,6 +27,7 @@ import { ReferentielsModule } from './referentiels/referentiels.module';
 import { ArchivesModule } from './archives/archives.module';
 import { RechercheModule } from './recherche/recherche.module';
 import { HealthModule } from './health/health.module';
+import { CleanupModule } from './cleanup/cleanup.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { HealthModule } from './health/health.module';
     ReferentielsModule,
     ArchivesModule,
     RechercheModule,
+    CleanupModule,
   ],
   controllers: [AppController],
   providers: [
