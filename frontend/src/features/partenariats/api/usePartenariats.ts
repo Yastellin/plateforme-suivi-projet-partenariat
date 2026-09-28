@@ -1,26 +1,30 @@
 ﻿// src/features/partenariats/api/usePartenariats.ts
-import { useQuery, keepPreviousData } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
-import type { PageServeur, Partenariat } from "@/types/api"
 
-export interface FiltresPartenariats {
-  page?: number
-  limit?: number
-  intitule?: string
-  domaine?: string
-  statut?: string
-  etablissement_id?: string
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import type { PageServeur, Partenariat } from '@/types/api';
+
+interface ParametresPartenariats {
+  page: number;
+  limit: number;
+  recherche?: string;
 }
 
-export function usePartenariats(filtres: FiltresPartenariats) {
-  return useQuery({
-    queryKey: ["partenariats", filtres],
-    queryFn: async () => {
-      const reponse = await apiClient.get<PageServeur<Partenariat>>("/partenariats", {
-        params: filtres,
-      })
-      return reponse.data
+async function recupererPartenariats(parametres: ParametresPartenariats): Promise<PageServeur<Partenariat>> {
+  const reponse = await apiClient.get<PageServeur<Partenariat>>('/partenariats', {
+    params: {
+      page: parametres.page,
+      limit: parametres.limit,
+      intitule: parametres.recherche || undefined,
     },
-    placeholderData: keepPreviousData,
-  })
+  });
+  return reponse.data;
+}
+
+export function usePartenariats(parametres: ParametresPartenariats) {
+  return useQuery({
+    queryKey: ['partenariats', 'liste', parametres],
+    queryFn: () => recupererPartenariats(parametres),
+    placeholderData: (precedent) => precedent,
+  });
 }
