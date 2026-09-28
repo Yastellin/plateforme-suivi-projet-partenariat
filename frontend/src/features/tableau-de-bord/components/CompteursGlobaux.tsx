@@ -1,24 +1,67 @@
 ﻿// src/features/tableau-de-bord/components/CompteursGlobaux.tsx
-import { Handshake, Users, FolderKanban, FileText } from "lucide-react"
-import type { CompteursTableauDeBord } from "@/types/api"
 
-export function CompteursGlobaux({ compteurs }: { compteurs: CompteursTableauDeBord }) {
-  const cartes = [
-    { icone: Handshake, label: "Partenaires", valeur: compteurs.nombre_partenaires },
-    { icone: Users, label: "Partenariats", valeur: compteurs.nombre_partenariats },
-    { icone: FolderKanban, label: "Cotutelles", valeur: compteurs.nombre_cotutelles },
-    { icone: FileText, label: "Conventions actives", valeur: compteurs.conventions_actives },
-  ]
+import { Handshake, FolderKanban, FileCheck2, TriangleAlert } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { CompteursTableauDeBord } from '@/types/api';
+
+interface CompteursGlobauxProps {
+  compteurs: CompteursTableauDeBord | undefined;
+  chargement: boolean;
+}
+
+interface CarteCompteur {
+  icone: LucideIcon;
+  libelle: string;
+  valeur: number;
+  critique?: boolean;
+}
+
+export function CompteursGlobaux({ compteurs, chargement }: CompteursGlobauxProps) {
+  if (chargement || !compteurs) {
+    return (
+      <div className="mb-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((cle) => (
+          <Skeleton key={cle} className="h-[104px] rounded-[var(--radius)]" />
+        ))}
+      </div>
+    );
+  }
+
+  const cartes: CarteCompteur[] = [
+    { icone: Handshake, libelle: 'Partenaires actifs', valeur: compteurs.partenaires_actifs },
+    { icone: FolderKanban, libelle: 'Projets en cours', valeur: compteurs.projets_en_cours },
+    { icone: FileCheck2, libelle: 'Conventions actives', valeur: compteurs.conventions_actives },
+    { icone: TriangleAlert, libelle: 'Conventions à échéance', valeur: compteurs.conventions_a_echeance, critique: true },
+  ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      {cartes.map((c) => (
-        <div key={c.label} className="rounded-md border border-border p-4">
-          <c.icone size={18} className="mb-2 text-muted-foreground" />
-          <p className="font-mono text-2xl font-semibold">{c.valeur}</p>
-          <p className="text-xs text-muted-foreground">{c.label}</p>
-        </div>
-      ))}
+    <div className="mb-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {cartes.map((carte) => {
+        const Icone = carte.icone;
+
+        return (
+          <div
+            key={carte.libelle}
+            className={
+              carte.critique
+                ? 'relative overflow-hidden rounded-[var(--radius)] border border-[var(--color-brand-moment)] bg-[var(--color-surface)] p-[20px_20px_18px] shadow-[var(--shadow-sm)]'
+                : 'relative overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[20px_20px_18px] shadow-[var(--shadow-sm)]'
+            }
+          >
+            {carte.critique ? <div className="woven-accent absolute inset-x-0 top-0" /> : null}
+
+            <div className="mb-3 flex items-center gap-2 text-[12.5px] font-semibold text-[var(--color-text-secondary)]">
+              <Icone className={carte.critique ? 'h-3.5 w-3.5 text-[var(--status-attente-fg)]' : 'h-3.5 w-3.5 text-[var(--color-brand)]'} />
+              {carte.libelle}
+            </div>
+
+            <div className="text-[30px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-mono)' }}>
+              {carte.valeur}
+            </div>
+          </div>
+        );
+      })}
     </div>
-  )
+  );
 }
