@@ -46,8 +46,8 @@ export function GraphiqueComparatif({ donnees, chargement }: GraphiqueComparatif
             fontSize: 12.5,
           }}
         />
-        <Bar dataKey="partenaires_actifs" name="Partenaires actifs" fill="var(--color-brand)" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="projets_en_cours" name="Projets en cours" fill="var(--color-brand-moment)" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="partenaires" name="Partenaires" fill="var(--color-brand)" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="projets_actifs" name="Projets actifs" fill="var(--color-brand-moment)" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

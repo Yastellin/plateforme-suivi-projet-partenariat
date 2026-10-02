@@ -1,5 +1,4 @@
 ﻿// src/features/tableau-de-bord/pages/TableauDeBordDecideur.tsx
-
 import { useTableauDeBord } from '../api/useTableauDeBord';
 import { useComparatifEtablissements } from '../api/useComparatifEtablissements';
 import { CompteursGlobaux } from '../components/CompteursGlobaux';

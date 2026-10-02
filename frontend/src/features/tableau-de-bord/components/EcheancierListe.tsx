@@ -1,10 +1,7 @@
 ﻿// src/features/tableau-de-bord/components/EcheancierListe.tsx
-
 import { Link } from 'react-router-dom';
 import { ExternalLink, CalendarCheck } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StatusBadge } from '@/components/shared/StatusBadge';
-import { LIBELLES_STATUT_CONVENTION } from '@/lib/status-mappings';
 import type { EcheanceProchaine } from '@/types/api';
 
 interface EcheancierListeProps {
@@ -13,7 +10,11 @@ interface EcheancierListeProps {
 }
 
 function formaterDate(dateIso: string): string {
-  return new Date(dateIso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(dateIso).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export function EcheancierListe({ echeances, chargement }: EcheancierListeProps) {
@@ -48,53 +49,43 @@ export function EcheancierListe({ echeances, chargement }: EcheancierListeProps)
               Référence
             </th>
             <th className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-5 py-3 text-left text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">
-              Établissement
-            </th>
-            <th className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-5 py-3 text-left text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">
               Objet
             </th>
             <th className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-5 py-3 text-left text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">
               Échéance
             </th>
             <th className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-5 py-3 text-left text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">
-              État
+              Jours restants
             </th>
             <th className="border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-5 py-3" />
           </tr>
         </thead>
         <tbody>
-          {echeances.map((echeance) => {
-            const info = LIBELLES_STATUT_CONVENTION[echeance.statut];
-
-            return (
-              <tr key={echeance.id} className="hover:bg-[var(--color-page-bg)]">
-                <td className="whitespace-nowrap border-b border-[var(--color-border)] px-5 py-3.5 font-mono text-[12.5px] font-semibold text-[var(--color-text-secondary)]">
-                  {echeance.reference}
-                </td>
-                <td className="border-b border-[var(--color-border)] px-5 py-3.5 font-semibold">
-                  {echeance.etablissement_nom}
-                </td>
-                <td className="border-b border-[var(--color-border)] px-5 py-3.5 text-[var(--color-text-secondary)]">
-                  {echeance.objet}
-                </td>
-                <td className="whitespace-nowrap border-b border-[var(--color-border)] px-5 py-3.5 font-mono text-[12.5px]">
-                  {formaterDate(echeance.date_fin)}
-                </td>
-                <td className="whitespace-nowrap border-b border-[var(--color-border)] px-5 py-3.5">
-                  <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
-                </td>
-                <td className="border-b border-[var(--color-border)] px-5 py-3.5 text-right">
-                  <Link
-                    to={`/presidence/conventions/${echeance.id}`}
-                    aria-label="Ouvrir la convention"
-                    className="inline-flex rounded-md p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Link>
-                </td>
-              </tr>
-            );
-          })}
+          {echeances.map((echeance) => (
+            <tr key={echeance.id} className="hover:bg-[var(--color-page-bg)]">
+              <td className="whitespace-nowrap border-b border-[var(--color-border)] px-5 py-3.5 font-mono text-[12.5px] font-semibold text-[var(--color-text-secondary)]">
+                {echeance.reference}
+              </td>
+              <td className="border-b border-[var(--color-border)] px-5 py-3.5 font-semibold">
+                {echeance.titre}
+              </td>
+              <td className="whitespace-nowrap border-b border-[var(--color-border)] px-5 py-3.5 font-mono text-[12.5px]">
+                {formaterDate(echeance.date_fin)}
+              </td>
+              <td className="whitespace-nowrap border-b border-[var(--color-border)] px-5 py-3.5 font-mono text-[12.5px]">
+                {echeance.jours_restants} j
+              </td>
+              <td className="border-b border-[var(--color-border)] px-5 py-3.5 text-right">
+                <Link
+                  to={`/presidence/conventions/${echeance.id}`}
+                  aria-label="Ouvrir la convention"
+                  className="inline-flex rounded-md p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
