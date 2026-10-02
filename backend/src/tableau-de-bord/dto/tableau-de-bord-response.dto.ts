@@ -1,4 +1,25 @@
+// src/tableau-de-bord/dto/tableau-de-bord-response.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+
+export class RepartitionConventionsDto {
+  @ApiProperty()
+  BROUILLON: number;
+
+  @ApiProperty()
+  EN_ATTENTE_SIGNATURE: number;
+
+  @ApiProperty()
+  SIGNEE: number;
+
+  @ApiProperty()
+  ACTIVE: number;
+
+  @ApiProperty()
+  SUSPENDUE: number;
+
+  @ApiProperty()
+  EXPIREE: number;
+}
 
 export class CompteursGlobauxDto {
   @ApiProperty()
@@ -18,6 +39,9 @@ export class CompteursGlobauxDto {
 
   @ApiProperty()
   publications: number;
+
+  @ApiProperty({ type: RepartitionConventionsDto })
+  repartition_conventions: RepartitionConventionsDto;
 }
 
 export class ProjetsParStatutDto {

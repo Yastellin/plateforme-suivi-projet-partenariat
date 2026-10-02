@@ -8,8 +8,10 @@ import { GraphiqueStatuts } from '../components/GraphiqueStatuts';
 import { EcheancierListe } from '../components/EcheancierListe';
 
 export function TableauDeBordPresidence() {
-  const { data: compteurs, isLoading: chargementCompteurs } = useTableauDeBord();
+  const { data: tableauDeBord, isLoading: chargementCompteurs } = useTableauDeBord();
   const { data: echeances, isLoading: chargementEcheancier } = useEcheancier();
+
+  const compteurs = tableauDeBord?.compteurs;
 
   return (
     <div>
