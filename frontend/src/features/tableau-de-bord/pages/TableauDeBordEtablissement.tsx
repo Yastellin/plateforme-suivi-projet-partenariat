@@ -1,5 +1,4 @@
 ﻿// src/features/tableau-de-bord/pages/TableauDeBordEtablissement.tsx
-
 import { Link } from 'react-router-dom';
 import { Handshake, FolderKanban } from 'lucide-react';
 import { useTableauDeBord } from '../api/useTableauDeBord';
