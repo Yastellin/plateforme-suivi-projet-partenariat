@@ -10,9 +10,6 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      # VITE_API_URL doit rester une adresse joignable depuis le NAVIGATEUR
-      # du client (le code React s'execute cote navigateur, pas dans le
-      # conteneur) -> jamais le nom d'un service Docker interne comme "backend".
       VITE_API_URL: ${VITE_API_URL}
     depends_on:
       - backend
@@ -49,6 +46,9 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       NODE_ENV: development
+    volumes:
+      - ./backend/prisma:/app/prisma
+      - ./backend/uploads:/app/uploads
 
 volumes:
   db_data:

@@ -23,9 +23,6 @@ CREATE TYPE "TypeCotutelle" AS ENUM ('COTUTELLE', 'COENCADREMENT');
 CREATE TYPE "StatutConvention" AS ENUM ('BROUILLON', 'EN_ATTENTE_SIGNATURE', 'SIGNEE', 'ACTIVE', 'SUSPENDUE', 'EXPIREE');
 
 -- CreateEnum
-CREATE TYPE "EtapeCircuit" AS ENUM ('REDACTION', 'TRANSMISSION', 'VERIFICATION_DAJ', 'ATTENTE_SIGNATURE', 'SIGNEE');
-
--- CreateEnum
 CREATE TYPE "TypeDocument" AS ENUM ('TDR', 'DESCRIPTION', 'CONVENTION', 'AUTRE');
 
 -- CreateEnum
@@ -307,8 +304,6 @@ CREATE TABLE "Convention" (
     "date_debut" TIMESTAMP(3),
     "date_fin" TIMESTAMP(3),
     "statut" "StatutConvention" NOT NULL DEFAULT 'BROUILLON',
-    "etape_circuit" "EtapeCircuit" NOT NULL DEFAULT 'REDACTION',
-    "date_derniere_etape" TIMESTAMP(3),
     "description" TEXT,
     "archive" BOOLEAN NOT NULL DEFAULT false,
     "partenariat_id" TEXT,
@@ -404,6 +399,18 @@ CREATE TABLE "SynthesePartenaireStrategique" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "SynthesePartenaireStrategique_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RefreshToken" (
+    "id" TEXT NOT NULL,
+    "token_hash" TEXT NOT NULL,
+    "utilisateur_id" TEXT NOT NULL,
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "revoked_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "RefreshToken_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -559,6 +566,18 @@ CREATE INDEX "SynthesePartenaireStrategique_etablissement_id_annee_idx" ON "Synt
 -- CreateIndex
 CREATE UNIQUE INDEX "SynthesePartenaireStrategique_etablissement_id_annee_parten_key" ON "SynthesePartenaireStrategique"("etablissement_id", "annee", "partenaire_id");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "RefreshToken_token_hash_key" ON "RefreshToken"("token_hash");
+
+-- CreateIndex
+CREATE INDEX "RefreshToken_utilisateur_id_idx" ON "RefreshToken"("utilisateur_id");
+
+-- CreateIndex
+CREATE INDEX "RefreshToken_expires_at_idx" ON "RefreshToken"("expires_at");
+
+-- CreateIndex
+CREATE INDEX "RefreshToken_revoked_at_idx" ON "RefreshToken"("revoked_at");
+
 -- AddForeignKey
 ALTER TABLE "Utilisateur" ADD CONSTRAINT "Utilisateur_etablissement_id_fkey" FOREIGN KEY ("etablissement_id") REFERENCES "Etablissement"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -657,3 +676,6 @@ ALTER TABLE "SynthesePartenaireStrategique" ADD CONSTRAINT "SynthesePartenaireSt
 
 -- AddForeignKey
 ALTER TABLE "SynthesePartenaireStrategique" ADD CONSTRAINT "SynthesePartenaireStrategique_partenaire_id_fkey" FOREIGN KEY ("partenaire_id") REFERENCES "Partenaire"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_utilisateur_id_fkey" FOREIGN KEY ("utilisateur_id") REFERENCES "Utilisateur"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,3 +1,4 @@
+// src/tableau-de-bord/tableau-de-bord.service.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -5,6 +6,7 @@ import {
   CompteursGlobauxDto,
   ProjetsParStatutDto,
   ConventionsParStatutDto,
+  RepartitionConventionsDto,
 } from './dto/tableau-de-bord-response.dto';
 import {
   EcheancierResponseDto,
@@ -65,7 +67,47 @@ export class TableauDeBordService {
         this.prisma.publication.count({}),
       ]);
 
-    return { partenaires, partenariats, cotutelles, projets, conventions, publications };
+    const repartition_conventions = await this.getRepartitionConventions(etablissementId);
+
+    return {
+      partenaires,
+      partenariats,
+      cotutelles,
+      projets,
+      conventions,
+      publications,
+      repartition_conventions,
+    };
+  }
+
+  private async getRepartitionConventions(
+    etablissementId?: string,
+  ): Promise<RepartitionConventionsDto> {
+    const where: any = { archive: false };
+    if (etablissementId) {
+      where.projet = { etablissement_id: etablissementId };
+    }
+
+    const counts = await this.prisma.convention.groupBy({
+      by: ['statut'],
+      where,
+      _count: { _all: true },
+    });
+
+    const result: RepartitionConventionsDto = {
+      BROUILLON: 0,
+      EN_ATTENTE_SIGNATURE: 0,
+      SIGNEE: 0,
+      ACTIVE: 0,
+      SUSPENDUE: 0,
+      EXPIREE: 0,
+    };
+
+    for (const c of counts) {
+      result[c.statut as keyof RepartitionConventionsDto] = c._count._all;
+    }
+
+    return result;
   }
 
   private async getProjetsParStatut(etablissementId?: string): Promise<ProjetsParStatutDto> {
