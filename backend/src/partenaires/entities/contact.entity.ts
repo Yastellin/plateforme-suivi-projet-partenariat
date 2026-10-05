@@ -1,21 +1,19 @@
 import {
   Entity,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   Column,
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  BeforeInsert,
   Index,
 } from 'typeorm';
-import { randomUUID } from 'crypto';
 import { Partenaire } from './partenaire.entity';
 
 @Entity('Contact')
 @Index(['partenaire_id'])
 export class Contact {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'varchar' })
@@ -43,10 +41,4 @@ export class Contact {
   @UpdateDateColumn({ type: 'timestamp', precision: 3 })
   updated_at: Date;
 
-  @BeforeInsert()
-  genererId() {
-    if (!this.id) {
-      this.id = randomUUID();
-    }
-  }
 }
