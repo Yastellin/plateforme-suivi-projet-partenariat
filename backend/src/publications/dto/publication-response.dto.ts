@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { StatutPublication } from '@prisma/client';
+import { StatutPublication } from '../../common/enums/statut-publication.enum';
 
 export class PhotoPublicationResponseDto {
   @ApiProperty()

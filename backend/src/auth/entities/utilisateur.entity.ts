@@ -1,14 +1,16 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   ManyToOne,
   OneToMany,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
   Index,
 } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { Role } from '../../common/enums/role.enum';
 import { Etablissement } from '../../etablissements/entities/etablissement.entity';
 import { RefreshToken } from './refresh-token.entity';
@@ -18,19 +20,19 @@ import { RefreshToken } from './refresh-token.entity';
 @Index(['role'])
 @Index(['actif'])
 export class Utilisateur {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   email: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   password_hash: string;
 
   @Column({ type: 'enum', enum: Role, enumName: 'Role' })
   role: Role;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   etablissement_id: string | null;
 
   @Column({ default: true })
@@ -51,4 +53,11 @@ export class Utilisateur {
 
   @UpdateDateColumn({ type: 'timestamp', precision: 3 })
   updated_at: Date;
+
+  @BeforeInsert()
+  genererId() {
+    if (!this.id) {
+      this.id = randomUUID();
+    }
+  }
 }

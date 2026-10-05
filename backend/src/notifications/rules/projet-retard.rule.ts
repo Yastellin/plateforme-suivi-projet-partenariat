@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications.service';
-import { TypeNotification, PrioriteNotification, StatutProjet } from '@prisma/client';
+import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { PrioriteNotification } from '../../common/enums/priorite-notification.enum';
+import { StatutProjet } from '../../common/enums/statut-projet.enum';
 import { NotificationRule } from './notification-rule.interface';
 
 @Injectable()

@@ -9,7 +9,7 @@ import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
 import { QueryPublicationDto } from './dto/query-publication.dto';
 import { PublicationResponseDto } from './dto/publication-response.dto';
-import { StatutPublication } from '@prisma/client';
+import { StatutPublication } from '../common/enums/statut-publication.enum';
 
 @Injectable()
 export class PublicationsService {

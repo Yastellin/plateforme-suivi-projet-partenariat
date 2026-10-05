@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryNotificationDto } from './dto/query-notification.dto';
-import { TypeNotification, PrioriteNotification, Role } from '@prisma/client';
+import { TypeNotification } from '../common/enums/type-notification.enum';
+import { PrioriteNotification } from '../common/enums/priorite-notification.enum';
+import { Role } from '../common/enums/role.enum';
 
 export interface CreateNotificationData {
   titre: string;

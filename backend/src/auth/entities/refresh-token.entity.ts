@@ -1,12 +1,14 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  BeforeInsert,
   Index,
 } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { Utilisateur } from './utilisateur.entity';
 
 @Entity('RefreshToken')
@@ -14,13 +16,13 @@ import { Utilisateur } from './utilisateur.entity';
 @Index(['expires_at'])
 @Index(['revoked_at'])
 export class RefreshToken {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   token_hash: string;
 
-  @Column()
+  @Column({ type: 'uuid' })
   utilisateur_id: string;
 
   @Column({ type: 'timestamp', precision: 3 })
@@ -35,4 +37,11 @@ export class RefreshToken {
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;
+
+  @BeforeInsert()
+  genererId() {
+    if (!this.id) {
+      this.id = randomUUID();
+    }
+  }
 }

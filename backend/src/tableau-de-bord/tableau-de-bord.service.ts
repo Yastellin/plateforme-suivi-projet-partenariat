@@ -13,7 +13,9 @@ import {
   EcheanceConventionDto,
   ProjetEnRetardDto,
 } from './dto/echeancier-response.dto';
-import { StatutProjet, StatutConvention, Role } from '@prisma/client';
+import { StatutProjet } from '../common/enums/statut-projet.enum';
+import { StatutConvention } from '../common/enums/statut-convention.enum';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class TableauDeBordService {

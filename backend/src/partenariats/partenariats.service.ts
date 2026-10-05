@@ -9,7 +9,7 @@ import { CreatePartenariatDto } from './dto/create-partenariat.dto';
 import { UpdatePartenariatDto } from './dto/update-partenariat.dto';
 import { QueryPartenariatDto } from './dto/query-partenariat.dto';
 import { PartenariatResponseDto } from './dto/partenariat-response.dto';
-import { StatutPartenariat } from '@prisma/client';
+import { StatutPartenariat } from '../common/enums/statut-partenariat.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TypeNotification } from '../common/enums/type-notification.enum';
 import { PrioriteNotification } from '../common/enums/priorite-notification.enum';

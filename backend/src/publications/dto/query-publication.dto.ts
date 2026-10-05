@@ -1,7 +1,7 @@
 import { IsOptional, IsString, IsEnum, IsUUID } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { StatutPublication } from '@prisma/client';
+import { StatutPublication } from '../../common/enums/statut-publication.enum';
 
 export class QueryPublicationDto extends PaginationQueryDto {
   @ApiPropertyOptional()

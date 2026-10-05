@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications.service';
-import { TypeNotification, PrioriteNotification, StatutConvention } from '@prisma/client';
+import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { PrioriteNotification } from '../../common/enums/priorite-notification.enum';
+import { StatutConvention } from '../../common/enums/statut-convention.enum';
 import { NotificationRule } from '../rules/notification-rule.interface';
 
 const SEUILS_JOURS = [30, 15, 7];

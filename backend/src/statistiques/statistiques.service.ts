@@ -4,7 +4,7 @@ import {
   ComparatifEtablissementsResponseDto,
   StatistiquesEtablissementDto,
 } from './dto/comparatif-response.dto';
-import { StatutProjet } from '@prisma/client';
+import { StatutProjet } from '../common/enums/statut-projet.enum';
 
 @Injectable()
 export class StatistiquesService {

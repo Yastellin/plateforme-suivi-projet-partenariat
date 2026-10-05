@@ -80,13 +80,15 @@ export class DocumentsService {
       },
     });
 
-    return document;
+    // TODO: retirer le cast lors de la migration vers TypeORM
+    return document as any;
   }
 
   async findOne(id: string): Promise<DocumentResponseDto> {
     const document = await this.prisma.document.findUnique({ where: { id } });
     if (!document) throw new NotFoundException('Document non trouve');
-    return document;
+    // TODO: retirer le cast lors de la migration vers TypeORM
+    return document as any;
   }
 
   async telecharger(id: string): Promise<{ chemin: string; nom: string }> {
@@ -107,7 +109,8 @@ export class DocumentsService {
       orderBy: { version: 'desc' },
     });
 
-    return versions;
+    // TODO: retirer le cast lors de la migration vers TypeORM
+    return versions as any;
   }
 
   async remove(id: string): Promise<{ message: string }> {

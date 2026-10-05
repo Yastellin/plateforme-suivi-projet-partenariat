@@ -1,75 +1,62 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, ILike } from 'typeorm';
 import { CreateBailleurDto } from './dto/create-bailleur.dto';
 import { UpdateBailleurDto } from './dto/update-bailleur.dto';
-import { BailleurResponseDto } from './dto/bailleur-response.dto';
+import { Bailleur } from './entities/bailleur.entity';
 
 @Injectable()
 export class BailleursService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Bailleur)
+    private bailleurRepo: Repository<Bailleur>,
+  ) {}
 
-  async create(dto: CreateBailleurDto): Promise<BailleurResponseDto> {
-    const existant = await this.prisma.bailleur.findFirst({
-      where: { nom: { equals: dto.nom, mode: 'insensitive' } },
+  async create(dto: CreateBailleurDto): Promise<Bailleur> {
+    const existant = await this.bailleurRepo.findOne({
+      where: { nom: ILike(dto.nom) },
     });
     if (existant) {
       throw new ConflictException(`Un bailleur nomme "${dto.nom}" existe deja`);
     }
-
-    return this.prisma.bailleur.create({
-      data: { nom: dto.nom, description: dto.description },
+    const bailleur = this.bailleurRepo.create({
+      nom: dto.nom,
+      description: dto.description ?? null,
     });
+    return this.bailleurRepo.save(bailleur);
   }
 
-  async findAll(nom?: string): Promise<BailleurResponseDto[]> {
-    const where: any = {};
-    if (nom) where.nom = { contains: nom, mode: 'insensitive' };
-    return this.prisma.bailleur.findMany({
-      where,
-      orderBy: { nom: 'asc' },
-    });
+  async findAll(nom?: string): Promise<Bailleur[]> {
+    const where = nom ? { nom: ILike(`%${nom}%`) } : {};
+    return this.bailleurRepo.find({ where, order: { nom: 'ASC' } });
   }
 
-  async findOne(id: string): Promise<BailleurResponseDto> {
-    const bailleur = await this.prisma.bailleur.findUnique({ where: { id } });
+  async findOne(id: string): Promise<Bailleur> {
+    const bailleur = await this.bailleurRepo.findOne({ where: { id } });
     if (!bailleur) throw new NotFoundException('Bailleur non trouve');
     return bailleur;
   }
 
-  async update(id: string, dto: UpdateBailleurDto): Promise<BailleurResponseDto> {
+  async update(id: string, dto: UpdateBailleurDto): Promise<Bailleur> {
     await this.findOne(id);
-
     if (dto.nom) {
-      const existant = await this.prisma.bailleur.findFirst({
-        where: {
-          nom: { equals: dto.nom, mode: 'insensitive' },
-          id: { not: id },
-        },
+      const existant = await this.bailleurRepo.findOne({
+        where: { nom: ILike(dto.nom) },
       });
-      if (existant) {
+      if (existant && existant.id !== id) {
         throw new ConflictException(`Un bailleur nomme "${dto.nom}" existe deja`);
       }
     }
-
-    return this.prisma.bailleur.update({
-      where: { id },
-      data: { nom: dto.nom, description: dto.description },
+    await this.bailleurRepo.update(id, {
+      nom: dto.nom,
+      description: dto.description !== undefined ? dto.description : undefined,
     });
+    return this.findOne(id);
   }
 
   async remove(id: string): Promise<{ message: string }> {
     await this.findOne(id);
-
-    const projetsAssocies = await this.prisma.projetBailleur.count({
-      where: { bailleur_id: id },
-    });
-    if (projetsAssocies > 0) {
-      throw new ConflictException(
-        `Impossible de supprimer ce bailleur : ${projetsAssocies} projet(s) y sont associes`,
-      );
-    }
-
-    await this.prisma.bailleur.delete({ where: { id } });
+    await this.bailleurRepo.delete(id);
     return { message: 'Bailleur supprime' };
   }
 }

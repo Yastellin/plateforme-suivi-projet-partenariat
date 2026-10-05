@@ -1,6 +1,7 @@
 import { IsString, IsOptional, IsEmail, IsEnum, IsBoolean, Length, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { StatutPartenaire, Visibilite } from '@prisma/client';
+import { StatutPartenaire } from '../../common/enums/statut-partenaire.enum';
+import { Visibilite } from '../../common/enums/visibilite.enum';
 
 export class CreatePartenaireDto {
   @ApiProperty({ example: 'Université de Toulouse' })

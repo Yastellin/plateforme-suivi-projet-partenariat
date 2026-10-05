@@ -1,83 +1,64 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, ILike } from 'typeorm';
 import { CreateBeneficiaireDto } from './dto/create-beneficiaire.dto';
 import { UpdateBeneficiaireDto } from './dto/update-beneficiaire.dto';
-import { BeneficiaireResponseDto } from './dto/beneficiaire-response.dto';
+import { Beneficiaire } from './entities/beneficiaire.entity';
 
 @Injectable()
 export class BeneficiairesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Beneficiaire)
+    private beneficiaireRepo: Repository<Beneficiaire>,
+  ) {}
 
-  async create(dto: CreateBeneficiaireDto): Promise<BeneficiaireResponseDto> {
-    const existant = await this.prisma.beneficiaire.findFirst({
-      where: { nom: { equals: dto.nom, mode: 'insensitive' } },
+  async create(dto: CreateBeneficiaireDto): Promise<Beneficiaire> {
+    const existant = await this.beneficiaireRepo.findOne({
+      where: { nom: ILike(dto.nom) },
     });
     if (existant) {
       throw new ConflictException(`Un beneficiaire nomme "${dto.nom}" existe deja`);
     }
-
-    return this.prisma.beneficiaire.create({
-      data: {
-        nom: dto.nom,
-        categorie: dto.categorie,
-        description: dto.description,
-      },
+    const b = this.beneficiaireRepo.create({
+      nom: dto.nom,
+      categorie: dto.categorie ?? null,
+      description: dto.description ?? null,
     });
+    return this.beneficiaireRepo.save(b);
   }
 
-  async findAll(nom?: string): Promise<BeneficiaireResponseDto[]> {
-    const where: any = {};
-    if (nom) where.nom = { contains: nom, mode: 'insensitive' };
-    return this.prisma.beneficiaire.findMany({
-      where,
-      orderBy: { nom: 'asc' },
-    });
+  async findAll(nom?: string): Promise<Beneficiaire[]> {
+    const where = nom ? { nom: ILike(`%${nom}%`) } : {};
+    return this.beneficiaireRepo.find({ where, order: { nom: 'ASC' } });
   }
 
-  async findOne(id: string): Promise<BeneficiaireResponseDto> {
-    const beneficiaire = await this.prisma.beneficiaire.findUnique({ where: { id } });
-    if (!beneficiaire) throw new NotFoundException('Beneficiaire non trouve');
-    return beneficiaire;
+  async findOne(id: string): Promise<Beneficiaire> {
+    const b = await this.beneficiaireRepo.findOne({ where: { id } });
+    if (!b) throw new NotFoundException('Beneficiaire non trouve');
+    return b;
   }
 
-  async update(id: string, dto: UpdateBeneficiaireDto): Promise<BeneficiaireResponseDto> {
+  async update(id: string, dto: UpdateBeneficiaireDto): Promise<Beneficiaire> {
     await this.findOne(id);
-
     if (dto.nom) {
-      const existant = await this.prisma.beneficiaire.findFirst({
-        where: {
-          nom: { equals: dto.nom, mode: 'insensitive' },
-          id: { not: id },
-        },
+      const existant = await this.beneficiaireRepo.findOne({
+        where: { nom: ILike(dto.nom) },
       });
-      if (existant) {
+      if (existant && existant.id !== id) {
         throw new ConflictException(`Un beneficiaire nomme "${dto.nom}" existe deja`);
       }
     }
-
-    return this.prisma.beneficiaire.update({
-      where: { id },
-      data: {
-        nom: dto.nom,
-        categorie: dto.categorie,
-        description: dto.description,
-      },
+    await this.beneficiaireRepo.update(id, {
+      nom: dto.nom,
+      categorie: dto.categorie !== undefined ? dto.categorie : undefined,
+      description: dto.description !== undefined ? dto.description : undefined,
     });
+    return this.findOne(id);
   }
 
   async remove(id: string): Promise<{ message: string }> {
     await this.findOne(id);
-
-    const projetsAssocies = await this.prisma.projetBeneficiaire.count({
-      where: { beneficiaire_id: id },
-    });
-    if (projetsAssocies > 0) {
-      throw new ConflictException(
-        `Impossible de supprimer ce beneficiaire : ${projetsAssocies} projet(s) y sont associes`,
-      );
-    }
-
-    await this.prisma.beneficiaire.delete({ where: { id } });
+    await this.beneficiaireRepo.delete(id);
     return { message: 'Beneficiaire supprime' };
   }
 }

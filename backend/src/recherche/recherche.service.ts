@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryRechercheDto, TypeRecherche } from './dto/query-recherche.dto';
 import { ResultatRechercheDto, RechercheResponseDto } from './dto/recherche-response.dto';
-import { Role } from '@prisma/client';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class RechercheService {

@@ -7,7 +7,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { StatutConvention } from '@prisma/client';
+import { StatutConvention } from '../../common/enums/statut-convention.enum';
 
 export class CreateConventionDto {
   @ApiProperty({ example: 'CONV-2026-001' })

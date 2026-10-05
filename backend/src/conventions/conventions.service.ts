@@ -9,7 +9,7 @@ import { CreateConventionDto } from './dto/create-convention.dto';
 import { UpdateConventionDto } from './dto/update-convention.dto';
 import { QueryConventionDto } from './dto/query-convention.dto';
 import { ConventionResponseDto } from './dto/convention-response.dto';
-import { StatutConvention } from '@prisma/client';
+import { StatutConvention } from '../common/enums/statut-convention.enum';
 
 @Injectable()
 export class ConventionsService {

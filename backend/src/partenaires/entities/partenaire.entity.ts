@@ -1,0 +1,89 @@
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeInsert,
+  Index,
+} from 'typeorm';
+import { randomUUID } from 'crypto';
+import { StatutPartenaire } from '../../common/enums/statut-partenaire.enum';
+import { Visibilite } from '../../common/enums/visibilite.enum';
+import { Etablissement } from '../../etablissements/entities/etablissement.entity';
+import { Contact } from './contact.entity';
+
+@Entity('Partenaire')
+@Index(['etablissement_id'])
+@Index(['archive'])
+@Index(['nom'])
+@Index(['statut'])
+export class Partenaire {
+  @PrimaryColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
+  nom: string;
+
+  @Column({ type: 'varchar' })
+  type: string;
+
+  @Column({ type: 'varchar' })
+  pays: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  adresse: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  telephone: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  email: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  site_web: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
+
+  @Column({ type: 'enum', enum: StatutPartenaire, enumName: 'StatutPartenaire', default: StatutPartenaire.ACTIF })
+  statut: StatutPartenaire;
+
+  @Column({ type: 'enum', enum: Visibilite, enumName: 'Visibilite', default: Visibilite.PRIVE })
+  visibilite: Visibilite;
+
+  @Column({ default: false })
+  est_strategique: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  logo_url: string | null;
+
+  @Column({ default: false })
+  archive: boolean;
+
+  @Column({ type: 'uuid' })
+  etablissement_id: string;
+
+  @ManyToOne(() => Etablissement, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'etablissement_id' })
+  etablissement: Etablissement;
+
+  @OneToMany(() => Contact, (contact) => contact.partenaire, { cascade: true })
+  contacts: Contact[];
+
+  @CreateDateColumn({ type: 'timestamp', precision: 3 })
+  created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamp', precision: 3 })
+  updated_at: Date;
+
+  @BeforeInsert()
+  genererId() {
+    if (!this.id) {
+      this.id = randomUUID();
+    }
+  }
+}
