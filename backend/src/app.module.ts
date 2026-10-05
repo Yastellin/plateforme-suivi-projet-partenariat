@@ -28,12 +28,14 @@ import { ArchivesModule } from './archives/archives.module';
 import { RechercheModule } from './recherche/recherche.module';
 import { HealthModule } from './health/health.module';
 import { CleanupModule } from './cleanup/cleanup.module';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     // Rate limiting global : 100 requetes par minute et par IP.
     // Le TTL est en millisecondes dans @nestjs/throttler v6.
+    DatabaseModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
