@@ -1,14 +1,16 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
 } from 'typeorm';
+import { randomUUID } from 'crypto';
 
 @Entity('Site')
 export class Site {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
 
   @Column({ type: 'varchar' })
@@ -23,4 +25,10 @@ export class Site {
   @UpdateDateColumn({ type: 'timestamp', precision: 3 })
   updated_at: Date;
 
+  @BeforeInsert()
+  genererId() {
+    if (!this.id) {
+      this.id = randomUUID();
+    }
+  }
 }
