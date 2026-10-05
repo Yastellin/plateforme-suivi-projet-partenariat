@@ -1,0 +1,109 @@
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeInsert,
+  Index,
+} from 'typeorm';
+import { randomUUID } from 'crypto';
+import { StatutProjet } from '../../common/enums/statut-projet.enum';
+import { Etablissement } from '../../etablissements/entities/etablissement.entity';
+import { Partenariat } from '../../partenariats/entities/partenariat.entity';
+import { Porteur } from '../../referentiels/porteurs/entities/porteur.entity';
+import { ProjetPartenaire } from './projet-partenaire.entity';
+import { ProjetBeneficiaire } from './projet-beneficiaire.entity';
+import { ProjetBailleur } from './projet-bailleur.entity';
+import { ProjetSite } from './projet-site.entity';
+import { Activite } from './activite.entity';
+
+@Entity('Projet')
+@Index(['etablissement_id'])
+@Index(['statut'])
+@Index(['archive'])
+@Index(['date_debut', 'date_fin_prevue'])
+@Index(['partenariat_id'])
+export class Projet {
+  @PrimaryColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
+  nom: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  intitule_officiel: string | null;
+
+  @Column({ type: 'varchar' })
+  type: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  domaine: string | null;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
+  budget: number | null;
+
+  @Column({ type: 'timestamp', precision: 3 })
+  date_debut: Date;
+
+  @Column({ type: 'timestamp', precision: 3 })
+  date_fin_prevue: Date;
+
+  @Column({ type: 'enum', enum: StatutProjet, enumName: 'StatutProjet', default: StatutProjet.BROUILLON })
+  statut: StatutProjet;
+
+  @Column({ default: false })
+  archive: boolean;
+
+  @Column({ type: 'uuid' })
+  etablissement_id: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  partenariat_id: string | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  porteur_id: string | null;
+
+  @ManyToOne(() => Etablissement, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'etablissement_id' })
+  etablissement: Etablissement;
+
+  @ManyToOne(() => Partenariat, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'partenariat_id' })
+  partenariat: Partenariat | null;
+
+  @ManyToOne(() => Porteur, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'porteur_id' })
+  porteur: Porteur | null;
+
+  @OneToMany(() => ProjetPartenaire, (pp) => pp.projet)
+  partenaires: ProjetPartenaire[];
+
+  @OneToMany(() => ProjetBeneficiaire, (pb) => pb.projet)
+  beneficiaires: ProjetBeneficiaire[];
+
+  @OneToMany(() => ProjetBailleur, (pb) => pb.projet)
+  bailleurs: ProjetBailleur[];
+
+  @OneToMany(() => ProjetSite, (ps) => ps.projet)
+  sites: ProjetSite[];
+
+  @OneToMany(() => Activite, (a) => a.projet)
+  activites: Activite[];
+
+  @CreateDateColumn({ type: 'timestamp', precision: 3 })
+  created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamp', precision: 3 })
+  updated_at: Date;
+
+  @BeforeInsert()
+  genererId() {
+    if (!this.id) {
+      this.id = randomUUID();
+    }
+  }
+}

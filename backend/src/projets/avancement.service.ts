@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Activite } from './entities/activite.entity';
 
 @Injectable()
 export class AvancementService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Activite)
+    private activiteRepo: Repository<Activite>,
+  ) {}
 
   async calculer(projetId: string): Promise<number> {
-    const total = await this.prisma.activite.count({
+    const total = await this.activiteRepo.count({
       where: { projet_id: projetId },
     });
     if (total === 0) return 0;
 
-    const terminees = await this.prisma.activite.count({
+    const terminees = await this.activiteRepo.count({
       where: { projet_id: projetId, terminee: true },
     });
 
