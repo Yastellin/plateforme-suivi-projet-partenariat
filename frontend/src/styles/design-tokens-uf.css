@@ -1,7 +1,5 @@
 /* src/styles/design-tokens-uf.css */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
-
 :root {
   --font-heading: 'Plus Jakarta Sans', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -12,35 +10,41 @@
   --fs-h1: 24px;
 
   --color-surface: #FFFFFF;
-  --color-page-bg: #F7F7F5;
+  --color-page-bg: #F4FAF6;
 
   --color-chrome-bg: #FFFFFF;
-  --color-chrome-hover: #F2F3F1;
-  --color-chrome-border: #E3E4E0;
+  --color-chrome-hover: #F4FAF6;
+  --color-chrome-border: #D6E5DC;
 
-  --color-text-primary: #1F2328;
-  --color-text-secondary: #5F6368;
-  --color-border: #E3E4E0;
+  --color-text-primary: #052E1F;
+  --color-text-secondary: #5B7A6B;
+  --color-border: #D6E5DC;
 
-  --color-brand: #367D56;
-  --color-brand-hover: #266141;
+  --color-brand: #047857;
+  --color-brand-hover: #065F46;
   --color-brand-text: #FFFFFF;
-  --color-brand-deep: #1B4D34;
-  --color-active-zone: #E8F0EA;
-  --color-brand-moment: #C89000;
+  --color-brand-deep: #065F46;
+  --color-active-zone: #D1FAE5;
+  --color-brand-moment: #FFC400;
 
-  --status-brouillon-bg: #F1F2F0; --status-brouillon-fg: #5F6368;
-  --status-attente-bg:   #FBF0D9; --status-attente-fg:   #8A5A00;
-  --status-actif-bg:     #E8F0EA; --status-actif-fg:     #1B4D34;
-  --status-expire-bg:    #FBE5E5; --status-expire-fg:    #A82A2A;
-  --status-archive-bg:   #F1F2F0; --status-archive-fg:   #5F6368;
-  --status-info-bg:      #E0E8F5; --status-info-fg:      #1E40AF;
+  --status-brouillon-bg: #ECF1EE; --status-brouillon-fg: #5B7A6B;
+  --status-attente-bg:   #FFF1CC; --status-attente-fg:   #8A5A00;
+  --status-actif-bg:     #D1FAE5; --status-actif-fg:     #065F46;
+  --status-expire-bg:    #FFDDE0; --status-expire-fg:    #B91C1C;
+  --status-archive-bg:   #EFF3F1; --status-archive-fg:   #5B7A6B;
+  --status-circuit-bg:   #DBEAFE; --status-circuit-fg:   #1D4ED8;
+  --status-info-bg:      #DBEAFE; --status-info-fg:      #1D4ED8;
+
+  --chart-circuit: #3B82F6;
+  --chart-error:   #B91C1C;
+  --chart-warning: #FFC400;
+  --chart-brand:   #047857;
 
   --radius: 12px;
   --radius-sm: 8px;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.04);
-  --shadow-md: 0 4px 14px rgba(0,0,0,.06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 14px rgba(0,0,0,.08);
 
   --layout-sidebar-width: 248px;
   --layout-sidebar-width-collapsed: 72px;
@@ -48,30 +52,36 @@
 }
 
 .dark {
-  --color-surface: #1B1F24;
-  --color-page-bg: #15181C;
+  --color-surface: #0A2419;
+  --color-page-bg: #041710;
 
-  --color-chrome-bg: #1F2328;
-  --color-chrome-hover: #2A2E34;
-  --color-chrome-border: #2C3138;
+  --color-chrome-bg: #0F2318;
+  --color-chrome-hover: #163020;
+  --color-chrome-border: #1B3A2C;
 
-  --color-text-primary: #E8E9EB;
-  --color-text-secondary: #9096A0;
-  --color-border: #2C3138;
+  --color-text-primary: #F0FDF6;
+  --color-text-secondary: #8FA89B;
+  --color-border: #1B3A2C;
 
-  --color-brand: #6BAF85;
-  --color-brand-hover: #82C198;
-  --color-brand-text: #0D2818;
-  --color-brand-deep: #A2D4B0;
-  --color-active-zone: #1F3A2A;
-  --color-brand-moment: #E5B84D;
+  --color-brand: #34D399;
+  --color-brand-hover: #10B981;
+  --color-brand-text: #052E1F;
+  --color-brand-deep: #10B981;
+  --color-active-zone: #103A28;
+  --color-brand-moment: #FFD24D;
 
-  --status-brouillon-bg: #24282E; --status-brouillon-fg: #9096A0;
-  --status-attente-bg:   #3D2E08; --status-attente-fg:   #FCD34D;
-  --status-actif-bg:     #1F3A2A; --status-actif-fg:     #A2D4B0;
-  --status-expire-bg:    #3A1818; --status-expire-fg:    #E8A5A5;
-  --status-archive-bg:   #1E2227; --status-archive-fg:   #6E747E;
+  --status-brouillon-bg: #142A20; --status-brouillon-fg: #8FA89B;
+  --status-attente-bg:   #3D2E08; --status-attente-fg:   #FFD24D;
+  --status-actif-bg:     #103A28; --status-actif-fg:     #6EE7B7;
+  --status-expire-bg:    #3A1820; --status-expire-fg:    #FF9B9B;
+  --status-archive-bg:   #10241B; --status-archive-fg:   #7B9287;
+  --status-circuit-bg:   #1E2A50; --status-circuit-fg:   #93B4F7;
   --status-info-bg:      #1E2A50; --status-info-fg:      #93B4F7;
+
+  --chart-circuit: #93B4F7;
+  --chart-error:   #FF9B9B;
+  --chart-warning: #FFD24D;
+  --chart-brand:   #34D399;
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,.35);
   --shadow-md: 0 4px 14px rgba(0,0,0,.50);
