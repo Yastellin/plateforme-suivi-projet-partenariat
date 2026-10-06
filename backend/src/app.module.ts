@@ -30,6 +30,7 @@ import { HealthModule } from './health/health.module';
 import { CleanupModule } from './cleanup/cleanup.module';
 import { DatabaseModule } from './database/database.module';
 import { SyntheseModule } from './synthese/synthese.module';
+import { EspacePublicModule } from './espace-public/espace-public.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { SyntheseModule } from './synthese/synthese.module';
     RechercheModule,
     CleanupModule,
     SyntheseModule,
+    EspacePublicModule,
   ],
   controllers: [AppController],
   providers: [
