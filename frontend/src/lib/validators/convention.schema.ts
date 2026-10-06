@@ -8,7 +8,6 @@ export const schemaConvention = z.object({
   date_debut: z.string().optional(),
   date_fin: z.string().optional(),
   statut: z.enum(["BROUILLON", "EN_ATTENTE_SIGNATURE", "SIGNEE", "ACTIVE", "SUSPENDUE", "EXPIREE"]),
-  etape_circuit: z.enum(["REDACTION", "TRANSMISSION", "VERIFICATION_DAJ", "ATTENTE_SIGNATURE", "SIGNEE"]),
   description: z.string().optional(),
   partenariat_id: z.string().optional(),
   projet_id: z.string().optional(),

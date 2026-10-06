@@ -1,11 +1,16 @@
-// src/lib/validators/compte.schema.ts
-import { z } from "zod"
+// src/lib/validators/contact.schema.ts
 
-export const schemaContact = z.object({
-  nom: z.string().trim().min(1, "Le nom est requis").max(255, "Le nom ne doit pas dépasser 255 caractères"),
-  fonction: z.string().trim().max(255, "La fonction ne doit pas dépasser 255 caractères").optional().or(z.literal("")),
-  email: z.string().trim().email("Email invalide").max(255, "L'email ne doit pas dépasser 255 caractères").optional().or(z.literal("")),
-  telephone: z.string().trim().max(20, "Le téléphone ne doit pas dépasser 20 caractères").optional().or(z.literal("")),
-})
+import { z } from 'zod';
+import { creerSchemaTelephoneOptionnel } from './phone.schema';
 
-export type ContactFormValues = z.infer<typeof schemaContact>
+export const contactSchema = z.object({
+  prenom: z.string().min(1, 'Le prénom est obligatoire.'),
+  nom: z.string().min(1, 'Le nom est obligatoire.'),
+  fonction: z.string().optional(),
+  email: z.string().email('Adresse e-mail invalide.').optional().or(z.literal('')),
+  telephone: creerSchemaTelephoneOptionnel(),
+});
+
+export const schemaContact = contactSchema;
+
+export type ContactFormValues = z.infer<typeof contactSchema>;

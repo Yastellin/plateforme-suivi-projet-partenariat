@@ -1,20 +1,25 @@
 // src/lib/validators/phone.schema.ts
 
 import { z } from 'zod';
+import { isValidPhoneNumber } from 'libphonenumber-js';
+import { normaliserTelephone as normaliserNumeroTelephone } from '@/lib/phone';
 
-const TELEPHONE_MG_INTERNATIONAL = /^\+2613[2348]\d{7}$/;
-const TELEPHONE_MG_LOCAL = /^03[2348]\d{7}$/;
+const MESSAGE_INVALIDE = 'Numéro invalide. Exemples acceptés : +261 32 12 345 67, 032 12 345 67, +33 6 12 34 56 78.';
 
-export function normaliserTelephone(valeur: string): string {
-  return valeur.replace(/\s+/g, '');
+export function normaliserTelephone(valeur: string): string | null {
+  return normaliserNumeroTelephone(valeur);
 }
 
 export function creerSchemaTelephoneOptionnel() {
   return z
     .string()
     .optional()
-    .refine(
-      (valeur) => !valeur || TELEPHONE_MG_INTERNATIONAL.test(normaliserTelephone(valeur)) || TELEPHONE_MG_LOCAL.test(normaliserTelephone(valeur)),
-      { message: 'Numéro invalide. Format attendu : +261 32 12 345 67 ou 032 12 345 67.' },
-    );
+    .refine((valeur) => !valeur || isValidPhoneNumber(valeur, 'MG'), { message: MESSAGE_INVALIDE });
+}
+
+export function creerSchemaTelephoneObligatoire() {
+  return z
+    .string()
+    .min(1, 'Le numéro de téléphone est obligatoire.')
+    .refine((valeur) => isValidPhoneNumber(valeur, 'MG'), { message: MESSAGE_INVALIDE });
 }
