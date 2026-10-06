@@ -11,6 +11,7 @@ import { QueryPublicationDto } from './dto/query-publication.dto';
 import { PublicationResponseDto } from './dto/publication-response.dto';
 import { StatutPublication } from '../common/enums/statut-publication.enum';
 import { Publication } from './enitities/publication.entity';
+import { PhotoPublication } from './enitities/photo-publication.entity';
 import { Projet } from '../projets/entities/projet.entity';
 
 @Injectable()
@@ -48,7 +49,7 @@ export class PublicationsService {
       }),
     );
 
-    return (await this.findOne(publication.id)) as any;
+    return this.findOne(publication.id);
   }
 
   async findAll(query: QueryPublicationDto) {
@@ -68,9 +69,7 @@ export class PublicationsService {
     });
 
     return {
-      data: data.map((publication) =>
-        this.mapToResponse(publication),
-      ) as any,
+      data: data.map((publication) => this.mapToResponse(publication)),
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -82,7 +81,7 @@ export class PublicationsService {
       order: { photos: { ordre: 'ASC' } },
     });
     if (!publication) throw new NotFoundException('Publication non trouvee');
-    return this.mapToResponse(publication) as any;
+    return this.mapToResponse(publication);
   }
 
   async update(
@@ -138,7 +137,7 @@ export class PublicationsService {
     return this.findOne(id);
   }
 
-  private mapToResponse(data: any): PublicationResponseDto {
+  private mapToResponse(data: Publication): PublicationResponseDto {
     return {
       id: data.id,
       titre: data.titre,
@@ -147,7 +146,7 @@ export class PublicationsService {
       statut: data.statut,
       resultats: data.resultats,
       projet_id: data.projet_id,
-      photos: data.photos.map((p: any) => ({
+      photos: (data.photos ?? []).map((p: PhotoPublication) => ({
         id: p.id,
         url_fichier: p.url_fichier,
         legende: p.legende,

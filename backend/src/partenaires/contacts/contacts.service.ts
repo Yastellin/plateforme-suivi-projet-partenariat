@@ -35,8 +35,8 @@ export class ContactsService {
     const contact = await this.contactRepo.findOne({ where: { id } });
     if (!contact) throw new NotFoundException('Contact non trouve');
 
-    await this.contactRepo.update(id, dto as any);
-    return this.contactRepo.findOne({ where: { id } });
+    Object.assign(contact, dto);
+    return this.contactRepo.save(contact);
   }
 
   async remove(id: string) {

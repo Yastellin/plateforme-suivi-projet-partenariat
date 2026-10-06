@@ -84,13 +84,13 @@ export class DocumentsService {
       convention_id: dto.convention_id || null,
     });
 
-    return (await this.documentRepo.save(document)) as any;
+    return this.mapToResponse(await this.documentRepo.save(document));
   }
 
   async findOne(id: string): Promise<DocumentResponseDto> {
     const document = await this.documentRepo.findOne({ where: { id } });
     if (!document) throw new NotFoundException('Document non trouve');
-    return document as any;
+    return this.mapToResponse(document);
   }
 
   async telecharger(id: string): Promise<{ chemin: string; nom: string }> {
@@ -111,7 +111,7 @@ export class DocumentsService {
       order: { version: 'DESC' },
     });
 
-    return versions as any;
+    return versions.map((version) => this.mapToResponse(version));
   }
 
   async remove(id: string): Promise<{ message: string }> {
@@ -122,5 +122,20 @@ export class DocumentsService {
     await this.documentRepo.delete(id);
 
     return { message: 'Document supprime' };
+  }
+
+  private mapToResponse(document: Document): DocumentResponseDto {
+    return {
+      id: document.id,
+      nom_fichier: document.nom_fichier,
+      url_fichier: document.url_fichier,
+      type: document.type,
+      version: document.version,
+      est_archive: document.est_archive,
+      projet_id: document.projet_id,
+      convention_id: document.convention_id,
+      created_at: document.created_at,
+      updated_at: document.updated_at,
+    };
   }
 }

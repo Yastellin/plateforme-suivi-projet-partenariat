@@ -50,7 +50,7 @@ export class PhotosService {
       }),
     );
 
-    return photo as any;
+    return this.mapToResponse(photo);
   }
 
   async findAllByPublication(publicationId: string): Promise<PhotoResponseDto[]> {
@@ -59,10 +59,11 @@ export class PhotosService {
     });
     if (!publication) throw new NotFoundException('Publication non trouvee');
 
-    return (await this.photoRepo.find({
+    const photos = await this.photoRepo.find({
       where: { publication_id: publicationId },
       order: { ordre: 'ASC' },
-    })) as any;
+    });
+    return photos.map((photo) => this.mapToResponse(photo));
   }
 
   async remove(id: string): Promise<{ message: string }> {
@@ -73,5 +74,17 @@ export class PhotosService {
     await this.photoRepo.delete(id);
 
     return { message: 'Photo supprimee' };
+  }
+
+  private mapToResponse(photo: PhotoPublication): PhotoResponseDto {
+    return {
+      id: photo.id,
+      publication_id: photo.publication_id,
+      url_fichier: photo.url_fichier,
+      legende: photo.legende,
+      ordre: photo.ordre,
+      created_at: photo.created_at,
+      updated_at: photo.updated_at,
+    };
   }
 }

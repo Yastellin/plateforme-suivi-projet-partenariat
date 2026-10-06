@@ -6,6 +6,7 @@ import { UpdatePartenaireDto } from './dto/update-partenaire.dto';
 import { QueryPartenaireDto } from './dto/query-partenaire.dto';
 import { Partenaire } from './entities/partenaire.entity';
 import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
+import { Visibilite } from '../common/enums/visibilite.enum';
 
 @Injectable()
 export class PartenairesService {
@@ -34,7 +35,7 @@ export class PartenairesService {
     partenaire.site_web = dto.site_web ?? null;
     partenaire.description = dto.description ?? null;
     partenaire.statut = dto.statut || StatutPartenaire.ACTIF;
-    partenaire.visibilite = (dto.visibilite || 'PRIVE') as any;
+    partenaire.visibilite = dto.visibilite || Visibilite.PRIVE;
     partenaire.est_strategique = dto.est_strategique || false;
     partenaire.etablissement_id = etablissementId;
 
@@ -80,7 +81,7 @@ export class PartenairesService {
   }
 
   async update(id: string, dto: UpdatePartenaireDto, etablissementId?: string) {
-    await this.findOne(id, etablissementId);
+    const partenaire = await this.findOne(id, etablissementId);
 
     const { etablissement_id, ...data } = dto;
 
@@ -98,8 +99,8 @@ export class PartenairesService {
       }
     }
 
-    await this.partenaireRepo.update(id, data as any);
-    return this.findOne(id, etablissementId);
+    Object.assign(partenaire, data);
+    return this.partenaireRepo.save(partenaire);
   }
 
   async archiver(id: string) {
