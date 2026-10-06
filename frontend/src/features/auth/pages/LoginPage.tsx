@@ -31,15 +31,17 @@ function StatistiquesAccueil() {
     );
   }
 
-  if (isError || !data) {
+  const statistiques = data?.statistiques;
+
+  if (isError || !data || !statistiques) {
     return null;
   }
 
   return (
     <div className="flex gap-7">
-      <StatistiqueAccueil valeur={data.statistiques.partenaires_actifs} libelle="Partenaires actifs" />
-      <StatistiqueAccueil valeur={data.statistiques.projets_en_cours} libelle="Projets en cours" />
-      <StatistiqueAccueil valeur={data.statistiques.conventions_signees} libelle="Conventions signées" />
+      <StatistiqueAccueil valeur={statistiques.partenaires_actifs} libelle="Partenaires actifs" />
+      <StatistiqueAccueil valeur={statistiques.projets_en_cours} libelle="Projets en cours" />
+      <StatistiqueAccueil valeur={statistiques.conventions_signees} libelle="Conventions signées" />
     </div>
   );
 }

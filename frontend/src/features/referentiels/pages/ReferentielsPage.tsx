@@ -1,14 +1,17 @@
 // src/features/referentiels/pages/ReferentielsPage.tsx
+
 import { useState } from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EmptyState } from "@/components/shared/EmptyState"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { Panel, PanelBody } from "@/components/shared/Panel"
+import { TableToolbar } from "@/components/shared/TableToolbar"
 import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog"
 import { useDebounce } from "@/hooks/useDebounce"
 
@@ -29,18 +32,13 @@ import { useCreateSite } from "@/features/referentiels/api/useCreateSite"
 import { useUpdateSite } from "@/features/referentiels/api/useUpdateSite"
 import { useDeleteSite } from "@/features/referentiels/api/useDeleteSite"
 
-interface LigneTableau {
-  id: string
-  nom: string
-}
-
 interface TableauReferentielProps {
-  donnees: LigneTableau[] | undefined
+  donnees: { id: string; nom: string }[] | undefined
   isLoading: boolean
   onCreer: (nom: string, extra?: string) => void
   onModifier: (id: string, nom: string, extra?: string) => void
   onSupprimer: (id: string) => void
-  champExtra?: { label: string; key: string; get: (el: LigneTableau) => string }
+  champExtra?: { label: string; key: string; get: (el: { id: string; nom: string }) => string }
 }
 
 function TableauReferentiel({
@@ -53,7 +51,7 @@ function TableauReferentiel({
 }: TableauReferentielProps) {
   const [recherche, setRecherche] = useState("")
   const [dialogueOuvert, setDialogueOuvert] = useState(false)
-  const [elementSelectionne, setElementSelectionne] = useState<LigneTableau | null>(null)
+  const [elementSelectionne, setElementSelectionne] = useState<{ id: string; nom: string } | null>(null)
   const [suppressionId, setSuppressionId] = useState<string | null>(null)
   const [nomForm, setNomForm] = useState("")
   const [extraForm, setExtraForm] = useState("")
@@ -71,7 +69,7 @@ function TableauReferentiel({
     setDialogueOuvert(true)
   }
 
-  function ouvrirModification(element: LigneTableau) {
+  function ouvrirModification(element: { id: string; nom: string }) {
     setElementSelectionne(element)
     setNomForm(element.nom)
     setExtraForm(champExtra?.get(element) ?? "")
@@ -88,72 +86,81 @@ function TableauReferentiel({
     setDialogueOuvert(false)
   }
 
-  if (isLoading) {
-    return <p className="p-4 text-sm text-muted-foreground">Chargement...</p>
-  }
-
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <Input
-          value={recherche}
-          onChange={(e) => setRecherche(e.target.value)}
-          placeholder="Rechercher..."
-          className="h-9 max-w-sm text-[13px]"
-        />
-        <Button onClick={ouvrirCreation} className="h-9">
-          <Plus size={14} className="mr-1" />
-          Ajouter
-        </Button>
-      </div>
+    <div>
+      <TableToolbar
+        valeurRecherche={recherche}
+        onRechercheChange={setRecherche}
+        placeholderRecherche="Rechercher…"
+        action={
+          <button
+            type="button"
+            onClick={ouvrirCreation}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Ajouter
+          </button>
+        }
+      />
 
-      {!filtered || filtered.length === 0 ? (
-        <EmptyState
-          icon={Plus}
-          titre={recherche ? "Aucun résultat" : "Aucun élément"}
-          message={recherche ? "Essayez de modifier la recherche." : "Ajoutez un élément pour commencer."}
-        />
-      ) : (
-        <div className="rounded-xl border border-border">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                <th className="px-4 py-3 font-semibold">Nom</th>
-                {champExtra && <th className="px-4 py-3 font-semibold">{champExtra.label}</th>}
-                <th className="w-24 px-4 py-3 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((element) => (
-                <tr key={element.id} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground">{element.nom}</td>
+      <PanelBody>
+        {isLoading ? (
+          <p className="text-[13px] text-[var(--color-text-secondary)]">Chargement…</p>
+        ) : !filtered || filtered.length === 0 ? (
+          <EmptyState
+            icone={Plus}
+            titre={recherche ? "Aucun résultat" : "Aucun élément"}
+            description={recherche ? "Essayez de modifier la recherche." : "Ajoutez un élément pour commencer."}
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-[13px]">
+              <thead>
+                <tr>
+                  <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">Nom</th>
                   {champExtra && (
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {champExtra.get(element) || "—"}
-                    </td>
+                    <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">{champExtra.label}</th>
                   )}
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => ouvrirModification(element)}
-                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => setSuppressionId(element.id)}
-                        className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
+                  <th scope="col" className="w-24 border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px]" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {filtered.map((element) => (
+                  <tr key={element.id} className="hover:bg-[var(--color-page-bg)]">
+                    <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] font-semibold">{element.nom}</td>
+                    {champExtra && (
+                      <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
+                        {champExtra.get(element) || "—"}
+                      </td>
+                    )}
+                    <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => ouvrirModification(element)}
+                          aria-label={`Modifier ${element.nom}`}
+                          className="rounded p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSuppressionId(element.id)}
+                          aria-label={`Supprimer ${element.nom}`}
+                          className="rounded p-1 text-[var(--color-text-secondary)] hover:bg-[var(--status-expire-bg)] hover:text-[var(--status-expire-fg)]"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </PanelBody>
 
       <Dialog open={dialogueOuvert} onOpenChange={setDialogueOuvert}>
         <DialogContent className="sm:max-w-[430px]">
@@ -163,7 +170,7 @@ function TableauReferentiel({
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="nom-ref">Nom</Label>
-              <Input id="nom-ref" value={nomForm} onChange={(e) => setNomForm(e.target.value)} placeholder="Nom..." autoFocus />
+              <Input id="nom-ref" value={nomForm} onChange={(e) => setNomForm(e.target.value)} placeholder="Nom…" autoFocus />
             </div>
             {champExtra && (
               <div className="flex flex-col gap-1.5">
@@ -172,10 +179,21 @@ function TableauReferentiel({
               </div>
             )}
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setDialogueOuvert(false)}>Annuler</Button>
-              <Button onClick={gererSoumission} disabled={!nomForm.trim()}>
+              <button
+                type="button"
+                onClick={() => setDialogueOuvert(false)}
+                className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold hover:bg-[var(--color-chrome-hover)]"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={gererSoumission}
+                disabled={!nomForm.trim()}
+                className="rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 {elementSelectionne ? "Enregistrer" : "Créer"}
-              </Button>
+              </button>
             </div>
           </div>
         </DialogContent>
@@ -191,8 +209,8 @@ function TableauReferentiel({
         }}
         titre="Supprimer cet élément"
         description="Cette action est irréversible."
-        texteConfirmation="SUPPRIMER"
-        libelleBouton="Supprimer"
+        nomCible={donnees?.find((d) => d.id === suppressionId)?.nom ?? "ÉLÉMENT"}
+        libelleAction="Supprimer"
       />
     </div>
   )
@@ -211,7 +229,7 @@ function PorteursTab() {
       onCreer={(nom, extra) => createPorteur.mutate({ nom, institution_rattachement: extra })}
       onModifier={(id, nom, extra) => updatePorteur.mutate({ id, donnees: { nom, institution_rattachement: extra } }, { onSuccess: () => toast.success("Porteur modifié") })}
       onSupprimer={(id) => deletePorteur.mutate(id)}
-      champExtra={{ label: "Institution", key: "institution_rattachement", get: (el) => String((el as any).institution_rattachement ?? "") }}
+      champExtra={{ label: "Institution", key: "institution_rattachement", get: (el) => String((el as Record<string, unknown>).institution_rattachement ?? "") }}
     />
   )
 }
@@ -229,7 +247,7 @@ function BailleursTab() {
       onCreer={(nom, extra) => createBailleur.mutate({ nom, description: extra })}
       onModifier={(id, nom, extra) => updateBailleur.mutate({ id, donnees: { nom, description: extra } }, { onSuccess: () => toast.success("Bailleur modifié") })}
       onSupprimer={(id) => deleteBailleur.mutate(id)}
-      champExtra={{ label: "Description", key: "description", get: (el) => String((el as any).description ?? "") }}
+      champExtra={{ label: "Description", key: "description", get: (el) => String((el as Record<string, unknown>).description ?? "") }}
     />
   )
 }
@@ -247,7 +265,7 @@ function BeneficiairesTab() {
       onCreer={(nom, extra) => createBeneficiaire.mutate({ nom, categorie: extra })}
       onModifier={(id, nom, extra) => updateBeneficiaire.mutate({ id, donnees: { nom, categorie: extra } }, { onSuccess: () => toast.success("Bénéficiaire modifié") })}
       onSupprimer={(id) => deleteBeneficiaire.mutate(id)}
-      champExtra={{ label: "Catégorie", key: "categorie", get: (el) => String((el as any).categorie ?? "") }}
+      champExtra={{ label: "Catégorie", key: "categorie", get: (el) => String((el as Record<string, unknown>).categorie ?? "") }}
     />
   )
 }
@@ -265,15 +283,19 @@ function SitesTab() {
       onCreer={(nom, extra) => createSite.mutate({ nom, description: extra })}
       onModifier={(id, nom, extra) => updateSite.mutate({ id, donnees: { nom, description: extra } }, { onSuccess: () => toast.success("Site modifié") })}
       onSupprimer={(id) => deleteSite.mutate(id)}
-      champExtra={{ label: "Description", key: "description", get: (el) => String((el as any).description ?? "") }}
+      champExtra={{ label: "Description", key: "description", get: (el) => String((el as Record<string, unknown>).description ?? "") }}
     />
   )
 }
 
 export function ReferentielsPage() {
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="font-heading text-2xl font-semibold text-foreground">Référentiels</h1>
+    <div>
+      <PageHeader
+        titre="Référentiels"
+        description="Gérez les porteurs, bailleurs, bénéficiaires et sites."
+      />
+
       <Tabs defaultValue="porteurs">
         <TabsList>
           <TabsTrigger value="porteurs">Porteurs</TabsTrigger>
@@ -281,10 +303,18 @@ export function ReferentielsPage() {
           <TabsTrigger value="beneficiaires">Bénéficiaires</TabsTrigger>
           <TabsTrigger value="sites">Sites</TabsTrigger>
         </TabsList>
-        <TabsContent value="porteurs" className="mt-4"><PorteursTab /></TabsContent>
-        <TabsContent value="bailleurs" className="mt-4"><BailleursTab /></TabsContent>
-        <TabsContent value="beneficiaires" className="mt-4"><BeneficiairesTab /></TabsContent>
-        <TabsContent value="sites" className="mt-4"><SitesTab /></TabsContent>
+        <TabsContent value="porteurs" className="mt-4">
+          <Panel><PorteursTab /></Panel>
+        </TabsContent>
+        <TabsContent value="bailleurs" className="mt-4">
+          <Panel><BailleursTab /></Panel>
+        </TabsContent>
+        <TabsContent value="beneficiaires" className="mt-4">
+          <Panel><BeneficiairesTab /></Panel>
+        </TabsContent>
+        <TabsContent value="sites" className="mt-4">
+          <Panel><SitesTab /></Panel>
+        </TabsContent>
       </Tabs>
     </div>
   )
