@@ -14,6 +14,7 @@ import { randomUUID } from 'crypto';
 import { TypeCotutelle } from '../../common/enums/type-cotutelle.enum';
 import { Etablissement } from '../../etablissements/entities/etablissement.entity';
 import { Partenaire } from '../../partenaires/entities/partenaire.entity';
+import { Convention } from '../../conventions/entities/convention.entity';
 
 @Entity('CotutelleThese')
 @Index(['etablissement_id'])
@@ -82,7 +83,9 @@ export class CotutelleThese {
   @JoinColumn({ name: 'partenaire_id' })
   partenaire: Partenaire;
 
-  // Relation Convention ajoutee apres migration du module Conventions.
+  @ManyToOne(() => Convention, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'convention_id'})
+  convention: Convention | null;
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;

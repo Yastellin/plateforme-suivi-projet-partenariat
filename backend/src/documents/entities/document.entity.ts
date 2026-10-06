@@ -13,6 +13,7 @@ import {
 import { randomUUID } from 'crypto';
 import { TypeDocument } from '../../common/enums/type-document.enum';
 import { Projet } from '../../projets/entities/projet.entity';
+import { Convention } from '../../conventions/entities/convention.entity';
 
 @Entity('Document')
 @Index(['projet_id'])
@@ -47,7 +48,9 @@ export class Document {
   @JoinColumn({ name: 'projet_id' })
   projet: Projet | null;
 
-  // Relation Convention ajoutee apres migration du module Conventions.
+  @ManyToOne(() => Convention, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'convention_id' })
+  convention: Convention | null;
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;
