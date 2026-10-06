@@ -21,7 +21,7 @@ export function SelectionPorteur({ valeur, onChange }: SelectionPorteurProps) {
   return (
     <Select value={valeur} onValueChange={onChange} disabled={isLoading}>
       <SelectTrigger>
-        <SelectValue placeholder="Selectionner un porteur" />
+        <SelectValue placeholder="Sélectionner un porteur" />
       </SelectTrigger>
       <SelectContent>
         {porteurs?.map((p) => (

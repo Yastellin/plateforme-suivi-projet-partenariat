@@ -13,7 +13,7 @@ export function BoutonSoumettre({ projetId, disabled }: { projetId: string; disa
   const handleSoumettre = () => {
     soumission.mutate(undefined, {
       onSuccess: () => {
-        toast.success("Projet soumis a la Presidence")
+        toast.success("Projet soumis à la Présidence")
         setConfirmOuvert(false)
       },
       onError: (erreur: Error) => toast.error(erreur.message),
@@ -23,17 +23,16 @@ export function BoutonSoumettre({ projetId, disabled }: { projetId: string; disa
   return (
     <>
       <Button onClick={() => setConfirmOuvert(true)} disabled={disabled}>
-        <Send size={16} /> Soumettre a la Presidence
+        <Send size={16} /> Soumettre à la Présidence
       </Button>
       <ConfirmDialog
-        open={confirmOuvert}
-        onOpenChange={setConfirmOuvert}
+        ouvert={confirmOuvert}
+        onFermer={() => setConfirmOuvert(false)}
         titre="Soumettre ce projet ?"
-        description="Une fois soumis, vous ne pourrez plus le modifier. La Presidence prendra la main pour ajouter les activites, gerer la convention et decider de la publication."
-        onConfirm={handleSoumettre}
+        description="Une fois soumis, vous ne pourrez plus le modifier. La Présidence prendra la main pour la suite du suivi."
+        onConfirmer={handleSoumettre}
         enCours={soumission.isPending}
-        libelleConfirmation="Soumettre"
-        destructif={false}
+        libelleAction="Soumettre"
       />
     </>
   )
