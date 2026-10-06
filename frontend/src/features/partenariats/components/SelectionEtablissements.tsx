@@ -13,11 +13,12 @@ interface SelectionEtablissementsProps {
 
 export function SelectionEtablissements({ selection, libelles, onChange, erreur }: SelectionEtablissementsProps) {
   const [recherche, setRecherche] = useState('');
-  const { data, isLoading } = useEtablissements();
+  const { data: pageEtablissements, isLoading } = useEtablissements();
 
   const terme = recherche.trim().toLowerCase();
+  const etablissements = pageEtablissements?.data ?? [];
 
-  const options = (data ?? [])
+  const options = etablissements
     .filter((etablissement) => `${etablissement.nom} ${etablissement.sigle ?? ''}`.toLowerCase().includes(terme))
     .map((etablissement) => ({
       id: etablissement.id,
