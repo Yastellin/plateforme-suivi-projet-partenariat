@@ -31,6 +31,7 @@ import { CleanupModule } from './cleanup/cleanup.module';
 import { DatabaseModule } from './database/database.module';
 import { SyntheseModule } from './synthese/synthese.module';
 import { EspacePublicModule } from './espace-public/espace-public.module';
+import { ExportModule } from './export/export.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { EspacePublicModule } from './espace-public/espace-public.module';
     CleanupModule,
     SyntheseModule,
     EspacePublicModule,
+    ExportModule,
   ],
   controllers: [AppController],
   providers: [
