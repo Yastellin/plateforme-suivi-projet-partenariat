@@ -6,14 +6,19 @@ import { Mail, Pencil, Phone, Plus, Trash2, Users } from 'lucide-react';
 import { ContactDialog } from './ContactDialog';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { Panel, PanelHeader } from '@/components/shared/Panel';
 import { useCreateContact, useDeleteContact, useUpdateContact } from '../api/useContacts';
 import type { Contact } from '@/types/api';
-import type { ContactFormValues } from '@/lib/validators/partenaire.schema';
+import type { ContactFormValues } from '@/lib/validators/contact.schema';
 
 interface ContactsSectionProps {
   partenaireId: string;
   contacts: Contact[];
   peutGerer: boolean;
+}
+
+function nomComplet(contact: Contact): string {
+  return contact.prenom ? `${contact.prenom} ${contact.nom}` : contact.nom;
 }
 
 export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsSectionProps) {
@@ -84,20 +89,22 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
   }
 
   return (
-    <section className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
-      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
-        <h3 className="text-[15px] font-bold">Contacts</h3>
-        {peutGerer && contacts.length > 0 ? (
-          <button
-            type="button"
-            onClick={ouvrirCreation}
-            className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-1.5 text-[12.5px] font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Ajouter
-          </button>
-        ) : null}
-      </div>
+    <Panel>
+      <PanelHeader
+        titre="Contacts"
+        action={
+          peutGerer && contacts.length > 0 ? (
+            <button
+              type="button"
+              onClick={ouvrirCreation}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-1.5 text-[12.5px] font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Ajouter
+            </button>
+          ) : null
+        }
+      />
 
       {contacts.length === 0 ? (
         <EmptyState
@@ -122,7 +129,7 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
           {contacts.map((contact) => (
             <li key={contact.id} className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold">{contact.nom}</p>
+                <p className="text-[13px] font-semibold">{nomComplet(contact)}</p>
                 {contact.fonction ? (
                   <p className="text-xs text-[var(--color-text-secondary)]">{contact.fonction}</p>
                 ) : null}
@@ -147,7 +154,7 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
                   <button
                     type="button"
                     onClick={() => ouvrirEdition(contact)}
-                    aria-label={`Modifier ${contact.nom}`}
+                    aria-label={`Modifier ${nomComplet(contact)}`}
                     className="rounded-md p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -155,7 +162,7 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
                   <button
                     type="button"
                     onClick={() => setContactASupprimer(contact)}
-                    aria-label={`Supprimer ${contact.nom}`}
+                    aria-label={`Supprimer ${nomComplet(contact)}`}
                     className="rounded-md p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--status-expire-bg)] hover:text-[var(--status-expire-fg)]"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -174,6 +181,7 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
             onFermer={fermerDialogue}
             onSoumettre={onSoumettre}
             enCours={creationEnCours || modificationEnCours}
+            partenaireId={partenaireId}
             contact={contactEdite}
           />
 
@@ -182,12 +190,12 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
             onFermer={() => setContactASupprimer(null)}
             onConfirmer={onConfirmerSuppression}
             titre="Supprimer ce contact"
-            description={`Le contact « ${contactASupprimer?.nom ?? ''} » sera retiré de la fiche du partenaire.`}
+            description={`Le contact « ${contactASupprimer ? nomComplet(contactASupprimer) : ''} » sera retiré de la fiche du partenaire.`}
             libelleAction="Supprimer"
             enCours={suppressionEnCours}
           />
         </>
       ) : null}
-    </section>
+    </Panel>
   );
 }

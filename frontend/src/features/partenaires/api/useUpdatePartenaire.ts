@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import { videsEnNull } from '@/lib/payload';
-import { normaliserTelephone } from '@/lib/validators/phone.schema';
+import { normaliserTelephone } from '@/lib/phone';
 import type { Partenaire } from '@/types/api';
 import type { PartenaireFormValues } from '@/lib/validators/partenaire.schema';
 

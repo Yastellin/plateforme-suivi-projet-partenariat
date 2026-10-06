@@ -2,16 +2,18 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
-import { videsEnNull } from '@/lib/payload';
-import { normaliserTelephone } from '@/lib/validators/phone.schema';
+import { normaliserEmail, normaliserNomPersonne, normaliserPrenom } from '@/lib/normalisation';
+import { normaliserTelephone } from '@/lib/phone';
 import type { Contact } from '@/types/api';
-import type { ContactFormValues } from '@/lib/validators/partenaire.schema';
+import type { ContactFormValues } from '@/lib/validators/contact.schema';
 
 function preparerPayloadContact(valeurs: ContactFormValues): Record<string, unknown> {
-  const { telephone, ...reste } = valeurs;
   return {
-    ...videsEnNull(reste),
-    telephone: telephone ? normaliserTelephone(telephone) : null,
+    prenom: normaliserPrenom(valeurs.prenom),
+    nom: normaliserNomPersonne(valeurs.nom),
+    fonction: valeurs.fonction || null,
+    email: valeurs.email ? normaliserEmail(valeurs.email) : null,
+    telephone: valeurs.telephone ? normaliserTelephone(valeurs.telephone) : null,
   };
 }
 
@@ -39,6 +41,10 @@ export function useCreateContact() {
   });
 }
 
+export function useCreerContact(_partenaireId?: string) {
+  return useCreateContact();
+}
+
 interface VariablesModifierContact {
   id: string;
   partenaireId: string;
@@ -59,6 +65,10 @@ export function useUpdateContact() {
       queryClient.invalidateQueries({ queryKey: ['partenaires', variables.partenaireId] });
     },
   });
+}
+
+export function useModifierContact(_partenaireId?: string) {
+  return useUpdateContact();
 }
 
 interface VariablesSupprimerContact {
