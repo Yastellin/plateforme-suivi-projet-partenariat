@@ -10,6 +10,7 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Index,
+  OneToOne,
 } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { StatutProjet } from '../../common/enums/statut-projet.enum';
@@ -21,6 +22,9 @@ import { ProjetBeneficiaire } from './projet-beneficiaire.entity';
 import { ProjetBailleur } from './projet-bailleur.entity';
 import { ProjetSite } from './projet-site.entity';
 import { Activite } from './activite.entity';
+import { Document } from '../../documents/entities/document.entity';
+import { Convention } from '../../conventions/entities/convention.entity';
+import { Publication } from '../../publications/enitities/publication.entity';
 
 @Entity('Projet')
 @Index(['etablissement_id'])
@@ -94,6 +98,15 @@ export class Projet {
 
   @OneToMany(() => Activite, (a) => a.projet)
   activites: Activite[];
+
+  @OneToMany(() => Document, (d) => d.projet)
+  documents: Document[];
+
+  @OneToMany(() => Convention, (c) => c.projet)
+  conventions: Convention[];
+
+  @OneToOne(() => Publication, (p) => p.projet)
+  publication: Publication | null;
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;

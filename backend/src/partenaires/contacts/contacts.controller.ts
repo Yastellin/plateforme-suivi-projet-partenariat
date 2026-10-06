@@ -47,3 +47,24 @@ export class ContactsController {
     return this.contactsService.remove(id);
   }
 }
+
+@ApiTags('Contacts')
+@ApiBearerAuth()
+@Controller('contacts')
+export class ContactsDirectController {
+  constructor(private contactsService: ContactsService) {}
+
+  @Patch(':id')
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Mettre à jour un contact' })
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateContactDto) {
+    return this.contactsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Supprimer un contact' })
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.contactsService.remove(id);
+  }
+}

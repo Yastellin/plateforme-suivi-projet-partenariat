@@ -16,6 +16,10 @@ import { StatutPartenaire } from '../../common/enums/statut-partenaire.enum';
 import { Visibilite } from '../../common/enums/visibilite.enum';
 import { Etablissement } from '../../etablissements/entities/etablissement.entity';
 import { Contact } from './contact.entity';
+import { PartenariatPartenaire } from '../../partenariats/entities/partenariat-partenaire.entity';
+import { CotutelleThese } from '../../cotutelles/entities/cotutelle-these.entity';
+import { ProjetPartenaire } from '../../projets/entities/projet-partenaire.entity';
+import { SynthesePartenaireStrategique } from '../../synthese/entities/synthese-partenaire-strategique.entity';
 
 @Entity('Partenaire')
 @Index(['etablissement_id'])
@@ -74,6 +78,18 @@ export class Partenaire {
 
   @OneToMany(() => Contact, (contact) => contact.partenaire, { cascade: true })
   contacts: Contact[];
+
+  @OneToMany(() => PartenariatPartenaire, (pp) => pp.partenaire)
+  partenariats: PartenariatPartenaire[];
+
+  @OneToMany(() => CotutelleThese, (c) => c.partenaire)
+  cotutelles: CotutelleThese[];
+
+  @OneToMany(() => ProjetPartenaire, (pp) => pp.partenaire)
+  projets: ProjetPartenaire[];
+
+  @OneToMany(() => SynthesePartenaireStrategique, (s) => s.partenaire)
+  synthese_partenaires_strategiques: SynthesePartenaireStrategique[];
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;

@@ -14,6 +14,8 @@ import { DomainePartenariat } from '../../common/enums/domaine-partenariat.enum'
 import { StatutPartenariat } from '../../common/enums/statut-partenariat.enum';
 import { PartenariatEtablissement } from './partenariat-etablissement.entity';
 import { PartenariatPartenaire } from './partenariat-partenaire.entity';
+import { Projet } from '../../projets/entities/projet.entity';
+import { Convention } from '../../conventions/entities/convention.entity';
 
 @Entity('Partenariat')
 @Index(['archive'])
@@ -67,6 +69,12 @@ export class Partenariat {
 
   @OneToMany(() => PartenariatPartenaire, (pp) => pp.partenariat)
   partenaires: PartenariatPartenaire[];
+
+  @OneToMany(() => Projet, (p) => p.partenariat)
+  projets: Projet[];
+
+  @OneToMany(() => Convention, (c) => c.partenariat)
+  conventions: Convention[];
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;

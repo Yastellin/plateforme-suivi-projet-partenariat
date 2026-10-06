@@ -9,11 +9,14 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Index,
+  OneToMany,
 } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { StatutConvention } from '../../common/enums/statut-convention.enum';
 import { Partenariat } from '../../partenariats/entities/partenariat.entity';
 import { Projet } from '../../projets/entities/projet.entity';
+import { Document } from '../../documents/entities/document.entity';
+import { CotutelleThese } from '../../cotutelles/entities/cotutelle-these.entity';
 
 @Entity('Convention')
 @Index(['reference'])
@@ -63,6 +66,12 @@ export class Convention {
   @ManyToOne(() => Projet, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'projet_id' })
   projet: Projet | null;
+
+  @OneToMany(() => Document, (d) => d.convention)
+  documents: Document[];
+
+  @OneToMany(() => CotutelleThese, (c) => c.convention)
+  cotutelles: CotutelleThese[];
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;

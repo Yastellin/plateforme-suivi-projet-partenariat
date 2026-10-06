@@ -15,6 +15,7 @@ import { randomUUID } from 'crypto';
 import { Role } from '../../common/enums/role.enum';
 import { Etablissement } from '../../etablissements/entities/etablissement.entity';
 import { RefreshToken } from './refresh-token.entity';
+import { Notification } from '../../notifications/entities/notification.entity';
 
 @Entity('Utilisateur')
 @Index(['etablissement_id'])
@@ -48,6 +49,9 @@ export class Utilisateur {
 
   @OneToMany(() => RefreshToken, (token) => token.utilisateur)
   refresh_tokens: RefreshToken[];
+
+  @OneToMany(() => Notification, (n) => n.utilisateur)
+  notifications: Notification[];
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;
