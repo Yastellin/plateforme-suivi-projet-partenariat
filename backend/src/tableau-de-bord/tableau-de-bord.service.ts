@@ -1,6 +1,14 @@
 // src/tableau-de-bord/tableau-de-bord.service.ts
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Between, FindOptionsWhere, In, LessThan, Not, Repository } from 'typeorm';
+import { Partenaire } from '../partenaires/entities/partenaire.entity';
+import { Partenariat } from '../partenariats/entities/partenariat.entity';
+import { PartenariatEtablissement } from '../partenariats/entities/partenariat-etablissement.entity';
+import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
+import { Projet } from '../projets/entities/projet.entity';
+import { Convention } from '../conventions/entities/convention.entity';
+import { Publication } from '../publications/enitities/publication.entity';
 import {
   TableauDeBordResponseDto,
   CompteursGlobauxDto,
@@ -13,11 +21,21 @@ import {
   EcheanceConventionDto,
   ProjetEnRetardDto,
 } from './dto/echeancier-response.dto';
-import { StatutProjet, StatutConvention, Role } from '@prisma/client';
+import { StatutProjet } from '../common/enums/statut-projet.enum';
+import { StatutConvention } from '../common/enums/statut-convention.enum';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class TableauDeBordService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Partenaire) private partenaireRepo: Repository<Partenaire>,
+    @InjectRepository(Partenariat) private partenariatRepo: Repository<Partenariat>,
+    @InjectRepository(PartenariatEtablissement) private peRepo: Repository<PartenariatEtablissement>,
+    @InjectRepository(CotutelleThese) private cotutelleRepo: Repository<CotutelleThese>,
+    @InjectRepository(Projet) private projetRepo: Repository<Projet>,
+    @InjectRepository(Convention) private conventionRepo: Repository<Convention>,
+    @InjectRepository(Publication) private publicationRepo: Repository<Publication>,
+  ) {}
 
   async getTableauDeBord(
     role: Role,
@@ -39,32 +57,27 @@ export class TableauDeBordService {
   }
 
   private async getCompteurs(etablissementId?: string): Promise<CompteursGlobauxDto> {
-    const whereEtab: any = {};
-    const whereProjet: any = { archive: false };
-    if (etablissementId) {
-      whereEtab.etablissement_id = etablissementId;
-      whereProjet.etablissement_id = etablissementId;
-    }
-
     const [partenaires, partenariats, cotutelles, projets, conventions, publications] =
       await Promise.all([
-        this.prisma.partenaire.count({
-          where: { archive: false, ...whereEtab },
+        this.partenaireRepo.count({
+          where: { archive: false, ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
         }),
-        this.prisma.partenariat.count({
-          where: {
-            archive: false,
-            ...(etablissementId
-              ? { etablissements: { some: { etablissement_id: etablissementId } } }
-              : {}),
-          },
+        etablissementId
+          ? this.partenariatRepo
+              .createQueryBuilder('partenariat')
+              .innerJoin('partenariat.etablissements', 'pe')
+              .where('partenariat.archive = false')
+              .andWhere('pe.etablissement_id = :etablissementId', { etablissementId })
+              .getCount()
+          : this.partenariatRepo.count({ where: { archive: false } }),
+        this.cotutelleRepo.count({
+          where: { archive: false, ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
         }),
-        this.prisma.cotutelleThese.count({
-          where: { archive: false, ...whereEtab },
+        this.projetRepo.count({
+          where: { archive: false, ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
         }),
-        this.prisma.projet.count({ where: whereProjet }),
-        this.prisma.convention.count({ where: { archive: false } }),
-        this.prisma.publication.count({}),
+        this.conventionRepo.count({ where: { archive: false } }),
+        this.publicationRepo.count(),
       ]);
 
     const repartition_conventions = await this.getRepartitionConventions(etablissementId);
@@ -83,16 +96,21 @@ export class TableauDeBordService {
   private async getRepartitionConventions(
     etablissementId?: string,
   ): Promise<RepartitionConventionsDto> {
-    const where: any = { archive: false };
+    const query = this.conventionRepo
+      .createQueryBuilder('c')
+      .select('c.statut', 'statut')
+      .addSelect('COUNT(*)', 'count')
+      .where('c.archive = false');
     if (etablissementId) {
-      where.projet = { etablissement_id: etablissementId };
+      query.andWhere(
+        'c.projet_id IN (SELECT id FROM "Projet" WHERE etablissement_id = :etab)',
+        { etab: etablissementId },
+      );
     }
-
-    const counts = await this.prisma.convention.groupBy({
-      by: ['statut'],
-      where,
-      _count: { _all: true },
-    });
+    const counts = await query.groupBy('c.statut').getRawMany<{
+      statut: StatutConvention;
+      count: string;
+    }>();
 
     const result: RepartitionConventionsDto = {
       BROUILLON: 0,
@@ -104,21 +122,25 @@ export class TableauDeBordService {
     };
 
     for (const c of counts) {
-      result[c.statut as keyof RepartitionConventionsDto] = c._count._all;
+      result[c.statut as keyof RepartitionConventionsDto] = Number(c.count);
     }
 
     return result;
   }
 
   private async getProjetsParStatut(etablissementId?: string): Promise<ProjetsParStatutDto> {
-    const where: any = { archive: false };
-    if (etablissementId) where.etablissement_id = etablissementId;
-
-    const counts = await this.prisma.projet.groupBy({
-      by: ['statut'],
-      where,
-      _count: { _all: true },
-    });
+    const query = this.projetRepo
+      .createQueryBuilder('p')
+      .select('p.statut', 'statut')
+      .addSelect('COUNT(*)', 'count')
+      .where('p.archive = false');
+    if (etablissementId) {
+      query.andWhere('p.etablissement_id = :etablissementId', { etablissementId });
+    }
+    const counts = await query.groupBy('p.statut').getRawMany<{
+      statut: StatutProjet;
+      count: string;
+    }>();
 
     const result: ProjetsParStatutDto = {
       BROUILLON: 0,
@@ -130,7 +152,7 @@ export class TableauDeBordService {
     };
 
     for (const c of counts) {
-      result[c.statut as keyof ProjetsParStatutDto] = c._count._all;
+      result[c.statut as keyof ProjetsParStatutDto] = Number(c.count);
     }
 
     return result;
@@ -143,40 +165,24 @@ export class TableauDeBordService {
     const dans30Jours = new Date(maintenant.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     // Si un etablissement est cible, on filtre les conventions liees a ses projets
-    const filtreEtab = etablissementId
-      ? { projet: { etablissement_id: etablissementId } }
-      : {};
+    const compter = (statut: StatutConvention | StatutConvention[], dateFin?: [Date, Date]) => {
+      const where: FindOptionsWhere<Convention> = {
+        archive: false,
+        statut: Array.isArray(statut) ? In(statut) : statut,
+        ...(dateFin ? { date_fin: Between(dateFin[0], dateFin[1]) } : {}),
+        ...(etablissementId ? { projet: { etablissement_id: etablissementId } } : {}),
+      };
+      return this.conventionRepo.count({ where });
+    };
 
     const [actives, expirees, bientot_expirees, en_attente_signature] = await Promise.all([
-      this.prisma.convention.count({
-        where: {
-          archive: false,
-          statut: { in: [StatutConvention.ACTIVE, StatutConvention.SIGNEE] },
-          ...filtreEtab,
-        },
-      }),
-      this.prisma.convention.count({
-        where: {
-          archive: false,
-          statut: StatutConvention.EXPIREE,
-          ...filtreEtab,
-        },
-      }),
-      this.prisma.convention.count({
-        where: {
-          archive: false,
-          statut: { in: [StatutConvention.SIGNEE, StatutConvention.ACTIVE] },
-          date_fin: { gte: maintenant, lte: dans30Jours },
-          ...filtreEtab,
-        },
-      }),
-      this.prisma.convention.count({
-        where: {
-          archive: false,
-          statut: StatutConvention.EN_ATTENTE_SIGNATURE,
-          ...filtreEtab,
-        },
-      }),
+      compter([StatutConvention.ACTIVE, StatutConvention.SIGNEE]),
+      compter(StatutConvention.EXPIREE),
+      compter(
+        [StatutConvention.SIGNEE, StatutConvention.ACTIVE],
+        [maintenant, dans30Jours],
+      ),
+      compter(StatutConvention.EN_ATTENTE_SIGNATURE),
     ]);
 
     return { actives, expirees, bientot_expirees, en_attente_signature };
@@ -186,18 +192,15 @@ export class TableauDeBordService {
     const maintenant = new Date();
     const dans30Jours = new Date(maintenant.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const filtreEtab = etablissementId
-      ? { projet: { etablissement_id: etablissementId } }
-      : {};
-
-    const conventions = await this.prisma.convention.findMany({
+    const conventions = await this.conventionRepo.find({
       where: {
         archive: false,
-        statut: { in: [StatutConvention.SIGNEE, StatutConvention.ACTIVE] },
-        date_fin: { gte: maintenant, lte: dans30Jours },
-        ...filtreEtab,
+        statut: In([StatutConvention.SIGNEE, StatutConvention.ACTIVE]),
+        date_fin: Between(maintenant, dans30Jours),
+        ...(etablissementId ? { projet: { etablissement_id: etablissementId } } : {}),
       },
-      orderBy: { date_fin: 'asc' },
+      relations: etablissementId ? { projet: true } : undefined,
+      order: { date_fin: 'ASC' },
       take: 50,
     });
 
@@ -216,18 +219,14 @@ export class TableauDeBordService {
         };
       });
 
-    const whereProjet: any = {
-      archive: false,
-      statut: {
-        notIn: [StatutProjet.BROUILLON, StatutProjet.TERMINE, StatutProjet.EXPIRE],
+    const projets = await this.projetRepo.find({
+      where: {
+        archive: false,
+        statut: Not(In([StatutProjet.BROUILLON, StatutProjet.TERMINE, StatutProjet.EXPIRE])),
+        date_fin_prevue: LessThan(maintenant),
+        ...(etablissementId ? { etablissement_id: etablissementId } : {}),
       },
-      date_fin_prevue: { lt: maintenant },
-    };
-    if (etablissementId) whereProjet.etablissement_id = etablissementId;
-
-    const projets = await this.prisma.projet.findMany({
-      where: whereProjet,
-      orderBy: { date_fin_prevue: 'asc' },
+      order: { date_fin_prevue: 'ASC' },
       take: 50,
     });
 

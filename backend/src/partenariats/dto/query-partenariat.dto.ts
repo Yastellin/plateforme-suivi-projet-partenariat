@@ -2,7 +2,8 @@ import { IsOptional, IsString, IsEnum, IsUUID, IsDateString, IsBoolean } from 'c
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { DomainePartenariat, StatutPartenariat } from '@prisma/client';
+import { DomainePartenariat } from '../../common/enums/domaine-partenariat.enum';
+import { StatutPartenariat } from '../../common/enums/statut-partenariat.enum';
 
 export class QueryPartenariatDto extends PaginationQueryDto {
   @ApiPropertyOptional()

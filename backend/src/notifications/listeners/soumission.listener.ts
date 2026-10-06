@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications.service';
-import { TypeNotification, PrioriteNotification } from '@prisma/client';
+import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { PrioriteNotification } from '../../common/enums/priorite-notification.enum';
 
 @Injectable()
 export class SoumissionListener {

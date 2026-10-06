@@ -1,44 +1,56 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
+import { Contact } from '../entities/contact.entity';
+import { Partenaire } from '../entities/partenaire.entity';
 
 @Injectable()
 export class ContactsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Contact)
+    private contactRepo: Repository<Contact>,
+    @InjectRepository(Partenaire)
+    private partenaireRepo: Repository<Partenaire>,
+  ) {}
 
   async create(partenaireId: string, dto: CreateContactDto) {
-    const partenaire = await this.prisma.partenaire.findUnique({
+    const partenaire = await this.partenaireRepo.findOne({
       where: { id: partenaireId, archive: false },
     });
-    if (!partenaire) throw new NotFoundException('Partenaire non trouvé');
+    if (!partenaire) throw new NotFoundException('Partenaire non trouve');
 
-    return this.prisma.contact.create({
-      data: { ...dto, partenaire_id: partenaireId },
+    const contact = this.contactRepo.create({
+      nom: dto.nom,
+      fonction: dto.fonction ?? null,
+      email: dto.email ?? null,
+      telephone: dto.telephone ?? null,
+      partenaire_id: partenaireId,
     });
+    return this.contactRepo.save(contact);
   }
 
   async update(id: string, dto: UpdateContactDto) {
-    const contact = await this.prisma.contact.findUnique({ where: { id } });
-    if (!contact) throw new NotFoundException('Contact non trouvé');
+    const contact = await this.contactRepo.findOne({ where: { id } });
+    if (!contact) throw new NotFoundException('Contact non trouve');
 
-    return this.prisma.contact.update({
-      where: { id },
-      data: dto,
-    });
+    Object.assign(contact, dto);
+    return this.contactRepo.save(contact);
   }
 
   async remove(id: string) {
-    const contact = await this.prisma.contact.findUnique({ where: { id } });
-    if (!contact) throw new NotFoundException('Contact non trouvé');
+    const contact = await this.contactRepo.findOne({ where: { id } });
+    if (!contact) throw new NotFoundException('Contact non trouve');
 
-    return this.prisma.contact.delete({ where: { id } });
+    await this.contactRepo.delete(id);
+    return { message: 'Contact supprime' };
   }
 
   async findAllByPartenaire(partenaireId: string) {
-    return this.prisma.contact.findMany({
+    return this.contactRepo.find({
       where: { partenaire_id: partenaireId },
-      orderBy: { nom: 'asc' },
+      order: { nom: 'ASC' },
     });
   }
 }

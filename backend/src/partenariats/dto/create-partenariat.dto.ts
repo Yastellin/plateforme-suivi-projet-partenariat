@@ -8,7 +8,8 @@ import {
   MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DomainePartenariat, StatutPartenariat } from '@prisma/client';
+import { DomainePartenariat } from '../../common/enums/domaine-partenariat.enum';
+import { StatutPartenariat } from '../../common/enums/statut-partenariat.enum';
 
 export class CreatePartenariatDto {
   @ApiProperty({ example: 'Coopération scientifique Madagascar - France' })

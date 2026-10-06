@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { StatutConvention } from '@prisma/client';
+import { StatutConvention } from '../../common/enums/statut-convention.enum';
 
 export class ConventionResponseDto {
   @ApiProperty()

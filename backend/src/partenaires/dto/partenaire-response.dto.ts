@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { StatutPartenaire, Visibilite } from '@prisma/client';
+import { StatutPartenaire } from '../../common/enums/statut-partenaire.enum';
+import { Visibilite } from '../../common/enums/visibilite.enum';
 
 export class ContactResponseDto {
   @ApiProperty()

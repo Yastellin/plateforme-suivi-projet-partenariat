@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsDateString, IsEnum, IsUUID, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { StatutPublication } from '@prisma/client';
+import { StatutPublication } from '../../common/enums/statut-publication.enum';
 
 export class CreatePublicationDto {
   @ApiProperty({ example: 'Projet Biodiversite : premiers resultats' })

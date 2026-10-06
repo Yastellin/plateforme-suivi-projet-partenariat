@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Between, In, Repository } from 'typeorm';
+import { Convention } from '../../conventions/entities/convention.entity';
+import { Projet } from '../../projets/entities/projet.entity';
 import { NotificationsService } from '../notifications.service';
-import { TypeNotification, PrioriteNotification, StatutConvention } from '@prisma/client';
+import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { PrioriteNotification } from '../../common/enums/priorite-notification.enum';
+import { StatutConvention } from '../../common/enums/statut-convention.enum';
 import { NotificationRule } from '../rules/notification-rule.interface';
 
 const SEUILS_JOURS = [30, 15, 7];
@@ -9,7 +14,8 @@ const SEUILS_JOURS = [30, 15, 7];
 @Injectable()
 export class ConventionExpirationRule implements NotificationRule {
   constructor(
-    private prisma: PrismaService,
+    @InjectRepository(Convention) private conventionRepo: Repository<Convention>,
+    @InjectRepository(Projet) private projetRepo: Repository<Projet>,
     private notificationsService: NotificationsService,
   ) {}
 
@@ -17,11 +23,11 @@ export class ConventionExpirationRule implements NotificationRule {
     const maintenant = new Date();
     const dans30Jours = new Date(maintenant.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const conventions = await this.prisma.convention.findMany({
+    const conventions = await this.conventionRepo.find({
       where: {
         archive: false,
-        statut: { in: [StatutConvention.SIGNEE, StatutConvention.ACTIVE] },
-        date_fin: { gte: maintenant, lte: dans30Jours },
+        statut: In([StatutConvention.SIGNEE, StatutConvention.ACTIVE]),
+        date_fin: Between(maintenant, dans30Jours),
       },
     });
 
@@ -63,9 +69,8 @@ export class ConventionExpirationRule implements NotificationRule {
 
     // Notifier l'Etablissement proprietaire si la convention est liee a un projet
     if (convention.projet_id) {
-      const projet = await this.prisma.projet.findUnique({
+      const projet = await this.projetRepo.findOne({
         where: { id: convention.projet_id },
-        select: { etablissement_id: true },
       });
       if (projet) {
         const etabUsers = await this.notificationsService.trouverUtilisateursEtablissement(

@@ -1,12 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { Partenaire } from '../partenaires/entities/partenaire.entity';
+import { Partenariat } from '../partenariats/entities/partenariat.entity';
+import { Projet } from '../projets/entities/projet.entity';
+import { Convention } from '../conventions/entities/convention.entity';
+import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 import { QueryRechercheDto, TypeRecherche } from './dto/query-recherche.dto';
 import { ResultatRechercheDto, RechercheResponseDto } from './dto/recherche-response.dto';
-import { Role } from '@prisma/client';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class RechercheService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Partenaire) private partenaireRepo: Repository<Partenaire>,
+    @InjectRepository(Partenariat) private partenariatRepo: Repository<Partenariat>,
+    @InjectRepository(Projet) private projetRepo: Repository<Projet>,
+    @InjectRepository(Convention) private conventionRepo: Repository<Convention>,
+    @InjectRepository(CotutelleThese) private cotutelleRepo: Repository<CotutelleThese>,
+  ) {}
 
   async rechercher(
     query: QueryRechercheDto,
@@ -51,18 +63,13 @@ export class RechercheService {
     q: string,
     etablissementId?: string,
   ): Promise<ResultatRechercheDto[]> {
-    const where: any = {
-      archive: false,
-      OR: [
-        { nom: { contains: q, mode: 'insensitive' } },
-        { type: { contains: q, mode: 'insensitive' } },
-        { pays: { contains: q, mode: 'insensitive' } },
-        { description: { contains: q, mode: 'insensitive' } },
-      ],
-    };
-    if (etablissementId) where.etablissement_id = etablissementId;
-
-    const data = await this.prisma.partenaire.findMany({ where, take: 20 });
+    const where: FindOptionsWhere<Partenaire>[] = [
+      { archive: false, nom: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, type: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, pays: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, description: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+    ];
+    const data = await this.partenaireRepo.find({ where, take: 20 });
     return data.map((p) => ({
       id: p.id,
       type: 'partenaire',
@@ -76,18 +83,19 @@ export class RechercheService {
     q: string,
     etablissementId?: string,
   ): Promise<ResultatRechercheDto[]> {
-    const where: any = {
-      archive: false,
-      OR: [
-        { intitule: { contains: q, mode: 'insensitive' } },
-        { objet: { contains: q, mode: 'insensitive' } },
-      ],
-    };
-    if (etablissementId) {
-      where.etablissements = { some: { etablissement_id: etablissementId } };
-    }
-
-    const data = await this.prisma.partenariat.findMany({ where, take: 20 });
+    const where: FindOptionsWhere<Partenariat>[] = [
+      {
+        archive: false,
+        intitule: ILike(`%${q}%`),
+        ...(etablissementId ? { etablissements: { etablissement_id: etablissementId } } : {}),
+      },
+      {
+        archive: false,
+        objet: ILike(`%${q}%`),
+        ...(etablissementId ? { etablissements: { etablissement_id: etablissementId } } : {}),
+      },
+    ];
+    const data = await this.partenariatRepo.find({ where, take: 20 });
     return data.map((p) => ({
       id: p.id,
       type: 'partenariat',
@@ -101,18 +109,13 @@ export class RechercheService {
     q: string,
     etablissementId?: string,
   ): Promise<ResultatRechercheDto[]> {
-    const where: any = {
-      archive: false,
-      OR: [
-        { nom: { contains: q, mode: 'insensitive' } },
-        { intitule_officiel: { contains: q, mode: 'insensitive' } },
-        { type: { contains: q, mode: 'insensitive' } },
-        { domaine: { contains: q, mode: 'insensitive' } },
-      ],
-    };
-    if (etablissementId) where.etablissement_id = etablissementId;
-
-    const data = await this.prisma.projet.findMany({ where, take: 20 });
+    const where: FindOptionsWhere<Projet>[] = [
+      { archive: false, nom: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, intitule_officiel: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, type: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, domaine: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+    ];
+    const data = await this.projetRepo.find({ where, take: 20 });
     return data.map((p) => ({
       id: p.id,
       type: 'projet',
@@ -126,19 +129,12 @@ export class RechercheService {
     q: string,
     etablissementId?: string,
   ): Promise<ResultatRechercheDto[]> {
-    const where: any = {
-      archive: false,
-      OR: [
-        { reference: { contains: q, mode: 'insensitive' } },
-        { titre: { contains: q, mode: 'insensitive' } },
-        { description: { contains: q, mode: 'insensitive' } },
-      ],
-    };
-    if (etablissementId) {
-      where.projet = { etablissement_id: etablissementId };
-    }
-
-    const data = await this.prisma.convention.findMany({ where, take: 20 });
+    const where: FindOptionsWhere<Convention>[] = [
+      { archive: false, reference: ILike(`%${q}%`), ...(etablissementId ? { projet: { etablissement_id: etablissementId } } : {}) },
+      { archive: false, titre: ILike(`%${q}%`), ...(etablissementId ? { projet: { etablissement_id: etablissementId } } : {}) },
+      { archive: false, description: ILike(`%${q}%`), ...(etablissementId ? { projet: { etablissement_id: etablissementId } } : {}) },
+    ];
+    const data = await this.conventionRepo.find({ where, take: 20 });
     return data.map((c) => ({
       id: c.id,
       type: 'convention',
@@ -152,18 +148,13 @@ export class RechercheService {
     q: string,
     etablissementId?: string,
   ): Promise<ResultatRechercheDto[]> {
-    const where: any = {
-      archive: false,
-      OR: [
-        { nom_doctorant: { contains: q, mode: 'insensitive' } },
-        { specialite: { contains: q, mode: 'insensitive' } },
-        { directeur_these_local: { contains: q, mode: 'insensitive' } },
-        { directeur_these_partenaire: { contains: q, mode: 'insensitive' } },
-      ],
-    };
-    if (etablissementId) where.etablissement_id = etablissementId;
-
-    const data = await this.prisma.cotutelleThese.findMany({ where, take: 20 });
+    const where: FindOptionsWhere<CotutelleThese>[] = [
+      { archive: false, nom_doctorant: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, specialite: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, directeur_these_local: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+      { archive: false, directeur_these_partenaire: ILike(`%${q}%`), ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
+    ];
+    const data = await this.cotutelleRepo.find({ where, take: 20 });
     return data.map((c) => ({
       id: c.id,
       type: 'cotutelle',

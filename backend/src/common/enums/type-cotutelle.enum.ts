@@ -1,0 +1,4 @@
+export enum TypeCotutelle {
+  COTUTELLE = 'COTUTELLE',
+  COENCADREMENT = 'COENCADREMENT',
+}
