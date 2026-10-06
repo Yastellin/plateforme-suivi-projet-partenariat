@@ -15,7 +15,7 @@ export function DocumentVersionsListe({ documentId }: { documentId: string }) {
 
   if (!versions || versions.length === 0) {
     return (
-      <EmptyState icon={FileText} titre="Aucun document" message="Aucun document n'a encore ete televerse." />
+      <EmptyState icone={FileText} titre="Aucun document" description="Aucun document n'a encore ete televerse." />
     )
   }
 
