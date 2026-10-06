@@ -13,6 +13,7 @@ const CLASSES_TONALITE: Record<ToneStatut, string> = {
   actif: 'bg-[var(--status-actif-bg)] text-[var(--status-actif-fg)]',
   expire: 'bg-[var(--status-expire-bg)] text-[var(--status-expire-fg)]',
   archive: 'bg-[var(--status-archive-bg)] text-[var(--status-archive-fg)]',
+  circuit: 'bg-[var(--status-circuit-bg)] text-[var(--status-circuit-fg)]',
 };
 
 export function StatusBadge({ libelle, tonalite }: StatusBadgeProps) {
