@@ -2,6 +2,7 @@
 import { Building2, Globe, Star } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { StatusBadge } from "@/components/shared/StatusBadge"
+import { obtenirInfoStatut } from "@/lib/status-mappings"
 import type { Partenaire } from "@/types/api"
 
 interface PartenaireCardProps {
@@ -37,7 +38,7 @@ export function PartenaireCard({ partenaire, onClic }: PartenaireCardProps) {
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex items-start justify-between gap-2">
               <span className="truncate font-heading text-sm font-semibold">{partenaire.nom}</span>
-              <StatusBadge statut={partenaire.statut} />
+              <StatusBadge libelle={obtenirInfoStatut(partenaire.statut).libelle} tonalite={obtenirInfoStatut(partenaire.statut).tonalite} />
             </div>
             <span className="text-xs text-muted-foreground">
               {partenaire.type} - {partenaire.pays}

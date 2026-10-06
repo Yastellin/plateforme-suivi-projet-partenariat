@@ -12,15 +12,19 @@ import { PartenaireInformations } from '../components/PartenaireInformations';
 import { PartenaireCoordonnees } from '../components/PartenaireCoordonnees';
 import { ContactsSection } from '../components/ContactsSection';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
 import { DestructiveConfirmDialog } from '@/components/shared/DestructiveConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { PartenaireFormValues } from '@/lib/validators/partenaire.schema';
 
 export function PartenaireDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { utilisateur } = useAuth();
+  const permissions = usePermissions();
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
 
   const { data: partenaire, isLoading } = usePartenaire(id ?? '');
@@ -29,8 +33,6 @@ export function PartenaireDetailPage() {
 
   const role = utilisateur?.role;
   const cheminBase = role === 'PRESIDENCE' ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur';
-  const peutModifier = role === 'PRESIDENCE' || role === 'ETABLISSEMENT';
-  const peutArchiver = role === 'PRESIDENCE';
 
   function onSoumettre(valeurs: PartenaireFormValues) {
     if (!id) {
@@ -73,53 +75,48 @@ export function PartenaireDetailPage() {
 
   return (
     <div>
-      <div className="mb-[26px] flex items-start justify-between gap-5">
-        <div>
-          <div className="mb-1.5 flex items-center gap-2.5">
-            <h1 className="text-[24px] font-bold">{partenaire.nom}</h1>
-            <StatusBadge
-              libelle={partenaire.statut === 'ACTIF' ? 'Actif' : 'Suspendu'}
-              tonalite={partenaire.statut === 'ACTIF' ? 'actif' : 'attente'}
-            />
-          </div>
-          <p className="text-[13px] text-[var(--color-text-secondary)]">
-            {partenaire.type} — {partenaire.pays}
-          </p>
-        </div>
+      <PageHeader
+        titre={partenaire.nom}
+        description={`${partenaire.type} — ${partenaire.pays}`}
+        badge={
+          <StatusBadge
+            libelle={partenaire.statut === 'ACTIF' ? 'Actif' : 'Suspendu'}
+            tonalite={partenaire.statut === 'ACTIF' ? 'actif' : 'attente'}
+          />
+        }
+        actions={
+          permissions.peutArchiver ? (
+            <button
+              type="button"
+              onClick={() => setDialogueArchivageOuvert(true)}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--status-expire-fg)] hover:text-[var(--status-expire-fg)]"
+            >
+              <Archive className="h-3.5 w-3.5" />
+              Archiver
+            </button>
+          ) : null
+        }
+      />
 
-        {peutArchiver ? (
-          <button
-            type="button"
-            onClick={() => setDialogueArchivageOuvert(true)}
-            className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--status-expire-fg)] hover:text-[var(--status-expire-fg)]"
-          >
-            <Archive className="h-3.5 w-3.5" />
-            Archiver
-          </button>
-        ) : null}
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
-        <section className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
-          <div className="border-b border-[var(--color-border)] px-5 py-4">
-            <h3 className="text-[15px] font-bold">Informations</h3>
-          </div>
-          <div className="p-5">
-            {peutModifier ? (
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Panel>
+          <PanelHeader titre="Informations" sousTitre="Fiche du partenaire" />
+          <PanelBody>
+            {permissions.peutModifier ? (
               <PartenaireForm partenaire={partenaire} onSoumettre={onSoumettre} enCours={enCoursMiseAJour} />
             ) : (
               <PartenaireInformations partenaire={partenaire} />
             )}
-          </div>
-        </section>
+          </PanelBody>
+        </Panel>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <PartenaireCoordonnees partenaire={partenaire} />
-          <ContactsSection partenaireId={partenaire.id} contacts={partenaire.contacts} peutGerer={peutModifier} />
+          <ContactsSection partenaireId={partenaire.id} contacts={partenaire.contacts} peutGerer={permissions.peutModifier} />
         </div>
       </div>
 
-      {peutArchiver ? (
+      {permissions.peutArchiver ? (
         <DestructiveConfirmDialog
           ouvert={dialogueArchivageOuvert}
           onFermer={() => setDialogueArchivageOuvert(false)}

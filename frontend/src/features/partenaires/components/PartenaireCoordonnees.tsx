@@ -2,6 +2,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Globe, Mail, Phone } from 'lucide-react';
+import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
 import type { Partenaire } from '@/types/api';
 
 interface PartenaireCoordonneesProps {
@@ -37,12 +38,9 @@ export function PartenaireCoordonnees({ partenaire }: PartenaireCoordonneesProps
   const lignes = construireLignes(partenaire);
 
   return (
-    <section className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
-      <div className="border-b border-[var(--color-border)] px-5 py-4">
-        <h3 className="text-[15px] font-bold">Coordonnées</h3>
-      </div>
-
-      <div className="flex flex-col gap-3 p-5 text-[13px]">
+    <Panel>
+      <PanelHeader titre="Coordonnées" />
+      <PanelBody className="flex flex-col gap-3 text-[13px]">
         {lignes.length === 0 ? (
           <p className="text-[var(--color-text-secondary)]">Aucune coordonnée renseignée.</p>
         ) : (
@@ -61,7 +59,7 @@ export function PartenaireCoordonnees({ partenaire }: PartenaireCoordonneesProps
             );
           })
         )}
-      </div>
-    </section>
+      </PanelBody>
+    </Panel>
   );
 }

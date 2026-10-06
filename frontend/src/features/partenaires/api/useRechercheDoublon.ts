@@ -4,17 +4,30 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import type { Partenaire } from '@/types/api';
 
-async function rechercherDoublon(nom: string): Promise<Partenaire[]> {
+type ChampRechercheDoublon = 'nom' | 'email' | 'telephone';
+
+async function rechercherDoublonPartenaire(champ: ChampRechercheDoublon, valeur: string): Promise<Partenaire[]> {
   const reponse = await apiClient.get<Partenaire[]>('/partenaires/recherche-doublon', {
-    params: { nom },
+    params: { [champ]: valeur },
   });
   return reponse.data;
 }
 
-export function useRechercheDoublon(nom: string) {
+function seuilAtteint(champ: ChampRechercheDoublon, valeur: string): boolean {
+  if (champ === 'nom') {
+    return valeur.trim().length >= 3;
+  }
+  if (champ === 'email') {
+    return valeur.includes('@') && valeur.includes('.');
+  }
+  return valeur.trim().length > 0;
+}
+
+export function useRechercheDoublon(champ: ChampRechercheDoublon, valeur: string) {
   return useQuery({
-    queryKey: ['partenaires', 'recherche-doublon', nom],
-    queryFn: () => rechercherDoublon(nom),
-    enabled: nom.trim().length >= 3,
+    queryKey: ['partenaires', 'recherche-doublon', champ, valeur],
+    queryFn: () => rechercherDoublonPartenaire(champ, valeur),
+    enabled: seuilAtteint(champ, valeur),
+    staleTime: 30_000,
   });
 }
