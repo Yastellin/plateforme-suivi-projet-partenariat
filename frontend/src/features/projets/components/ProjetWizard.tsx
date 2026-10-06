@@ -84,9 +84,10 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const derniereEtape = etapeActive === ETAPES.length - 1
 
   // Sauvegarde auto brouillon toutes les 30s (section 8.2)
-  const { viderBrouillon } = useWizardDraft({
+  const { effacerBrouillon } = useWizardDraft({
     cle: "projet-wizard",
-    donnees: { ...valeurs, etapeActive },
+    valeurs: { ...valeurs, etapeActive },
+    actif: !creation.isPending,
     onRestaurer: (d) => {
       if (d.etapeActive !== undefined) setEtapeActive(d.etapeActive as number)
     },
@@ -105,12 +106,12 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   function onSubmit(valeurs: ProjetFormValues) {
     creation.mutate(valeurs, {
       onSuccess: (projet) => {
-        viderBrouillon()
-        toast.success("Projet cree avec succes !")
+        effacerBrouillon()
+        toast.success("Projet créé avec succès !")
         onSucces(projet)
       },
       onError: (erreur) => {
-        toast.error(erreur.message || "Erreur lors de la creation.")
+        toast.error(erreur.message || "Erreur lors de la création.")
       },
     })
   }
@@ -133,7 +134,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
           )}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="intitule_officiel">Intitule officiel</Label>
+          <Label htmlFor="intitule_officiel">Intitulé officiel</Label>
           <Input id="intitule_officiel" {...register("intitule_officiel")} />
         </div>
       </div>
@@ -174,7 +175,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
       <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_debut">
-            Date de debut <span className="text-destructive">*</span>
+            Date de début <span className="text-destructive">*</span>
           </Label>
           <Input
             id="date_debut"
@@ -188,7 +189,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_fin_prevue">
-            Date de fin prevue <span className="text-destructive">*</span>
+            Date de fin prévue <span className="text-destructive">*</span>
           </Label>
           <Input
             id="date_fin_prevue"
@@ -223,8 +224,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         </div>
       </div>
       <p className="text-xs text-muted-foreground">
-        Le statut est defini a BROUILLON par defaut. Vous pourrez le modifier
-        ulterieurement.
+        Le statut est défini à BROUILLON par défaut. Vous pourrez le modifier ultérieurement.
       </p>
     </div>,
 
@@ -253,7 +253,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label>Beneficiaires</Label>
+        <Label>Bénéficiaires</Label>
         <Controller
           control={control}
           name="beneficiaire_ids"
@@ -263,7 +263,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label>Sites concernes</Label>
+        <Label>Sites concernés</Label>
         <Controller
           control={control}
           name="site_ids"
@@ -277,7 +277,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
     // Etape 5 : Recapitulatif
     <div key="recap" className="flex flex-col gap-4">
       <h3 className="font-heading text-sm font-medium text-muted-foreground">
-        Verifiez les informations avant la creation
+        Vérifiez les informations avant la création
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
         <RecapChamp label="Nom" valeur={valeurs.nom || "—"} />
@@ -287,20 +287,20 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
           label="Budget"
           valeur={valeurs.budget ? `${valeurs.budget.toLocaleString("fr-FR")} MGA` : "—"}
         />
-        <RecapChamp label="Date de debut" valeur={valeurs.date_debut || "—"} />
-        <RecapChamp label="Date de fin prevue" valeur={valeurs.date_fin_prevue || "—"} />
+        <RecapChamp label="Date de début" valeur={valeurs.date_debut || "—"} />
+        <RecapChamp label="Date de fin prévue" valeur={valeurs.date_fin_prevue || "—"} />
         <RecapChamp label="Statut" valeur={STATUTS.find((s) => s.value === valeurs.statut)?.label ?? valeurs.statut} />
         <RecapChamp
           label="Porteur"
-          valeur={valeurs.porteur_id ? "Selectionne" : "Non defini"}
+          valeur={valeurs.porteur_id ? "Sélectionné" : "Non défini"}
         />
-        <RecapChamp label="Bailleurs" valeur={`${valeurs.bailleur_ids?.length ?? 0} selectionne(s)`} />
-        <RecapChamp label="Beneficiaires" valeur={`${valeurs.beneficiaire_ids?.length ?? 0} selectionne(s)`} />
-        <RecapChamp label="Sites" valeur={`${valeurs.site_ids?.length ?? 0} selectionne(s)`} />
+        <RecapChamp label="Bailleurs" valeur={`${valeurs.bailleur_ids?.length ?? 0} sélectionné(s)`} />
+        <RecapChamp label="Bénéficiaires" valeur={`${valeurs.beneficiaire_ids?.length ?? 0} sélectionné(s)`} />
+        <RecapChamp label="Sites" valeur={`${valeurs.site_ids?.length ?? 0} sélectionné(s)`} />
       </div>
       {valeurs.intitule_officiel && (
         <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Intitule officiel</span>
+          <span className="text-xs text-muted-foreground">Intitulé officiel</span>
           <p className="text-sm text-foreground">{valeurs.intitule_officiel}</p>
         </div>
       )}
@@ -320,7 +320,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
           onClick={precedent}
           disabled={etapeActive === 0 || creation.isPending}
         >
-          Precedent
+          Précédent
         </Button>
         <div className="flex gap-2">
           <Button
@@ -337,7 +337,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
             disabled={creation.isPending}
           >
             {creation.isPending && <LoaderCircle className="animate-spin" />}
-            {derniereEtape ? "Creer le projet" : "Suivant"}
+            {derniereEtape ? "Créer le projet" : "Suivant"}
           </Button>
         </div>
       </div>

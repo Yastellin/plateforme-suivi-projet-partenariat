@@ -78,7 +78,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
           {errors.nom && <p className="text-sm text-destructive">{errors.nom.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="intitule_officiel">Intitule officiel</Label>
+          <Label htmlFor="intitule_officiel">Intitulé officiel</Label>
           <Input id="intitule_officiel" {...register("intitule_officiel")} />
         </div>
       </div>
@@ -101,12 +101,12 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="date_debut">Date de debut</Label>
+          <Label htmlFor="date_debut">Date de début</Label>
           <Input id="date_debut" type="date" aria-invalid={!!errors.date_debut} {...register("date_debut")} />
           {errors.date_debut && <p className="text-sm text-destructive">{errors.date_debut.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="date_fin_prevue">Date de fin prevue</Label>
+          <Label htmlFor="date_fin_prevue">Date de fin prévue</Label>
           <Input id="date_fin_prevue" type="date" aria-invalid={!!errors.date_fin_prevue} {...register("date_fin_prevue")} />
           {errors.date_fin_prevue && <p className="text-sm text-destructive">{errors.date_fin_prevue.message}</p>}
         </div>
@@ -148,7 +148,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label>Beneficiaires</Label>
+        <Label>Bénéficiaires</Label>
         <Controller
           control={control}
           name="beneficiaire_ids"
@@ -157,7 +157,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label>Sites concernes</Label>
+        <Label>Sites concernés</Label>
         <Controller
           control={control}
           name="site_ids"
@@ -169,7 +169,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
         <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>Annuler</Button>
         <Button type="submit" disabled={enCours}>
           {enCours && <LoaderCircle className="animate-spin" />}
-          {projet ? "Enregistrer les modifications" : "Creer le projet"}
+          {projet ? "Enregistrer les modifications" : "Créer le projet"}
         </Button>
       </div>
     </form>

@@ -4,8 +4,6 @@ import apiClient from "@/lib/api-client"
 
 interface Avancement {
   pourcentage: number
-  activites_terminees: number
-  activites_total: number
 }
 
 export function useAvancement(projetId: string | undefined) {

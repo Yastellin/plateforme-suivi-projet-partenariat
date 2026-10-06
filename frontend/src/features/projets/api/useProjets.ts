@@ -1,25 +1,30 @@
 ﻿// src/features/projets/api/useProjets.ts
-import { useQuery, keepPreviousData } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
-import type { PageServeur, Projet } from "@/types/api"
 
-export interface FiltresProjets {
-  page?: number
-  limit?: number
-  nom?: string
-  statut?: string
-  etablissement_id?: string
-  partenariat_id?: string
-  partenaire_id?: string
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import type { PageServeur, Projet } from '@/types/api';
+
+interface ParametresProjets {
+  page: number;
+  limit: number;
+  recherche?: string;
 }
 
-export function useProjets(filtres: FiltresProjets) {
-  return useQuery({
-    queryKey: ["projets", filtres],
-    queryFn: async () => {
-      const reponse = await apiClient.get<PageServeur<Projet>>("/projets", { params: filtres })
-      return reponse.data
+async function recupererProjets(parametres: ParametresProjets): Promise<PageServeur<Projet>> {
+  const reponse = await apiClient.get<PageServeur<Projet>>('/projets', {
+    params: {
+      page: parametres.page,
+      limit: parametres.limit,
+      nom: parametres.recherche || undefined,
     },
-    placeholderData: keepPreviousData,
-  })
+  });
+  return reponse.data;
+}
+
+export function useProjets(parametres: ParametresProjets) {
+  return useQuery({
+    queryKey: ['projets', 'liste', parametres],
+    queryFn: () => recupererProjets(parametres),
+    placeholderData: (precedent) => precedent,
+  });
 }
