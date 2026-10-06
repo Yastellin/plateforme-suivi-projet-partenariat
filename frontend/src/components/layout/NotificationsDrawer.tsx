@@ -2,6 +2,8 @@
 
 import { X, Bell, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/features/notifications/api/useNotifications';
+import { NotificationItem } from '@/features/notifications/components/NotificationItem';
 
 interface NotificationsDrawerProps {
   ouvert: boolean;
@@ -9,6 +11,9 @@ interface NotificationsDrawerProps {
 }
 
 export function NotificationsDrawer({ ouvert, onFermer }: NotificationsDrawerProps) {
+  const { data: notifications, isLoading } = useNotifications();
+  const listeNotifications = Array.isArray(notifications) ? notifications : [];
+
   return (
     <>
       <div
@@ -44,13 +49,25 @@ export function NotificationsDrawer({ ouvert, onFermer }: NotificationsDrawerPro
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-          <Inbox className="h-12 w-12 text-[var(--color-text-secondary)]" strokeWidth={1.5} />
-          <p className="text-[13.5px] font-semibold text-[var(--color-text-primary)]">Aucune notification pour le moment</p>
-          <p className="text-[12.5px] text-[var(--color-text-secondary)]">
-            Vous serez averti ici des nouveaux projets soumis et des échéances importantes.
-          </p>
-        </div>
+        {isLoading ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+            <p className="text-[13px] text-[var(--color-text-secondary)]">Chargement...</p>
+          </div>
+        ) : listeNotifications.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+            <Inbox className="h-12 w-12 text-[var(--color-text-secondary)]" strokeWidth={1.5} />
+            <p className="text-[13.5px] font-semibold text-[var(--color-text-primary)]">Aucune notification pour le moment</p>
+            <p className="text-[12.5px] text-[var(--color-text-secondary)]">
+              Vous serez averti ici des nouveaux projets soumis et des échéances importantes.
+            </p>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+            {listeNotifications.map((notification) => (
+              <NotificationItem key={notification.id} notification={notification} />
+            ))}
+          </div>
+        )}
       </aside>
     </>
   );
