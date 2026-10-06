@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog"
 import { StatusBadge } from "@/components/shared/StatusBadge"
+import { obtenirInfoStatut } from "@/lib/status-mappings"
 import { GaleriePhotosReordonnable } from "@/features/publications/components/GaleriePhotosReordonnable"
 import { DocumentDropzone } from "@/features/documents/components/DocumentDropzone"
 import { schemaPublication, type PublicationFormValues } from "@/lib/validators/publication.schema"
@@ -60,7 +61,7 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
     <div className="flex flex-col gap-6">
       {publication && (
         <div className="flex items-center justify-between">
-          <StatusBadge statut={publication.statut} />
+          <StatusBadge libelle={obtenirInfoStatut(publication.statut).libelle} tonalite={obtenirInfoStatut(publication.statut).tonalite} />
           {publication.statut === "BROUILLON" && (
             <Button variant="outline" onClick={() => setConfirmPublierOuvert(true)}>
               <Globe size={16} /> Publier
@@ -102,11 +103,11 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
       )}
 
       <ConfirmDialog
-        open={confirmPublierOuvert}
-        onOpenChange={setConfirmPublierOuvert}
+        ouvert={confirmPublierOuvert}
+        onFermer={() => setConfirmPublierOuvert(false)}
         titre="Publier cette page ?"
         description="Une fois publiee, cette page sera visible par tous les visiteurs de l'espace public."
-        onConfirm={() => {
+        onConfirmer={() => {
           publierAction.mutate(undefined, {
             onSuccess: () => {
               toast.success("Publication mise en ligne")
@@ -115,8 +116,7 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
           })
         }}
         enCours={publierAction.isPending}
-        libelleConfirmation="Publier"
-        destructif={false}
+        libelleAction="Publier"
       />
     </div>
   )
