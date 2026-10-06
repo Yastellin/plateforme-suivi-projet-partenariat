@@ -29,6 +29,7 @@ import { RechercheModule } from './recherche/recherche.module';
 import { HealthModule } from './health/health.module';
 import { CleanupModule } from './cleanup/cleanup.module';
 import { DatabaseModule } from './database/database.module';
+import { SyntheseModule } from './synthese/synthese.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { DatabaseModule } from './database/database.module';
     ArchivesModule,
     RechercheModule,
     CleanupModule,
+    SyntheseModule,
   ],
   controllers: [AppController],
   providers: [
