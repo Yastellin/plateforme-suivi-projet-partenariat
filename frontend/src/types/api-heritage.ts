@@ -90,15 +90,6 @@ export interface Site {
   description?: string
 }
 
-export interface Activite {
-  id: string
-  intitule: string
-  ordre: number
-  terminee: boolean
-  date_echeance?: string
-  projet_id: string
-}
-
 export interface Projet {
   id: string
   nom: string
@@ -117,12 +108,10 @@ export interface Projet {
   bailleurs?: { bailleur_id: string; bailleur?: Bailleur }[]
   beneficiaires?: { beneficiaire_id: string; beneficiaire?: Beneficiaire }[]
   sites?: { site_id: string; site?: Site }[]
-  activites?: Activite[]
   created_at: string
   updated_at: string
 }
 export type StatutConvention = "BROUILLON"| "EN_ATTENTE_SIGNATURE"| "SIGNEE"| "ACTIVE"| "SUSPENDUE"| "EXPIREE"
-export type EtapeCircuit = "REDACTION" | "TRANSMISSION" | "VERIFICATION_DAJ" | "ATTENTE_SIGNATURE" | "SIGNEE"
 export interface Convention {
   id: string
   reference: string
@@ -132,7 +121,6 @@ export interface Convention {
   date_debut?: string
   date_fin?: string
   statut: StatutConvention
-  etape_circuit: EtapeCircuit
   date_derniere_etape?: string
   description?: string
   archive: boolean
