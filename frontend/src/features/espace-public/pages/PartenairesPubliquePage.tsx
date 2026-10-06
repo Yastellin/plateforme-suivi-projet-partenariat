@@ -8,6 +8,7 @@ import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPart
 import { useDebounce } from "@/hooks/useDebounce"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { StatusBadge } from "@/components/shared/StatusBadge"
+import { obtenirInfoStatut } from "@/lib/status-mappings"
 
 // Page Partenaires de la vitrine publique (section 6.2).
 // Liste publique des partenaires avec visibilite = PUBLIC (RG cf.
@@ -121,7 +122,7 @@ export function PartenairesPubliquePage() {
                         {partenaire.type}
                       </p>
                     </div>
-                    <StatusBadge statut={partenaire.statut} />
+                    <StatusBadge libelle={obtenirInfoStatut(partenaire.statut).libelle} tonalite={obtenirInfoStatut(partenaire.statut).tonalite} />
                   </div>
                   {partenaire.description && (
                     <p className="line-clamp-2 text-xs text-muted-foreground">
@@ -146,9 +147,9 @@ export function PartenairesPubliquePage() {
 
       {!isLoading && partenaires.length === 0 && (
         <EmptyState
-          icon={Handshake}
+          icone={Handshake}
           titre="Aucun partenaire trouvé"
-          message={
+          description={
             recherche || pays
               ? "Aucun partenaire ne correspond à vos critères."
               : "Aucun partenaire n'est actuellement visible publiquement."

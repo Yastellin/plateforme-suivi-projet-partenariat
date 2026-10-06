@@ -102,9 +102,9 @@ export function EtablissementsPage() {
 
       {!isLoading && etablissements.length === 0 && (
         <EmptyState
-          icon={Building2}
+          icone={Building2}
           titre="Aucun établissement trouvé"
-          message={
+          description={
             recherche
               ? "Aucun établissement ne correspond à votre recherche."
               : "Aucun établissement n'est actuellement disponible."

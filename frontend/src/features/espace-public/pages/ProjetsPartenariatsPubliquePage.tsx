@@ -128,9 +128,9 @@ export function ProjetsPartenariatsPubliquePage() {
 
       {!isLoading && publications.length === 0 && (
         <EmptyState
-          icon={Newspaper}
+          icone={Newspaper}
           titre="Aucune publication trouvée"
-          message={
+          description={
             recherche
               ? "Aucune publication ne correspond à votre recherche."
               : "Aucune publication n'est actuellement disponible."
