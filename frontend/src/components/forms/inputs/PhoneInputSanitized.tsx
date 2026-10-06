@@ -10,23 +10,12 @@ interface PhoneInputSanitizedProps extends Omit<InputHTMLAttributes<HTMLInputEle
   erreur?: string;
 }
 
+const CARACTERES_INTERDITS = /[^\d+\s\-()]/g;
+
 export const PhoneInputSanitized = forwardRef<HTMLInputElement, PhoneInputSanitizedProps>(
   ({ label = 'Téléphone', aide, erreur, onChange, ...props }, ref) => {
     function gererSaisie(e: React.ChangeEvent<HTMLInputElement>) {
-      let valeur = e.target.value;
-
-      valeur = valeur.replace(/[^\d+\s]/g, '');
-
-      if (valeur.indexOf('+') > 0) {
-        valeur = valeur.replace(/\+/g, '');
-      }
-
-      const parties = valeur.split('+');
-      if (parties.length > 2) {
-        valeur = '+' + parties.slice(1).join('');
-      }
-
-      e.target.value = valeur;
+      e.target.value = e.target.value.replace(CARACTERES_INTERDITS, '');
       onChange?.(e);
     }
 
@@ -37,10 +26,10 @@ export const PhoneInputSanitized = forwardRef<HTMLInputElement, PhoneInputSaniti
         inputMode="tel"
         autoComplete="tel"
         label={label}
-        aide={aide ?? 'Format : +261 32 12 345 67 ou 032 12 345 67'}
+        aide={aide ?? 'Exemples : +261 32 12 345 67, 032 12 345 67'}
         erreur={erreur}
         icone={<Phone />}
-        placeholder="032 12 345 67"
+        placeholder="+261 32 12 345 67"
         onChange={gererSaisie}
         {...props}
       />
