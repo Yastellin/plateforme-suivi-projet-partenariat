@@ -26,7 +26,12 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(200)
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'development' ? 50 : 5,
+      ttl: 60000,
+    },
+  })
   @ApiOperation({ summary: 'Connexion utilisateur' })
   async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(dto);

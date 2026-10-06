@@ -40,7 +40,7 @@ import { DatabaseModule } from './database/database.module';
       throttlers: [
         {
           ttl: 60000,
-          limit: 100,
+          limit: process.env.NODE_ENV === 'development' ? 1000 : 100,
         },
       ],
     }),
@@ -68,8 +68,6 @@ import { DatabaseModule } from './database/database.module';
   controllers: [AppController],
   providers: [
     AppService,
-    // Le ThrottlerGuard doit passer AVANT JwtAuthGuard pour limiter
-    // les tentatives meme sur les routes publiques (ex : /auth/login).
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
