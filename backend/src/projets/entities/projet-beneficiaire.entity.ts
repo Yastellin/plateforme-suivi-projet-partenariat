@@ -26,7 +26,7 @@ export class ProjetBeneficiaire {
   beneficiaire: Beneficiaire;
 
   @BeforeInsert()
-  genererId() {
+  preparerInsertion() {
     if (!this.id) this.id = randomUUID();
   }
 }

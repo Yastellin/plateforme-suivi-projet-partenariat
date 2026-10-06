@@ -32,7 +32,7 @@ export class PartenariatEtablissement {
   etablissement: Etablissement;
 
   @BeforeInsert()
-  genererId() {
+  preparerInsertion() {
     if (!this.id) {
       this.id = randomUUID();
     }

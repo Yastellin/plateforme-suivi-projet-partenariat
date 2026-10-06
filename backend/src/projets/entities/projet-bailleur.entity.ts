@@ -26,7 +26,7 @@ export class ProjetBailleur {
   bailleur: Bailleur;
 
   @BeforeInsert()
-  genererId() {
+  preparerInsertion() {
     if (!this.id) this.id = randomUUID();
   }
 }

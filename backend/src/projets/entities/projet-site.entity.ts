@@ -26,7 +26,7 @@ export class ProjetSite {
   site: Site;
 
   @BeforeInsert()
-  genererId() {
+  preparerInsertion() {
     if (!this.id) this.id = randomUUID();
   }
 }

@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BeforeInsert,
+  BeforeUpdate,
   Index,
 } from 'typeorm';
 import { randomUUID } from 'crypto';
@@ -81,9 +82,21 @@ export class Partenaire {
   updated_at: Date;
 
   @BeforeInsert()
-  genererId() {
+  preparerInsertion() {
+    const maintenant = new Date();
     if (!this.id) {
       this.id = randomUUID();
     }
+    if (!this.created_at) {
+      this.created_at = maintenant;
+    }
+    if (!this.updated_at) {
+      this.updated_at = maintenant;
+    }
+  }
+
+  @BeforeUpdate()
+  preparerMiseAJour() {
+    this.updated_at = new Date();
   }
 }

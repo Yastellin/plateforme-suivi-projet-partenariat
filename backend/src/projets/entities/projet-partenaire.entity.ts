@@ -26,7 +26,7 @@ export class ProjetPartenaire {
   partenaire: Partenaire;
 
   @BeforeInsert()
-  genererId() {
+  preparerInsertion() {
     if (!this.id) this.id = randomUUID();
   }
 }

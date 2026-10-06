@@ -39,9 +39,13 @@ export class RefreshToken {
   created_at: Date;
 
   @BeforeInsert()
-  genererId() {
+  preparerInsertion() {
+    const maintenant = new Date();
     if (!this.id) {
       this.id = randomUUID();
+    }
+    if (!this.created_at) {
+      this.created_at = maintenant;
     }
   }
 }
