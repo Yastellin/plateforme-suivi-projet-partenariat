@@ -2,17 +2,30 @@
 
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
-import type { Etablissement } from '@/types/api';
+import type { Etablissement, PageServeur } from '@/types/api';
 
-async function recupererEtablissements(): Promise<Etablissement[]> {
-  const reponse = await apiClient.get<Etablissement[]>('/etablissements');
+interface ParametresEtablissements {
+  page?: number;
+  limit?: number;
+  recherche?: string;
+}
+
+async function recupererEtablissements(parametres: ParametresEtablissements = {}): Promise<PageServeur<Etablissement>> {
+  const reponse = await apiClient.get<PageServeur<Etablissement>>('/etablissements', {
+    params: {
+      page: parametres.page,
+      limit: parametres.limit,
+      recherche: parametres.recherche || undefined,
+    },
+  });
   return reponse.data;
 }
 
-export function useEtablissements(actif: boolean = true) {
+export function useEtablissements(parametres: ParametresEtablissements | boolean = {}) {
+  const parametresNormaux = typeof parametres === 'boolean' ? {} : parametres;
+
   return useQuery({
-    queryKey: ['etablissements'],
-    queryFn: recupererEtablissements,
-    enabled: actif,
+    queryKey: ['etablissements', parametresNormaux],
+    queryFn: () => recupererEtablissements(parametresNormaux),
   });
 }
