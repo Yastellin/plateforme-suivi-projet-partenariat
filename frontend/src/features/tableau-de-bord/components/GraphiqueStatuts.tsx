@@ -1,22 +1,13 @@
 ﻿// src/features/tableau-de-bord/components/GraphiqueStatuts.tsx
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { LIBELLES_STATUT_CONVENTION } from '@/lib/status-mappings';
-import type { CompteursTableauDeBord, StatutConvention } from '@/types/api';
+import { RepartitionBars, type LigneRepartition } from '@/components/shared/RepartitionBars';
+import type { CompteursTableauDeBord } from '@/types/api';
 
 interface GraphiqueStatutsProps {
   compteurs: CompteursTableauDeBord | undefined;
   chargement: boolean;
 }
-
-const COULEUR_BARRE: Record<StatutConvention, string> = {
-  BROUILLON: 'bg-[var(--color-text-secondary)]',
-  EN_ATTENTE_SIGNATURE: 'bg-[var(--color-brand-moment)]',
-  SIGNEE: 'bg-[var(--color-brand)]',
-  ACTIVE: 'bg-[var(--color-brand)]',
-  SUSPENDUE: 'bg-[var(--color-brand-moment)]',
-  EXPIREE: 'bg-[var(--status-expire-fg)]',
-};
 
 export function GraphiqueStatuts({ compteurs, chargement }: GraphiqueStatutsProps) {
   if (chargement || !compteurs) {
@@ -29,30 +20,19 @@ export function GraphiqueStatuts({ compteurs, chargement }: GraphiqueStatutsProp
     );
   }
 
-  const total = Object.values(compteurs.repartition_conventions).reduce((somme, valeur) => somme + valeur, 0);
+  const repartition = compteurs.repartition_conventions;
+  const signees = (repartition?.SIGNEE ?? 0) + (repartition?.ACTIVE ?? 0);
+  const enAttente = (repartition?.EN_ATTENTE_SIGNATURE ?? 0) + (repartition?.BROUILLON ?? 0) + (repartition?.SUSPENDUE ?? 0);
+  const expirees = repartition?.EXPIREE ?? 0;
+  // « En circuit » : tonalité disponible mais pas de statut API confirmé — compteur à 0.
+  const enCircuit = 0;
 
-  return (
-    <div className="flex flex-col gap-[15px]">
-      {(Object.keys(compteurs.repartition_conventions) as StatutConvention[]).map((statut) => {
-        const valeur = compteurs.repartition_conventions[statut];
-        const pourcentage = total > 0 ? Math.round((valeur / total) * 100) : 0;
-        const info = LIBELLES_STATUT_CONVENTION[statut];
+  const lignes: LigneRepartition[] = [
+    { cle: 'signees', libelle: 'Signées', valeur: signees, ton: 'brand' },
+    { cle: 'attente', libelle: 'En attente', valeur: enAttente, ton: 'warning' },
+    { cle: 'circuit', libelle: 'En circuit', valeur: enCircuit, ton: 'circuit' },
+    { cle: 'expirees', libelle: 'Expirées', valeur: expirees, ton: 'error' },
+  ];
 
-        return (
-          <div key={statut} className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5">
-            <span className="text-[12.5px] font-semibold">{info.libelle}</span>
-            <span className="font-mono text-xs font-bold text-[var(--color-text-secondary)]">
-              {valeur} ({pourcentage}%)
-            </span>
-            <div className="col-span-2 h-[9px] overflow-hidden rounded-[var(--radius-sm)] bg-[var(--color-page-bg)]">
-              <div
-                className={`h-full rounded-[var(--radius-sm)] ${COULEUR_BARRE[statut]}`}
-                style={{ width: `${pourcentage}%` }}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  return <RepartitionBars lignes={lignes} />;
 }
