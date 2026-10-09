@@ -16,6 +16,7 @@ import { Role } from '../../common/enums/role.enum';
 import { Etablissement } from '../../etablissements/entities/etablissement.entity';
 import { RefreshToken } from './refresh-token.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
+import { PasswordResetToken } from './password-reset-token.entity';
 
 @Entity('Utilisateur')
 @Index(['etablissement_id'])
@@ -49,6 +50,9 @@ export class Utilisateur {
 
   @OneToMany(() => RefreshToken, (token) => token.utilisateur)
   refresh_tokens: RefreshToken[];
+
+  @OneToMany(() => PasswordResetToken, (t) => t.utilisateur)
+  password_reset_tokens: PasswordResetToken[];
 
   @OneToMany(() => Notification, (n) => n.utilisateur)
   notifications: Notification[];

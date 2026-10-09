@@ -11,11 +11,13 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { PrismaModule } from '../prisma/prisma.module';
 import { Utilisateur } from './entities/utilisateur.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { MotDePasseModifieListener } from './listeners/mot-de-passe-modifie.listener';
 
 @Module({
   imports: [
     PrismaModule,
-    TypeOrmModule.forFeature([Utilisateur, RefreshToken]),
+    TypeOrmModule.forFeature([Utilisateur, RefreshToken, PasswordResetToken]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -27,7 +29,13 @@ import { RefreshToken } from './entities/refresh-token.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, AuthSchedulerService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    AuthSchedulerService,
+    MotDePasseModifieListener,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

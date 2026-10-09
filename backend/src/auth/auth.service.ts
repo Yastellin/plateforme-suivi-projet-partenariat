@@ -1,4 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Inject, Logger } from '@nestjs/common';
+import { MAIL_PORT, type MailPort } from '../mail/mail.port';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
+import {
+  MotDePasseModifieEvent,
+  MOT_DE_PASSE_MODIFIE,
+} from './events/mot-de-passe-modifie.event';
+
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan, IsNull } from 'typeorm';
@@ -20,6 +33,10 @@ export class AuthService {
     private utilisateurRepo: Repository<Utilisateur>,
     @InjectRepository(RefreshToken)
     private refreshTokenRepo: Repository<RefreshToken>,
+    @InjectRepository(PasswordResetToken)
+    private passwordResetTokenRepo: Repository<PasswordResetToken>,
+    @Inject(MAIL_PORT) private readonly mail: MailPort,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
@@ -143,6 +160,118 @@ export class AuthService {
         : null,
     };
   }
+
+    async demanderReinitialisation(email: string): Promise<{ message: string }> {
+    // Reponse volontairement identique que l'e-mail existe ou non (anti-enumeration).
+    const message =
+      'Si un compte existe avec cet e-mail, un lien de reinitialisation a ete envoye.';
+
+    const utilisateur = await this.utilisateurRepo.findOne({ where: { email } });
+    if (!utilisateur || !utilisateur.actif) {
+      return { message };
+    }
+
+    // Invalider les tokens de reinitialisation precedents non utilises.
+    await this.passwordResetTokenRepo.update(
+      { utilisateur_id: utilisateur.id, utilise_le: IsNull() },
+      { utilise_le: new Date() },
+    );
+
+    // Token brut : 32 octets aleatoires, encodes en base64url (43 caracteres).
+    const tokenBrut = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = this.hasherToken(tokenBrut);
+
+    const expirationMinutes = parseInt(
+      process.env.MOT_DE_PASSE_RESET_EXPIRATION_MINUTES || '30',
+      10,
+    );
+    const expireLe = new Date(Date.now() + expirationMinutes * 60 * 1000);
+
+    const entite = this.passwordResetTokenRepo.create({
+      token_hash: tokenHash,
+      utilisateur_id: utilisateur.id,
+      expire_le: expireLe,
+    });
+    await this.passwordResetTokenRepo.save(entite);
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const lien = `${frontendUrl}/reset-password?token=${tokenBrut}`;
+    const texte =
+      `Bonjour,\n\n` +
+      `Vous avez demande la reinitialisation de votre mot de passe.\n` +
+      `Cliquez sur le lien suivant (valable ${expirationMinutes} minutes) :\n${lien}\n\n` +
+      `Si vous n etes pas a l origine de cette demande, ignorez ce message.`;
+    const html =
+      `<p>Bonjour,</p>` +
+      `<p>Vous avez demande la reinitialisation de votre mot de passe.</p>` +
+      `<p><a href="${lien}">Reinitialiser mon mot de passe</a></p>` +
+      `<p>Ce lien est valable ${expirationMinutes} minutes. ` +
+      `Si vous n etes pas a l origine de cette demande, ignorez ce message.</p>`;
+
+    await this.mail.envoyer({
+      destinataire: utilisateur.email,
+      sujet: 'Reinitialisation de votre mot de passe',
+      contenu_texte: texte,
+      contenu_html: html,
+    });
+
+    return { message };
+  }
+
+  async reinitialiserMotDePasse(dto: {
+    token: string;
+    nouveau_mot_de_passe: string;
+  }): Promise<{ message: string }> {
+    const tokenHash = this.hasherToken(dto.token);
+    const entite = await this.passwordResetTokenRepo.findOne({
+      where: { token_hash: tokenHash },
+    });
+
+    if (!entite) {
+      throw new BadRequestException('Token de reinitialisation invalide.');
+    }
+    if (entite.utilise_le) {
+      throw new BadRequestException('Token de reinitialisation deja utilise.');
+    }
+    if (entite.expire_le < new Date()) {
+      throw new BadRequestException('Token de reinitialisation expire.');
+    }
+
+    const utilisateur = await this.utilisateurRepo.findOne({
+      where: { id: entite.utilisateur_id },
+    });
+    if (!utilisateur || !utilisateur.actif) {
+      throw new BadRequestException('Utilisateur introuvable ou desactive.');
+    }
+
+    const nouveauHash = await bcrypt.hash(dto.nouveau_mot_de_passe, 10);
+
+    await this.utilisateurRepo.update(utilisateur.id, {
+      password_hash: nouveauHash,
+    });
+
+    await this.passwordResetTokenRepo.update(entite.id, {
+      utilise_le: new Date(),
+    });
+
+    // Invalider toutes les sessions actives (refresh tokens non revoques).
+    await this.refreshTokenRepo.update(
+      { utilisateur_id: utilisateur.id, revoked_at: IsNull() },
+      { revoked_at: new Date() },
+    );
+
+    // Notifier l'utilisateur par e-mail.
+    this.eventEmitter.emit(
+      MOT_DE_PASSE_MODIFIE,
+      new MotDePasseModifieEvent(utilisateur.id, utilisateur.email),
+    );
+
+    return {
+      message:
+        'Mot de passe reinitialise avec succes. Veuillez vous reconnecter.',
+    };
+  }
+
 
   async nettoyerTokensExpires(): Promise<{ supprimes: number }> {
     const seuil = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

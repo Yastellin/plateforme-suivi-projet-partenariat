@@ -10,6 +10,8 @@ import { Throttle } from '@nestjs/throttler';
 import { IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { HttpCode } from '@nestjs/common';
+import { MotDePasseOublieDto } from './dto/mot-de-passe-oublie.dto';
+import { ReinitialiserMotDePasseDto } from './dto/reinitialiser-mot-de-passe.dto';
 
 class LogoutDto {
   @ApiPropertyOptional({ description: 'Refresh token a revoquer (optionnel)' })
@@ -35,6 +37,32 @@ export class AuthController {
   @ApiOperation({ summary: 'Connexion utilisateur' })
   async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('mot-de-passe-oublie')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Demander une reinitialisation de mot de passe par e-mail',
+  })
+  async motDePasseOublie(
+    @Body() dto: MotDePasseOublieDto,
+  ): Promise<{ message: string }> {
+    return this.authService.demanderReinitialisation(dto.email);
+  }
+
+  @Public()
+  @Post('reinitialiser-mot-de-passe')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Definir un nouveau mot de passe a partir d un token',
+  })
+  async reinitialiserMotDePasse(
+    @Body() dto: ReinitialiserMotDePasseDto,
+  ): Promise<{ message: string }> {
+    return this.authService.reinitialiserMotDePasse(dto);
   }
 
   @Public()
