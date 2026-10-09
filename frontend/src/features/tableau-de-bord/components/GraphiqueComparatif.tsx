@@ -10,11 +10,13 @@ interface GraphiqueComparatifProps {
 }
 
 export function GraphiqueComparatif({ donnees, chargement }: GraphiqueComparatifProps) {
+  const donneesSecurisees = Array.isArray(donnees) ? donnees : [];
+
   if (chargement) {
     return <Skeleton className="h-[260px] w-full" />;
   }
 
-  if (!donnees || donnees.length === 0) {
+  if (donneesSecurisees.length === 0) {
     return (
       <p className="py-10 text-center text-[13px] text-[var(--color-text-secondary)]">
         Aucune donnée comparative disponible.
@@ -24,7 +26,7 @@ export function GraphiqueComparatif({ donnees, chargement }: GraphiqueComparatif
 
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <BarChart data={donnees} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+      <BarChart data={donneesSecurisees} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
         <XAxis
           dataKey="etablissement_nom"
@@ -46,8 +48,8 @@ export function GraphiqueComparatif({ donnees, chargement }: GraphiqueComparatif
             fontSize: 12.5,
           }}
         />
-        <Bar dataKey="partenaires_actifs" name="Partenaires actifs" fill="var(--color-brand)" radius={[3, 3, 0, 0]} />
-        <Bar dataKey="projets_en_cours" name="Projets en cours" fill="var(--color-brand-moment)" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="partenaires_actifs" name="Partenaires" fill="var(--color-brand)" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="projets_en_cours" name="Projets" fill="var(--color-brand-moment)" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
