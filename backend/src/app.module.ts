@@ -32,6 +32,7 @@ import { DatabaseModule } from './database/database.module';
 import { SyntheseModule } from './synthese/synthese.module';
 import { EspacePublicModule } from './espace-public/espace-public.module';
 import { ExportModule } from './export/export.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { ExportModule } from './export/export.module';
     SyntheseModule,
     EspacePublicModule,
     ExportModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [
