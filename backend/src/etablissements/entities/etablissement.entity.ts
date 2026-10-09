@@ -15,7 +15,7 @@ import { Partenaire } from '../../partenaires/entities/partenaire.entity';
 import { PartenariatEtablissement } from '../../partenariats/entities/partenariat-etablissement.entity';
 import { Projet } from '../../projets/entities/projet.entity';
 import { CotutelleThese } from '../../cotutelles/entities/cotutelle-these.entity';
-import { SyntheseItem } from '../../synthese/entities/synthese-item';
+import { SyntheseItem } from '../../synthese/entities/synthese-item.entity';
 import { SynthesePartenaireStrategique } from '../../synthese/entities/synthese-partenaire-strategique.entity';
 
 @Entity('Etablissement')
