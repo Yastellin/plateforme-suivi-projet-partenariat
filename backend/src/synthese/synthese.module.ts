@@ -5,7 +5,7 @@ import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Convention } from '../conventions/entities/convention.entity';
 import { Projet } from '../projets/entities/projet.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
-import { SyntheseItem } from './entities/synthese-item';
+import { SyntheseItem } from './entities/synthese-item.entity';
 import { SynthesePartenaireStrategique } from './entities/synthese-partenaire-strategique.entity';
 import { SyntheseController } from './synthese.controller';
 import { SyntheseService } from './synthese.service';

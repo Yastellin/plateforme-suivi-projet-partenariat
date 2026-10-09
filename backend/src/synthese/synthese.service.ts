@@ -14,7 +14,7 @@ import {
   SyntheseEtablissementDto,
   SyntheseGlobaleDto,
 } from './dto/synthese-response.dto';
-import { SyntheseItem } from './entities/synthese-item';
+import { SyntheseItem } from './entities/synthese-item.entity';
 import { SynthesePartenaireStrategique } from './entities/synthese-partenaire-strategique.entity';
 
 export interface FiltresSynthese {
