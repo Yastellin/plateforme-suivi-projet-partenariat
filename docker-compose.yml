@@ -50,6 +50,12 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       # Envoi d'e-mails : noop (journalisation) ou smtp
       MAIL_MODE: ${MAIL_MODE:-noop}
+      # Parametres SMTP : requis uniquement si MAIL_MODE=smtp
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       # Base des liens de reinitialisation de mot de passe
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       # Duree de validite du lien de reinitialisation
