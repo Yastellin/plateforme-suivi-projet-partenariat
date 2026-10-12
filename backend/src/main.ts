@@ -1,11 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
-import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { validerEnvironnement } from './config/env.validation';
+import { configurerApplication } from './config/application.config';
 
 async function bootstrap() {
   // 1. Validation des variables d environnement AVANT tout le reste.
@@ -19,45 +18,12 @@ async function bootstrap() {
     // Helmet s en charge, mais on peut aussi le desactiver globalement.
   });
 
-  // 2. Helmet : en-tetes de securite HTTP.
-  // contentSecurityPolicy desactive car l API sert Swagger UI (scripts inline).
-  app.use(
-    helmet({
-      contentSecurityPolicy: false,
-      crossOriginEmbedderPolicy: false,
-    }),
-  );
+  // 2. Configuration commune (Helmet, prefixe /api, validation, CORS, statique)
+  configurerApplication(app);
 
-  // 3. Graceful shutdown : ferme proprement les connexions (Prisma, HTTP)
+  // 3. Graceful shutdown : ferme proprement les connexions (base de donnees, HTTP)
   // lors d un SIGTERM ou SIGINT (docker stop, redemarrage).
   app.enableShutdownHooks();
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
-  app.setGlobalPrefix('api');
-
-  // Authentification par Bearer token (header Authorization).
-  const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
-    : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
-
-  app.enableCors({
-    origin: corsOrigins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
-
-  // Servir les fichiers uploades (documents, logos, photos)
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
-    prefix: '/uploads/',
-  });
 
   const config = new DocumentBuilder()
     .setTitle('Plateforme gestion projets et partenariats')

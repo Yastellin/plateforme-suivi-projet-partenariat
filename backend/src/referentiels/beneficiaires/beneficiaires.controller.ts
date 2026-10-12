@@ -9,7 +9,12 @@ import {
   Query,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { BeneficiairesService } from './beneficiaires.service';
 import { CreateBeneficiaireDto } from './dto/create-beneficiaire.dto';
 import { UpdateBeneficiaireDto } from './dto/update-beneficiaire.dto';
@@ -43,13 +48,17 @@ export class BeneficiairesController {
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
   @ApiOperation({ summary: 'Obtenir un beneficiaire par ID' })
   @ApiResponse({ status: 200, type: BeneficiaireResponseDto })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<BeneficiaireResponseDto> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<BeneficiaireResponseDto> {
     return this.beneficiairesService.findOne(id);
   }
 
   @Patch(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Mettre a jour un beneficiaire (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Mettre a jour un beneficiaire (Presidence uniquement)',
+  })
   @ApiResponse({ status: 200, type: BeneficiaireResponseDto })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -60,7 +69,9 @@ export class BeneficiairesController {
 
   @Delete(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Supprimer un beneficiaire (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Supprimer un beneficiaire (Presidence uniquement)',
+  })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.beneficiairesService.remove(id);
   }

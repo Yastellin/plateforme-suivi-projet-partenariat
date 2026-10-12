@@ -12,7 +12,12 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { PartenariatsService } from './partenariats.service';
 import { CreatePartenariatDto } from './dto/create-partenariat.dto';
 import { UpdatePartenariatDto } from './dto/update-partenariat.dto';
@@ -40,11 +45,15 @@ export class PartenariatsController {
     if (user.role === Role.ETABLISSEMENT) {
       etablissementId = user.etablissement_id;
       if (!etablissementId) {
-        throw new BadRequestException('Aucun établissement associé à ce compte.');
+        throw new BadRequestException(
+          'Aucun établissement associé à ce compte.',
+        );
       }
       // L'établissement qui crée doit être dans la liste des établissements associés (RG06)
       if (!dto.etablissements_ids.includes(etablissementId)) {
-        throw new BadRequestException('L\'établissement connecté doit être dans la liste des établissements associés.');
+        throw new BadRequestException(
+          "L'établissement connecté doit être dans la liste des établissements associés.",
+        );
       }
     } else if (user.role === Role.PRESIDENCE) {
       if (!dto.etablissements_ids || dto.etablissements_ids.length === 0) {
@@ -69,45 +78,48 @@ export class PartenariatsController {
     return this.partenariatsService.findAll(query, etablissementId);
   }
 
-@Get(':id')
-@ApiOperation({ summary: 'Obtenir un partenariat par ID' })
-@ApiResponse({ status: 200, type: PartenariatResponseDto })
-findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
-  const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-  // includeArchived reste a false : un element archive n'est pas accessible
-  // via GET /:id, il faut passer par GET /?archive=true ou /archives/...
-  return this.partenariatsService.findOne(id, etablissementId, false);
-}
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtenir un partenariat par ID' })
+  @ApiResponse({ status: 200, type: PartenariatResponseDto })
+  findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    // includeArchived reste a false : un element archive n'est pas accessible
+    // via GET /:id, il faut passer par GET /?archive=true ou /archives/...
+    return this.partenariatsService.findOne(id, etablissementId, false);
+  }
 
   @Patch(':id')
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
   @ApiOperation({ summary: 'Mettre à jour un partenariat' })
   @ApiResponse({ status: 200, type: PartenariatResponseDto })
   async update(
-  @CurrentUser() user: any,
-  @Param('id', ParseUUIDPipe) id: string,
-  @Body() dto: UpdatePartenariatDto,
+    @CurrentUser() user: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePartenariatDto,
   ) {
-  const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-  return this.partenariatsService.update(id, dto, etablissementId, user.role);
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.partenariatsService.update(id, dto, etablissementId, user.role);
   }
 
-@Post(':id/soumettre')
-@HttpCode(200)
-@Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
-@ApiOperation({ summary: 'Soumettre un partenariat à la Présidence' })
-@ApiResponse({ status: 200, type: PartenariatResponseDto })
-soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
-  const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-  return this.partenariatsService.soumettre(id, etablissementId);
-}
+  @Post(':id/soumettre')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence' })
+  @ApiResponse({ status: 200, type: PartenariatResponseDto })
+  soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.partenariatsService.soumettre(id, etablissementId);
+  }
 
-@Post(':id/archiver')
-@HttpCode(200)
-@Roles(Role.PRESIDENCE)
-@ApiOperation({ summary: 'Archiver un partenariat (Présidence uniquement)' })
-@ApiResponse({ status: 200, type: PartenariatResponseDto })
-archiver(@Param('id', ParseUUIDPipe) id: string) {
-  return this.partenariatsService.archiver(id);
-}
+  @Post(':id/archiver')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({ summary: 'Archiver un partenariat (Présidence uniquement)' })
+  @ApiResponse({ status: 200, type: PartenariatResponseDto })
+  archiver(@Param('id', ParseUUIDPipe) id: string) {
+    return this.partenariatsService.archiver(id);
+  }
 }

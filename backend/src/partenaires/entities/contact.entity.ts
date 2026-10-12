@@ -34,7 +34,9 @@ export class Contact {
   @Column({ type: 'uuid' })
   partenaire_id: string;
 
-  @ManyToOne(() => Partenaire, (partenaire) => partenaire.contacts, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Partenaire, (partenaire) => partenaire.contacts, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'partenaire_id' })
   partenaire: Partenaire;
 

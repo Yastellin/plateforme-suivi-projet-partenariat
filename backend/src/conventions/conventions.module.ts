@@ -9,12 +9,7 @@ import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Convention,
-      Partenariat,
-      Projet,
-      CotutelleThese,
-    ]),
+    TypeOrmModule.forFeature([Convention, Partenariat, Projet, CotutelleThese]),
   ],
   controllers: [ConventionsController],
   providers: [ConventionsService],

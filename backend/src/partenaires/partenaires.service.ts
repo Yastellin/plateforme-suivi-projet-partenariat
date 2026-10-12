@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, Not } from 'typeorm';
 import { CreatePartenaireDto } from './dto/create-partenaire.dto';
@@ -15,9 +19,16 @@ export class PartenairesService {
     private partenaireRepo: Repository<Partenaire>,
   ) {}
 
-  async create(etablissementId: string, dto: CreatePartenaireDto): Promise<Partenaire> {
+  async create(
+    etablissementId: string,
+    dto: CreatePartenaireDto,
+  ): Promise<Partenaire> {
     const existant = await this.partenaireRepo.findOne({
-      where: { nom: dto.nom, etablissement_id: etablissementId, archive: false },
+      where: {
+        nom: dto.nom,
+        etablissement_id: etablissementId,
+        archive: false,
+      },
     });
     if (existant) {
       throw new ConflictException(
@@ -83,7 +94,7 @@ export class PartenairesService {
   async update(id: string, dto: UpdatePartenaireDto, etablissementId?: string) {
     const partenaire = await this.findOne(id, etablissementId);
 
-    const { etablissement_id, ...data } = dto;
+    const data = { ...dto };
 
     if (data.nom) {
       const existant = await this.partenaireRepo.findOne({
@@ -95,7 +106,9 @@ export class PartenairesService {
         },
       });
       if (existant) {
-        throw new ConflictException(`Un partenaire nomme "${data.nom}" existe deja.`);
+        throw new ConflictException(
+          `Un partenaire nomme "${data.nom}" existe deja.`,
+        );
       }
     }
 
@@ -116,9 +129,12 @@ export class PartenairesService {
     return this.partenaireRepo.findOne({ where: { id } });
   }
 
-  async rechercherDoublon(nom: string, etablissementId: string) {
+  async rechercherDoublon(nom: string, etablissementId?: string) {
+    const where: any = { nom: ILike(nom), archive: false };
+    if (etablissementId) where.etablissement_id = etablissementId;
+
     return this.partenaireRepo.findOne({
-      where: { nom: ILike(nom), etablissement_id: etablissementId, archive: false },
+      where,
       relations: { contacts: true },
     });
   }

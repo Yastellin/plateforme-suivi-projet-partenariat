@@ -20,7 +20,13 @@ export class ProjetRetardRule implements NotificationRule {
     const projets = await this.projetRepo.find({
       where: {
         archive: false,
-        statut: Not(In([StatutProjet.BROUILLON, StatutProjet.TERMINE, StatutProjet.EXPIRE])),
+        statut: Not(
+          In([
+            StatutProjet.BROUILLON,
+            StatutProjet.TERMINE,
+            StatutProjet.EXPIRE,
+          ]),
+        ),
         date_fin_prevue: LessThan(maintenant),
       },
     });
@@ -29,7 +35,8 @@ export class ProjetRetardRule implements NotificationRule {
       const titre = `Projet en retard : ${projet.nom}`;
       const message = `Le projet "${projet.nom}" a depasse sa date de fin prevue le ${projet.date_fin_prevue.toLocaleDateString('fr-FR')}.`;
 
-      const presidenceUsers = await this.notificationsService.trouverUtilisateursPresidence();
+      const presidenceUsers =
+        await this.notificationsService.trouverUtilisateursPresidence();
       for (const userId of presidenceUsers) {
         await this.notificationsService.creer({
           titre,
@@ -43,9 +50,10 @@ export class ProjetRetardRule implements NotificationRule {
         });
       }
 
-      const etabUsers = await this.notificationsService.trouverUtilisateursEtablissement(
-        projet.etablissement_id,
-      );
+      const etabUsers =
+        await this.notificationsService.trouverUtilisateursEtablissement(
+          projet.etablissement_id,
+        );
       for (const userId of etabUsers) {
         await this.notificationsService.creer({
           titre,

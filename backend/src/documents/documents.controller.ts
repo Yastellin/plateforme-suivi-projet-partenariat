@@ -12,7 +12,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { UploadDocumentDto } from './dto/upload-document.dto';
@@ -41,7 +48,10 @@ export class DocumentsController {
       limits: { fileSize: 10 * 1024 * 1024 },
       fileFilter: (req, file, cb) => {
         if (!MIME_AUTORISES.includes(file.mimetype)) {
-          return cb(new BadRequestException('Type de fichier non autorise'), false);
+          return cb(
+            new BadRequestException('Type de fichier non autorise'),
+            false,
+          );
         }
         cb(null, true);
       },
@@ -53,7 +63,10 @@ export class DocumentsController {
       type: 'object',
       properties: {
         fichier: { type: 'string', format: 'binary' },
-        type: { type: 'string', enum: ['TDR', 'DESCRIPTION', 'CONVENTION', 'AUTRE'] },
+        type: {
+          type: 'string',
+          enum: ['TDR', 'DESCRIPTION', 'CONVENTION', 'AUTRE'],
+        },
         nom_fichier: { type: 'string' },
         projet_id: { type: 'string' },
         convention_id: { type: 'string' },
@@ -73,7 +86,9 @@ export class DocumentsController {
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Obtenir un document par ID' })
   @ApiResponse({ status: 200, type: DocumentResponseDto })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<DocumentResponseDto> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<DocumentResponseDto> {
     return this.documentsService.findOne(id);
   }
 
@@ -92,7 +107,9 @@ export class DocumentsController {
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Lister les versions d un document' })
   @ApiResponse({ status: 200, type: [DocumentResponseDto] })
-  findVersions(@Param('id', ParseUUIDPipe) id: string): Promise<DocumentResponseDto[]> {
+  findVersions(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<DocumentResponseDto[]> {
     return this.documentsService.findVersions(id);
   }
 

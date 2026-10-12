@@ -31,7 +31,12 @@ export class Publication {
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   date_publication: Date | null;
 
-  @Column({ type: 'enum', enum: StatutPublication, enumName: 'StatutPublication', default: StatutPublication.BROUILLON })
+  @Column({
+    type: 'enum',
+    enum: StatutPublication,
+    enumName: 'StatutPublication',
+    default: StatutPublication.BROUILLON,
+  })
   statut: StatutPublication;
 
   @Column({ type: 'text', nullable: true })
@@ -44,7 +49,9 @@ export class Publication {
   @JoinColumn({ name: 'projet_id' })
   projet: Projet;
 
-  @OneToMany(() => PhotoPublication, (photo) => photo.publication, { cascade: true })
+  @OneToMany(() => PhotoPublication, (photo) => photo.publication, {
+    cascade: true,
+  })
   photos: PhotoPublication[];
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })

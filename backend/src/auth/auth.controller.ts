@@ -68,15 +68,23 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Rafraichir le token d acces (rotation du refresh token)' })
-  async refresh(@Body() dto: RefreshDto): Promise<{ access_token: string; refresh_token: string }> {
+  @ApiOperation({
+    summary: 'Rafraichir le token d acces (rotation du refresh token)',
+  })
+  async refresh(
+    @Body() dto: RefreshDto,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     return this.authService.refresh(dto);
   }
 
   @Post('logout')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Deconnexion (revoque les refresh tokens)' })
-  async logout(@CurrentUser() user: any, @Body() dto: LogoutDto): Promise<{ message: string }> {
+  async logout(
+    @CurrentUser() user: any,
+    @Body() dto: LogoutDto,
+  ): Promise<{ message: string }> {
     await this.authService.logout(user.id, dto.refresh_token);
     return { message: 'Déconnexion réussie' };
   }

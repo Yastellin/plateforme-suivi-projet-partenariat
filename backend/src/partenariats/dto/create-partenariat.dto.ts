@@ -22,7 +22,10 @@ export class CreatePartenariatDto {
   @IsString()
   objet?: string;
 
-  @ApiProperty({ enum: DomainePartenariat, default: DomainePartenariat.RECHERCHE })
+  @ApiProperty({
+    enum: DomainePartenariat,
+    default: DomainePartenariat.RECHERCHE,
+  })
   @IsEnum(DomainePartenariat)
   domaine: DomainePartenariat;
 
@@ -35,21 +38,26 @@ export class CreatePartenariatDto {
   @IsDateString()
   date_fin?: string;
 
-  @ApiProperty({ enum: StatutPartenariat, default: StatutPartenariat.BROUILLON })
+  @ApiProperty({
+    enum: StatutPartenariat,
+    default: StatutPartenariat.BROUILLON,
+  })
   @IsEnum(StatutPartenariat)
   statut?: StatutPartenariat = StatutPartenariat.BROUILLON;
 
-  @ApiPropertyOptional({ example: 'Missions d\'échange réalisées en 2024' })
+  @ApiPropertyOptional({ example: "Missions d'échange réalisées en 2024" })
   @IsOptional()
   @IsString()
   actions_realisees?: string;
 
-  @ApiPropertyOptional({ example: 'Préparation d\'un projet de recherche commun' })
+  @ApiPropertyOptional({
+    example: "Préparation d'un projet de recherche commun",
+  })
   @IsOptional()
   @IsString()
   actions_en_cours?: string;
 
-  @ApiPropertyOptional({ example: 'Organisation d\'un colloque en 2025' })
+  @ApiPropertyOptional({ example: "Organisation d'un colloque en 2025" })
   @IsOptional()
   @IsString()
   actions_prevues?: string;
@@ -69,12 +77,18 @@ export class CreatePartenariatDto {
   @IsString()
   perspectives_recommandations?: string;
 
-  @ApiProperty({ type: [String], example: ['8e94f369-9ba5-4742-b213-5c97c8b08d5f'] })
+  @ApiProperty({
+    type: [String],
+    example: ['8e94f369-9ba5-4742-b213-5c97c8b08d5f'],
+  })
   @IsArray()
   @IsUUID('4', { each: true })
   etablissements_ids: string[];
 
-  @ApiProperty({ type: [String], example: ['67d13845-635b-4427-a6e3-d85b11337f4f'] })
+  @ApiProperty({
+    type: [String],
+    example: ['67d13845-635b-4427-a6e3-d85b11337f4f'],
+  })
   @IsArray()
   @IsUUID('4', { each: true })
   partenaires_ids: string[];

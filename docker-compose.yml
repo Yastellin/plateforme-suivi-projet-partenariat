@@ -46,8 +46,12 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       NODE_ENV: development
+      # Origines autorisees en CORS (separees par des virgules)
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      # Envoi d'e-mails : noop (journalisation) ou smtp
+      MAIL_MODE: ${MAIL_MODE:-noop}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     volumes:
-      - ./backend/prisma:/app/prisma
       - ./backend/uploads:/app/uploads
 
 volumes:

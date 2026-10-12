@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsDateString, IsEnum, IsUUID, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsEnum,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StatutPublication } from '../../common/enums/statut-publication.enum';
 
@@ -18,7 +25,10 @@ export class CreatePublicationDto {
   @IsDateString()
   date_publication?: string;
 
-  @ApiProperty({ enum: StatutPublication, default: StatutPublication.BROUILLON })
+  @ApiProperty({
+    enum: StatutPublication,
+    default: StatutPublication.BROUILLON,
+  })
   @IsOptional()
   @IsEnum(StatutPublication)
   statut?: StatutPublication;

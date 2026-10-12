@@ -14,14 +14,17 @@ const SEUILS_JOURS = [30, 15, 7];
 @Injectable()
 export class ConventionExpirationRule implements NotificationRule {
   constructor(
-    @InjectRepository(Convention) private conventionRepo: Repository<Convention>,
+    @InjectRepository(Convention)
+    private conventionRepo: Repository<Convention>,
     @InjectRepository(Projet) private projetRepo: Repository<Projet>,
     private notificationsService: NotificationsService,
   ) {}
 
   async verifier(): Promise<void> {
     const maintenant = new Date();
-    const dans30Jours = new Date(maintenant.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const dans30Jours = new Date(
+      maintenant.getTime() + 30 * 24 * 60 * 60 * 1000,
+    );
 
     const conventions = await this.conventionRepo.find({
       where: {
@@ -35,7 +38,8 @@ export class ConventionExpirationRule implements NotificationRule {
       if (!convention.date_fin) continue;
 
       const joursRestants = Math.ceil(
-        (convention.date_fin.getTime() - maintenant.getTime()) / (24 * 60 * 60 * 1000),
+        (convention.date_fin.getTime() - maintenant.getTime()) /
+          (24 * 60 * 60 * 1000),
       );
 
       const seuilsTries = [...SEUILS_JOURS].sort((a, b) => a - b);
@@ -48,12 +52,16 @@ export class ConventionExpirationRule implements NotificationRule {
     }
   }
 
-  private async genererNotifications(convention: any, seuil: number): Promise<void> {
+  private async genererNotifications(
+    convention: any,
+    seuil: number,
+  ): Promise<void> {
     const titre = `Convention bientot expiree (${seuil} jours)`;
     const message = `La convention ${convention.reference} (${convention.titre}) arrivera a expiration dans ${seuil} jours.`;
 
     // Notifier la Presidence (dedup etendue a 30 jours pour eviter le spam)
-    const presidenceUsers = await this.notificationsService.trouverUtilisateursPresidence();
+    const presidenceUsers =
+      await this.notificationsService.trouverUtilisateursPresidence();
     for (const userId of presidenceUsers) {
       await this.notificationsService.creer({
         titre,
@@ -73,9 +81,10 @@ export class ConventionExpirationRule implements NotificationRule {
         where: { id: convention.projet_id },
       });
       if (projet) {
-        const etabUsers = await this.notificationsService.trouverUtilisateursEtablissement(
-          projet.etablissement_id,
-        );
+        const etabUsers =
+          await this.notificationsService.trouverUtilisateursEtablissement(
+            projet.etablissement_id,
+          );
         for (const userId of etabUsers) {
           await this.notificationsService.creer({
             titre,

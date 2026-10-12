@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
@@ -29,15 +33,21 @@ export class SyntheseService {
     @InjectRepository(SyntheseItem) private itemRepo: Repository<SyntheseItem>,
     @InjectRepository(SynthesePartenaireStrategique)
     private partenaireStrategiqueRepo: Repository<SynthesePartenaireStrategique>,
-    @InjectRepository(Etablissement) private etablissementRepo: Repository<Etablissement>,
-    @InjectRepository(Partenaire) private partenaireRepo: Repository<Partenaire>,
-    @InjectRepository(Convention) private conventionRepo: Repository<Convention>,
+    @InjectRepository(Etablissement)
+    private etablissementRepo: Repository<Etablissement>,
+    @InjectRepository(Partenaire)
+    private partenaireRepo: Repository<Partenaire>,
+    @InjectRepository(Convention)
+    private conventionRepo: Repository<Convention>,
     @InjectRepository(Projet) private projetRepo: Repository<Projet>,
-    @InjectRepository(CotutelleThese) private cotutelleRepo: Repository<CotutelleThese>,
+    @InjectRepository(CotutelleThese)
+    private cotutelleRepo: Repository<CotutelleThese>,
   ) {}
 
   async getSyntheseGlobale(annee: number): Promise<SyntheseGlobaleDto> {
-    const etablissements = await this.etablissementRepo.find({ order: { nom: 'ASC' } });
+    const etablissements = await this.etablissementRepo.find({
+      order: { nom: 'ASC' },
+    });
     return {
       annee,
       etablissements: await Promise.all(
@@ -59,7 +69,9 @@ export class SyntheseService {
       throw new NotFoundException('Établissement introuvable.');
     }
 
-    const compterConventions = (statut: StatutConvention | StatutConvention[]) =>
+    const compterConventions = (
+      statut: StatutConvention | StatutConvention[],
+    ) =>
       this.conventionRepo
         .createQueryBuilder('convention')
         .leftJoin('convention.projet', 'projet')
@@ -100,7 +112,9 @@ export class SyntheseService {
           statut: In([StatutProjet.EN_COURS, StatutProjet.EN_ATTENTE]),
         },
       }),
-      this.itemRepo.find({ where: { etablissement_id: etablissementId, annee } }),
+      this.itemRepo.find({
+        where: { etablissement_id: etablissementId, annee },
+      }),
       this.partenaireStrategiqueRepo.find({
         where: { etablissement_id: etablissementId, annee },
         relations: { partenaire: true },
@@ -153,7 +167,9 @@ export class SyntheseService {
 
   async listerItems(filtres: FiltresSynthese) {
     const where = {
-      ...(filtres.etablissement_id ? { etablissement_id: filtres.etablissement_id } : {}),
+      ...(filtres.etablissement_id
+        ? { etablissement_id: filtres.etablissement_id }
+        : {}),
       ...(filtres.annee !== undefined ? { annee: filtres.annee } : {}),
       ...(filtres.type ? { type: filtres.type } : {}),
     };
@@ -199,7 +215,9 @@ export class SyntheseService {
   async listerPartenairesStrategiques(filtres: FiltresSynthese) {
     const partenairesStrategiques = await this.partenaireStrategiqueRepo.find({
       where: {
-        ...(filtres.etablissement_id ? { etablissement_id: filtres.etablissement_id } : {}),
+        ...(filtres.etablissement_id
+          ? { etablissement_id: filtres.etablissement_id }
+          : {}),
         ...(filtres.annee !== undefined ? { annee: filtres.annee } : {}),
       },
       relations: { partenaire: true },

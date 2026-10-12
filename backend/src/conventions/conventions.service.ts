@@ -221,7 +221,8 @@ export class ConventionsService {
         data.date_fin = dto.date_fin ? new Date(dto.date_fin) : null;
       }
       if (dto.statut) data.statut = dto.statut;
-      if (dto.description !== undefined) data.description = dto.description ?? null;
+      if (dto.description !== undefined)
+        data.description = dto.description ?? null;
       if (dto.partenariat_id !== undefined) {
         data.partenariat_id = dto.partenariat_id || null;
       }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { CreatePorteurDto } from './dto/create-porteur.dto';
@@ -49,14 +53,18 @@ export class PorteursService {
         where: { nom: ILike(dto.nom) },
       });
       if (existant && existant.id !== id) {
-        throw new ConflictException(`Un porteur nomme "${dto.nom}" existe deja`);
+        throw new ConflictException(
+          `Un porteur nomme "${dto.nom}" existe deja`,
+        );
       }
     }
 
     await this.porteurRepo.update(id, {
       nom: dto.nom,
       institution_rattachement:
-        dto.institution_rattachement !== undefined ? dto.institution_rattachement : undefined,
+        dto.institution_rattachement !== undefined
+          ? dto.institution_rattachement
+          : undefined,
     });
     return this.findOne(id);
   }

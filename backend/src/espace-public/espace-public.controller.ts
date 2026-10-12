@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { EtablissementResponseDto } from '../etablissements/dto/etablissement-response.dto';
@@ -19,7 +14,9 @@ export class EspacePublicController {
 
   @Get('accueil')
   @Public()
-  @ApiOperation({ summary: 'Obtenir les informations de la page d’accueil publique' })
+  @ApiOperation({
+    summary: 'Obtenir les informations de la page d’accueil publique',
+  })
   @ApiResponse({ status: 200, type: AccueilPublicDto })
   getAccueil(): Promise<AccueilPublicDto> {
     return this.espacePublicService.getAccueil();

@@ -15,7 +15,7 @@ export class LocalStorageAdapter implements StoragePort {
     }
   }
 
-  async enregistrer(fichier: Express.Multer.File, dossier: string): Promise<string> {
+  enregistrer(fichier: Express.Multer.File, dossier: string): Promise<string> {
     const dossierComplet = path.join(this.baseDir, dossier);
     if (!fs.existsSync(dossierComplet)) {
       fs.mkdirSync(dossierComplet, { recursive: true });
@@ -27,26 +27,34 @@ export class LocalStorageAdapter implements StoragePort {
 
     fs.writeFileSync(cheminComplet, fichier.buffer);
 
-    return `/uploads/${dossier}/${nomUnique}`;
+    return Promise.resolve(`/uploads/${dossier}/${nomUnique}`);
   }
 
-  async supprimer(urlFichier: string): Promise<void> {
-    const cheminComplet = path.join(this.baseDir, urlFichier.replace('/uploads/', ''));
+  supprimer(urlFichier: string): Promise<void> {
+    const cheminComplet = path.join(
+      this.baseDir,
+      urlFichier.replace('/uploads/', ''),
+    );
     if (fs.existsSync(cheminComplet)) {
       fs.unlinkSync(cheminComplet);
     }
+
+    return Promise.resolve();
   }
 
-  async listerFichiers(): Promise<FichierStocke[]> {
+  listerFichiers(): Promise<FichierStocke[]> {
     const resultats: FichierStocke[] = [];
-    if (!fs.existsSync(this.baseDir)) {
-      return resultats;
+    if (fs.existsSync(this.baseDir)) {
+      this.parcourirDossier(this.baseDir, resultats);
     }
-    this.parcourirDossier(this.baseDir, resultats);
-    return resultats;
+
+    return Promise.resolve(resultats);
   }
 
-  private parcourirDossier(dossierCourant: string, resultats: FichierStocke[]): void {
+  private parcourirDossier(
+    dossierCourant: string,
+    resultats: FichierStocke[],
+  ): void {
     let entrees: fs.Dirent[];
     try {
       entrees = fs.readdirSync(dossierCourant, { withFileTypes: true });
@@ -68,7 +76,8 @@ export class LocalStorageAdapter implements StoragePort {
 
       try {
         const stats = fs.statSync(cheminComplet);
-        const urlRelative = '/' + path.relative(process.cwd(), cheminComplet).replace(/\\/g, '/');
+        const urlRelative =
+          '/' + path.relative(process.cwd(), cheminComplet).replace(/\\/g, '/');
         resultats.push({
           url: urlRelative,
           cheminComplet,

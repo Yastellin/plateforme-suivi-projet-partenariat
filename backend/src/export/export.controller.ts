@@ -4,9 +4,14 @@ import {
   Query,
   Res,
   BadRequestException,
-  ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { ExportService } from './export.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -31,19 +36,22 @@ export class ExportController {
   ): Promise<void> {
     const formatValide = format || 'pdf';
     if (formatValide !== 'pdf' && formatValide !== 'xlsx') {
-      throw new BadRequestException('Format invalide. Valeurs acceptees : pdf, xlsx.');
+      throw new BadRequestException(
+        'Format invalide. Valeurs acceptees : pdf, xlsx.',
+      );
     }
 
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
 
-    const { buffer, nomFichier, mimeType } = await this.exportService.exporterProjets(
-      formatValide as 'pdf' | 'xlsx',
-      etablissementId,
-    );
+    const { buffer, nomFichier, mimeType } =
+      await this.exportService.exporterProjets(formatValide, etablissementId);
 
     res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${nomFichier}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${nomFichier}"`,
+    );
     res.setHeader('Content-Length', buffer.length.toString());
     res.send(buffer);
   }
@@ -60,19 +68,25 @@ export class ExportController {
   ): Promise<void> {
     const formatValide = format || 'pdf';
     if (formatValide !== 'pdf' && formatValide !== 'xlsx') {
-      throw new BadRequestException('Format invalide. Valeurs acceptees : pdf, xlsx.');
+      throw new BadRequestException(
+        'Format invalide. Valeurs acceptees : pdf, xlsx.',
+      );
     }
 
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
 
-    const { buffer, nomFichier, mimeType } = await this.exportService.exporterConventions(
-      formatValide as 'pdf' | 'xlsx',
-      etablissementId,
-    );
+    const { buffer, nomFichier, mimeType } =
+      await this.exportService.exporterConventions(
+        formatValide,
+        etablissementId,
+      );
 
     res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${nomFichier}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${nomFichier}"`,
+    );
     res.setHeader('Content-Length', buffer.length.toString());
     res.send(buffer);
   }
