@@ -11,10 +11,22 @@ export class SmtpMailAdapter implements MailPort {
 
   constructor(private readonly config: ConfigService) {
     this.expediteur = this.config.getOrThrow<string>('SMTP_FROM');
+
+    // ConfigService renvoie les variables d environnement sous forme de chaines.
+    // Sans conversion explicite, `port === 465` comparait "465" a 465 : toujours
+    // faux, si bien que le TLS implicite n etait jamais active sur le port 465.
+    const port = Number(this.config.getOrThrow<string>('SMTP_PORT'));
+
+    if (!Number.isInteger(port) || port <= 0) {
+      throw new Error(
+        `SMTP_PORT invalide : "${this.config.get<string>('SMTP_PORT')}" (un nombre est attendu).`,
+      );
+    }
+
     this.transporteur = createTransport({
       host: this.config.getOrThrow<string>('SMTP_HOST'),
-      port: this.config.getOrThrow<number>('SMTP_PORT'),
-      secure: this.config.get<number>('SMTP_PORT') === 465,
+      port,
+      secure: port === 465,
       auth: {
         user: this.config.getOrThrow<string>('SMTP_USER'),
         pass: this.config.getOrThrow<string>('SMTP_PASS'),
