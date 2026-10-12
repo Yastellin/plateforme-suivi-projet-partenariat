@@ -4,6 +4,16 @@
 $API = "http://localhost:3000/api"
 $PASS = "password123"
 
+# Dates de test calculees par rapport au jour courant : les jeux de donnees
+# restent valides quelle que soit la date d'execution (regle « date de debut
+# aujourd'hui ou posterieure »).
+function DateIso {
+    param([int]$Jours)
+    $format = "yyyy-MM-ddTHH:mm:ss.fff"
+    $jour = [datetime]::UtcNow.AddDays($Jours)
+    return $jour.ToString($format, [System.Globalization.CultureInfo]::InvariantCulture) + "Z"
+}
+
 $script:TESTS_PASS = 0
 $script:TESTS_FAIL = 0
 
@@ -118,8 +128,8 @@ $r = Invoke-Api -Method POST -Url "$API/partenariats" -Token $TOKEN_ETAB -Body @
     intitule = "Partenariat Test Automatise"
     objet = "Validation des endpoints Partenariats"
     domaine = "RECHERCHE"
-    date_debut = "2026-01-01T00:00:00.000Z"
-    date_fin = "2028-12-31T00:00:00.000Z"
+    date_debut = (DateIso 60)
+    date_fin = (DateIso 1000)
     statut = "BROUILLON"
     actions_realisees = "Premieres reunions effectuees"
     etablissements_ids = @($ETAB_ID)
@@ -199,7 +209,7 @@ Check "Detail par Decideur (200)" 200 $r.StatusCode
 $r = Invoke-Api -Method POST -Url "$API/partenariats" -Token $TOKEN_DEC -Body @{
     intitule = "Interdit"
     domaine = "RECHERCHE"
-    date_debut = "2026-01-01T00:00:00.000Z"
+    date_debut = (DateIso 60)
     etablissements_ids = @($ETAB_ID)
     partenaires_ids = @($PARTENAIRE_ID)
 }
@@ -268,7 +278,7 @@ Section "9. Cas d'erreur"
 $r = Invoke-Api -Method POST -Url "$API/partenariats" -Token $TOKEN_PRES -Body @{
     intitule = "Test etablissement inexistant"
     domaine = "RECHERCHE"
-    date_debut = "2026-01-01T00:00:00.000Z"
+    date_debut = (DateIso 60)
     etablissements_ids = @("11111111-1111-4111-8111-111111111111")
     partenaires_ids = @($PARTENAIRE_ID)
 }
@@ -278,7 +288,7 @@ Check "Creation avec etablissement inexistant (404)" 404 $r.StatusCode
 $r = Invoke-Api -Method POST -Url "$API/partenariats" -Token $TOKEN_PRES -Body @{
     intitule = "Test partenaire inexistant"
     domaine = "RECHERCHE"
-    date_debut = "2026-01-01T00:00:00.000Z"
+    date_debut = (DateIso 60)
     etablissements_ids = @($ETAB_ID)
     partenaires_ids = @("11111111-1111-4111-8111-111111111111")
 }
@@ -288,7 +298,7 @@ Check "Creation avec partenaire inexistant (404)" 404 $r.StatusCode
 $r = Invoke-Api -Method POST -Url "$API/partenariats" -Token $TOKEN_PRES -Body @{
     intitule = "Test sans etablissement"
     domaine = "RECHERCHE"
-    date_debut = "2026-01-01T00:00:00.000Z"
+    date_debut = (DateIso 60)
     partenaires_ids = @($PARTENAIRE_ID)
 }
 Check "Creation sans etablissement (400)" 400 $r.StatusCode

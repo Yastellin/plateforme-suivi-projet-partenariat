@@ -169,7 +169,7 @@ function TableauReferentiel({
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="nom-ref">Nom</Label>
+              <Label htmlFor="nom-ref" requis>Nom</Label>
               <Input id="nom-ref" value={nomForm} onChange={(e) => setNomForm(e.target.value)} placeholder="Nom…" autoFocus />
             </div>
             {champExtra && (

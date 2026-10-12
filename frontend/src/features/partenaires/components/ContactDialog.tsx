@@ -89,6 +89,7 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, partenai
             <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
               <FloatingLabelInput
                 label="Prénom"
+                requis
                 autoFocus
                 icone={<User />}
                 placeholder="Ex : Marie"
@@ -97,6 +98,7 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, partenai
               />
               <FloatingLabelInput
                 label="Nom"
+                requis
                 icone={<User />}
                 placeholder="Ex : Rakoto"
                 erreur={errors.nom?.message}

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { schemaCotutelle, type CotutelleFormValues } from "@/lib/validators/cotutelle.schema"
+import { creerSchemaCotutelle, type CotutelleFormValues } from "@/lib/validators/cotutelle.schema"
 import { useCreateCotutelle } from "@/features/cotutelles/api/useCreateCotutelle"
 import { useUpdateCotutelle } from "@/features/cotutelles/api/useUpdateCotutelle"
 import type { CotutelleThese } from "@/types/api"
@@ -34,7 +34,7 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
     handleSubmit,
     formState: { errors },
   } = useForm<CotutelleFormValues>({
-    resolver: zodResolver(schemaCotutelle),
+    resolver: zodResolver(creerSchemaCotutelle({ exigerDateDebutFuture: !cotutelle })),
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
@@ -62,7 +62,7 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="nom_doctorant">Nom du doctorant</Label>
+        <Label htmlFor="nom_doctorant" requis>Nom du doctorant</Label>
         <Input id="nom_doctorant" aria-invalid={!!errors.nom_doctorant} {...register("nom_doctorant")} />
         {errors.nom_doctorant && <p className="text-sm text-destructive">{errors.nom_doctorant.message}</p>}
       </div>
@@ -106,13 +106,14 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="date_debut">Date de debut</Label>
+          <Label htmlFor="date_debut" requis>Date de debut</Label>
           <Input id="date_debut" type="date" aria-invalid={!!errors.date_debut} {...register("date_debut")} />
           {errors.date_debut && <p className="text-sm text-destructive">{errors.date_debut.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_prevue_soutenance">Date prevue de soutenance</Label>
-          <Input id="date_prevue_soutenance" type="date" {...register("date_prevue_soutenance")} />
+          <Input id="date_prevue_soutenance" type="date" aria-invalid={!!errors.date_prevue_soutenance} {...register("date_prevue_soutenance")} />
+          {errors.date_prevue_soutenance && <p className="text-sm text-destructive">{errors.date_prevue_soutenance.message}</p>}
         </div>
       </div>
 
@@ -123,12 +124,12 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="etablissement_id">Etablissement malgache</Label>
+          <Label htmlFor="etablissement_id" requis>Etablissement malgache</Label>
           <Input id="etablissement_id" aria-invalid={!!errors.etablissement_id} {...register("etablissement_id")} />
           {errors.etablissement_id && <p className="text-sm text-destructive">{errors.etablissement_id.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="partenaire_id">Universite partenaire</Label>
+          <Label htmlFor="partenaire_id" requis>Universite partenaire</Label>
           <Input id="partenaire_id" aria-invalid={!!errors.partenaire_id} {...register("partenaire_id")} />
           {errors.partenaire_id && <p className="text-sm text-destructive">{errors.partenaire_id.message}</p>}
         </div>

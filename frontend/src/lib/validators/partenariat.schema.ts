@@ -2,6 +2,8 @@
 
 import { z } from 'zod';
 
+import { validerDates } from './regles-dates';
+
 export const DOMAINES_PARTENARIAT = [
   'RECHERCHE',
   'FORMATION',
@@ -27,7 +29,15 @@ const partenariatSchemaBase = z.object({
   perspectives_recommandations: z.string().optional(),
 });
 
-export function creerSchemaPartenariat(etablissementsObligatoires: boolean) {
+export interface OptionsSchemaPartenariat {
+  // A la creation seule : la date de debut ne peut pas etre anterieure au jour.
+  exigerDateDebutFuture?: boolean
+}
+
+export function creerSchemaPartenariat(
+  etablissementsObligatoires: boolean,
+  { exigerDateDebutFuture = false }: OptionsSchemaPartenariat = {},
+) {
   return partenariatSchemaBase.superRefine((valeurs, ctx) => {
     if (etablissementsObligatoires && valeurs.etablissements_ids.length === 0) {
       ctx.addIssue({
@@ -37,13 +47,11 @@ export function creerSchemaPartenariat(etablissementsObligatoires: boolean) {
       });
     }
 
-    if (valeurs.date_fin && valeurs.date_debut && valeurs.date_fin <= valeurs.date_debut) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['date_fin'],
-        message: 'La date de fin doit être postérieure à la date de début.',
-      });
-    }
+    validerDates(ctx, {
+      dateDebut: valeurs.date_debut,
+      dateFin: valeurs.date_fin,
+      exigerDateDebutFuture,
+    });
   });
 }
 

@@ -2,6 +2,7 @@
 
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { ReponseApi } from '@/types/api';
+import { estPayloadNormalisable, normaliserPayload } from './payload';
 import { tokenStorage } from './token-storage';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -31,6 +32,12 @@ apiClient.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
+
+  // Champs de formulaire vides -> null, pour tous les endpoints (hors uploads).
+  if (estPayloadNormalisable(config.data)) {
+    config.data = normaliserPayload(config.data);
+  }
+
   return config;
 });
 

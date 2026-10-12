@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { obtenirInfoStatut } from "@/lib/status-mappings"
 import { GaleriePhotosReordonnable } from "@/features/publications/components/GaleriePhotosReordonnable"
+import { TeleversementPhotos } from "@/features/publications/components/TeleversementPhotos"
 import { PhotosSelection } from "@/features/publications/components/PhotosSelection"
 import { schemaPublication, type PublicationFormValues } from "@/lib/validators/publication.schema"
 import { usePublication } from "@/features/publications/api/usePublication"
@@ -52,20 +53,6 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
     return <p className="text-sm text-muted-foreground">Chargement...</p>
   }
 
-  /** Envoie les photos une à une ; celles déjà envoyées sont retirées de la sélection. */
-  const envoyerPhotos = async (publicationId: string) => {
-    setEnvoiPhotos(true)
-    try {
-      for (const fichier of [...photosSelectionnees]) {
-        await ajouterPhoto(publicationId, fichier)
-        setPhotosSelectionnees((courantes) => courantes.filter((f) => f !== fichier))
-      }
-    } finally {
-      setEnvoiPhotos(false)
-      queryClient.invalidateQueries({ queryKey: ["publications"] })
-    }
-  }
-
   const onSubmit = async (valeurs: PublicationFormValues) => {
     if (publication) {
       modification.mutate(valeurs, { onSuccess: () => toast.success("Publication mise a jour") })
@@ -75,19 +62,19 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
     try {
       const nouvelle = await creation.mutateAsync(valeurs)
       if (photosSelectionnees.length > 0) {
-        await envoyerPhotos(nouvelle.id)
+        setEnvoiPhotos(true)
+        try {
+          // Envoi une à une ; les photos déjà envoyées sont retirées de la sélection.
+          for (const fichier of [...photosSelectionnees]) {
+            await ajouterPhoto(nouvelle.id, fichier)
+            setPhotosSelectionnees((courantes) => courantes.filter((f) => f !== fichier))
+          }
+        } finally {
+          setEnvoiPhotos(false)
+          queryClient.invalidateQueries({ queryKey: ["publications"] })
+        }
       }
-      toast.success("Brouillon de publication cree")
-    } catch (erreur) {
-      toast.error(erreur instanceof Error ? erreur.message : "Une erreur est survenue")
-    }
-  }
-
-  const ajouterPhotosPublication = async () => {
-    if (!publication || photosSelectionnees.length === 0) return
-    try {
-      await envoyerPhotos(publication.id)
-      toast.success("Photos ajoutees")
+      toast.success("Publication créée")
     } catch (erreur) {
       toast.error(erreur instanceof Error ? erreur.message : "Une erreur est survenue")
     }
@@ -110,7 +97,7 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="titre">Titre</Label>
+          <Label htmlFor="titre" requis>Titre</Label>
           <Input id="titre" aria-invalid={!!errors.titre} {...register("titre")} />
           {errors.titre && <p className="text-sm text-destructive">{errors.titre.message}</p>}
         </div>
@@ -132,27 +119,19 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
 
         <Button type="submit" disabled={enCours} className="self-start">
           {enCours && <LoaderCircle className="animate-spin" />}
-          {publication ? "Enregistrer" : "Creer le brouillon"}
+          {publication ? "Enregistrer" : "Créer la publication"}
         </Button>
       </form>
 
       {publication && (
-        <div className="flex flex-col gap-3">
-          <h3 className="font-heading text-sm font-semibold">Photos</h3>
+        <div>
+          <h3 className="mb-2 font-heading text-sm font-semibold">Photos</h3>
+          <TeleversementPhotos publicationId={publication.id} />
           {publication.photos && publication.photos.length > 0 && (
-            <GaleriePhotosReordonnable photos={publication.photos} />
+            <div className="mt-3">
+              <GaleriePhotosReordonnable photos={publication.photos} />
+            </div>
           )}
-          <PhotosSelection fichiers={photosSelectionnees} onChange={setPhotosSelectionnees} disabled={enCours} />
-          <Button
-            type="button"
-            variant="outline"
-            className="self-start"
-            onClick={ajouterPhotosPublication}
-            disabled={enCours || photosSelectionnees.length === 0}
-          >
-            {envoiPhotos && <LoaderCircle className="animate-spin" />}
-            Ajouter les photos
-          </Button>
         </div>
       )}
 

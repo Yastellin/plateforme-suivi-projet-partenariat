@@ -10,6 +10,10 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StatutProjet } from '../../common/enums/statut-projet.enum';
+import {
+  EstDateNonPassee,
+  EstPosterieurA,
+} from '../../common/validators/dates.validator';
 
 export class CreateProjetDto {
   @ApiProperty({ example: 'Projet Biodiversité' })
@@ -40,10 +44,14 @@ export class CreateProjetDto {
 
   @ApiProperty({ example: '2025-01-15T00:00:00.000Z' })
   @IsDateString()
+  @EstDateNonPassee()
   date_debut: string;
 
   @ApiProperty({ example: '2026-06-30T00:00:00.000Z' })
   @IsDateString()
+  @EstPosterieurA('date_debut', {
+    message: 'La date de fin prévue doit être postérieure à la date de début.',
+  })
   date_fin_prevue: string;
 
   @ApiPropertyOptional({ enum: StatutProjet, default: StatutProjet.BROUILLON })

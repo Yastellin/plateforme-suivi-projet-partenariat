@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ConventionForm } from "@/features/conventions/components/ConventionForm"
 import { DocumentDropzone } from "@/features/documents/components/DocumentDropzone"
-import { DocumentVersionsListe } from "@/features/documents/components/DocumentVersionsListe"
+import { ListeDocumentsEntite } from "@/features/documents/components/ListeDocumentsEntite"
 import { useConvention } from "@/features/conventions/api/useConvention"
 import { useArchiverConvention } from "@/features/conventions/api/useArchiverConvention"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -133,7 +133,7 @@ export function ConventionDetailPage() {
           <Panel>
             <PanelHeader titre="Documents associés" />
             <PanelBody>
-              <DocumentVersionsListe documentId={convention.id} />
+              <ListeDocumentsEntite conventionId={convention.id} />
             </PanelBody>
           </Panel>
         </TabsContent>
