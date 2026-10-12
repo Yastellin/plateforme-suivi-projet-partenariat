@@ -54,6 +54,10 @@ async function rafraichirToken(refreshToken: string): Promise<string> {
 
 apiClient.interceptors.response.use(
   (reponse) => {
+    // Les fichiers (téléchargements en blob) ne sont pas enveloppés dans { status, data }
+    if (reponse.config.responseType === "blob") {
+      return reponse;
+    }
     const enveloppe = reponse.data as ReponseApi<unknown>;
     if (enveloppe.status === 'error') {
       return Promise.reject(new Error(enveloppe.message));

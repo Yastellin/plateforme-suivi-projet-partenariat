@@ -1,4 +1,4 @@
-﻿// src/router.tsx
+// src/router.tsx
 
 import { lazy, Suspense, useState, useEffect } from "react"
 import { createBrowserRouter, Navigate, RouterProvider, Outlet } from "react-router-dom"
@@ -250,6 +250,9 @@ const router = createBrowserRouter([
       { path: "/decideur/etablissements", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><EtablissementsListePage /></Charge></RouteProtegee> },
       { path: "/decideur/etablissements/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><EtablissementDetailPage /></Charge></RouteProtegee> },
 
+      { path: "/presidence/partenaires-partenariats", element: <Navigate to="/presidence/partenaires-partenariats/partenaires" replace /> },
+      { path: "/etablissement/partenaires-partenariats", element: <Navigate to="/etablissement/partenaires-partenariats/partenaires" replace /> },
+      { path: "/decideur/partenaires-partenariats", element: <Navigate to="/decideur/partenaires-partenariats/partenaires" replace /> },
       { path: "/presidence/partenaires-partenariats/partenaires", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenairesListePage /></Charge></RouteProtegee> },
       { path: "/presidence/partenaires-partenariats/partenaires/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenaireCreatePage /></Charge></RouteProtegee> },
       { path: "/presidence/partenaires-partenariats/partenaires/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenaireDetailPage /></Charge></RouteProtegee> },
