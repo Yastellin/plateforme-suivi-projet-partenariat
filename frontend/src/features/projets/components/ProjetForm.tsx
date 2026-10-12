@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { schemaProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
+import { creerSchemaProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
 import { useCreateProjet } from "@/features/projets/api/useCreateProjet"
 import { useUpdateProjet } from "@/features/projets/api/useUpdateProjet"
 import { SelectionPorteur } from "@/features/projets/components/SelectionPorteur"
@@ -42,7 +42,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
     handleSubmit,
     formState: { errors },
   } = useForm<ProjetFormValues>({
-    resolver: zodResolver(schemaProjet) as any,
+    resolver: zodResolver(creerSchemaProjet({ exigerDateDebutFuture: !projet })) as any,
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
@@ -55,9 +55,9 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
       date_fin_prevue: projet?.date_fin_prevue?.slice(0, 10) ?? "",
       statut: projet?.statut ?? "BROUILLON",
       porteur_id: projet?.porteur_id ?? undefined,
-      bailleur_ids: projet?.bailleurs?.map((b) => b.bailleur_id) ?? [],
-      beneficiaire_ids: projet?.beneficiaires?.map((b) => b.beneficiaire_id) ?? [],
-      site_ids: projet?.sites?.map((s) => s.site_id) ?? [],
+      bailleurs_ids: projet?.bailleurs?.map((b) => b.bailleur_id) ?? [],
+      beneficiaires_ids: projet?.beneficiaires?.map((b) => b.beneficiaire_id) ?? [],
+      sites_ids: projet?.sites?.map((s) => s.site_id) ?? [],
     },
   })
 
@@ -73,7 +73,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="nom">Nom du projet</Label>
+          <Label htmlFor="nom" requis>Nom du projet</Label>
           <Input id="nom" aria-invalid={!!errors.nom} {...register("nom")} />
           {errors.nom && <p className="text-sm text-destructive">{errors.nom.message}</p>}
         </div>
@@ -85,7 +85,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="type">Type</Label>
+          <Label htmlFor="type" requis>Type</Label>
           <Input id="type" aria-invalid={!!errors.type} {...register("type")} />
           {errors.type && <p className="text-sm text-destructive">{errors.type.message}</p>}
         </div>
@@ -101,12 +101,12 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="date_debut">Date de début</Label>
+          <Label htmlFor="date_debut" requis>Date de début</Label>
           <Input id="date_debut" type="date" aria-invalid={!!errors.date_debut} {...register("date_debut")} />
           {errors.date_debut && <p className="text-sm text-destructive">{errors.date_debut.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="date_fin_prevue">Date de fin prévue</Label>
+          <Label htmlFor="date_fin_prevue" requis>Date de fin prévue</Label>
           <Input id="date_fin_prevue" type="date" aria-invalid={!!errors.date_fin_prevue} {...register("date_fin_prevue")} />
           {errors.date_fin_prevue && <p className="text-sm text-destructive">{errors.date_fin_prevue.message}</p>}
         </div>
@@ -142,7 +142,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
         <Label>Bailleurs</Label>
         <Controller
           control={control}
-          name="bailleur_ids"
+          name="bailleurs_ids"
           render={({ field }) => <SelectionBailleurs valeur={field.value ?? []} onChange={field.onChange} />}
         />
       </div>
@@ -151,7 +151,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
         <Label>Bénéficiaires</Label>
         <Controller
           control={control}
-          name="beneficiaire_ids"
+          name="beneficiaires_ids"
           render={({ field }) => <SelectionBeneficiaires valeur={field.value ?? []} onChange={field.onChange} />}
         />
       </div>
@@ -160,7 +160,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
         <Label>Sites concernés</Label>
         <Controller
           control={control}
-          name="site_ids"
+          name="sites_ids"
           render={({ field }) => <SelectionSites valeur={field.value ?? []} onChange={field.onChange} />}
         />
       </div>

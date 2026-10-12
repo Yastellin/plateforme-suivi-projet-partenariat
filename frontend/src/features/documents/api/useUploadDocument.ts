@@ -31,13 +31,8 @@ export function useUploadDocument(onProgression?: (pourcentage: number) => void)
       })
       return reponse.data
     },
-    onSuccess: (_, variables) => {
-      if (variables.projet_id) {
-        queryClient.invalidateQueries({ queryKey: ["projets", variables.projet_id, "documents"] })
-      }
-      if (variables.convention_id) {
-        queryClient.invalidateQueries({ queryKey: ["conventions", variables.convention_id, "documents"] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] })
     },
   })
 }

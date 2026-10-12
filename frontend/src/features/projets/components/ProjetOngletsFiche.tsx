@@ -2,7 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProjetForm } from "@/features/projets/components/ProjetForm"
 import { DocumentDropzone } from "@/features/documents/components/DocumentDropzone"
-import { DocumentVersionsListe } from "@/features/documents/components/DocumentVersionsListe"
+import { ListeDocumentsEntite } from "@/features/documents/components/ListeDocumentsEntite"
 import type { Projet } from "@/types/api"
 
 export function ProjetOngletsFiche({ projet, onModifie }: { projet: Projet; onModifie: (p: Projet) => void }) {
@@ -21,7 +21,7 @@ export function ProjetOngletsFiche({ projet, onModifie }: { projet: Projet; onMo
         <DocumentDropzone projetId={projet.id} />
         <div>
           <h3 className="mb-2 font-heading text-sm font-semibold">Documents existants</h3>
-          <DocumentVersionsListe documentId={projet.id} />
+          <ListeDocumentsEntite projetId={projet.id} />
         </div>
       </TabsContent>
     </Tabs>

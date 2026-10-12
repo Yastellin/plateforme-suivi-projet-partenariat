@@ -13,7 +13,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { obtenirInfoStatut } from "@/lib/status-mappings"
 import { GaleriePhotosReordonnable } from "@/features/publications/components/GaleriePhotosReordonnable"
-import { DocumentDropzone } from "@/features/documents/components/DocumentDropzone"
+import { TeleversementPhotos } from "@/features/publications/components/TeleversementPhotos"
 import { schemaPublication, type PublicationFormValues } from "@/lib/validators/publication.schema"
 import { usePublication } from "@/features/publications/api/usePublication"
 import { useCreatePublication } from "@/features/publications/api/useCreatePublication"
@@ -51,7 +51,7 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
     if (publication) {
       modification.mutate(valeurs, { onSuccess: () => toast.success("Publication mise a jour") })
     } else {
-      creation.mutate(valeurs, { onSuccess: () => toast.success("Brouillon de publication cree") })
+      creation.mutate(valeurs, { onSuccess: () => toast.success("Publication créée") })
     }
   }
 
@@ -72,7 +72,7 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="titre">Titre</Label>
+          <Label htmlFor="titre" requis>Titre</Label>
           <Input id="titre" aria-invalid={!!errors.titre} {...register("titre")} />
           {errors.titre && <p className="text-sm text-destructive">{errors.titre.message}</p>}
         </div>
@@ -86,14 +86,14 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
         </div>
         <Button type="submit" disabled={enCours} className="self-start">
           {enCours && <LoaderCircle className="animate-spin" />}
-          {publication ? "Enregistrer" : "Creer le brouillon"}
+          {publication ? "Enregistrer" : "Créer la publication"}
         </Button>
       </form>
 
       {publication && (
         <div>
           <h3 className="mb-2 font-heading text-sm font-semibold">Photos</h3>
-          <DocumentDropzone projetId={projetId} />
+          <TeleversementPhotos publicationId={publication.id} />
           {publication.photos && publication.photos.length > 0 && (
             <div className="mt-3">
               <GaleriePhotosReordonnable photos={publication.photos} />

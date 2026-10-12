@@ -70,12 +70,12 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="contact-prenom">Prénom</Label>
+          <Label htmlFor="contact-prenom" requis>Prénom</Label>
           <TextInputSanitized id="contact-prenom" maxLength={255} aria-invalid={!!errors.prenom} {...register("prenom")} />
           {errors.prenom && <p className="text-sm text-destructive">{errors.prenom.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="contact-nom">Nom</Label>
+          <Label htmlFor="contact-nom" requis>Nom</Label>
           <TextInputSanitized id="contact-nom" maxLength={255} aria-invalid={!!errors.nom} {...register("nom")} />
           {errors.nom && <p className="text-sm text-destructive">{errors.nom.message}</p>}
         </div>

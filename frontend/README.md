@@ -1,32 +1,32 @@
-# React + TypeScript + Vite
+# Frontend — Plateforme de suivi des projets et partenariats
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interface React 19 + Vite (TypeScript, Tailwind CSS 4) de l'Université de
+Fianarantsoa. Elle consomme l'API NestJS du dossier `../backend`.
 
-Currently, two official plugins are available:
+## Démarrage
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+cp .env.example .env        # VITE_API_URL doit pointer vers l'API (…/api)
+npm run dev                 # http://localhost:5173
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Scripts
+
+| Commande | Effet |
+|---|---|
+| `npm run dev` | Serveur de développement Vite |
+| `npm run build` | Vérification TypeScript (`tsc -b`) puis build de production |
+| `npm run preview` | Sert le build de production |
+| `npm run lint` | Oxlint |
+| `npm test` | Tests unitaires Vitest (`tests/`) |
+| `npm run test:watch` | Tests en mode surveillance |
+
+## Tests
+
+Les tests unitaires couvrent la logique pure : normalisation des payloads
+(`src/lib/payload.ts`) et règles de validation des formulaires
+(`src/lib/validators/*.schema.ts`). Ils s'exécutent sans navigateur et sans API.
+
+Les scénarios de bout en bout (contrat HTTP, permissions) sont couverts côté
+API par `npm run test:e2e` dans `../backend`.

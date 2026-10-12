@@ -8,10 +8,11 @@ interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
   label?: string;
   aide?: string;
   erreur?: string;
+  requis?: boolean;
 }
 
 export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ label = 'Mot de passe', aide, erreur, ...props }, ref) => {
+  ({ label = 'Mot de passe', aide, erreur, requis, ...props }, ref) => {
     const [visible, setVisible] = useState(false);
 
     return (
@@ -21,6 +22,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         label={label}
         aide={aide}
         erreur={erreur}
+        requis={requis}
         icone={<Lock />}
         autoComplete="current-password"
         suffixe={

@@ -10,6 +10,7 @@ import {
   type ApplicationTest,
 } from './harness/application-test';
 import { donnees, enteteBearer } from './harness/jetons';
+import { dateIsoDans } from './harness/dates';
 import { Role } from '../src/common/enums/role.enum';
 
 const MOT_DE_PASSE = 'password123';
@@ -191,8 +192,8 @@ describe('Authentification (e2e)', () => {
         .send({
           nom: 'Projet interdit',
           type: 'Recherche',
-          date_debut: '2026-01-01T00:00:00.000Z',
-          date_fin_prevue: '2026-12-31T00:00:00.000Z',
+          date_debut: dateIsoDans(30),
+          date_fin_prevue: dateIsoDans(400),
         })
         .expect(403);
 

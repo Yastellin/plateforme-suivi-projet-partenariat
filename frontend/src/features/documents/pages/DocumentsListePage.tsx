@@ -59,7 +59,7 @@ export function DocumentsListePage() {
         meta: { page: number; limit: number; total: number; totalPages: number }
       }>(
         "/documents",
-        { params: { page, limit: 25, recherche: rechercheDebouncee || undefined } },
+        { params: { page, limit: 25, nom: rechercheDebouncee || undefined } },
       )
       return reponse.data
     },

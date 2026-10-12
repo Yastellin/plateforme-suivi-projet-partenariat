@@ -7,9 +7,11 @@ export interface FiltresConventions {
   page?: number
   limit?: number
   reference?: string
+  titre?: string
   statut?: string
   partenariat_id?: string
   projet_id?: string
+  archive?: boolean
 }
 
 export function useConventions(filtres: FiltresConventions) {

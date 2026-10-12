@@ -88,6 +88,19 @@ En cas d'erreur : `status: "error"`, `data: null`, `errors: [...]`.
 Les codes d'erreur PostgreSQL sont traduits en HTTP : `23505` → 409,
 `23503` → 409, `23502` → 400, `22P02` → 400, indisponibilité → 503.
 
+## Règles de dates
+
+| Règle | Portée |
+|---|---|
+| La date de début ne peut pas être antérieure au jour courant | Création uniquement (projets, partenariats, conventions, cotutelles) |
+| La date d'échéance doit être postérieure à la date de début | Création et modification, dès que les deux dates sont fournies |
+
+Ces règles sont portées par `src/common/validators/dates.validator.ts`
+(`@EstDateNonPassee()` et `@EstPosterieurA('date_debut')`) et appliquées aux DTO
+de création ; les DTO de modification redéclarent la date de début sans la
+première règle. Les comparaisons se font au jour près, dans le fuseau
+`TZ_APPLICATION` (défaut `Indian/Antananarivo`).
+
 ## Scripts d'outillage
 
 | Script | Rôle |
@@ -101,8 +114,8 @@ Les codes d'erreur PostgreSQL sont traduits en HTTP : `23505` → 409,
 | Commande | Résultat attendu |
 |---|---|
 | `npm run build` | `dist/main.js` présent (≈ 243 fichiers `.js`) |
-| `npm test` | 4 suites, 29 tests |
-| `npm run test:e2e` | 5 suites, 52 tests |
+| `npm test` | 5 suites, 37 tests |
+| `npm run test:e2e` | 7 suites, 83 tests |
 | `npm run lint` | 0 erreur |
 | `npm run migration:run` | applique `InitSchema` puis `CreatePasswordResetTokens` |
 

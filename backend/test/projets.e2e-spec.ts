@@ -9,6 +9,7 @@ import {
   type ApplicationTest,
 } from './harness/application-test';
 import { donnees, enteteBearer } from './harness/jetons';
+import { dateIsoDans } from './harness/dates';
 
 function chargeProjet(nom: string, etablissementId?: string) {
   return {
@@ -16,8 +17,8 @@ function chargeProjet(nom: string, etablissementId?: string) {
     type: 'Recherche',
     domaine: 'Biologie',
     budget: 12000,
-    date_debut: '2026-01-15T00:00:00.000Z',
-    date_fin_prevue: '2026-12-30T00:00:00.000Z',
+    date_debut: dateIsoDans(15),
+    date_fin_prevue: dateIsoDans(400),
     ...(etablissementId ? { etablissement_id: etablissementId } : {}),
   };
 }
@@ -94,7 +95,7 @@ describe('Projets (e2e)', () => {
           nom: 'Projet date invalide',
           type: 'Recherche',
           date_debut: 'pas-une-date',
-          date_fin_prevue: '2026-01-01T00:00:00.000Z',
+          date_fin_prevue: dateIsoDans(30),
         })
         .expect(400);
     });

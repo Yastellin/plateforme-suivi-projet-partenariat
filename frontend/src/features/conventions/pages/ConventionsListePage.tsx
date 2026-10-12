@@ -1,4 +1,4 @@
-﻿// src/features/conventions/pages/ConventionsListePage.tsx
+// src/features/conventions/pages/ConventionsListePage.tsx
 
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
@@ -23,16 +23,16 @@ import { toast } from "sonner"
 
 const LIMITE_PAR_PAGE = 20
 
-type FiltreStatut = 'tous' | 'BROUILLON' | 'EN_COURS' | 'EN_ATTENTE' | 'SIGNEE' | 'EXPIRE' | 'RESILIEE'
+type FiltreStatut = 'tous' | 'BROUILLON' | 'EN_ATTENTE_SIGNATURE' | 'SIGNEE' | 'ACTIVE' | 'SUSPENDUE' | 'EXPIREE'
 
 const OPTIONS_FILTRE = [
   { cle: 'tous', libelle: 'Tous' },
   { cle: 'BROUILLON', libelle: 'Brouillons' },
-  { cle: 'EN_COURS', libelle: 'En cours' },
-  { cle: 'EN_ATTENTE', libelle: 'En attente' },
+  { cle: 'EN_ATTENTE_SIGNATURE', libelle: 'En attente' },
   { cle: 'SIGNEE', libelle: 'Signées' },
-  { cle: 'EXPIRE', libelle: 'Expirées' },
-  { cle: 'RESILIEE', libelle: 'Résiliées' },
+  { cle: 'ACTIVE', libelle: 'Actives' },
+  { cle: 'SUSPENDUE', libelle: 'Suspendues' },
+  { cle: 'EXPIREE', libelle: 'Expirées' },
 ]
 
 export function ConventionsListePage() {
@@ -52,7 +52,7 @@ export function ConventionsListePage() {
     () => ({
       page,
       limit: LIMITE_PAR_PAGE,
-      nom: rechercheDebouncee || undefined,
+      titre: rechercheDebouncee || undefined,
       statut: statutFiltre !== 'tous' ? statutFiltre : undefined,
     }),
     [page, rechercheDebouncee, statutFiltre]
