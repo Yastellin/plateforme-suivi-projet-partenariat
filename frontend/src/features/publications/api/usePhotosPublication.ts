@@ -3,22 +3,26 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
 import type { PhotoPublication } from "@/types/api"
 
+/** Envoie une photo à une publication (le backend attend le champ « fichier »). */
+export async function ajouterPhoto(
+  publicationId: string,
+  fichier: File,
+  legende?: string,
+): Promise<PhotoPublication> {
+  const formData = new FormData()
+  formData.append("fichier", fichier)
+  if (legende) formData.append("legende", legende)
+
+  const reponse = await apiClient.post<PhotoPublication>(`/publications/${publicationId}/photos`, formData)
+  return reponse.data
+}
+
 export function useAjouterPhoto(publicationId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ fichier, legende }: { fichier: File; legende?: string }) => {
-      const formData = new FormData()
-      // Nom de champ attendu par l'API (FileInterceptor('fichier'))
-      formData.append("fichier", fichier)
-      if (legende) formData.append("legende", legende)
-
-      const reponse = await apiClient.post<PhotoPublication>(
-        `/publications/${publicationId}/photos`,
-        formData,
-      )
-      return reponse.data
-    },
+    mutationFn: ({ fichier, legende }: { fichier: File; legende?: string }) =>
+      ajouterPhoto(publicationId, fichier, legende),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["publications"] })
     },

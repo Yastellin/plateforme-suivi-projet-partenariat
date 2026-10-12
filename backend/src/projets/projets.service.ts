@@ -269,14 +269,18 @@ export class ProjetsService {
     const projet = await this.projetRepo.findOneBy({ id, archive: false });
     if (!projet) throw new NotFoundException('Projet non trouvé');
 
-    const activitesNonTerminees = await this.activiteRepo.count({
-      where: { projet_id: id, terminee: false },
-    });
+    // Un projet déjà terminé peut être archivé, même si certaines activités
+    // n'ont pas été cochées : seul un projet en cours est bloqué.
+    if (projet.statut !== StatutProjet.TERMINE) {
+      const activitesNonTerminees = await this.activiteRepo.count({
+        where: { projet_id: id, terminee: false },
+      });
 
-    if (activitesNonTerminees > 0) {
-      throw new ConflictException(
-        "Impossible d'archiver un projet avec des activités non terminées",
-      );
+      if (activitesNonTerminees > 0) {
+        throw new ConflictException(
+          "Impossible d'archiver un projet avec des activités non terminées",
+        );
+      }
     }
 
     await this.projetRepo.update(id, { archive: true });
