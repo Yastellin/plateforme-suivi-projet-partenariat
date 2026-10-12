@@ -84,7 +84,7 @@ export class CotutelleThese {
   partenaire: Partenaire;
 
   @ManyToOne(() => Convention, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'convention_id'})
+  @JoinColumn({ name: 'convention_id' })
   convention: Convention | null;
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })

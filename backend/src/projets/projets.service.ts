@@ -174,7 +174,9 @@ export class ProjetsService {
       order: { created_at: 'DESC' },
     });
 
-    const enriched = await Promise.all(data.map((projet) => this.enrichir(projet)));
+    const enriched = await Promise.all(
+      data.map((projet) => this.enrichir(projet)),
+    );
 
     return {
       data: enriched,
@@ -182,7 +184,10 @@ export class ProjetsService {
     };
   }
 
-  async findOne(id: string, etablissementId?: string): Promise<ProjetResponseDto> {
+  async findOne(
+    id: string,
+    etablissementId?: string,
+  ): Promise<ProjetResponseDto> {
     const where: any = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
@@ -241,7 +246,9 @@ export class ProjetsService {
     const projet = await this.findOne(id, etablissementId);
 
     if (projet.statut !== StatutProjet.BROUILLON) {
-      throw new ConflictException('Seul un projet en BROUILLON peut être soumis');
+      throw new ConflictException(
+        'Seul un projet en BROUILLON peut être soumis',
+      );
     }
 
     await this.projetRepo.update(id, { statut: StatutProjet.EN_ATTENTE });

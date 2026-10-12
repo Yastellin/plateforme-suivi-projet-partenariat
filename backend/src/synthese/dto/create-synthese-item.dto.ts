@@ -12,7 +12,8 @@ export class CreateSyntheseItemDto {
   annee: number;
 
   @ApiProperty({
-    description: 'Type d item (DOMAINE_PRINCIPAL, DEFI_MAJEUR, PRIORITE_FUTURE)',
+    description:
+      'Type d item (DOMAINE_PRINCIPAL, DEFI_MAJEUR, PRIORITE_FUTURE)',
     example: 'DOMAINE_PRINCIPAL',
   })
   @IsString()

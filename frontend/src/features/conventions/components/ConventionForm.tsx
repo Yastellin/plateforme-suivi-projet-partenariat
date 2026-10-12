@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { schemaConvention, type ConventionFormValues } from "@/lib/validators/convention.schema"
+import { creerSchemaConvention, type ConventionFormValues } from "@/lib/validators/convention.schema"
 import { useCreateConvention } from "@/features/conventions/api/useCreateConvention"
 import { useUpdateConvention } from "@/features/conventions/api/useUpdateConvention"
 import type { Convention } from "@/types/api"
@@ -39,7 +39,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     handleSubmit,
     formState: { errors },
   } = useForm<ConventionFormValues>({
-    resolver: zodResolver(schemaConvention),
+    resolver: zodResolver(creerSchemaConvention({ exigerDateDebutFuture: !convention })),
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
@@ -67,12 +67,12 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="reference">Reference</Label>
+          <Label htmlFor="reference" requis>Reference</Label>
           <Input id="reference" className="font-mono" aria-invalid={!!errors.reference} {...register("reference")} />
           {errors.reference && <p className="text-sm text-destructive">{errors.reference.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="titre">Titre</Label>
+          <Label htmlFor="titre" requis>Titre</Label>
           <Input id="titre" aria-invalid={!!errors.titre} {...register("titre")} />
           {errors.titre && <p className="text-sm text-destructive">{errors.titre.message}</p>}
         </div>
@@ -90,11 +90,13 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_debut">Date de debut</Label>
-          <Input id="date_debut" type="date" {...register("date_debut")} />
+          <Input id="date_debut" type="date" aria-invalid={!!errors.date_debut} {...register("date_debut")} />
+          {errors.date_debut && <p className="text-sm text-destructive">{errors.date_debut.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_fin">Date de fin</Label>
-          <Input id="date_fin" type="date" {...register("date_fin")} />
+          <Input id="date_fin" type="date" aria-invalid={!!errors.date_fin} {...register("date_fin")} />
+          {errors.date_fin && <p className="text-sm text-destructive">{errors.date_fin.message}</p>}
         </div>
       </div>
 

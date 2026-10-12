@@ -1,7 +1,14 @@
 // src/tableau-de-bord/tableau-de-bord.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, FindOptionsWhere, In, LessThan, Not, Repository } from 'typeorm';
+import {
+  Between,
+  FindOptionsWhere,
+  In,
+  LessThan,
+  Not,
+  Repository,
+} from 'typeorm';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
 import { PartenariatEtablissement } from '../partenariats/entities/partenariat-etablissement.entity';
@@ -28,13 +35,19 @@ import { Role } from '../common/enums/role.enum';
 @Injectable()
 export class TableauDeBordService {
   constructor(
-    @InjectRepository(Partenaire) private partenaireRepo: Repository<Partenaire>,
-    @InjectRepository(Partenariat) private partenariatRepo: Repository<Partenariat>,
-    @InjectRepository(PartenariatEtablissement) private peRepo: Repository<PartenariatEtablissement>,
-    @InjectRepository(CotutelleThese) private cotutelleRepo: Repository<CotutelleThese>,
+    @InjectRepository(Partenaire)
+    private partenaireRepo: Repository<Partenaire>,
+    @InjectRepository(Partenariat)
+    private partenariatRepo: Repository<Partenariat>,
+    @InjectRepository(PartenariatEtablissement)
+    private peRepo: Repository<PartenariatEtablissement>,
+    @InjectRepository(CotutelleThese)
+    private cotutelleRepo: Repository<CotutelleThese>,
     @InjectRepository(Projet) private projetRepo: Repository<Projet>,
-    @InjectRepository(Convention) private conventionRepo: Repository<Convention>,
-    @InjectRepository(Publication) private publicationRepo: Repository<Publication>,
+    @InjectRepository(Convention)
+    private conventionRepo: Repository<Convention>,
+    @InjectRepository(Publication)
+    private publicationRepo: Repository<Publication>,
   ) {}
 
   async getTableauDeBord(
@@ -45,42 +58,64 @@ export class TableauDeBordService {
     // L'Etablissement a une vue filtree sur ses propres donnees
     const estGlobal = role === Role.PRESIDENCE || role === Role.DECIDEUR;
     const perimetre = estGlobal ? 'GLOBAL' : 'ETABLISSEMENT';
-    const filtreEtab = !estGlobal && etablissementId ? etablissementId : undefined;
+    const filtreEtab =
+      !estGlobal && etablissementId ? etablissementId : undefined;
 
-    const [compteurs, projets_par_statut, conventions_par_statut] = await Promise.all([
-      this.getCompteurs(filtreEtab),
-      this.getProjetsParStatut(filtreEtab),
-      this.getConventionsParStatut(filtreEtab),
-    ]);
+    const [compteurs, projets_par_statut, conventions_par_statut] =
+      await Promise.all([
+        this.getCompteurs(filtreEtab),
+        this.getProjetsParStatut(filtreEtab),
+        this.getConventionsParStatut(filtreEtab),
+      ]);
 
     return { compteurs, projets_par_statut, conventions_par_statut, perimetre };
   }
 
-  private async getCompteurs(etablissementId?: string): Promise<CompteursGlobauxDto> {
-    const [partenaires, partenariats, cotutelles, projets, conventions, publications] =
-      await Promise.all([
-        this.partenaireRepo.count({
-          where: { archive: false, ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
-        }),
-        etablissementId
-          ? this.partenariatRepo
-              .createQueryBuilder('partenariat')
-              .innerJoin('partenariat.etablissements', 'pe')
-              .where('partenariat.archive = false')
-              .andWhere('pe.etablissement_id = :etablissementId', { etablissementId })
-              .getCount()
-          : this.partenariatRepo.count({ where: { archive: false } }),
-        this.cotutelleRepo.count({
-          where: { archive: false, ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
-        }),
-        this.projetRepo.count({
-          where: { archive: false, ...(etablissementId ? { etablissement_id: etablissementId } : {}) },
-        }),
-        this.conventionRepo.count({ where: { archive: false } }),
-        this.publicationRepo.count(),
-      ]);
+  private async getCompteurs(
+    etablissementId?: string,
+  ): Promise<CompteursGlobauxDto> {
+    const [
+      partenaires,
+      partenariats,
+      cotutelles,
+      projets,
+      conventions,
+      publications,
+    ] = await Promise.all([
+      this.partenaireRepo.count({
+        where: {
+          archive: false,
+          ...(etablissementId ? { etablissement_id: etablissementId } : {}),
+        },
+      }),
+      etablissementId
+        ? this.partenariatRepo
+            .createQueryBuilder('partenariat')
+            .innerJoin('partenariat.etablissements', 'pe')
+            .where('partenariat.archive = false')
+            .andWhere('pe.etablissement_id = :etablissementId', {
+              etablissementId,
+            })
+            .getCount()
+        : this.partenariatRepo.count({ where: { archive: false } }),
+      this.cotutelleRepo.count({
+        where: {
+          archive: false,
+          ...(etablissementId ? { etablissement_id: etablissementId } : {}),
+        },
+      }),
+      this.projetRepo.count({
+        where: {
+          archive: false,
+          ...(etablissementId ? { etablissement_id: etablissementId } : {}),
+        },
+      }),
+      this.conventionRepo.count({ where: { archive: false } }),
+      this.publicationRepo.count(),
+    ]);
 
-    const repartition_conventions = await this.getRepartitionConventions(etablissementId);
+    const repartition_conventions =
+      await this.getRepartitionConventions(etablissementId);
 
     return {
       partenaires,
@@ -128,14 +163,18 @@ export class TableauDeBordService {
     return result;
   }
 
-  private async getProjetsParStatut(etablissementId?: string): Promise<ProjetsParStatutDto> {
+  private async getProjetsParStatut(
+    etablissementId?: string,
+  ): Promise<ProjetsParStatutDto> {
     const query = this.projetRepo
       .createQueryBuilder('p')
       .select('p.statut', 'statut')
       .addSelect('COUNT(*)', 'count')
       .where('p.archive = false');
     if (etablissementId) {
-      query.andWhere('p.etablissement_id = :etablissementId', { etablissementId });
+      query.andWhere('p.etablissement_id = :etablissementId', {
+        etablissementId,
+      });
     }
     const counts = await query.groupBy('p.statut').getRawMany<{
       statut: StatutProjet;
@@ -162,42 +201,56 @@ export class TableauDeBordService {
     etablissementId?: string,
   ): Promise<ConventionsParStatutDto> {
     const maintenant = new Date();
-    const dans30Jours = new Date(maintenant.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const dans30Jours = new Date(
+      maintenant.getTime() + 30 * 24 * 60 * 60 * 1000,
+    );
 
     // Si un etablissement est cible, on filtre les conventions liees a ses projets
-    const compter = (statut: StatutConvention | StatutConvention[], dateFin?: [Date, Date]) => {
+    const compter = (
+      statut: StatutConvention | StatutConvention[],
+      dateFin?: [Date, Date],
+    ) => {
       const where: FindOptionsWhere<Convention> = {
         archive: false,
         statut: Array.isArray(statut) ? In(statut) : statut,
         ...(dateFin ? { date_fin: Between(dateFin[0], dateFin[1]) } : {}),
-        ...(etablissementId ? { projet: { etablissement_id: etablissementId } } : {}),
+        ...(etablissementId
+          ? { projet: { etablissement_id: etablissementId } }
+          : {}),
       };
       return this.conventionRepo.count({ where });
     };
 
-    const [actives, expirees, bientot_expirees, en_attente_signature] = await Promise.all([
-      compter([StatutConvention.ACTIVE, StatutConvention.SIGNEE]),
-      compter(StatutConvention.EXPIREE),
-      compter(
-        [StatutConvention.SIGNEE, StatutConvention.ACTIVE],
-        [maintenant, dans30Jours],
-      ),
-      compter(StatutConvention.EN_ATTENTE_SIGNATURE),
-    ]);
+    const [actives, expirees, bientot_expirees, en_attente_signature] =
+      await Promise.all([
+        compter([StatutConvention.ACTIVE, StatutConvention.SIGNEE]),
+        compter(StatutConvention.EXPIREE),
+        compter(
+          [StatutConvention.SIGNEE, StatutConvention.ACTIVE],
+          [maintenant, dans30Jours],
+        ),
+        compter(StatutConvention.EN_ATTENTE_SIGNATURE),
+      ]);
 
     return { actives, expirees, bientot_expirees, en_attente_signature };
   }
 
-  async getEcheancier(etablissementId?: string | null): Promise<EcheancierResponseDto> {
+  async getEcheancier(
+    etablissementId?: string | null,
+  ): Promise<EcheancierResponseDto> {
     const maintenant = new Date();
-    const dans30Jours = new Date(maintenant.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const dans30Jours = new Date(
+      maintenant.getTime() + 30 * 24 * 60 * 60 * 1000,
+    );
 
     const conventions = await this.conventionRepo.find({
       where: {
         archive: false,
         statut: In([StatutConvention.SIGNEE, StatutConvention.ACTIVE]),
         date_fin: Between(maintenant, dans30Jours),
-        ...(etablissementId ? { projet: { etablissement_id: etablissementId } } : {}),
+        ...(etablissementId
+          ? { projet: { etablissement_id: etablissementId } }
+          : {}),
       },
       relations: etablissementId ? { projet: true } : undefined,
       order: { date_fin: 'ASC' },
@@ -208,7 +261,8 @@ export class TableauDeBordService {
       .filter((c) => c.date_fin !== null)
       .map((c) => {
         const jours = Math.ceil(
-          (c.date_fin!.getTime() - maintenant.getTime()) / (24 * 60 * 60 * 1000),
+          (c.date_fin!.getTime() - maintenant.getTime()) /
+            (24 * 60 * 60 * 1000),
         );
         return {
           id: c.id,
@@ -222,7 +276,13 @@ export class TableauDeBordService {
     const projets = await this.projetRepo.find({
       where: {
         archive: false,
-        statut: Not(In([StatutProjet.BROUILLON, StatutProjet.TERMINE, StatutProjet.EXPIRE])),
+        statut: Not(
+          In([
+            StatutProjet.BROUILLON,
+            StatutProjet.TERMINE,
+            StatutProjet.EXPIRE,
+          ]),
+        ),
         date_fin_prevue: LessThan(maintenant),
         ...(etablissementId ? { etablissement_id: etablissementId } : {}),
       },
@@ -232,7 +292,8 @@ export class TableauDeBordService {
 
     const projets_en_retard: ProjetEnRetardDto[] = projets.map((p) => {
       const jours = Math.ceil(
-        (maintenant.getTime() - p.date_fin_prevue.getTime()) / (24 * 60 * 60 * 1000),
+        (maintenant.getTime() - p.date_fin_prevue.getTime()) /
+          (24 * 60 * 60 * 1000),
       );
       return {
         id: p.id,

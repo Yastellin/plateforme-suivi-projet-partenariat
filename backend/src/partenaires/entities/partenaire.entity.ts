@@ -54,10 +54,20 @@ export class Partenaire {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ type: 'enum', enum: StatutPartenaire, enumName: 'StatutPartenaire', default: StatutPartenaire.ACTIF })
+  @Column({
+    type: 'enum',
+    enum: StatutPartenaire,
+    enumName: 'StatutPartenaire',
+    default: StatutPartenaire.ACTIF,
+  })
   statut: StatutPartenaire;
 
-  @Column({ type: 'enum', enum: Visibilite, enumName: 'Visibilite', default: Visibilite.PRIVE })
+  @Column({
+    type: 'enum',
+    enum: Visibilite,
+    enumName: 'Visibilite',
+    default: Visibilite.PRIVE,
+  })
   visibilite: Visibilite;
 
   @Column({ default: false })

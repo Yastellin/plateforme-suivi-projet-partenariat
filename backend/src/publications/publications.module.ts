@@ -7,10 +7,7 @@ import { Publication } from './enitities/publication.entity';
 import { Projet } from '../projets/entities/projet.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Publication, Projet]),
-    PhotosModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Publication, Projet]), PhotosModule],
   controllers: [PublicationsController],
   providers: [PublicationsService],
   exports: [PublicationsService],

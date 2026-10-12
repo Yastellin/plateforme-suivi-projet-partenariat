@@ -4,6 +4,16 @@
 $API = "http://localhost:3000/api"
 $PASS = "password123"
 
+# Dates de test calculees par rapport au jour courant : les jeux de donnees
+# restent valides quelle que soit la date d'execution (regle « date de debut
+# aujourd'hui ou posterieure »).
+function DateIso {
+    param([int]$Jours)
+    $format = "yyyy-MM-ddTHH:mm:ss.fff"
+    $jour = [datetime]::UtcNow.AddDays($Jours)
+    return $jour.ToString($format, [System.Globalization.CultureInfo]::InvariantCulture) + "Z"
+}
+
 # Compteurs
 $script:TESTS_PASS = 0
 $script:TESTS_FAIL = 0
@@ -120,8 +130,8 @@ $resp = Invoke-Api -Method POST -Url "$API/projets" -Token $TOKEN_ETAB -Body @{
     type = "Recherche"
     domaine = "Informatique"
     budget = 15000
-    date_debut = "2026-09-01T00:00:00.000Z"
-    date_fin_prevue = "2027-12-31T00:00:00.000Z"
+    date_debut = (DateIso 60)
+    date_fin_prevue = (DateIso 500)
 }
 
 Check "Creation projet (HTTP)" 201 $resp.StatusCode
@@ -197,8 +207,8 @@ if ($rPart.Content.data.data.Count -gt 0) {
     $r = Invoke-Api -Method POST -Url "$API/projets" -Token $TOKEN_ETAB -Body @{
         nom = "Projet lie a un partenariat"
         type = "Recherche"
-        date_debut = "2026-09-01T00:00:00.000Z"
-        date_fin_prevue = "2027-12-31T00:00:00.000Z"
+        date_debut = (DateIso 60)
+        date_fin_prevue = (DateIso 500)
         partenariat_id = $PARTENARIAT_ID
     }
     Check "Creation avec partenariat" 201 $r.StatusCode
@@ -218,8 +228,8 @@ if ($rPart.Content.data.data.Count -gt 0) {
     $r = Invoke-Api -Method POST -Url "$API/projets" -Token $TOKEN_ETAB -Body @{
         nom = "Projet avec partenaires propres"
         type = "Recherche"
-        date_debut = "2026-09-01T00:00:00.000Z"
-        date_fin_prevue = "2027-12-31T00:00:00.000Z"
+        date_debut = (DateIso 60)
+        date_fin_prevue = (DateIso 500)
         partenaires_ids = @($PARTENAIRE_ID)
     }
     Check "Creation avec partenaires propres" 201 $r.StatusCode
@@ -275,8 +285,8 @@ Check "Detail (Decideur)" 200 $r.StatusCode
 $r = Invoke-Api -Method POST -Url "$API/projets" -Token $TOKEN_DEC -Body @{
     nom = "Interdit"
     type = "Test"
-    date_debut = "2026-09-01T00:00:00.000Z"
-    date_fin_prevue = "2027-12-31T00:00:00.000Z"
+    date_debut = (DateIso 60)
+    date_fin_prevue = (DateIso 500)
 }
 Check "Creation interdite (403)" 403 $r.StatusCode
 

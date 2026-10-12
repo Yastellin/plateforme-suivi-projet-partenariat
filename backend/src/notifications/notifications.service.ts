@@ -1,10 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  FindOptionsWhere,
-  MoreThanOrEqual,
-  Repository,
-} from 'typeorm';
+import { FindOptionsWhere, MoreThanOrEqual, Repository } from 'typeorm';
 import { QueryNotificationDto } from './dto/query-notification.dto';
 import { TypeNotification } from '../common/enums/type-notification.enum';
 import { PrioriteNotification } from '../common/enums/priorite-notification.enum';

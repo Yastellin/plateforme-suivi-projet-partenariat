@@ -25,7 +25,8 @@ export class CleanupService {
 
   constructor(
     @InjectRepository(Document) private documentRepo: Repository<Document>,
-    @InjectRepository(PhotoPublication) private photoRepo: Repository<PhotoPublication>,
+    @InjectRepository(PhotoPublication)
+    private photoRepo: Repository<PhotoPublication>,
     @Inject(STORAGE_PORT) private storage: StoragePort,
   ) {}
 

@@ -4,11 +4,14 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { Utilisateur } from '../entities/utilisateur.entity';
 
 @Injectable()
-export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class JwtRefreshStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(
     private configService: ConfigService,
     @InjectRepository(Utilisateur)
@@ -16,7 +19,9 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
   ) {
     const secret = configService.get<string>('JWT_REFRESH_SECRET');
     if (!secret) {
-      throw new Error('JWT_REFRESH_SECRET non défini dans les variables d environnement');
+      throw new Error(
+        'JWT_REFRESH_SECRET non défini dans les variables d environnement',
+      );
     }
     super({
       jwtFromRequest: ExtractJwt.fromBodyField('refresh_token'),

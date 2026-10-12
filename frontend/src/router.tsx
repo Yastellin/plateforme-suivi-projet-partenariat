@@ -18,6 +18,8 @@ import { PageTransition } from "@/components/shared/PageTransition"
 import { Skeleton } from "@/components/ui/skeleton"
 
 const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage").then((m) => ({ default: m.LoginPage })))
+const MotDePasseOubliePage = lazy(() => import("@/features/auth/pages/MotDePasseOubliePage").then((m) => ({ default: m.MotDePasseOubliePage })))
+const ResetPasswordPage = lazy(() => import("@/features/auth/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })))
 const TableauDeBordPresidence = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordPresidence").then((m) => ({ default: m.TableauDeBordPresidence })))
 const TableauDeBordEtablissement = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordEtablissement").then((m) => ({ default: m.TableauDeBordEtablissement })))
 const TableauDeBordDecideur = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordDecideur").then((m) => ({ default: m.TableauDeBordDecideur })))
@@ -202,6 +204,8 @@ const router = createBrowserRouter([
     ],
   },
   { path: "/connexion", element: <Charge><LoginPage /></Charge> },
+  { path: "/mot-de-passe-oublie", element: <Charge><MotDePasseOubliePage /></Charge> },
+  { path: "/reset-password", element: <Charge><ResetPasswordPage /></Charge> },
   {
     element: <LayoutInterne />,
     children: [

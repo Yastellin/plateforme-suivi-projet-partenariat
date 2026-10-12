@@ -1,6 +1,16 @@
 $API = "http://localhost:3000/api"
 $PASS = "password123"
 
+# Dates de test calculees par rapport au jour courant : les jeux de donnees
+# restent valides quelle que soit la date d'execution (regle « date de debut
+# aujourd'hui ou posterieure »).
+function DateIso {
+    param([int]$Jours)
+    $format = "yyyy-MM-ddTHH:mm:ss.fff"
+    $jour = [datetime]::UtcNow.AddDays($Jours)
+    return $jour.ToString($format, [System.Globalization.CultureInfo]::InvariantCulture) + "Z"
+}
+
 $script:TESTS_PASS = 0
 $script:TESTS_FAIL = 0
 
@@ -78,8 +88,8 @@ Section "2. Creation et soumission d'un projet (par FLSH)"
 $r = Invoke-Api -Method POST -Url "$API/projets" -Token $TOKEN_ETAB2 -Body @{
     nom = "Projet Notification Test"
     type = "Recherche"
-    date_debut = "2026-01-01T00:00:00.000Z"
-    date_fin_prevue = "2027-12-31T00:00:00.000Z"
+    date_debut = (DateIso 60)
+    date_fin_prevue = (DateIso 500)
 }
 Check "Creation projet (201)" 201 $r.StatusCode
 $PROJET_ID = $r.Content.data.id

@@ -212,7 +212,8 @@ export class PartenariatsService {
       updateData.difficultes_contraintes = dto.difficultes_contraintes;
     }
     if (dto.perspectives_recommandations !== undefined) {
-      updateData.perspectives_recommandations = dto.perspectives_recommandations;
+      updateData.perspectives_recommandations =
+        dto.perspectives_recommandations;
     }
 
     await this.partenariatRepo.update(id, updateData);

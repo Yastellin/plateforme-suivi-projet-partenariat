@@ -9,7 +9,12 @@ import {
   ParseUUIDPipe,
   HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { ConventionsService } from './conventions.service';
 import { CreateConventionDto } from './dto/create-convention.dto';
 import { UpdateConventionDto } from './dto/update-convention.dto';
@@ -44,13 +49,17 @@ export class ConventionsController {
   @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({ summary: 'Obtenir une convention par ID' })
   @ApiResponse({ status: 200, type: ConventionResponseDto })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<ConventionResponseDto> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ConventionResponseDto> {
     return this.conventionsService.findOne(id);
   }
 
   @Patch(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Mettre a jour une convention (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Mettre a jour une convention (Presidence uniquement)',
+  })
   @ApiResponse({ status: 200, type: ConventionResponseDto })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -64,7 +73,9 @@ export class ConventionsController {
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Archiver une convention (Presidence uniquement)' })
   @ApiResponse({ status: 200, type: ConventionResponseDto })
-  archiver(@Param('id', ParseUUIDPipe) id: string): Promise<ConventionResponseDto> {
+  archiver(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ConventionResponseDto> {
     return this.conventionsService.archiver(id);
   }
 }

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, Inject, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
@@ -28,7 +33,9 @@ export class PhotosService {
     if (!fichier) throw new BadRequestException('Aucun fichier fourni');
 
     if (!MIME_AUTORISES.includes(fichier.mimetype)) {
-      throw new BadRequestException('Type d image non autorise (JPEG, PNG, WebP)');
+      throw new BadRequestException(
+        'Type d image non autorise (JPEG, PNG, WebP)',
+      );
     }
 
     const publication = await this.publicationRepo.findOne({
@@ -53,7 +60,9 @@ export class PhotosService {
     return this.mapToResponse(photo);
   }
 
-  async findAllByPublication(publicationId: string): Promise<PhotoResponseDto[]> {
+  async findAllByPublication(
+    publicationId: string,
+  ): Promise<PhotoResponseDto[]> {
     const publication = await this.publicationRepo.findOne({
       where: { id: publicationId },
     });

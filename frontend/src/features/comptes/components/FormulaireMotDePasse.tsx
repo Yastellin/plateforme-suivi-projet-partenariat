@@ -54,7 +54,7 @@ export function FormulaireMotDePasse() {
       noValidate
     >
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="mot_de_passe_actuel">Mot de passe actuel</Label>
+        <Label htmlFor="mot_de_passe_actuel" requis>Mot de passe actuel</Label>
         <Input
           id="mot_de_passe_actuel"
           type="password"
@@ -68,7 +68,7 @@ export function FormulaireMotDePasse() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="nouveau_mot_de_passe">Nouveau mot de passe</Label>
+        <Label htmlFor="nouveau_mot_de_passe" requis>Nouveau mot de passe</Label>
         <Input
           id="nouveau_mot_de_passe"
           type="password"
@@ -82,7 +82,7 @@ export function FormulaireMotDePasse() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="confirmation_mot_de_passe">Confirmer le nouveau mot de passe</Label>
+        <Label htmlFor="confirmation_mot_de_passe" requis>Confirmer le nouveau mot de passe</Label>
         <Input
           id="confirmation_mot_de_passe"
           type="password"

@@ -26,7 +26,10 @@ export class SyntheseController {
   @Get()
   @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({ summary: 'Obtenir la synthèse globale' })
-  getSyntheseGlobale(@CurrentUser() _user: any, @Query('annee') annee?: string) {
+  getSyntheseGlobale(
+    @CurrentUser() _user: any,
+    @Query('annee') annee?: string,
+  ) {
     return this.syntheseService.getSyntheseGlobale(this.parseAnnee(annee));
   }
 
@@ -94,7 +97,10 @@ export class SyntheseController {
   @Delete('items/:id')
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Supprimer un item de synthèse' })
-  supprimerItem(@CurrentUser() _user: any, @Param('id', ParseUUIDPipe) id: string) {
+  supprimerItem(
+    @CurrentUser() _user: any,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.syntheseService.supprimerItem(id);
   }
 

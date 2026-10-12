@@ -31,7 +31,9 @@ export class RefreshToken {
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   revoked_at: Date | null;
 
-  @ManyToOne(() => Utilisateur, (user) => user.refresh_tokens, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Utilisateur, (user) => user.refresh_tokens, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'utilisateur_id' })
   utilisateur: Utilisateur;
 

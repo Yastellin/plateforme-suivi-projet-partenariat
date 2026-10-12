@@ -14,12 +14,14 @@ const VARIABLES_REQUISES: VariableRequise[] = [
   {
     nom: 'JWT_SECRET',
     minLength: 32,
-    description: 'Secret de signature des access tokens (minimum 32 caracteres)',
+    description:
+      'Secret de signature des access tokens (minimum 32 caracteres)',
   },
   {
     nom: 'JWT_REFRESH_SECRET',
     minLength: 32,
-    description: 'Secret de signature des refresh tokens (minimum 32 caracteres)',
+    description:
+      'Secret de signature des refresh tokens (minimum 32 caracteres)',
   },
 ];
 
@@ -45,7 +47,8 @@ export function validerEnvironnement(): void {
 
     // Verification de securite : secrets par defaut souvent copies du .env.example
     if (
-      (variable.nom === 'JWT_SECRET' || variable.nom === 'JWT_REFRESH_SECRET') &&
+      (variable.nom === 'JWT_SECRET' ||
+        variable.nom === 'JWT_REFRESH_SECRET') &&
       /^(change_me|your_secret|secret|test)/i.test(valeur)
     ) {
       erreurs.push(

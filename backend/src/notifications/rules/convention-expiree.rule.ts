@@ -12,7 +12,8 @@ import { NotificationRule } from './notification-rule.interface';
 @Injectable()
 export class ConventionExpireeRule implements NotificationRule {
   constructor(
-    @InjectRepository(Convention) private conventionRepo: Repository<Convention>,
+    @InjectRepository(Convention)
+    private conventionRepo: Repository<Convention>,
     @InjectRepository(Projet) private projetRepo: Repository<Projet>,
     private notificationsService: NotificationsService,
   ) {}
@@ -28,12 +29,15 @@ export class ConventionExpireeRule implements NotificationRule {
     });
 
     for (const convention of conventions) {
-      await this.conventionRepo.update(convention.id, { statut: StatutConvention.EXPIREE });
+      await this.conventionRepo.update(convention.id, {
+        statut: StatutConvention.EXPIREE,
+      });
 
       const titre = `Convention expiree : ${convention.reference}`;
       const message = `La convention ${convention.reference} (${convention.titre}) a expire.`;
 
-      const presidenceUsers = await this.notificationsService.trouverUtilisateursPresidence();
+      const presidenceUsers =
+        await this.notificationsService.trouverUtilisateursPresidence();
       for (const userId of presidenceUsers) {
         await this.notificationsService.creer({
           titre,
@@ -52,9 +56,10 @@ export class ConventionExpireeRule implements NotificationRule {
           where: { id: convention.projet_id },
         });
         if (projet) {
-          const etabUsers = await this.notificationsService.trouverUtilisateursEtablissement(
-            projet.etablissement_id,
-          );
+          const etabUsers =
+            await this.notificationsService.trouverUtilisateursEtablissement(
+              projet.etablissement_id,
+            );
           for (const userId of etabUsers) {
             await this.notificationsService.creer({
               titre,

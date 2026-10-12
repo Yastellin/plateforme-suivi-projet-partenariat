@@ -36,7 +36,7 @@ export function CotutellesListePage() {
     () => ({
       page,
       limit: LIMITE_PAR_PAGE,
-      nom: rechercheDebouncee || undefined,
+      nom_doctorant: rechercheDebouncee || undefined,
     }),
     [page, rechercheDebouncee]
   )

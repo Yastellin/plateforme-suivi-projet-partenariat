@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Inject, Logger } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { MAIL_PORT, type MailPort } from '../mail/mail.port';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import {
@@ -77,7 +77,9 @@ export class AuthService {
     };
   }
 
-  async refresh(dto: RefreshDto): Promise<{ access_token: string; refresh_token: string }> {
+  async refresh(
+    dto: RefreshDto,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     let payload: any;
     try {
       payload = this.jwtService.verify(dto.refresh_token, {
@@ -126,7 +128,11 @@ export class AuthService {
     if (refreshToken) {
       const tokenHash = this.hasherToken(refreshToken);
       await this.refreshTokenRepo.update(
-        { token_hash: tokenHash, utilisateur_id: utilisateurId, revoked_at: IsNull() },
+        {
+          token_hash: tokenHash,
+          utilisateur_id: utilisateurId,
+          revoked_at: IsNull(),
+        },
         { revoked_at: new Date() },
       );
     } else {
@@ -142,7 +148,8 @@ export class AuthService {
       where: { id: utilisateurId },
       relations: { etablissement: true },
     });
-    if (!utilisateur) throw new UnauthorizedException('Utilisateur introuvable');
+    if (!utilisateur)
+      throw new UnauthorizedException('Utilisateur introuvable');
     return {
       id: utilisateur.id,
       email: utilisateur.email,
@@ -161,12 +168,14 @@ export class AuthService {
     };
   }
 
-    async demanderReinitialisation(email: string): Promise<{ message: string }> {
+  async demanderReinitialisation(email: string): Promise<{ message: string }> {
     // Reponse volontairement identique que l'e-mail existe ou non (anti-enumeration).
     const message =
       'Si un compte existe avec cet e-mail, un lien de reinitialisation a ete envoye.';
 
-    const utilisateur = await this.utilisateurRepo.findOne({ where: { email } });
+    const utilisateur = await this.utilisateurRepo.findOne({
+      where: { email },
+    });
     if (!utilisateur || !utilisateur.actif) {
       return { message };
     }
@@ -272,11 +281,14 @@ export class AuthService {
     };
   }
 
-
   async nettoyerTokensExpires(): Promise<{ supprimes: number }> {
     const seuil = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const r1 = await this.refreshTokenRepo.delete({ expires_at: LessThan(seuil) });
-    const r2 = await this.refreshTokenRepo.delete({ revoked_at: LessThan(seuil) });
+    const r1 = await this.refreshTokenRepo.delete({
+      expires_at: LessThan(seuil),
+    });
+    const r2 = await this.refreshTokenRepo.delete({
+      revoked_at: LessThan(seuil),
+    });
     return { supprimes: (r1.affected ?? 0) + (r2.affected ?? 0) };
   }
 
@@ -294,7 +306,9 @@ export class AuthService {
       expiresIn: `${REFRESH_TOKEN_DUREE_JOURS}d`,
     });
 
-    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_DUREE_JOURS * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(
+      Date.now() + REFRESH_TOKEN_DUREE_JOURS * 24 * 60 * 60 * 1000,
+    );
     const token = this.refreshTokenRepo.create({
       token_hash: this.hasherToken(refreshToken),
       utilisateur_id: userId,

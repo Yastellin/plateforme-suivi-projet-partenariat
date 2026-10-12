@@ -1,6 +1,14 @@
 import {
-  Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn,
-  UpdateDateColumn, BeforeInsert, BeforeUpdate, Index,
+  Entity,
+  PrimaryColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
+  Index,
 } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { Projet } from './projet.entity';

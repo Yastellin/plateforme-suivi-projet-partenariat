@@ -1,5 +1,10 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { RechercheService } from './recherche.service';
 import { QueryRechercheDto } from './dto/query-recherche.dto';
 import { RechercheResponseDto } from './dto/recherche-response.dto';
@@ -15,7 +20,10 @@ export class RechercheController {
 
   @Get()
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
-  @ApiOperation({ summary: 'Recherche transverse (partenaires, partenariats, projets, conventions, cotutelles)' })
+  @ApiOperation({
+    summary:
+      'Recherche transverse (partenaires, partenariats, projets, conventions, cotutelles)',
+  })
   @ApiResponse({ status: 200, type: RechercheResponseDto })
   rechercher(
     @CurrentUser() user: any,

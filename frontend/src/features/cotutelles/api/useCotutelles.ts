@@ -6,8 +6,11 @@ import type { CotutelleThese, PageServeur } from "@/types/api"
 export interface FiltresCotutelles {
   page?: number
   limit?: number
-  nom?: string
+  nom_doctorant?: string
+  type?: string
   etablissement_id?: string
+  partenaire_id?: string
+  archive?: boolean
 }
 
 // Liste paginee cote serveur

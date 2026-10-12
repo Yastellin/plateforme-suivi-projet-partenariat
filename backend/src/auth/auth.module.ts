@@ -8,7 +8,6 @@ import { AuthService } from './auth.service';
 import { AuthSchedulerService } from './auth-scheduler.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
-import { PrismaModule } from '../prisma/prisma.module';
 import { Utilisateur } from './entities/utilisateur.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
@@ -16,7 +15,6 @@ import { MotDePasseModifieListener } from './listeners/mot-de-passe-modifie.list
 
 @Module({
   imports: [
-    PrismaModule,
     TypeOrmModule.forFeature([Utilisateur, RefreshToken, PasswordResetToken]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
