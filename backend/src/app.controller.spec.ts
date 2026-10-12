@@ -15,8 +15,8 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('renvoie le message d accueil de la plateforme', () => {
+      expect(appController.getHello()).toContain('Université de Fianarantsoa');
     });
   });
 });

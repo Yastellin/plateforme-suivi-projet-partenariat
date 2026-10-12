@@ -1,5 +1,18 @@
-import { Controller, Get, Patch, Param, Query, ParseUUIDPipe, HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Query,
+  ParseUUIDPipe,
+  HttpCode,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { QueryNotificationDto } from './dto/query-notification.dto';
 import { NotificationResponseDto } from './dto/notification-response.dto';
@@ -15,7 +28,9 @@ export class NotificationsController {
 
   @Get()
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
-  @ApiOperation({ summary: 'Lister les notifications de l utilisateur connecte' })
+  @ApiOperation({
+    summary: 'Lister les notifications de l utilisateur connecte',
+  })
   @ApiResponse({ status: 200 })
   findAll(@CurrentUser() user: any, @Query() query: QueryNotificationDto) {
     return this.notificationsService.findAll(query, user.id);

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { CreateBeneficiaireDto } from './dto/create-beneficiaire.dto';
@@ -17,7 +21,9 @@ export class BeneficiairesService {
       where: { nom: ILike(dto.nom) },
     });
     if (existant) {
-      throw new ConflictException(`Un beneficiaire nomme "${dto.nom}" existe deja`);
+      throw new ConflictException(
+        `Un beneficiaire nomme "${dto.nom}" existe deja`,
+      );
     }
     const b = this.beneficiaireRepo.create({
       nom: dto.nom,
@@ -45,7 +51,9 @@ export class BeneficiairesService {
         where: { nom: ILike(dto.nom) },
       });
       if (existant && existant.id !== id) {
-        throw new ConflictException(`Un beneficiaire nomme "${dto.nom}" existe deja`);
+        throw new ConflictException(
+          `Un beneficiaire nomme "${dto.nom}" existe deja`,
+        );
       }
     }
     await this.beneficiaireRepo.update(id, {

@@ -11,7 +11,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { PhotosService } from './photos.service';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { PhotoResponseDto } from './dto/photo-response.dto';
@@ -33,7 +40,10 @@ export class PhotosController {
       limits: { fileSize: 5 * 1024 * 1024 },
       fileFilter: (req, file, cb) => {
         if (!MIME_AUTORISES.includes(file.mimetype)) {
-          return cb(new BadRequestException('Type d image non autorise'), false);
+          return cb(
+            new BadRequestException('Type d image non autorise'),
+            false,
+          );
         }
         cb(null, true);
       },
@@ -50,7 +60,9 @@ export class PhotosController {
       },
     },
   })
-  @ApiOperation({ summary: 'Ajouter une photo a une publication (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Ajouter une photo a une publication (Presidence uniquement)',
+  })
   @ApiResponse({ status: 201, type: PhotoResponseDto })
   upload(
     @Param('publicationId', ParseUUIDPipe) publicationId: string,
@@ -64,7 +76,9 @@ export class PhotosController {
   @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({ summary: 'Lister les photos d une publication' })
   @ApiResponse({ status: 200, type: [PhotoResponseDto] })
-  findAllByPublication(@Param('publicationId', ParseUUIDPipe) publicationId: string) {
+  findAllByPublication(
+    @Param('publicationId', ParseUUIDPipe) publicationId: string,
+  ) {
     return this.photosService.findAllByPublication(publicationId);
   }
 

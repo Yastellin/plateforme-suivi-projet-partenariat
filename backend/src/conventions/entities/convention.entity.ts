@@ -44,7 +44,12 @@ export class Convention {
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   date_fin: Date | null;
 
-  @Column({ type: 'enum', enum: StatutConvention, enumName: 'StatutConvention', default: StatutConvention.BROUILLON })
+  @Column({
+    type: 'enum',
+    enum: StatutConvention,
+    enumName: 'StatutConvention',
+    default: StatutConvention.BROUILLON,
+  })
   statut: StatutConvention;
 
   @Column({ type: 'text', nullable: true })

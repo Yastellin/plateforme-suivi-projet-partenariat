@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsDateString, IsEnum, IsUUID, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsEnum,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TypeCotutelle } from '../../common/enums/type-cotutelle.enum';
 

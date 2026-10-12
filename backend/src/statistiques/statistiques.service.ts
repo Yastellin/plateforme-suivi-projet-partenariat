@@ -16,17 +16,23 @@ import { StatutProjet } from '../common/enums/statut-projet.enum';
 @Injectable()
 export class StatistiquesService {
   constructor(
-    @InjectRepository(Etablissement) private etablissementRepo: Repository<Etablissement>,
-    @InjectRepository(Partenaire) private partenaireRepo: Repository<Partenaire>,
-    @InjectRepository(Partenariat) private partenariatRepo: Repository<Partenariat>,
+    @InjectRepository(Etablissement)
+    private etablissementRepo: Repository<Etablissement>,
+    @InjectRepository(Partenaire)
+    private partenaireRepo: Repository<Partenaire>,
+    @InjectRepository(Partenariat)
+    private partenariatRepo: Repository<Partenariat>,
     @InjectRepository(PartenariatEtablissement)
     private peRepo: Repository<PartenariatEtablissement>,
     @InjectRepository(Projet) private projetRepo: Repository<Projet>,
-    @InjectRepository(CotutelleThese) private cotutelleRepo: Repository<CotutelleThese>,
+    @InjectRepository(CotutelleThese)
+    private cotutelleRepo: Repository<CotutelleThese>,
   ) {}
 
   async comparatifEtablissements(): Promise<ComparatifEtablissementsResponseDto> {
-    const etablissements = await this.etablissementRepo.find({ order: { nom: 'ASC' } });
+    const etablissements = await this.etablissementRepo.find({
+      order: { nom: 'ASC' },
+    });
 
     const resultats: StatistiquesEtablissementDto[] = [];
 
@@ -39,7 +45,9 @@ export class StatistiquesService {
           this.peRepo
             .createQueryBuilder('pe')
             .innerJoin('pe.partenariat', 'partenariat')
-            .where('pe.etablissement_id = :etablissementId', { etablissementId: etab.id })
+            .where('pe.etablissement_id = :etablissementId', {
+              etablissementId: etab.id,
+            })
             .andWhere('partenariat.archive = false')
             .getCount(),
           this.projetRepo.count({

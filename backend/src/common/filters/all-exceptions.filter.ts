@@ -6,7 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 interface ReponseMappee {
   status: number;
@@ -14,6 +14,21 @@ interface ReponseMappee {
   errors: string[];
 }
 
+/** Erreur remontee par le pilote PostgreSQL (pg) sous forme de code SQLSTATE. */
+interface ErreurPostgres {
+  code?: string;
+  detail?: string;
+  constraint?: string;
+  column?: string;
+  table?: string;
+}
+
+/**
+ * Traduit les erreurs de la base de donnees en reponses HTTP normalisees.
+ *
+ * Les codes SQLSTATE evites correspondent a ceux remontes par le pilote
+ * PostgreSQL via TypeORM (QueryFailedError.driverError.code).
+ */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
@@ -23,43 +38,47 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-      // Rate limiting : message francise
+    // Rate limiting : message francise
     if (
-        exception instanceof HttpException &&
-        exception.getStatus() === HttpStatus.TOO_MANY_REQUESTS
+      exception instanceof HttpException &&
+      exception.getStatus() === HttpStatus.TOO_MANY_REQUESTS
     ) {
-        return this.repondre(response, {
+      return this.repondre(response, {
         status: HttpStatus.TOO_MANY_REQUESTS,
         message: 'Trop de requetes. Veuillez reessayer dans quelques instants.',
         errors: [],
-        });
+      });
     }
 
     // 1. Erreur HTTP explicite (NotFoundException, ConflictException, etc.)
     if (exception instanceof HttpException) {
-      const mapped = this.mapperHttp(exception);
-      return this.repondre(response, mapped);
+      return this.repondre(response, this.mapperHttp(exception));
     }
 
-    // 2. Erreur Prisma (detection par structure : code Pxxxx ou nom PrismaClient*)
-    if (this.estErreurPrisma(exception)) {
-      const code = (exception as any).code as string | undefined;
-      const meta = (exception as any).meta;
-
-      const mapped = this.mapperPrisma(code, meta, exception);
+    // 2. Erreur de base de donnees (PostgreSQL / TypeORM)
+    const erreurPg = this.extraireErreurPostgres(exception);
+    if (erreurPg) {
+      const mapped = this.mapperPostgres(erreurPg, exception);
 
       if (mapped.status >= 500) {
-        const messageLog = exception instanceof Error ? exception.message : String(exception);
         this.logger.error(
-          `Erreur Prisma ${code ?? 'sans code'} sur ${request.method} ${request.url} : ${messageLog}`,
+          `Erreur PostgreSQL ${erreurPg.code ?? 'sans code'} sur ${request.method} ${request.url} : ` +
+            `${exception instanceof Error ? exception.message : String(exception)}`,
         );
       }
 
       return this.repondre(response, mapped);
     }
 
-    // 3. Fallback : erreur inattendue
-    const messageLog = exception instanceof Error ? exception.message : String(exception);
+    // 3. Erreur metier TypeORM (ressource introuvable, propriete inconnue...)
+    const erreurTypeorm = this.mapperTypeorm(exception);
+    if (erreurTypeorm) {
+      return this.repondre(response, erreurTypeorm);
+    }
+
+    // 4. Fallback : erreur inattendue
+    const messageLog =
+      exception instanceof Error ? exception.message : String(exception);
     const stackLog = exception instanceof Error ? exception.stack : undefined;
     const nameLog = (exception as any)?.name ?? 'inconnu';
     const codeLog = (exception as any)?.code ?? 'aucun';
@@ -113,190 +132,169 @@ export class AllExceptionsFilter implements ExceptionFilter {
     return { status, message, errors };
   }
 
-  private estErreurPrisma(exception: unknown): boolean {
-    if (!exception || typeof exception !== 'object') return false;
+  /**
+   * Recupere le code SQLSTATE de l'erreur, qu'elle vienne de TypeORM
+   * (QueryFailedError.driverError) ou directement du pilote pg.
+   */
+  private extraireErreurPostgres(exception: unknown): ErreurPostgres | null {
+    if (!exception || typeof exception !== 'object') return null;
     const e = exception as any;
 
-    if (typeof e.code === 'string' && /^P\d{4}$/.test(e.code)) return true;
-    if (typeof e.name === 'string' && e.name.startsWith('PrismaClient')) return true;
-    if (typeof e.message === 'string' && /Invalid `prisma\./.test(e.message)) return true;
-
-    const ctorName = e.constructor?.name;
-    if (typeof ctorName === 'string' && ctorName.startsWith('PrismaClient')) return true;
-
-    if (
-      typeof e.message === 'string' &&
-      /Unknown argument|Unknown field|Invalid value/.test(e.message)
-    ) {
-      return true;
+    const candidats: any[] = [e.driverError, e.original, e];
+    for (const candidat of candidats) {
+      if (!candidat || typeof candidat !== 'object') continue;
+      // Les codes SQLSTATE sont alphanumeriques sur 5 caracteres (23505, 22P02...)
+      if (
+        typeof candidat.code === 'string' &&
+        /^[0-9A-Z]{5}$/.test(candidat.code)
+      ) {
+        return candidat as ErreurPostgres;
+      }
     }
 
-    return false;
+    return null;
   }
 
-  private mapperPrisma(code: string | undefined, meta: any, exception: unknown): ReponseMappee {
-    const cible = meta?.target;
+  private mapperTypeorm(exception: unknown): ReponseMappee | null {
+    if (!exception || typeof exception !== 'object') return null;
+    const e = exception as any;
+    const nom = typeof e.name === 'string' ? e.name : '';
 
-    // Erreurs Prisma sans code Pxxxx (PrismaClientValidationError,
-    // PrismaClientInitializationError, etc.)
-    if (!code) {
-      const e = exception as any;
-      const nom = typeof e?.name === 'string' ? e.name : '';
-      const message = typeof e?.message === 'string' ? e.message : '';
-
-      if (nom === 'PrismaClientValidationError' || /Invalid `prisma\./.test(message)) {
-        return {
-          status: HttpStatus.BAD_REQUEST,
-          message: 'Donnees invalides envoyees a la base de donnees',
-          errors: [],
-        };
-      }
-
-      if (nom === 'PrismaClientInitializationError') {
-        return {
-          status: HttpStatus.SERVICE_UNAVAILABLE,
-          message: 'Base de donnees indisponible, veuillez reessayer plus tard',
-          errors: [],
-        };
-      }
-
-      if (nom === 'PrismaClientRustPanicError' || nom === 'PrismaClientUnknownRequestError') {
-        return {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Erreur interne du serveur',
-          errors: [],
-        };
-      }
-
-      // Erreur Prisma sans code et sans nom reconnu
+    if (nom === 'EntityNotFoundError') {
       return {
-        status: HttpStatus.BAD_REQUEST,
-        message: 'Donnees invalides envoyees a la base de donnees',
+        status: HttpStatus.NOT_FOUND,
+        message: 'Ressource non trouvee',
         errors: [],
       };
     }
 
-    switch (code) {
-      case 'P2000':
-        return {
-          status: HttpStatus.BAD_REQUEST,
-          message: 'Une valeur est trop longue pour le champ concerne',
-          errors: cible ? [`Champ : ${this.formaterCible(cible)}`] : [],
-        };
+    if (nom === 'EntityPropertyNotFoundError') {
+      return {
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Critere de recherche invalide',
+        errors: [],
+      };
+    }
 
-      case 'P2001':
-        return {
-          status: HttpStatus.NOT_FOUND,
-          message: 'Ressource non trouvee',
-          errors: [],
-        };
+    if (nom === 'QueryFailedError') {
+      // QueryFailedError sans code SQLSTATE exploitable : erreur serveur
+      return {
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Erreur interne du serveur',
+        errors: [],
+      };
+    }
 
-      case 'P2002': {
-        const champs = cible ? this.formaterCible(cible) : 'champ unique';
+    return null;
+  }
+
+  private mapperPostgres(
+    erreur: ErreurPostgres,
+    exception: unknown,
+  ): ReponseMappee {
+    switch (erreur.code) {
+      // --- Contraintes d'integrite ---
+      case '23505': {
+        const champ = this.champConcerne(erreur);
         return {
           status: HttpStatus.CONFLICT,
-          message: `Un enregistrement avec cette valeur existe deja (${champs})`,
-          errors: [`Contrainte d unicite : ${champs}`],
+          message: `Un enregistrement avec cette valeur existe deja${champ ? ` (${champ})` : ''}`,
+          errors: [
+            `Contrainte d unicite : ${champ || erreur.constraint || 'champ unique'}`,
+          ],
         };
       }
 
-      case 'P2003':
+      case '23503': {
+        const champ = this.champConcerne(erreur);
         return {
           status: HttpStatus.CONFLICT,
-          message: 'Operation impossible : des donnees liees existent ou manquent',
-          errors: cible ? [`Reference : ${this.formaterCible(cible)}`] : [],
+          message:
+            'Operation impossible : des donnees liees existent ou manquent',
+          errors: [champ ? `Reference : ${champ}` : 'Contrainte de reference'],
         };
+      }
 
-      case 'P2004':
+      case '23502': {
+        const champ = erreur.column || this.champConcerne(erreur);
+        return {
+          status: HttpStatus.BAD_REQUEST,
+          message: `Un champ obligatoire est manquant${champ ? ` (${champ})` : ''}`,
+          errors: [champ ? `Champ : ${champ}` : 'Contrainte de non-nullite'],
+        };
+      }
+
+      case '23514':
+      case '23P01':
         return {
           status: HttpStatus.BAD_REQUEST,
           message: 'Contrainte de base de donnees non respectee',
-          errors: [],
+          errors: erreur.constraint
+            ? [`Contrainte : ${erreur.constraint}`]
+            : [],
         };
 
-      case 'P2005':
-      case 'P2006':
+      // --- Valeurs invalides ---
+      case '22P02':
+        // Exemple : identifiant non-UUID envoye a une colonne uuid
         return {
           status: HttpStatus.BAD_REQUEST,
-          message: 'Valeur invalide pour un champ',
-          errors: [],
+          message: 'Identifiant ou valeur de type invalide',
+          errors: [this.detailMessage(erreur)],
         };
 
-      case 'P2007':
+      case '22001':
         return {
           status: HttpStatus.BAD_REQUEST,
-          message: 'Erreur de validation des donnees',
+          message: 'Une valeur est trop longue pour le champ concerne',
           errors: [],
         };
 
-      case 'P2008':
-      case 'P2009':
+      case '22003':
+      case '22007':
+      case '22008':
         return {
           status: HttpStatus.BAD_REQUEST,
-          message: 'Requete invalide',
-          errors: [],
+          message: 'Valeur hors limites ou format invalide pour un champ',
+          errors: [this.detailMessage(erreur)],
         };
 
-      case 'P2011': {
-        const champ = cible ? this.formaterCible(cible) : 'champ requis';
-        return {
-          status: HttpStatus.BAD_REQUEST,
-          message: `Un champ obligatoire est manquant (${champ})`,
-          errors: [],
-        };
-      }
-
-      case 'P2012':
-        return {
-          status: HttpStatus.BAD_REQUEST,
-          message: 'Une variable obligatoire est manquante',
-          errors: [],
-        };
-
-      case 'P2013':
-        return {
-          status: HttpStatus.BAD_REQUEST,
-          message: 'Argument obligatoire manquant',
-          errors: [],
-        };
-
-      case 'P2014':
-        return {
-          status: HttpStatus.CONFLICT,
-          message: 'Relation obligatoire manquante : une ressource liee est requise',
-          errors: [],
-        };
-
-      case 'P2015':
-        return {
-          status: HttpStatus.NOT_FOUND,
-          message: 'Enregistrement lie introuvable',
-          errors: [],
-        };
-
-      case 'P2020':
-        return {
-          status: HttpStatus.BAD_REQUEST,
-          message: 'Valeur hors limites pour un champ numerique',
-          errors: [],
-        };
-
-      case 'P2024':
+      // --- Disponibilite ---
+      case '40001':
+      case '40P01':
+      case '53300':
+      case '57P01':
+      case '57P03':
+      case '08000':
+      case '08003':
+      case '08006':
         return {
           status: HttpStatus.SERVICE_UNAVAILABLE,
-          message: 'Base de donnees saturee, veuillez reessayer',
+          message:
+            'Base de donnees indisponible, veuillez reessayer dans quelques instants',
           errors: [],
         };
 
-      case 'P2025':
+      // --- Erreurs de programmation (schema, requete) ---
+      case '42P01':
+      case '42703':
+      case '42601':
+      case '42883':
+      case '3D000':
+        this.logger.error(
+          `Requete invalide ou schema desynchronise (${erreur.code}) : ${this.detailMessage(erreur)}`,
+        );
         return {
-          status: HttpStatus.NOT_FOUND,
-          message: 'Ressource non trouvee ou deja supprimee',
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Erreur interne du serveur',
           errors: [],
         };
 
       default:
-        this.logger.error(`Code Prisma non mappe : ${code}`);
+        this.logger.error(
+          `Code PostgreSQL non mappe : ${erreur.code ?? 'inconnu'} ` +
+            `(${exception instanceof Error ? exception.message : String(exception)})`,
+        );
         return {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Erreur interne du serveur',
@@ -305,9 +303,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
   }
 
-  private formaterCible(cible: unknown): string {
-    if (Array.isArray(cible)) return cible.join(', ');
-    if (typeof cible === 'string') return cible;
-    return 'champ inconnu';
+  /** Extrait le ou les champs concernes depuis le detail PostgreSQL. */
+  private champConcerne(erreur: ErreurPostgres): string | null {
+    if (erreur.detail) {
+      // Exemple : 'Key (email)=(a@b.mg) already exists.'
+      const correspondance = /Key \(([^)]+)\)=/.exec(erreur.detail);
+      if (correspondance) return correspondance[1].replace(/,\s*/g, ', ');
+      // Exemple : 'Key (id)=(...) is not present in table "Projet".'
+      const reference = /is not present in table "([^"]+)"/.exec(erreur.detail);
+      if (reference) return reference[1];
+    }
+    if (erreur.column) return erreur.column;
+    if (erreur.constraint) return erreur.constraint;
+    return null;
+  }
+
+  private detailMessage(erreur: ErreurPostgres): string {
+    return erreur.detail || erreur.constraint || '';
   }
 }

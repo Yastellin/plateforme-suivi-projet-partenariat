@@ -36,7 +36,10 @@ export class ContactsController {
   @Patch(':id')
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
   @ApiOperation({ summary: 'Mettre à jour un contact' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateContactDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateContactDto,
+  ) {
     return this.contactsService.update(id, dto);
   }
 
@@ -57,7 +60,10 @@ export class ContactsDirectController {
   @Patch(':id')
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
   @ApiOperation({ summary: 'Mettre à jour un contact' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateContactDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateContactDto,
+  ) {
     return this.contactsService.update(id, dto);
   }
 

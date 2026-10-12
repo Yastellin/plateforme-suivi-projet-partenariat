@@ -23,7 +23,9 @@ export class PartenariatEtablissement {
   @Column({ type: 'uuid' })
   etablissement_id: string;
 
-  @ManyToOne(() => Partenariat, (p) => p.etablissements, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Partenariat, (p) => p.etablissements, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'partenariat_id' })
   partenariat: Partenariat;
 

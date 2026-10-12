@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+// pdfkit est un module CommonJS : l'import require est volontaire.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const PDFDocument = require('pdfkit');
 import { PdfGeneratorPort, ColonneTableau } from './pdf-generator.port';
 
@@ -12,17 +14,27 @@ export class PdfkitGeneratorAdapter implements PdfGeneratorPort {
   ): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
-        const doc = new PDFDocument({ size: 'A4', margin: 40, layout: 'landscape' });
+        const doc = new PDFDocument({
+          size: 'A4',
+          margin: 40,
+          layout: 'landscape',
+        });
         const chunks: Buffer[] = [];
         doc.on('data', (chunk) => chunks.push(chunk));
         doc.on('end', () => resolve(Buffer.concat(chunks)));
         doc.on('error', reject);
 
         // Titre
-        doc.fontSize(18).font('Helvetica-Bold').text(titre, { align: 'center' });
+        doc
+          .fontSize(18)
+          .font('Helvetica-Bold')
+          .text(titre, { align: 'center' });
         if (sousTitre) {
           doc.moveDown(0.3);
-          doc.fontSize(11).font('Helvetica').text(sousTitre, { align: 'center' });
+          doc
+            .fontSize(11)
+            .font('Helvetica')
+            .text(sousTitre, { align: 'center' });
         }
         doc.moveDown(1);
 
@@ -35,11 +47,15 @@ export class PdfkitGeneratorAdapter implements PdfGeneratorPort {
         // En-têtes
         doc.fontSize(9).font('Helvetica-Bold');
         colonnes.forEach((col, i) => {
-          doc.rect(40 + i * largeurCol, y, largeurCol, hauteurLigne).fillAndStroke('#e0e0e0', '#999999');
-          doc.fillColor('#000000').text(col.header, 45 + i * largeurCol, y + 6, {
-            width: largeurCol - 10,
-            ellipsis: true,
-          });
+          doc
+            .rect(40 + i * largeurCol, y, largeurCol, hauteurLigne)
+            .fillAndStroke('#e0e0e0', '#999999');
+          doc
+            .fillColor('#000000')
+            .text(col.header, 45 + i * largeurCol, y + 6, {
+              width: largeurCol - 10,
+              ellipsis: true,
+            });
         });
         y += hauteurLigne;
 
@@ -51,25 +67,34 @@ export class PdfkitGeneratorAdapter implements PdfGeneratorPort {
             y = 40;
           }
           colonnes.forEach((col, i) => {
-            doc.rect(40 + i * largeurCol, y, largeurCol, hauteurLigne).stroke('#cccccc');
+            doc
+              .rect(40 + i * largeurCol, y, largeurCol, hauteurLigne)
+              .stroke('#cccccc');
             const valeur = ligne[col.key] ?? '';
-            doc.fillColor('#000000').text(String(valeur), 45 + i * largeurCol, y + 6, {
-              width: largeurCol - 10,
-              ellipsis: true,
-            });
+            doc
+              .fillColor('#000000')
+              .text(String(valeur), 45 + i * largeurCol, y + 6, {
+                width: largeurCol - 10,
+                ellipsis: true,
+              });
           });
           y += hauteurLigne;
         }
 
         // Pied de page
         doc.fontSize(8).fillColor('#666666');
-        doc.text(`Genere le ${new Date().toLocaleString('fr-FR')}`, 40, doc.page.height - 40, {
-          align: 'center',
-        });
+        doc.text(
+          `Genere le ${new Date().toLocaleString('fr-FR')}`,
+          40,
+          doc.page.height - 40,
+          {
+            align: 'center',
+          },
+        );
 
         doc.end();
       } catch (err) {
-        reject(err);
+        reject(err instanceof Error ? err : new Error(String(err)));
       }
     });
   }

@@ -31,7 +31,11 @@ export class Partenariat {
   @Column({ type: 'text', nullable: true })
   objet: string | null;
 
-  @Column({ type: 'enum', enum: DomainePartenariat, enumName: 'DomainePartenariat' })
+  @Column({
+    type: 'enum',
+    enum: DomainePartenariat,
+    enumName: 'DomainePartenariat',
+  })
   domaine: DomainePartenariat;
 
   @Column({ type: 'timestamp', precision: 3 })
@@ -40,7 +44,12 @@ export class Partenariat {
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   date_fin: Date | null;
 
-  @Column({ type: 'enum', enum: StatutPartenariat, enumName: 'StatutPartenariat', default: StatutPartenariat.BROUILLON })
+  @Column({
+    type: 'enum',
+    enum: StatutPartenariat,
+    enumName: 'StatutPartenariat',
+    default: StatutPartenariat.BROUILLON,
+  })
   statut: StatutPartenariat;
 
   @Column({ type: 'text', nullable: true })

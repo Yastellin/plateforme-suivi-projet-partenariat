@@ -29,10 +29,19 @@ export class Notification {
   @Column({ type: 'text' })
   message: string;
 
-  @Column({ type: 'enum', enum: TypeNotification, enumName: 'TypeNotification' })
+  @Column({
+    type: 'enum',
+    enum: TypeNotification,
+    enumName: 'TypeNotification',
+  })
   type: TypeNotification;
 
-  @Column({ type: 'enum', enum: PrioriteNotification, enumName: 'PrioriteNotification', default: PrioriteNotification.MOYENNE })
+  @Column({
+    type: 'enum',
+    enum: PrioriteNotification,
+    enumName: 'PrioriteNotification',
+    default: PrioriteNotification.MOYENNE,
+  })
   priorite: PrioriteNotification;
 
   @Column({ type: 'timestamp', precision: 3 })

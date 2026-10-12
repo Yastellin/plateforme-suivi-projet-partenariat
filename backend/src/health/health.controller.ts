@@ -11,8 +11,13 @@ export class HealthController {
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Verifier que le serveur et ses dependances sont operationnels' })
-  @ApiResponse({ status: 200, description: 'Le serveur et la base de donnees repondent' })
+  @ApiOperation({
+    summary: 'Verifier que le serveur et ses dependances sont operationnels',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Le serveur et la base de donnees repondent',
+  })
   @ApiResponse({ status: 503, description: 'Une dependance est indisponible' })
   async check() {
     return this.healthService.check();

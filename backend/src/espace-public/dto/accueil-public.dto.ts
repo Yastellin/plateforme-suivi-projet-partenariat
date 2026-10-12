@@ -1,10 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class StatistiquesPubliquesDto {
-  @ApiProperty({ description: 'Nombre de partenaires actifs visibles publiquement' })
+  @ApiProperty({
+    description: 'Nombre de partenaires actifs visibles publiquement',
+  })
   partenaires_actifs: number;
 
-  @ApiProperty({ description: 'Nombre de projets en cours (statut EN_COURS ou EN_ATTENTE)' })
+  @ApiProperty({
+    description: 'Nombre de projets en cours (statut EN_COURS ou EN_ATTENTE)',
+  })
   projets_en_cours: number;
 
   @ApiProperty({ description: 'Nombre de conventions signees ou actives' })

@@ -21,11 +21,14 @@ export class PasswordResetToken {
   @Column({ name: 'token_hash', type: 'varchar', length: 64 })
   token_hash: string;
 
-  @Column({ name: 'utilisateur_id', type: 'text' })
+  @Column({ name: 'utilisateur_id', type: 'uuid' })
   utilisateur_id: string;
 
   @ManyToOne('Utilisateur', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'utilisateur_id' })
+  @JoinColumn({
+    name: 'utilisateur_id',
+    foreignKeyConstraintName: 'fk_prt_utilisateur',
+  })
   utilisateur: Utilisateur;
 
   @Column({ name: 'expire_le', type: 'timestamptz' })

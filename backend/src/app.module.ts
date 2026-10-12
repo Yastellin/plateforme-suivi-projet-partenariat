@@ -6,7 +6,6 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { PrismaModule } from './prisma/prisma.module';
 import { PartenairesModule } from './partenaires/partenaires.module';
 import { PartenariatsModule } from './partenariats/partenariats.module';
 import { ProjetsModule } from './projets/projets.module';
@@ -37,9 +36,9 @@ import { MailModule } from './mail/mail.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    DatabaseModule,
     // Rate limiting global : 100 requetes par minute et par IP.
     // Le TTL est en millisecondes dans @nestjs/throttler v6.
-    DatabaseModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -50,7 +49,6 @@ import { MailModule } from './mail/mail.module';
     }),
     EventEmitterModule.forRoot(),
     HealthModule,
-    PrismaModule,
     AuthModule,
     EtablissementsModule,
     PartenairesModule,

@@ -57,7 +57,12 @@ export class Projet {
   @Column({ type: 'timestamp', precision: 3 })
   date_fin_prevue: Date;
 
-  @Column({ type: 'enum', enum: StatutProjet, enumName: 'StatutProjet', default: StatutProjet.BROUILLON })
+  @Column({
+    type: 'enum',
+    enum: StatutProjet,
+    enumName: 'StatutProjet',
+    default: StatutProjet.BROUILLON,
+  })
   statut: StatutProjet;
 
   @Column({ default: false })

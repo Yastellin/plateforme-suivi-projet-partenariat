@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { CreateBailleurDto } from './dto/create-bailleur.dto';
@@ -44,7 +48,9 @@ export class BailleursService {
         where: { nom: ILike(dto.nom) },
       });
       if (existant && existant.id !== id) {
-        throw new ConflictException(`Un bailleur nomme "${dto.nom}" existe deja`);
+        throw new ConflictException(
+          `Un bailleur nomme "${dto.nom}" existe deja`,
+        );
       }
     }
     await this.bailleurRepo.update(id, {

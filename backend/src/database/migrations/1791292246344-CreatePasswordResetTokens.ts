@@ -1,8 +1,14 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreatePasswordResetTokens1791292246344
-  implements MigrationInterface
-{
+/**
+ * Table des jetons de reinitialisation de mot de passe.
+ *
+ * Note : "utilisateur_id" est de type uuid (et non text) afin de rester
+ * compatible avec la cle primaire "Utilisateur"."id" (uuid) definie par
+ * l'entite Utilisateur et par la migration InitSchema. Une FK de type
+ * incompatible est refusee par PostgreSQL.
+ */
+export class CreatePasswordResetTokens1791292246344 implements MigrationInterface {
   name = 'CreatePasswordResetTokens1791292246344';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -10,7 +16,7 @@ export class CreatePasswordResetTokens1791292246344
       CREATE TABLE "password_reset_tokens" (
         "id" text NOT NULL,
         "token_hash" character varying(64) NOT NULL,
-        "utilisateur_id" text NOT NULL,
+        "utilisateur_id" uuid NOT NULL,
         "expire_le" TIMESTAMP WITH TIME ZONE NOT NULL,
         "utilise_le" TIMESTAMP WITH TIME ZONE,
         "cree_le" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),

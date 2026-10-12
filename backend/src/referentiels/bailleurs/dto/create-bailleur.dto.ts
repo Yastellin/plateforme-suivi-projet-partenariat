@@ -7,7 +7,9 @@ export class CreateBailleurDto {
   @MinLength(2)
   nom: string;
 
-  @ApiPropertyOptional({ example: 'Bailleur principal pour les projets de recherche' })
+  @ApiPropertyOptional({
+    example: 'Bailleur principal pour les projets de recherche',
+  })
   @IsOptional()
   @IsString()
   description?: string;

@@ -17,7 +17,9 @@ export class CreateProjetDto {
   @MinLength(2)
   nom: string;
 
-  @ApiPropertyOptional({ example: 'Étude de la biodiversité dans les Hautes Terres malgaches' })
+  @ApiPropertyOptional({
+    example: 'Étude de la biodiversité dans les Hautes Terres malgaches',
+  })
   @IsOptional()
   @IsString()
   intitule_officiel?: string;
@@ -83,7 +85,9 @@ export class CreateProjetDto {
   @IsUUID('4', { each: true })
   sites_ids?: string[];
 
-  @ApiPropertyOptional({ description: 'ID de l\'établissement (PRÉSIDENCE uniquement)' })
+  @ApiPropertyOptional({
+    description: "ID de l'établissement (PRÉSIDENCE uniquement)",
+  })
   @IsOptional()
   @IsUUID()
   etablissement_id?: string;

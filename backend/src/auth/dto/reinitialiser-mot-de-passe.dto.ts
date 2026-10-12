@@ -9,9 +9,14 @@ export class ReinitialiserMotDePasseDto {
   @MaxLength(128, { message: 'Le token de reinitialisation est invalide.' })
   token: string;
 
-  @ApiProperty({ description: 'Nouveau mot de passe', example: 'NouveauMotDePasse1' })
+  @ApiProperty({
+    description: 'Nouveau mot de passe',
+    example: 'NouveauMotDePasse1',
+  })
   @IsString()
-  @MinLength(8, { message: 'Le mot de passe doit contenir au moins 8 caracteres.' })
+  @MinLength(8, {
+    message: 'Le mot de passe doit contenir au moins 8 caracteres.',
+  })
   @MaxLength(72, { message: 'Le mot de passe est trop long.' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
     message:

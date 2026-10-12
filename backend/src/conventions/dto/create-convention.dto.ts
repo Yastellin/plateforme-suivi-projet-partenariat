@@ -15,7 +15,9 @@ export class CreateConventionDto {
   @MinLength(3)
   reference: string;
 
-  @ApiProperty({ example: 'Convention de partenariat FDS - Universite de Toulouse' })
+  @ApiProperty({
+    example: 'Convention de partenariat FDS - Universite de Toulouse',
+  })
   @IsString()
   @MinLength(3)
   titre: string;
@@ -40,7 +42,9 @@ export class CreateConventionDto {
   @IsEnum(StatutConvention)
   statut?: StatutConvention;
 
-  @ApiPropertyOptional({ example: 'Convention cadre pour les echanges academiques' })
+  @ApiPropertyOptional({
+    example: 'Convention cadre pour les echanges academiques',
+  })
   @IsOptional()
   @IsString()
   description?: string;

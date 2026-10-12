@@ -71,7 +71,9 @@ export class DocumentsService {
     }
 
     // Enregistrer le fichier via le port de stockage
-    const dossier = dto.projet_id ? `projets/${dto.projet_id}` : `conventions/${dto.convention_id}`;
+    const dossier = dto.projet_id
+      ? `projets/${dto.projet_id}`
+      : `conventions/${dto.convention_id}`;
     const urlFichier = await this.storage.enregistrer(fichier, dossier);
 
     const document = this.documentRepo.create({

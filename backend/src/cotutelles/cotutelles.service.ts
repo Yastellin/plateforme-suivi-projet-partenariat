@@ -163,9 +163,7 @@ export class CotutellesService {
   async archiver(id: string): Promise<CotutelleResponseDto> {
     await this.findOne(id);
     await this.cotutelleRepo.update(id, { archive: true });
-    return this.mapToResponse(
-      await this.cotutelleRepo.findOneByOrFail({ id }),
-    );
+    return this.mapToResponse(await this.cotutelleRepo.findOneByOrFail({ id }));
   }
 
   private mapToResponse(data: CotutelleThese): CotutelleResponseDto {

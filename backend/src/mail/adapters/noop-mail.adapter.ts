@@ -7,12 +7,13 @@ import type { MailMessage, MailPort } from '../mail.port';
 export class NoopMailAdapter implements MailPort {
   private readonly logger = new Logger(NoopMailAdapter.name);
 
-  async envoyer(message: MailMessage): Promise<void> {
+  envoyer(message: MailMessage): Promise<void> {
     this.logger.log(
       `[NOOP MAIL] destinataire=${message.destinataire} sujet="${message.sujet}"`,
     );
     // Le contenu est logue au meme niveau pour permettre la recuperation
     // du lien de reinitialisation en developpement.
     this.logger.log(message.contenu_texte ?? message.contenu_html);
+    return Promise.resolve();
   }
 }

@@ -1,5 +1,11 @@
 import {
-  Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, BeforeInsert, Unique,
+  Entity,
+  PrimaryColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  BeforeInsert,
+  Unique,
 } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { Projet } from './projet.entity';

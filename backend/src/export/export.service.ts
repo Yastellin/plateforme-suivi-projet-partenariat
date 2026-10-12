@@ -24,7 +24,8 @@ const MIME_XLSX =
 export class ExportService {
   constructor(
     @InjectRepository(Projet) private projetRepo: Repository<Projet>,
-    @InjectRepository(Convention) private conventionRepo: Repository<Convention>,
+    @InjectRepository(Convention)
+    private conventionRepo: Repository<Convention>,
     @Inject(PDF_GENERATOR_PORT) private pdfGenerator: PdfGeneratorPort,
     @Inject(EXCEL_GENERATOR_PORT) private excelGenerator: ExcelGeneratorPort,
   ) {}
@@ -62,7 +63,11 @@ export class ExportService {
     const date = this.dateFichier();
     const buffer =
       format === 'pdf'
-        ? await this.pdfGenerator.genererTableau('Export des projets', colonnes, lignes)
+        ? await this.pdfGenerator.genererTableau(
+            'Export des projets',
+            colonnes,
+            lignes,
+          )
         : await this.excelGenerator.genererTableau('Projets', colonnes, lignes);
     return {
       buffer,

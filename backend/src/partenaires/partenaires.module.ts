@@ -7,10 +7,7 @@ import { Partenaire } from './entities/partenaire.entity';
 import { Contact } from './entities/contact.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Partenaire, Contact]),
-    ContactsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Partenaire, Contact]), ContactsModule],
   controllers: [PartenairesController],
   providers: [PartenairesService],
   exports: [PartenairesService, TypeOrmModule],
