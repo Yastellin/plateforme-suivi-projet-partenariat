@@ -21,6 +21,7 @@ export function PartenariatChampsGeneraux({ register, errors, autoFocus = false 
     <div>
       <FloatingLabelInput
         label="Intitulé"
+        requis
         autoFocus={autoFocus}
         placeholder="Ex : Convention-cadre de coopération en formation"
         erreur={errors.intitule?.message}
@@ -29,7 +30,7 @@ export function PartenariatChampsGeneraux({ register, errors, autoFocus = false 
 
       <div className="mb-4">
         <label htmlFor="domaine" className={CLASSE_LIBELLE}>
-          Domaine
+          Domaine <span className="text-[var(--status-expire-fg)]">*</span>
         </label>
         <select
           id="domaine"
@@ -51,7 +52,7 @@ export function PartenariatChampsGeneraux({ register, errors, autoFocus = false 
       </div>
 
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-        <DateInput label="Date de début" erreur={errors.date_debut?.message} {...register('date_debut')} />
+        <DateInput label="Date de début" requis erreur={errors.date_debut?.message} {...register('date_debut')} />
         <DateInput
           label="Date de fin"
           aide="Facultative. Doit être postérieure à la date de début."

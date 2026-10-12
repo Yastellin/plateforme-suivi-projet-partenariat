@@ -9,6 +9,7 @@ import {
   type ApplicationTest,
 } from './harness/application-test';
 import { donnees, enteteBearer } from './harness/jetons';
+import { dateIsoDans } from './harness/dates';
 
 describe('Conventions (e2e)', () => {
   let ctx: ApplicationTest;
@@ -50,8 +51,8 @@ describe('Conventions (e2e)', () => {
         .send({
           reference: 'CONV-2026-100',
           titre: 'Convention de mobilité étudiante',
-          date_debut: '2026-02-01T00:00:00.000Z',
-          date_fin: '2029-01-31T00:00:00.000Z',
+          date_debut: dateIsoDans(30),
+          date_fin: dateIsoDans(1200),
           description: 'Accueil d étudiants en master',
           partenariat_id: partenariatId,
         })

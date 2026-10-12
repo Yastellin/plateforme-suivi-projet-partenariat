@@ -6,8 +6,9 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, IsNull, Repository } from 'typeorm';
 import { UploadDocumentDto } from './dto/upload-document.dto';
+import { QueryDocumentDto } from './dto/query-document.dto';
 import { DocumentResponseDto } from './dto/document-response.dto';
 import { STORAGE_PORT } from '../storage/storage.port';
 import type { StoragePort } from '../storage/storage.port';
@@ -99,6 +100,29 @@ export class DocumentsService {
     const document = await this.findOne(id);
     const chemin = `${process.cwd()}${document.url_fichier}`;
     return { chemin, nom: document.nom_fichier };
+  }
+
+  /** Liste paginee, filtrable par projet, convention, type ou nom de fichier. */
+  async findAll(query: QueryDocumentDto) {
+    const { page = 1, limit = 20, projet_id, convention_id, type, nom } = query;
+
+    const where: FindOptionsWhere<Document> = {};
+    if (projet_id) where.projet_id = projet_id;
+    if (convention_id) where.convention_id = convention_id;
+    if (type) where.type = type;
+    if (nom) where.nom_fichier = ILike(`%${nom}%`);
+
+    const [data, total] = await this.documentRepo.findAndCount({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { created_at: 'DESC' },
+    });
+
+    return {
+      data: data.map((document) => this.mapToResponse(document)),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findVersions(id: string): Promise<DocumentResponseDto[]> {

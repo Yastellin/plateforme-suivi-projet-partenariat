@@ -55,7 +55,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
       {afficherSelectionEtablissement ? (
         <div className="mb-4">
           <label htmlFor="etablissement_id" className="mb-1.5 block text-[12.5px] font-medium text-[var(--color-text-secondary)]">
-            Établissement porteur
+            Établissement porteur <span className="text-[var(--status-expire-fg)]">*</span>
           </label>
           <select
             id="etablissement_id"
@@ -80,6 +80,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <FloatingLabelInput
           label="Nom"
+          requis
           autoFocus
           placeholder="Ex : Airtel Madagascar"
           erreur={errors.nom?.message}
@@ -87,6 +88,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
         />
         <FloatingLabelInput
           label="Type"
+          requis
           placeholder="Ex : Opérateur télécom, ONG, Université"
           erreur={errors.type?.message}
           {...register('type')}
@@ -96,6 +98,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <FloatingLabelInput
           label="Pays"
+          requis
           placeholder="Ex : Madagascar"
           erreur={errors.pays?.message}
           {...register('pays')}

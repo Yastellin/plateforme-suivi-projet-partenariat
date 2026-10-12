@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   ParseUUIDPipe,
   UseInterceptors,
   UploadedFile,
@@ -23,6 +24,7 @@ import {
 import type { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { UploadDocumentDto } from './dto/upload-document.dto';
+import { QueryDocumentDto } from './dto/query-document.dto';
 import { DocumentResponseDto } from './dto/document-response.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
@@ -80,6 +82,15 @@ export class DocumentsController {
     @Body() dto: UploadDocumentDto,
   ): Promise<DocumentResponseDto> {
     return this.documentsService.upload(fichier, dto);
+  }
+
+  @Get()
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({
+    summary: 'Lister les documents (filtrable par projet ou convention)',
+  })
+  findAll(@Query() query: QueryDocumentDto) {
+    return this.documentsService.findAll(query);
   }
 
   @Get(':id')

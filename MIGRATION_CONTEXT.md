@@ -36,7 +36,7 @@ Terminé :
 | Filtre d'exceptions | traduit désormais les codes d'erreur PostgreSQL (23505, 23503, 22P02…) |
 | Seed | `npm run seed` (TypeORM), mêmes données que l'ancien seed Prisma |
 | Docker | `backend/Dockerfile` applique les migrations TypeORM au démarrage |
-| Tests | unitaires (`npm test`, 4 suites / 29 tests) et d'intégration HTTP (`npm run test:e2e`, 5 suites / 52 tests) sur PostgreSQL en mémoire |
+| Tests | unitaires (`npm test`, 5 suites / 37 tests) et d'intégration HTTP (`npm run test:e2e`, 7 suites / 83 tests) sur PostgreSQL en mémoire |
 | Build | `nest build` corrigé (voir « Pièges ») ; `npm run build` produit bien `dist/` |
 | Dépendances | `dotenv` déclaré (utilisé par le DataSource et le seed) ; imports `express` en `import type` |
 
@@ -56,8 +56,8 @@ Reste à faire :
 cd backend
 npx tsc --noEmit -p tsconfig.json   # 0 erreur
 npm run build                       # dist/main.js + ~243 fichiers .js
-npm test                            # 4 suites / 29 tests
-npm run test:e2e                    # 5 suites / 52 tests
+npm test                            # 5 suites / 37 tests
+npm run test:e2e                    # 7 suites / 83 tests
 npm run lint                        # 0 erreur
 ```
 

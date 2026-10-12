@@ -76,7 +76,7 @@ export function PublicationsListePage() {
         meta: { page: number; limit: number; total: number; totalPages: number }
       }>(
         "/publications",
-        { params: { page, limit: 25, recherche: rechercheDebouncee || undefined } },
+        { params: { page, limit: 25, titre: rechercheDebouncee || undefined } },
       )
       return reponse.data
     },

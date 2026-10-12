@@ -10,10 +10,11 @@ interface FloatingLabelInputProps extends InputHTMLAttributes<HTMLInputElement> 
   icone?: ReactNode;
   suffixe?: ReactNode;
   libelleRemonte?: boolean;
+  requis?: boolean;
 }
 
 export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInputProps>(
-  ({ label, aide, erreur, icone, suffixe, libelleRemonte = false, className, id, placeholder, ...props }, ref) => {
+  ({ label, aide, erreur, icone, suffixe, libelleRemonte = false, requis = false, className, id, placeholder, ...props }, ref) => {
     const idGenere = useId();
     const inputId = id ?? idGenere;
 
@@ -58,6 +59,11 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
             )}
           >
             {label}
+            {requis ? (
+              <span className="text-[var(--status-expire-fg)]" aria-hidden="true">
+                {' *'}
+              </span>
+            ) : null}
           </label>
 
           {suffixe ? <span className="absolute right-2 top-[10px]">{suffixe}</span> : null}

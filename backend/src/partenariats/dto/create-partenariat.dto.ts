@@ -10,6 +10,10 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DomainePartenariat } from '../../common/enums/domaine-partenariat.enum';
 import { StatutPartenariat } from '../../common/enums/statut-partenariat.enum';
+import {
+  EstDateNonPassee,
+  EstPosterieurA,
+} from '../../common/validators/dates.validator';
 
 export class CreatePartenariatDto {
   @ApiProperty({ example: 'Coopération scientifique Madagascar - France' })
@@ -31,11 +35,15 @@ export class CreatePartenariatDto {
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   @IsDateString()
+  @EstDateNonPassee()
   date_debut: string;
 
   @ApiPropertyOptional({ example: '2026-12-31T00:00:00.000Z' })
   @IsOptional()
   @IsDateString()
+  @EstPosterieurA('date_debut', {
+    message: 'La date de fin doit être postérieure à la date de début.',
+  })
   date_fin?: string;
 
   @ApiProperty({
