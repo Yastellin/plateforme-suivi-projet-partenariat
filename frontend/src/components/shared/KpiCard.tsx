@@ -1,16 +1,25 @@
 // src/components/shared/KpiCard.tsx
 
-import type { ReactNode } from 'react';
+import { createElement, type ComponentType, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 type TonDeltaKpi = 'neutre' | 'up' | 'warn';
 
 interface KpiCardProps {
-  icone?: ReactNode;
+  /**
+   * Icône de la carte :
+   * - soit un élément React (version feature, ex. <Users className="…" />),
+   * - soit un composant d'icône Lucide (version develop, ex. Users).
+   */
+  icone?: ReactNode | ComponentType<{ className?: string }>;
   libelle: string;
   valeur: number | string;
+  /** Texte du delta (feature). */
   delta?: string;
   deltaTon?: TonDeltaKpi;
+  /** Alias develop de delta / deltaTon. */
+  variation?: string;
+  variationTon?: TonDeltaKpi;
   critique?: boolean;
   className?: string;
 }
@@ -21,15 +30,32 @@ const CLASSES_DELTA: Record<TonDeltaKpi, string> = {
   warn: 'text-[#8A5A00]',
 };
 
+function estComposantIcône(icone: ReactNode | ComponentType<{ className?: string }>): icone is ComponentType<{ className?: string }> {
+  return typeof icone === 'function' || (typeof icone === 'object' && icone !== null && 'render' in icone);
+}
+
+function rendreIcône(icone: ReactNode | ComponentType<{ className?: string }> | undefined): ReactNode {
+  if (icone == null) return null;
+  if (estComposantIcône(icone)) {
+    return createElement(icone, { className: 'h-[14px] w-[14px] shrink-0' });
+  }
+  return icone;
+}
+
 export function KpiCard({
   icone,
   libelle,
   valeur,
   delta,
-  deltaTon = 'neutre',
+  deltaTon,
+  variation,
+  variationTon = 'neutre',
   critique = false,
   className,
 }: KpiCardProps) {
+  const texteDelta = delta ?? variation;
+  const tonDelta: TonDeltaKpi = deltaTon ?? variationTon;
+
   return (
     <div
       className={cn(
@@ -48,7 +74,7 @@ export function KpiCard({
               critique ? 'text-[#8A5A00]' : 'text-[var(--color-brand)]',
             )}
           >
-            {icone}
+            {rendreIcône(icone)}
           </span>
         ) : null}
         <span>{libelle}</span>
@@ -58,8 +84,8 @@ export function KpiCard({
         {valeur}
       </div>
 
-      {delta ? (
-        <p className={cn('mt-2.5 text-[12.5px] font-semibold', CLASSES_DELTA[deltaTon])}>{delta}</p>
+      {texteDelta ? (
+        <p className={cn('mt-2.5 text-[12.5px] font-semibold', CLASSES_DELTA[tonDelta])}>{texteDelta}</p>
       ) : null}
     </div>
   );
