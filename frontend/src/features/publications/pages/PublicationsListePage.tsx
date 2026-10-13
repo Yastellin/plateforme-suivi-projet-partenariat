@@ -1,8 +1,7 @@
 // src/features/publications/pages/PublicationsListePage.tsx
 
 import { useState } from "react"
-import { Link } from "react-router-dom"
-import { Newspaper, ExternalLink, Plus } from "lucide-react"
+import { Newspaper, ExternalLink } from "lucide-react"
 
 import { DataTable, type Colonne } from "@/components/shared/DataTable"
 import { TableToolbar } from "@/components/shared/TableToolbar"
@@ -12,8 +11,6 @@ import { Panel, PanelBody } from "@/components/shared/Panel"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { obtenirInfoStatut } from "@/lib/status-mappings"
 import { useDebounce } from "@/hooks/useDebounce"
-import { useAuth } from "@/hooks/useAuth"
-import { usePermissions } from "@/hooks/usePermissions"
 import { useQuery } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
 import { formaterDate } from "@/lib/format"
@@ -59,14 +56,9 @@ const COLONNES: Colonne<Publication>[] = [
 ]
 
 export function PublicationsListePage() {
-  const { utilisateur } = useAuth()
-  const permissions = usePermissions()
   const [recherche, setRecherche] = useState("")
   const [page, setPage] = useState(1)
   const rechercheDebouncee = useDebounce(recherche, 300)
-
-  const role = utilisateur?.role
-  const cheminBase = role === 'PRESIDENCE' ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur'
 
   const { data, isLoading } = useQuery({
     queryKey: ["publications", { page, recherche: rechercheDebouncee }],
@@ -87,17 +79,6 @@ export function PublicationsListePage() {
       <PageHeader
         titre="Publications"
         description={data ? `${data.meta.total} publication${data.meta.total > 1 ? "s" : ""} enregistrée${data.meta.total > 1 ? "s" : ""}` : "Chargement…"}
-        actions={
-          permissions.peutCreer ? (
-            <Link
-              to={`${cheminBase}/publications/nouveau`}
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Nouvelle publication
-            </Link>
-          ) : null
-        }
       />
 
       <Panel>

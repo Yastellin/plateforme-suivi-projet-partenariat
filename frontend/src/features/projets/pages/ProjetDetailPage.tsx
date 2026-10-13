@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Archive, ExternalLink, Send, Pencil } from 'lucide-react';
+import { Archive, ExternalLink, Send, Pencil, Newspaper } from 'lucide-react';
 import { useProjet } from '../api/useProjet';
 import { useArchiverProjet } from '../api/useArchiverProjet';
 import { ProjetInformations } from '../components/ProjetInformations';
@@ -129,6 +129,23 @@ export function ProjetDetailPage() {
               </Link>
             </PanelBody>
           </Panel>
+
+          {/* Une publication est toujours rattachee a un projet
+              (relation un-avec-un) : creation via la fiche projet. */}
+          {permissions.estPresidence ? (
+            <Panel>
+              <PanelHeader titre="Publication" sousTitre="Page publique liée au projet" />
+              <PanelBody>
+                <Link
+                  to={`${cheminBase}/publications/${projet.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+                >
+                  <Newspaper className="h-3.5 w-3.5" />
+                  Gérer la publication
+                </Link>
+              </PanelBody>
+            </Panel>
+          ) : null}
         </div>
       </div>
 
