@@ -1,4 +1,4 @@
-﻿// src/features/tableau-de-bord/pages/TableauDeBordEtablissement.tsx
+// src/features/tableau-de-bord/pages/TableauDeBordEtablissement.tsx
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -47,7 +47,7 @@ export function TableauDeBordEtablissement() {
   const { data: projets, isLoading: chargementProjets } = useProjets({
     page,
     limit: LIMITE,
-    nom: rechercheDebouncee || undefined,
+    recherche: rechercheDebouncee || undefined,
   });
 
   const projetsAffiches = (projets?.data ?? []).filter((projet) => {
