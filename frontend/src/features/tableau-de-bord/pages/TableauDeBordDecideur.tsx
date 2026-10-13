@@ -3,6 +3,12 @@ import { useTableauDeBord } from '../api/useTableauDeBord';
 import { useComparatifEtablissements } from '../api/useComparatifEtablissements';
 import { CompteursGlobaux } from '../components/CompteursGlobaux';
 import { GraphiqueComparatif } from '../components/GraphiqueComparatif';
+import { GraphiqueStatuts } from '../components/GraphiqueStatuts';
+import { ActiviteMensuelle } from '../components/ActiviteMensuelle';
+import { EcheancierListe } from '../components/EcheancierListe';
+import { BandeauEtat } from '../components/BandeauEtat';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
 
 export function TableauDeBordDecideur() {
   const { data: compteurs, isLoading: chargementCompteurs } = useTableauDeBord();
@@ -10,20 +16,44 @@ export function TableauDeBordDecideur() {
 
   return (
     <div>
-      <div className="mb-[26px]">
-        <h1 className="text-[24px] font-bold">Tableau de bord</h1>
-      </div>
+      <PageHeader
+        titre="Tableau de bord"
+        description="Vue d'ensemble comparative des établissements."
+      />
 
       <CompteursGlobaux compteurs={compteurs} chargement={chargementCompteurs} />
 
-      <section className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
-        <div className="border-b border-[var(--color-border)] px-5 py-4">
-          <h3 className="text-[15px] font-bold">Comparatif par établissement</h3>
+      <div className="mb-[22px] grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Panel>
+          <PanelHeader titre="Comparatif par établissement" sousTitre="Partenaires et projets par établissement" />
+          <PanelBody>
+            <GraphiqueComparatif donnees={comparatif} chargement={chargementComparatif} />
+          </PanelBody>
+        </Panel>
+
+        <div className="flex flex-col gap-4">
+          <Panel>
+            <PanelHeader titre="Répartition des conventions" sousTitre="Par statut" />
+            <PanelBody>
+              <GraphiqueStatuts compteurs={compteurs} chargement={chargementCompteurs} />
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader titre="Activité mensuelle" sousTitre="Conventions signées vs projets soumis" />
+            <PanelBody>
+              <ActiviteMensuelle />
+            </PanelBody>
+          </Panel>
         </div>
-        <div className="p-[18px_20px]">
-          <GraphiqueComparatif donnees={comparatif} chargement={chargementComparatif} />
-        </div>
-      </section>
+      </div>
+
+      <Panel className="mb-[22px]">
+        <PanelHeader titre="Conventions à échéance" sousTitre="Lecture seule" />
+        <EcheancierListe compact />
+      </Panel>
+
+      <BandeauEtat compteurs={compteurs} chargement={chargementCompteurs} />
     </div>
   );
 }

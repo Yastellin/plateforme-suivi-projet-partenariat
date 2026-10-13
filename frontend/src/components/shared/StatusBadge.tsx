@@ -1,10 +1,11 @@
 // src/components/shared/StatusBadge.tsx
 
-import type { ToneStatut } from '@/lib/status-mappings';
+import { obtenirInfoStatut, type ToneStatut } from '@/lib/status-mappings';
 
 interface StatusBadgeProps {
-  libelle: string;
-  tonalite: ToneStatut;
+  libelle?: string;
+  tonalite?: ToneStatut;
+  statut?: string | null;
 }
 
 const CLASSES_TONALITE: Record<ToneStatut, string> = {
@@ -16,13 +17,15 @@ const CLASSES_TONALITE: Record<ToneStatut, string> = {
   circuit: 'bg-[var(--status-circuit-bg)] text-[var(--status-circuit-fg)]',
 };
 
-export function StatusBadge({ libelle, tonalite }: StatusBadgeProps) {
+export function StatusBadge({ libelle, tonalite, statut }: StatusBadgeProps) {
+  const info = statut ? obtenirInfoStatut(statut) : { libelle: libelle ?? '-', tonalite: tonalite ?? 'archive' };
+
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-sm)] px-2.5 py-[3px] text-xs font-semibold ${CLASSES_TONALITE[tonalite]}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-sm)] px-2.5 py-[3px] text-xs font-semibold ${CLASSES_TONALITE[info.tonalite]}`}
     >
       <span className="h-[5px] w-[5px] rounded-full bg-current" />
-      {libelle}
+      {info.libelle}
     </span>
   );
 }
