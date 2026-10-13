@@ -1,10 +1,10 @@
-﻿// src/features/tableau-de-bord/api/useTableauDeBord.ts
+// src/features/tableau-de-bord/api/useTableauDeBord.ts
 
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import type { CompteursTableauDeBord, StatutProjet, TableauDeBordReponse } from '@/types/api';
 
-interface CompteursEtendus extends CompteursTableauDeBord {
+export interface CompteursEtendus extends CompteursTableauDeBord {
   conventions_signees: number;
   projets_par_statut: Record<StatutProjet, number>;
   partenariats: number;
@@ -14,7 +14,7 @@ interface CompteursEtendus extends CompteursTableauDeBord {
 
 async function recupererTableauDeBord(): Promise<CompteursEtendus> {
   const reponse = await apiClient.get<TableauDeBordReponse>('/tableau-de-bord');
-  const { compteurs, conventions_par_statut, projets_par_statut } = reponse.data ?? {};
+  const { compteurs, conventions_par_statut, projets_par_statut } = reponse.data;
 
   const repartition = compteurs?.repartition_conventions ?? {
     BROUILLON: 0,
