@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 type ToneStatusStrip = 'attention' | 'info' | 'ok';
 
-interface ItemStatusStrip {
+export interface ItemStatusStrip {
   icone: LucideIcon;
   titre: string;
   description: string;
@@ -28,7 +28,7 @@ export function StatusStrip({ items }: StatusStripProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-5 rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[18px_20px] shadow-[var(--shadow-sm)] sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-[18px] rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[15px_18px] shadow-[var(--shadow-sm)] sm:grid-cols-3">
       {items.map((item, index) => {
         const Icone = item.icone;
         const estDernier = index === items.length - 1;

@@ -17,7 +17,7 @@ export function TableToolbar({
   enfants,
 }: TableToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2.5 border-b border-[var(--color-border)] px-5 py-[13px]">
+    <div className="flex flex-wrap items-center gap-2.5 border-b border-[var(--color-border)] px-[18px] py-3">
       <div className="flex h-8 max-w-[300px] flex-1 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-page-bg)] px-2.5">
         <Search className="h-[13px] w-[13px] flex-shrink-0 text-[var(--color-text-secondary)]" />
         <input

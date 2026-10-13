@@ -1,47 +1,66 @@
 // src/components/shared/KpiCard.tsx
 
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
+type TonDeltaKpi = 'neutre' | 'up' | 'warn';
+
 interface KpiCardProps {
-  icone?: React.ReactNode;
+  icone?: ReactNode;
   libelle: string;
   valeur: number | string;
+  delta?: string;
+  deltaTon?: TonDeltaKpi;
   critique?: boolean;
   className?: string;
 }
 
-export function KpiCard({ icone, libelle, valeur, critique = false, className }: KpiCardProps) {
-  const isNumber = typeof valeur === 'number';
-  const valDisplay = isNumber ? `${valeur}` : String(valeur);
+const CLASSES_DELTA: Record<TonDeltaKpi, string> = {
+  neutre: 'text-[var(--color-text-secondary)]',
+  up: 'text-[var(--color-brand)]',
+  warn: 'text-[#8A5A00]',
+};
 
+export function KpiCard({
+  icone,
+  libelle,
+  valeur,
+  delta,
+  deltaTon = 'neutre',
+  critique = false,
+  className,
+}: KpiCardProps) {
   return (
     <div
       className={cn(
-        'rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[16px_18px] shadow-[var(--shadow-sm)]',
-        critique && 'border-red-500/20',
+        'relative overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[18px_18px_16px] shadow-[var(--shadow-sm)]',
+        critique && 'border-[var(--color-brand-moment)]',
         className,
       )}
     >
-      {icone ? (
-        <div className="flex items-start gap-3 mb-3">
-          <div className="flex-shrink-0">{icone}</div>
-          <div className="flex-1">
-            <h3 className="text-[13px] font-semibold text-[var(--color-text-primary)]">{libelle}</h3>
-            <p className="text-[14px] font-mono font-bold text-[var(--color-brand)]">{valDisplay}</p>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <h3 className="text-[13px] font-semibold text-[var(--color-text-primary)]">{libelle}</h3>
-          <p className="text-[14px] font-mono font-bold text-[var(--color-brand)]">{valDisplay}</p>
-        </div>
-      )}
+      {critique ? <div className="woven-accent absolute inset-x-0 top-0" aria-hidden="true" /> : null}
 
-      {critique && (
-        <p className="mt-2 text-[10px] text-red-500">
-          Critique
-        </p>
-      )}
+      <div className="mb-[11px] flex items-center gap-2 text-[12.5px] font-semibold text-[var(--color-text-secondary)]">
+        {icone ? (
+          <span
+            className={cn(
+              'inline-flex shrink-0 [&>svg]:h-[14px] [&>svg]:w-[14px]',
+              critique ? 'text-[#8A5A00]' : 'text-[var(--color-brand)]',
+            )}
+          >
+            {icone}
+          </span>
+        ) : null}
+        <span>{libelle}</span>
+      </div>
+
+      <div className="text-[length:var(--fs-kpi)] font-mono font-bold leading-none tracking-[-.022em] text-[var(--color-text-primary)]">
+        {valeur}
+      </div>
+
+      {delta ? (
+        <p className={cn('mt-2.5 text-[12.5px] font-semibold', CLASSES_DELTA[deltaTon])}>{delta}</p>
+      ) : null}
     </div>
   );
 }

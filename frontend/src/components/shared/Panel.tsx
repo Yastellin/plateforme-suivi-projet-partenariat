@@ -17,7 +17,7 @@ interface PanelHeaderProps {
 
 export function PanelHeader({ titre, sousTitre, action }: PanelHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-4">
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-[18px] py-[15px]">
       <div>
         <h3 className="text-[15px] font-bold text-[var(--color-text-primary)]">{titre}</h3>
         {sousTitre ? <p className="mt-1 text-[11.5px] text-[var(--color-text-secondary)]">{sousTitre}</p> : null}
