@@ -1,4 +1,4 @@
-﻿// src/features/tableau-de-bord/components/EcheancierListe.tsx
+// src/features/tableau-de-bord/components/EcheancierListe.tsx
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -30,6 +30,13 @@ const OPTIONS_FILTRE = [
 
 interface EcheancierListeProps {
   compact?: boolean;
+}
+
+function calculerJoursRestants(dateFin: string | null | undefined): number | null {
+  if (!dateFin) return null;
+  const fin = new Date(dateFin).getTime();
+  if (Number.isNaN(fin)) return null;
+  return Math.ceil((fin - Date.now()) / 86_400_000);
 }
 
 export function EcheancierListe({ compact = false }: EcheancierListeProps) {
@@ -127,6 +134,9 @@ export function EcheancierListe({ compact = false }: EcheancierListeProps) {
                 Échéance
               </th>
               <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">
+                Jours restants
+              </th>
+              <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">
                 État
               </th>
               <th scope="col" className="border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px]"><span className="sr-only">Actions</span></th>
@@ -135,6 +145,7 @@ export function EcheancierListe({ compact = false }: EcheancierListeProps) {
           <tbody>
             {lignes.map((convention) => {
               const info = LIBELLES_STATUT_CONVENTION[convention.statut] ?? LIBELLES_STATUT_CONVENTION.BROUILLON;
+              const joursRestants = calculerJoursRestants(convention.date_fin);
 
               return (
                 <tr key={convention.id} className="hover:bg-[var(--color-page-bg)]">
@@ -151,6 +162,9 @@ export function EcheancierListe({ compact = false }: EcheancierListeProps) {
                   )}
                   <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
                     {convention.date_fin ? formaterDate(convention.date_fin) : '—'}
+                  </td>
+                  <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
+                    {joursRestants === null ? '—' : `${joursRestants} j`}
                   </td>
                   <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px]">
                     <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
