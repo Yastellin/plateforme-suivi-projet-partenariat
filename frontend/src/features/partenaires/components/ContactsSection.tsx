@@ -17,10 +17,9 @@ interface ContactsSectionProps {
   peutGerer: boolean;
 }
 
-function nomComplet(contact: Contact): string {
-  return contact.prenom ? `${contact.prenom} ${contact.nom}` : contact.nom;
-}
-
+// Le backend ne stocke pas de prenom : le contact est identifie par un seul
+// champ nom complet. Le champ contact-response.dto.ts (cote backend) est vide
+// et le service renvoie l'entite brute — TODO dedie ouvert de ce cote.
 export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsSectionProps) {
   const [dialogueOuvert, setDialogueOuvert] = useState(false);
   const [contactEdite, setContactEdite] = useState<Contact | undefined>(undefined);
@@ -129,7 +128,7 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
           {contacts.map((contact) => (
             <li key={contact.id} className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold">{nomComplet(contact)}</p>
+                <p className="text-[13px] font-semibold">{contact.nom}</p>
                 {contact.fonction ? (
                   <p className="text-xs text-[var(--color-text-secondary)]">{contact.fonction}</p>
                 ) : null}
@@ -154,7 +153,7 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
                   <button
                     type="button"
                     onClick={() => ouvrirEdition(contact)}
-                    aria-label={`Modifier ${nomComplet(contact)}`}
+                    aria-label={`Modifier ${contact.nom}`}
                     className="rounded-md p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -162,7 +161,7 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
                   <button
                     type="button"
                     onClick={() => setContactASupprimer(contact)}
-                    aria-label={`Supprimer ${nomComplet(contact)}`}
+                    aria-label={`Supprimer ${contact.nom}`}
                     className="rounded-md p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--status-expire-bg)] hover:text-[var(--status-expire-fg)]"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -190,7 +189,7 @@ export function ContactsSection({ partenaireId, contacts, peutGerer }: ContactsS
             onFermer={() => setContactASupprimer(null)}
             onConfirmer={onConfirmerSuppression}
             titre="Supprimer ce contact"
-            description={`Le contact « ${contactASupprimer ? nomComplet(contactASupprimer) : ''} » sera retiré de la fiche du partenaire.`}
+            description={`Le contact « ${contactASupprimer ? contactASupprimer.nom : ''} » sera retiré de la fiche du partenaire.`}
             libelleAction="Supprimer"
             enCours={suppressionEnCours}
           />

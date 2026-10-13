@@ -29,7 +29,6 @@ interface ContactDialogProps {
 
 function valeursInitiales(contact?: Contact): ContactFormValues {
   return {
-    prenom: contact?.prenom ?? '',
     nom: contact?.nom ?? '',
     fonction: contact?.fonction ?? '',
     email: contact?.email ?? '',
@@ -86,25 +85,15 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, partenai
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSoumettre)} noValidate className="pt-2">
-            <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-              <FloatingLabelInput
-                label="Prénom"
-                requis
-                autoFocus
-                icone={<User />}
-                placeholder="Ex : Marie"
-                erreur={errors.prenom?.message}
-                {...register('prenom')}
-              />
-              <FloatingLabelInput
-                label="Nom"
-                requis
-                icone={<User />}
-                placeholder="Ex : Rakoto"
-                erreur={errors.nom?.message}
-                {...register('nom')}
-              />
-            </div>
+            <FloatingLabelInput
+              label="Nom complet"
+              requis
+              autoFocus
+              icone={<User />}
+              placeholder="Ex : Marie Dupont"
+              erreur={errors.nom?.message}
+              {...register('nom')}
+            />
 
             <FloatingLabelInput
               label="Fonction"

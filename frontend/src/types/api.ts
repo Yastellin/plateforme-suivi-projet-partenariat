@@ -161,7 +161,6 @@ export interface Etablissement {
 
 export interface Contact {
   id: string;
-  prenom: string | null;
   nom: string;
   fonction: string | null;
   email: string | null;
