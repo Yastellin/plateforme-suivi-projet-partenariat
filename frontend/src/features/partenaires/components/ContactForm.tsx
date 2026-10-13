@@ -37,6 +37,7 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
+      prenom: contact?.prenom ?? "",
       nom: contact?.nom ?? "",
       fonction: contact?.fonction ?? "",
       email: contact?.email ?? "",
@@ -46,6 +47,7 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
 
   useEffect(() => {
     reset({
+      prenom: contact?.prenom ?? "",
       nom: contact?.nom ?? "",
       fonction: contact?.fonction ?? "",
       email: contact?.email ?? "",
@@ -54,28 +56,29 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
   }, [contact, reset])
 
   const onSubmit = (valeurs: ContactFormValues) => {
-    const payload = {
-      nom: valeurs.nom,
-      fonction: valeurs.fonction || undefined,
-      email: valeurs.email || undefined,
-      telephone: valeurs.telephone || undefined,
-    }
     if (contact) {
       modification.mutate(
-        { id: contact.id, payload },
+        { id: contact.id, partenaireId, valeurs },
         { onSuccess: onSucces }
       )
     } else {
-      creation.mutate(payload, { onSuccess: onSucces })
+      creation.mutate({ partenaireId, valeurs }, { onSuccess: onSucces })
     }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="contact-nom">Nom</Label>
-        <TextInputSanitized id="contact-nom" maxLength={255} aria-invalid={!!errors.nom} {...register("nom")} />
-        {errors.nom && <p className="text-sm text-destructive">{errors.nom.message}</p>}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="contact-prenom" requis>Prénom</Label>
+          <TextInputSanitized id="contact-prenom" maxLength={255} aria-invalid={!!errors.prenom} {...register("prenom")} />
+          {errors.prenom && <p className="text-sm text-destructive">{errors.prenom.message}</p>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="contact-nom" requis>Nom</Label>
+          <TextInputSanitized id="contact-nom" maxLength={255} aria-invalid={!!errors.nom} {...register("nom")} />
+          {errors.nom && <p className="text-sm text-destructive">{errors.nom.message}</p>}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">

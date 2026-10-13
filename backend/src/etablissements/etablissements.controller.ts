@@ -1,5 +1,10 @@
 import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { EtablissementsService } from './etablissements.service';
 import { EtablissementResponseDto } from './dto/etablissement-response.dto';
 
@@ -19,7 +24,9 @@ export class EtablissementsController {
   @Get(':id')
   @ApiOperation({ summary: 'Obtenir un établissement par ID' })
   @ApiResponse({ status: 200, type: EtablissementResponseDto })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<EtablissementResponseDto> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<EtablissementResponseDto> {
     return this.etablissementsService.findOne(id);
   }
 }

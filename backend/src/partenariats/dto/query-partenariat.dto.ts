@@ -1,8 +1,16 @@
-import { IsOptional, IsString, IsEnum, IsUUID, IsDateString, IsBoolean } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsUUID,
+  IsDateString,
+  IsBoolean,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { DomainePartenariat, StatutPartenariat } from '@prisma/client';
+import { DomainePartenariat } from '../../common/enums/domaine-partenariat.enum';
+import { StatutPartenariat } from '../../common/enums/statut-partenariat.enum';
 
 export class QueryPartenariatDto extends PaginationQueryDto {
   @ApiPropertyOptional()
@@ -40,9 +48,11 @@ export class QueryPartenariatDto extends PaginationQueryDto {
   @IsDateString()
   date_debut_to?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrer sur archive (true pour voir les archivés)' })
+  @ApiPropertyOptional({
+    description: 'Filtrer sur archive (true pour voir les archivés)',
+  })
   @IsOptional()
   @IsBoolean()
-  @Transform(({ value }) => value === 'true')  // Convertit le string "true" en boolean
+  @Transform(({ value }) => value === 'true') // Convertit le string "true" en boolean
   archive?: boolean;
 }

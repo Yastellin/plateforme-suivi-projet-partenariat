@@ -42,8 +42,39 @@ export interface StatistiquesPubliques {
   conventions_signees: number;
 }
 
+export interface PublicationAccueil {
+  id: string;
+  titre: string;
+  description_publique?: string | null;
+  date_publication?: string | null;
+}
+
+export interface EtablissementAccueil {
+  id: string;
+  nom: string;
+  sigle?: string | null;
+  logo_url?: string | null;
+}
+
+export interface PartenaireAccueil {
+  id: string;
+  nom: string;
+  logo_url?: string | null;
+}
+
+export interface CompteursAccueilPublic {
+  nombre_etablissements: number;
+  nombre_partenaires: number;
+  nombre_pays_partenaires: number;
+  nombre_projets_actifs: number;
+}
+
 export interface AccueilPublic {
-  statistiques: StatistiquesPubliques;
+  statistiques?: StatistiquesPubliques;
+  dernieres_publications?: PublicationAccueil[];
+  etablissements_a_la_une?: EtablissementAccueil[];
+  partenaires_a_la_une?: PartenaireAccueil[];
+  compteurs?: CompteursAccueilPublic;
 }
 
 export type StatutConvention = 'BROUILLON' | 'EN_ATTENTE_SIGNATURE' | 'SIGNEE' | 'ACTIVE' | 'SUSPENDUE' | 'EXPIREE';
@@ -70,23 +101,52 @@ export interface CompteursTableauDeBord {
   conventions_actives: number;
   conventions_a_echeance: number;
   repartition_conventions: Record<StatutConvention, number>;
+  partenaires?: number;
+  projets?: number;
+  conventions?: number;
+}
+
+export interface TableauDeBordReponse {
+  compteurs: {
+    partenaires: number;
+    partenariats: number;
+    cotutelles: number;
+    projets: number;
+    conventions: number;
+    publications: number;
+    repartition_conventions: Record<StatutConvention, number>;
+  };
+  projets_par_statut: Record<StatutProjet, number>;
+  conventions_par_statut: {
+    actives: number;
+    expirees: number;
+    bientot_expirees: number;
+    en_attente_signature: number;
+  };
+  perimetre: 'GLOBAL' | 'ETABLISSEMENT';
 }
 
 export interface EcheanceProchaine {
   id: string;
   reference: string;
-  etablissement_nom: string;
-  objet: string;
+  titre?: string;
+  objet?: string;
   date_fin: string;
-  statut: StatutConvention;
+  jours_restants?: number;
+  etablissement_nom?: string;
+  statut?: StatutConvention;
 }
 
 export interface ComparatifEtablissement {
   etablissement_id: string;
   etablissement_nom: string;
-  partenaires_actifs: number;
-  projets_en_cours: number;
-  conventions_actives: number;
+  etablissement_sigle?: string | null;
+  partenaires?: number;
+  partenaires_actifs?: number;
+  projets?: number;
+  projets_en_cours?: number;
+  projets_actifs?: number;
+  conventions?: number;
 }
 
 export interface Etablissement {
@@ -101,6 +161,7 @@ export interface Etablissement {
 
 export interface Contact {
   id: string;
+  prenom: string | null;
   nom: string;
   fonction: string | null;
   email: string | null;
@@ -140,6 +201,28 @@ export interface PartenariatEtablissementRef {
 export interface PartenariatPartenaireRef {
   id: string;
   nom: string;
+}
+export interface Projet {
+  id: string;
+  nom: string;
+  intitule_officiel: string | null;
+  type: string;
+  domaine: string | null;
+  budget: number | null;
+  date_debut: string;
+  date_fin_prevue: string;
+  statut: StatutProjet;
+  archive: boolean;
+  etablissement_id: string;
+  partenariat_id: string | null;
+  porteur_id: string | null;
+  avancement: number;
+  en_retard: boolean;
+  created_at: string;
+  updated_at: string;
+  bailleurs?: { bailleur_id: string; nom?: string }[];
+  beneficiaires?: { beneficiaire_id: string; nom?: string }[];
+  sites?: { site_id: string; nom?: string }[];
 }
 
 export interface Partenariat {

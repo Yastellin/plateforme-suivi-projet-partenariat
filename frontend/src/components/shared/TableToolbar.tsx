@@ -8,6 +8,7 @@ interface TableToolbarProps {
   onRechercheChange: (valeur: string) => void;
   placeholderRecherche: string;
   enfants?: ReactNode;
+  action?: ReactNode;
 }
 
 export function TableToolbar({
@@ -15,6 +16,7 @@ export function TableToolbar({
   onRechercheChange,
   placeholderRecherche,
   enfants,
+  action,
 }: TableToolbarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2.5 border-b border-[var(--color-border)] px-[18px] py-3">
@@ -39,7 +41,8 @@ export function TableToolbar({
         ) : null}
       </div>
 
-      {enfants ? <div className="ml-auto flex flex-wrap gap-1.5">{enfants}</div> : null}
+      {enfants ? <div className="flex flex-wrap gap-1.5">{enfants}</div> : null}
+      {action ? <div className="ml-auto flex flex-shrink-0 items-center gap-2">{action}</div> : null}
     </div>
   );
 }

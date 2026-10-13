@@ -6,7 +6,6 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { PrismaModule } from './prisma/prisma.module';
 import { PartenairesModule } from './partenaires/partenaires.module';
 import { PartenariatsModule } from './partenariats/partenariats.module';
 import { ProjetsModule } from './projets/projets.module';
@@ -28,23 +27,28 @@ import { ArchivesModule } from './archives/archives.module';
 import { RechercheModule } from './recherche/recherche.module';
 import { HealthModule } from './health/health.module';
 import { CleanupModule } from './cleanup/cleanup.module';
+import { DatabaseModule } from './database/database.module';
+import { SyntheseModule } from './synthese/synthese.module';
+import { EspacePublicModule } from './espace-public/espace-public.module';
+import { ExportModule } from './export/export.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    DatabaseModule,
     // Rate limiting global : 100 requetes par minute et par IP.
     // Le TTL est en millisecondes dans @nestjs/throttler v6.
     ThrottlerModule.forRoot({
       throttlers: [
         {
           ttl: 60000,
-          limit: 100,
+          limit: process.env.NODE_ENV === 'development' ? 1000 : 100,
         },
       ],
     }),
     EventEmitterModule.forRoot(),
     HealthModule,
-    PrismaModule,
     AuthModule,
     EtablissementsModule,
     PartenairesModule,
@@ -62,12 +66,14 @@ import { CleanupModule } from './cleanup/cleanup.module';
     ArchivesModule,
     RechercheModule,
     CleanupModule,
+    SyntheseModule,
+    EspacePublicModule,
+    ExportModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    // Le ThrottlerGuard doit passer AVANT JwtAuthGuard pour limiter
-    // les tentatives meme sur les routes publiques (ex : /auth/login).
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

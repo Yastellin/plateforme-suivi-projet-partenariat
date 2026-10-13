@@ -1,98 +1,137 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend — Plateforme de suivi des projets et partenariats
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API NestJS 11 + TypeORM + PostgreSQL 16 de l'Université de Fianarantsoa.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+| Élément | Choix |
+|---|---|
+| Framework | NestJS 11 |
+| ORM | TypeORM 0.3 (`synchronize: false`, migrations versionnées) |
+| Base de données | PostgreSQL 16 |
+| Authentification | JWT (access 1 h + refresh 7 j, rotation des refresh tokens) |
+| Documentation | Swagger sur `/api/docs` |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Démarrage
 
 ```bash
-$ npm install
+npm install
+
+# 1. Variables d'environnement
+cp .env.example .env        # renseigner DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET
+
+# 2. Schema de la base (migrations TypeORM)
+npm run migration:run
+
+# 3. Donnees de demonstration (optionnel)
+npm run seed                # comptes de test avec le mot de passe "password123"
+
+# 4. API
+npm run start:dev           # http://localhost:3000/api
 ```
 
-## Compile and run the project
+Comptes créés par le seed :
+
+| Compte | Rôle |
+|---|---|
+| `presidence@univ-fianarantsoa.mg` | PRESIDENCE |
+| `fds@univ-fianarantsoa.mg` | ETABLISSEMENT (Faculté des Sciences) |
+| `flsh@univ-fianarantsoa.mg` | ETABLISSEMENT (Faculté des Lettres et Sciences Humaines) |
+| `president@univ-fianarantsoa.mg` | DECIDEUR |
+
+## Migrations
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run migration:run        # applique les migrations en attente
+npm run migration:revert     # annule la derniere migration
+npm run migration:generate -- src/database/migrations/NomDeLaMigration
 ```
 
-## Run tests
+Le schéma initial (`src/database/migrations/1791200000000-InitSchema.ts`) est
+**généré automatiquement à partir des entités** :
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx ts-node scripts/generer-migration-initiale.ts --verifier
 ```
 
-## Deployment
+Ce script démarre un PostgreSQL en mémoire, laisse TypeORM construire le
+schéma, contrôle l'absence de dérive avec les entités puis réécrit la
+migration initiale. Ne pas modifier ce fichier à la main.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Tests
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm test          # tests unitaires (Jest)
+npm run test:e2e  # tests d'integration HTTP (NestJS + PostgreSQL en memoire)
+npm run lint      # ESLint
+npm run format    # Prettier
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Les tests d'intégration utilisent **PGlite** (PostgreSQL compilé en WebAssembly,
+exposé sur une socket TCP) : ils appliquent réellement les migrations, jouent le
+seed puis interrogent l'API complète via HTTP. Aucun Docker ni service externe
+n'est nécessaire.
 
-## Resources
+> `npm run test:e2e` active `--experimental-vm-modules` (requis par PGlite sous
+> Jest) via `cross-env`, y compris sous Windows.
 
-Check out a few resources that may come in handy when working with NestJS:
+## Contrat d'API
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Toutes les réponses respectent l'enveloppe `ITDCMADA` :
 
-## Support
+```json
+{ "status": "success", "message": "Opération réussie", "data": { }, "signature": "ITDCMADA" }
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+En cas d'erreur : `status: "error"`, `data: null`, `errors: [...]`.
 
-## Stay in touch
+Les codes d'erreur PostgreSQL sont traduits en HTTP : `23505` → 409,
+`23503` → 409, `23502` → 400, `22P02` → 400, indisponibilité → 503.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Règles de dates
 
-## License
+| Règle | Portée |
+|---|---|
+| La date de début ne peut pas être antérieure au jour courant | Création uniquement (projets, partenariats, conventions, cotutelles) |
+| La date d'échéance doit être postérieure à la date de début | Création et modification, dès que les deux dates sont fournies |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Ces règles sont portées par `src/common/validators/dates.validator.ts`
+(`@EstDateNonPassee()` et `@EstPosterieurA('date_debut')`) et appliquées aux DTO
+de création ; les DTO de modification redéclarent la date de début sans la
+première règle. Les comparaisons se font au jour près, dans le fuseau
+`TZ_APPLICATION` (défaut `Indian/Antananarivo`).
+
+## Scripts d'outillage
+
+| Script | Rôle |
+|---|---|
+| `scripts/generer-migration-initiale.ts` | Régénère la migration initiale depuis les entités (`--verifier` compare au schéma historique) |
+| `scripts/verifier-migrations.ts` | Applique toutes les migrations sur une base vierge et contrôle l'absence de dérive |
+| `scripts/serveur-pglite.ts` | Démarre un PostgreSQL en mémoire sur un port TCP (vérifications locales sans Docker) |
+
+## Vérifications avant livraison
+
+| Commande | Résultat attendu |
+|---|---|
+| `npm run build` | `dist/main.js` présent (≈ 243 fichiers `.js`) |
+| `npm test` | 5 suites, 37 tests |
+| `npm run test:e2e` | 7 suites, 83 tests |
+| `npm run lint` | 0 erreur |
+| `npm run migration:run` | applique `InitSchema` puis `CreatePasswordResetTokens` |
+
+> **Piège corrigé** : `nest build` supprime `dist/` (`deleteOutDir`) ; lorsque le
+> fichier d'informations incrémentales se trouve à la racine du projet, tsc croit
+> la compilation déjà effectuée et **n'émet rien** tout en sortant en code 0
+> (`dist/` absent, image Docker inutilisable). `tsconfig.build.json` place donc
+> `tsBuildInfoFile` dans `dist/` et `*.tsbuildinfo` est ignoré par Git.
+
+## Déploiement
+
+`backend/Dockerfile` compile l'application puis démarre avec :
+
+```sh
+npx typeorm migration:run -d dist/database/data-source.js && node dist/main
+```
+
+Les migrations sont donc appliquées automatiquement à chaque démarrage du
+conteneur (sans `ts-node`).

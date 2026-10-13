@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DomainePartenariat, StatutPartenariat } from '@prisma/client';
+import { DomainePartenariat } from '../../common/enums/domaine-partenariat.enum';
+import { StatutPartenariat } from '../../common/enums/statut-partenariat.enum';
 
 export class PartenaireSimpleDto {
   @ApiProperty()

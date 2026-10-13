@@ -23,8 +23,8 @@ export class NotificationsSchedulerService {
       await this.projetRetardRule.verifier();
       this.logger.log('Fin de l execution des regles de notification.');
     } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    this.logger.error(`Erreur lors de l execution des regles : ${message}`);
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Erreur lors de l execution des regles : ${message}`);
     }
   }
 }

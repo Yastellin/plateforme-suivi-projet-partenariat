@@ -4,6 +4,16 @@
 $API = "http://localhost:3000/api"
 $PASS = "password123"
 
+# Dates de test calculees par rapport au jour courant : les jeux de donnees
+# restent valides quelle que soit la date d'execution (regle « date de debut
+# aujourd'hui ou posterieure »).
+function DateIso {
+    param([int]$Jours)
+    $format = "yyyy-MM-ddTHH:mm:ss.fff"
+    $jour = [datetime]::UtcNow.AddDays($Jours)
+    return $jour.ToString($format, [System.Globalization.CultureInfo]::InvariantCulture) + "Z"
+}
+
 $script:TESTS_PASS = 0
 $script:TESTS_FAIL = 0
 
@@ -96,8 +106,8 @@ $r = Invoke-Api -Method POST -Url "$API/cotutelles" -Token $TOKEN_PRES -Body @{
     directeur_these_local = "Pr. Rasoa Hery"
     directeur_these_partenaire = "Pr. Dupont Marie"
     type = "COTUTELLE"
-    date_debut = "2026-01-01T00:00:00.000Z"
-    date_prevue_soutenance = "2029-06-30T00:00:00.000Z"
+    date_debut = (DateIso 60)
+    date_prevue_soutenance = (DateIso 1500)
     financement_bourse = "Bourse SCAC 2026"
     etat_avancement = "Premiere annee en cours"
     etablissement_id = $ETAB_ID
@@ -162,7 +172,7 @@ Section "6. Permissions"
 $r = Invoke-Api -Method POST -Url "$API/cotutelles" -Token $TOKEN_ETAB -Body @{
     nom_doctorant = "Test interdit"
     type = "COTUTELLE"
-    date_debut = "2026-01-01T00:00:00.000Z"
+    date_debut = (DateIso 60)
     etablissement_id = $ETAB_ID
     partenaire_id = $PARTENAIRE_ID
 }
@@ -178,7 +188,7 @@ Check "Modification par Etablissement (403)" 403 $r.StatusCode
 $r = Invoke-Api -Method POST -Url "$API/cotutelles" -Token $TOKEN_DEC -Body @{
     nom_doctorant = "Test interdit"
     type = "COTUTELLE"
-    date_debut = "2026-01-01T00:00:00.000Z"
+    date_debut = (DateIso 60)
     etablissement_id = $ETAB_ID
     partenaire_id = $PARTENAIRE_ID
 }

@@ -4,88 +4,110 @@ import {
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ILike, Repository } from 'typeorm';
 import { CreatePartenariatDto } from './dto/create-partenariat.dto';
 import { UpdatePartenariatDto } from './dto/update-partenariat.dto';
 import { QueryPartenariatDto } from './dto/query-partenariat.dto';
 import { PartenariatResponseDto } from './dto/partenariat-response.dto';
-import { StatutPartenariat } from '@prisma/client';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Partenariat } from './entities/partenariat.entity';
+import { PartenariatEtablissement } from './entities/partenariat-etablissement.entity';
+import { PartenariatPartenaire } from './entities/partenariat-partenaire.entity';
+import { Etablissement } from '../etablissements/entities/etablissement.entity';
+import { Partenaire } from '../partenaires/entities/partenaire.entity';
+import { StatutPartenariat } from '../common/enums/statut-partenariat.enum';
 import { TypeNotification } from '../common/enums/type-notification.enum';
 import { PrioriteNotification } from '../common/enums/priorite-notification.enum';
-import { Role } from '../common/enums/role.enum'
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class PartenariatsService {
   constructor(
-    private prisma: PrismaService,
+    @InjectRepository(Partenariat)
+    private partenariatRepo: Repository<Partenariat>,
+    @InjectRepository(PartenariatEtablissement)
+    private peRepo: Repository<PartenariatEtablissement>,
+    @InjectRepository(PartenariatPartenaire)
+    private ppRepo: Repository<PartenariatPartenaire>,
+    @InjectRepository(Etablissement)
+    private etablissementRepo: Repository<Etablissement>,
+    @InjectRepository(Partenaire)
+    private partenaireRepo: Repository<Partenaire>,
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async create(etablissementId: string, dto: CreatePartenariatDto): Promise<PartenariatResponseDto> {
-    // Transaction : les verifications et la creation sont atomiques.
-    // Evite qu'un etablissement ou partenaire soit supprime entre la
-    // verification et l'insertion (race condition TOCTOU).
-    return this.prisma.$transaction(async (tx) => {
-      const etablissement = await tx.etablissement.findUnique({
-        where: { id: etablissementId },
+  async create(
+    etablissementId: string,
+    dto: CreatePartenariatDto,
+  ): Promise<PartenariatResponseDto> {
+    return this.partenariatRepo.manager.transaction(async (manager) => {
+      const etablissementRepo = manager.getRepository(Etablissement);
+      const partenaireRepo = manager.getRepository(Partenaire);
+      const partenariatRepo = manager.getRepository(Partenariat);
+      const peRepo = manager.getRepository(PartenariatEtablissement);
+      const ppRepo = manager.getRepository(PartenariatPartenaire);
+
+      const etablissement = await etablissementRepo.findOneBy({
+        id: etablissementId,
       });
       if (!etablissement) {
         throw new NotFoundException('Établissement non trouvé');
       }
 
+      const etablissements = new Map<string, Etablissement>();
       for (const etabId of dto.etablissements_ids) {
-        const etab = await tx.etablissement.findUnique({
-          where: { id: etabId },
-        });
+        const etab = await etablissementRepo.findOneBy({ id: etabId });
         if (!etab) {
           throw new NotFoundException(`Établissement ${etabId} non trouvé`);
         }
+        etablissements.set(etabId, etab);
       }
 
+      const partenaires = new Map<string, Partenaire>();
       for (const partId of dto.partenaires_ids) {
-        const part = await tx.partenaire.findUnique({
-          where: { id: partId },
-        });
+        const part = await partenaireRepo.findOneBy({ id: partId });
         if (!part) {
           throw new NotFoundException(`Partenaire ${partId} non trouvé`);
         }
+        partenaires.set(partId, part);
       }
 
-      const partenariat = await tx.partenariat.create({
-        data: {
-          intitule: dto.intitule,
-          objet: dto.objet,
-          domaine: dto.domaine,
-          date_debut: new Date(dto.date_debut),
-          date_fin: dto.date_fin ? new Date(dto.date_fin) : undefined,
-          statut: dto.statut || StatutPartenariat.BROUILLON,
-          actions_realisees: dto.actions_realisees,
-          actions_en_cours: dto.actions_en_cours,
-          actions_prevues: dto.actions_prevues,
-          resultats_obtenus: dto.resultats_obtenus,
-          difficultes_contraintes: dto.difficultes_contraintes,
-          perspectives_recommandations: dto.perspectives_recommandations,
-          etablissements: {
-            create: dto.etablissements_ids.map((id) => ({
-              etablissement_id: id,
-            })),
-          },
-          partenaires: {
-            create: dto.partenaires_ids.map((id) => ({
-              partenaire_id: id,
-            })),
-          },
-        },
-        include: {
-          etablissements: {
-            include: { etablissement: true },
-          },
-          partenaires: {
-            include: { partenaire: true },
-          },
-        },
+      const partenariat = partenariatRepo.create({
+        intitule: dto.intitule,
+        objet: dto.objet ?? null,
+        domaine: dto.domaine,
+        date_debut: new Date(dto.date_debut),
+        date_fin: dto.date_fin ? new Date(dto.date_fin) : null,
+        statut: dto.statut || StatutPartenariat.BROUILLON,
+        actions_realisees: dto.actions_realisees ?? null,
+        actions_en_cours: dto.actions_en_cours ?? null,
+        actions_prevues: dto.actions_prevues ?? null,
+        resultats_obtenus: dto.resultats_obtenus ?? null,
+        difficultes_contraintes: dto.difficultes_contraintes ?? null,
+        perspectives_recommandations: dto.perspectives_recommandations ?? null,
+        archive: false,
       });
+      await partenariatRepo.save(partenariat);
+
+      partenariat.etablissements = await peRepo.save(
+        dto.etablissements_ids.map((id) =>
+          peRepo.create({
+            partenariat_id: partenariat.id,
+            etablissement_id: id,
+            etablissement: etablissements.get(id)!,
+          }),
+        ),
+      );
+      partenariat.partenaires = await ppRepo.save(
+        dto.partenaires_ids.map((id) =>
+          ppRepo.create({
+            partenariat_id: partenariat.id,
+            partenaire_id: id,
+            partenaire: partenaires.get(id)!,
+          }),
+        ),
+      );
 
       return this.mapToResponse(partenariat);
     });
@@ -93,43 +115,28 @@ export class PartenariatsService {
 
   async findAll(query: QueryPartenariatDto, etablissementId?: string) {
     const { page = 1, limit = 20, intitule, domaine, statut, archive } = query;
-
-    const where: any = { archive: false };
-
-      // Si archive est fourni, on l'utilise, sinon on prend false (par défaut)
-    if (archive !== undefined) {
-        where.archive = archive;
-    } else {
-        where.archive = false;
-    }
+    const where: any = { archive: archive ?? false };
 
     if (etablissementId) {
-      where.etablissements = { some: { etablissement_id: etablissementId } };
+      where.etablissements = { etablissement_id: etablissementId };
     }
-    if (intitule) where.intitule = { contains: intitule, mode: 'insensitive' };
+    if (intitule) where.intitule = ILike(`%${intitule}%`);
     if (domaine) where.domaine = domaine;
     if (statut) where.statut = statut;
 
-    const [data, total] = await Promise.all([
-      this.prisma.partenariat.findMany({
-        where,
-        include: {
-          etablissements: {
-            include: { etablissement: true },
-          },
-          partenaires: {
-            include: { partenaire: true },
-          },
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { created_at: 'desc' },
-      }),
-      this.prisma.partenariat.count({ where }),
-    ]);
+    const [data, total] = await this.partenariatRepo.findAndCount({
+      where,
+      relations: {
+        etablissements: { etablissement: true },
+        partenaires: { partenaire: true },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { created_at: 'DESC' },
+    });
 
     return {
-      data: data.map((p) => this.mapToResponse(p)),
+      data: data.map((partenariat) => this.mapToResponse(partenariat)),
       meta: {
         page,
         limit,
@@ -145,20 +152,14 @@ export class PartenariatsService {
       where.archive = false;
     }
     if (etablissementId) {
-      where.etablissements = { some: { etablissement_id: etablissementId } };
+      where.etablissements = { etablissement_id: etablissementId };
     }
 
-    // findFirst au lieu de findUnique : findUnique n'applique pas
-    // de maniere fiable les filtres sur des champs non-uniques (archive).
-    const partenariat = await this.prisma.partenariat.findFirst({
+    const partenariat = await this.partenariatRepo.findOne({
       where,
-      include: {
-        etablissements: {
-          include: { etablissement: true },
-        },
-        partenaires: {
-          include: { partenaire: true },
-        },
+      relations: {
+        etablissements: { etablissement: true },
+        partenaires: { partenaire: true },
       },
     });
 
@@ -169,114 +170,110 @@ export class PartenariatsService {
     return this.mapToResponse(partenariat);
   }
 
-  async update(id: string, dto: UpdatePartenariatDto, etablissementId?: string, userRole?: Role) {
+  async update(
+    id: string,
+    dto: UpdatePartenariatDto,
+    etablissementId?: string,
+    userRole?: Role,
+  ) {
     const existing = await this.findOne(id, etablissementId);
 
-    // Un établissement ne peut modifier qu'un partenariat en BROUILLON
-    if (userRole !== Role.PRESIDENCE && existing.statut !== StatutPartenariat.BROUILLON) {
-      throw new ForbiddenException('Ce partenariat n\'est plus modifiable (statut différent de BROUILLON)');
+    if (
+      userRole !== Role.PRESIDENCE &&
+      existing.statut !== StatutPartenariat.BROUILLON
+    ) {
+      throw new ForbiddenException(
+        "Ce partenariat n'est plus modifiable (statut différent de BROUILLON)",
+      );
     }
 
-    // Construction du payload de mise à jour
     const updateData: any = {};
     if (dto.intitule) updateData.intitule = dto.intitule;
     if (dto.objet !== undefined) updateData.objet = dto.objet;
     if (dto.domaine) updateData.domaine = dto.domaine;
     if (dto.date_debut) updateData.date_debut = new Date(dto.date_debut);
-    if (dto.date_fin !== undefined) updateData.date_fin = dto.date_fin ? new Date(dto.date_fin) : null;
+    if (dto.date_fin !== undefined) {
+      updateData.date_fin = dto.date_fin ? new Date(dto.date_fin) : null;
+    }
     if (dto.statut) updateData.statut = dto.statut;
-    if (dto.actions_realisees !== undefined) updateData.actions_realisees = dto.actions_realisees;
-    if (dto.actions_en_cours !== undefined) updateData.actions_en_cours = dto.actions_en_cours;
-    if (dto.actions_prevues !== undefined) updateData.actions_prevues = dto.actions_prevues;
-    if (dto.resultats_obtenus !== undefined) updateData.resultats_obtenus = dto.resultats_obtenus;
-    if (dto.difficultes_contraintes !== undefined) updateData.difficultes_contraintes = dto.difficultes_contraintes;
-    if (dto.perspectives_recommandations !== undefined) updateData.perspectives_recommandations = dto.perspectives_recommandations;
+    if (dto.actions_realisees !== undefined) {
+      updateData.actions_realisees = dto.actions_realisees;
+    }
+    if (dto.actions_en_cours !== undefined) {
+      updateData.actions_en_cours = dto.actions_en_cours;
+    }
+    if (dto.actions_prevues !== undefined) {
+      updateData.actions_prevues = dto.actions_prevues;
+    }
+    if (dto.resultats_obtenus !== undefined) {
+      updateData.resultats_obtenus = dto.resultats_obtenus;
+    }
+    if (dto.difficultes_contraintes !== undefined) {
+      updateData.difficultes_contraintes = dto.difficultes_contraintes;
+    }
+    if (dto.perspectives_recommandations !== undefined) {
+      updateData.perspectives_recommandations =
+        dto.perspectives_recommandations;
+    }
 
-    const updated = await this.prisma.partenariat.update({
-      where: { id },
-      data: updateData,
-      include: {
-        etablissements: {
-          include: { etablissement: true },
-        },
-        partenaires: {
-          include: { partenaire: true },
-        },
-      },
-    });
-
-    return this.mapToResponse(updated);
+    await this.partenariatRepo.update(id, updateData);
+    return this.findOne(id, etablissementId);
   }
 
   async soumettre(id: string, etablissementId?: string) {
     const partenariat = await this.findOne(id, etablissementId);
 
     if (partenariat.statut !== StatutPartenariat.BROUILLON) {
-      throw new ConflictException('Seul un partenariat en BROUILLON peut être soumis');
+      throw new ConflictException(
+        'Seul un partenariat en BROUILLON peut être soumis',
+      );
     }
 
-    const updated = await this.prisma.partenariat.update({
-      where: { id },
-      data: { statut: StatutPartenariat.EN_ATTENTE },
-      include: {
-        etablissements: {
-          include: { etablissement: true },
-        },
-        partenaires: {
-          include: { partenaire: true },
-        },
-      },
+    await this.partenariatRepo.update(id, {
+      statut: StatutPartenariat.EN_ATTENTE,
     });
 
-    // Notification : soumission du partenariat
     this.eventEmitter.emit('partenariat.soumis', {
       type: TypeNotification.PARTENARIAT_SOUMIS,
       priorite: PrioriteNotification.HAUTE,
       titre: `Partenariat soumis : ${partenariat.intitule}`,
       message: `Le partenariat "${partenariat.intitule}" a été soumis par l'établissement.`,
-      utilisateur_id: null, // Envoyer à la Présidence
+      utilisateur_id: null,
       reference_type: 'Partenariat',
       reference_id: id,
     });
 
-    return this.mapToResponse(updated);
+    return this.findOne(id, etablissementId);
   }
 
-async archiver(id: string) {
-  const partenariat = await this.prisma.partenariat.findUnique({
-    where: { id, archive: false },
-    include: {
-      etablissements: { include: { etablissement: true } },
-      partenaires: { include: { partenaire: true } },
-    },
-  });
-  if (!partenariat) throw new NotFoundException('Partenariat non trouvé');
+  async archiver(id: string) {
+    const partenariat = await this.partenariatRepo.findOne({
+      where: { id, archive: false },
+      relations: {
+        etablissements: { etablissement: true },
+        partenaires: { partenaire: true },
+      },
+    });
+    if (!partenariat) throw new NotFoundException('Partenariat non trouvé');
 
-  const projetsActifs = await this.prisma.projet.count({
-    where: {
-      partenariat_id: id,
-      archive: false,
-      statut: { notIn: ['TERMINE', 'EXPIRE'] },
-    },
-  });
-
-  if (projetsActifs > 0) {
-    throw new ConflictException(
-      'Impossible d\'archiver un partenariat avec des projets actifs',
+    const projetsActifs = await this.partenariatRepo.manager.query(
+      `SELECT COUNT(*)::int AS count
+       FROM "Projet"
+       WHERE "partenariat_id" = $1
+         AND "archive" = false
+         AND "statut" NOT IN ($2, $3)`,
+      [id, 'TERMINE', 'EXPIRE'],
     );
+
+    if (Number(projetsActifs[0].count) > 0) {
+      throw new ConflictException(
+        "Impossible d'archiver un partenariat avec des projets actifs",
+      );
+    }
+
+    await this.partenariatRepo.update(id, { archive: true });
+    return this.findOne(id, undefined, true);
   }
-
-  const archived = await this.prisma.partenariat.update({
-    where: { id },
-    data: { archive: true },
-    include: {
-      etablissements: { include: { etablissement: true } },
-      partenaires: { include: { partenaire: true } },
-    },
-  });
-
-  return this.mapToResponse(archived);
-}
 
   private mapToResponse(data: any): PartenariatResponseDto {
     return {

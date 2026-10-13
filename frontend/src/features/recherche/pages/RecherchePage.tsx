@@ -1,4 +1,5 @@
 // src/features/recherche/pages/RecherchePage.tsx
+
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Search } from "lucide-react"
@@ -7,6 +8,9 @@ import { useQuery } from "@tanstack/react-query"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/shared/EmptyState"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { Panel, PanelBody } from "@/components/shared/Panel"
+import { FilterChips } from "@/components/shared/FilterChips"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDebounce } from "@/hooks/useDebounce"
 import apiClient from "@/lib/api-client"
@@ -22,13 +26,13 @@ interface ResultatRecherche {
   description?: string
 }
 
-const FILTRES_TYPE: { value: TypeRecherche; label: string }[] = [
-  { value: "TOUT", label: "Tous" },
-  { value: "PARTENAIRES", label: "Partenaires" },
-  { value: "PARTENARIATS", label: "Partenariats" },
-  { value: "PROJETS", label: "Projets" },
-  { value: "CONVENTIONS", label: "Conventions" },
-  { value: "COTUTELLES", label: "Cotutelles" },
+const OPTIONS_FILTRE = [
+  { cle: 'TOUT', libelle: 'Tous' },
+  { cle: 'PARTENAIRES', libelle: 'Partenaires' },
+  { cle: 'PARTENARIATS', libelle: 'Partenariats' },
+  { cle: 'PROJETS', libelle: 'Projets' },
+  { cle: 'CONVENTIONS', libelle: 'Conventions' },
+  { cle: 'COTUTELLES', libelle: 'Cotutelles' },
 ]
 
 function cheminDetail(role: RoleUtilisateur, type: string, id: string): string {
@@ -56,76 +60,78 @@ export function RecherchePage() {
   })
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="font-heading text-2xl font-semibold text-foreground">Recherche</h1>
+    <div>
+      <PageHeader
+        titre="Recherche"
+        description="Recherchez un partenaire, projet, convention…"
+      />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Input
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            placeholder="Rechercher un partenaire, projet, convention..."
-            className="h-10 pl-10 text-[14px]"
+      <Panel>
+        <PanelBody>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" />
+              <Input
+                value={recherche}
+                onChange={(e) => setRecherche(e.target.value)}
+                placeholder="Rechercher un partenaire, projet, convention…"
+                className="h-10 pl-10 text-[14px]"
+              />
+            </div>
+            <FilterChips
+              options={OPTIONS_FILTRE}
+              valeur={type}
+              onChange={(valeur) => setType(valeur as TypeRecherche)}
+            />
+          </div>
+        </PanelBody>
+      </Panel>
+
+      <div className="mt-[22px]">
+        {rechercheDebouncee.length < 2 ? (
+          <EmptyState
+            icone={Search}
+            titre="Lancez une recherche"
+            description="Saisissez au moins 2 caractères pour lancer la recherche."
           />
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        </div>
-        <div className="flex gap-1">
-          {FILTRES_TYPE.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setType(f.value)}
-              className={`rounded-[var(--radius-sm)] px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                type === f.value
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {rechercheDebouncee.length < 2 ? (
-        <EmptyState
-          icon={Search}
-          titre="Lancez une recherche"
-          message="Saisissez au moins 2 caracteres pour lancer la recherche."
-        />
-      ) : isLoading ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : resultats && resultats.length > 0 ? (
-        <>
-          <p className="text-sm text-muted-foreground">
-            {resultats.length} résultat{resultats.length > 1 ? "s" : ""} trouvé{resultats.length > 1 ? "s" : ""}
-          </p>
-          <div className="flex flex-col gap-2">
-            {resultats.map((r) => (
-              <button
-                key={`${r.type}-${r.id}`}
-                onClick={() => navigate(cheminDetail(utilisateur?.role ?? "PRESIDENCE", r.type, r.id))}
-                className="flex items-start gap-3 rounded-xl border border-border p-3 text-left transition-colors hover:bg-muted/50"
-              >
-                <Badge variant="outline" className="mt-0.5 shrink-0 text-[11px]">{r.type}</Badge>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{r.titre}</p>
-                  {r.description && <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{r.description}</p>}
-                </div>
-              </button>
+        ) : isLoading ? (
+          <div className="flex flex-col gap-3">
+            {[0, 1, 2, 3, 4].map((cle) => (
+              <Skeleton key={cle} className="h-16 w-full" />
             ))}
           </div>
-        </>
-      ) : (
-        <EmptyState
-          icon={Search}
-          titre="Aucun résultat"
-          message={`Aucun résultat pour « ${rechercheDebouncee} » avec le filtre sélectionné.`}
-        />
-      )}
+        ) : resultats && resultats.length > 0 ? (
+          <Panel>
+            <PanelBody>
+              <p className="mb-3 text-[13px] text-[var(--color-text-secondary)]">
+                {resultats.length} résultat{resultats.length > 1 ? "s" : ""} trouvé{resultats.length > 1 ? "s" : ""}
+              </p>
+              <div className="flex flex-col gap-2">
+                {resultats.map((r) => (
+                  <button
+                    key={`${r.type}-${r.id}`}
+                    type="button"
+                    onClick={() => navigate(cheminDetail(utilisateur?.role ?? "PRESIDENCE", r.type, r.id))}
+                    className="flex items-start gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] p-3 text-left transition-colors hover:bg-[var(--color-page-bg)]"
+                  >
+                    <Badge variant="outline" className="mt-0.5 shrink-0 text-[11px]">{r.type}</Badge>
+                    <div className="min-w-0">
+                      <p className="text-[13.5px] font-semibold text-[var(--color-text-primary)]">{r.titre}</p>
+                      {r.description && <p className="mt-0.5 text-xs text-[var(--color-text-secondary)] line-clamp-1">{r.description}</p>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </PanelBody>
+          </Panel>
+        ) : (
+          <EmptyState
+            icone={Search}
+            titre="Aucun résultat"
+            description={`Aucun résultat pour « ${rechercheDebouncee} » avec le filtre sélectionné.`}
+          />
+        )}
+      </div>
     </div>
   )
 }

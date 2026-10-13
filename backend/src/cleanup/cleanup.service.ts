@@ -1,5 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Document } from '../documents/entities/document.entity';
+import { PhotoPublication } from '../publications/enitities/photo-publication.entity';
 import { STORAGE_PORT } from '../storage/storage.port';
 import type { StoragePort } from '../storage/storage.port';
 
@@ -21,7 +24,9 @@ export class CleanupService {
   private readonly logger = new Logger(CleanupService.name);
 
   constructor(
-    private prisma: PrismaService,
+    @InjectRepository(Document) private documentRepo: Repository<Document>,
+    @InjectRepository(PhotoPublication)
+    private photoRepo: Repository<PhotoPublication>,
     @Inject(STORAGE_PORT) private storage: StoragePort,
   ) {}
 
@@ -33,8 +38,8 @@ export class CleanupService {
 
     // Recuperer toutes les URLs referencees en base
     const [documents, photos] = await Promise.all([
-      this.prisma.document.findMany({ select: { url_fichier: true } }),
-      this.prisma.photoPublication.findMany({ select: { url_fichier: true } }),
+      this.documentRepo.find({ select: ['url_fichier'] }),
+      this.photoRepo.find({ select: ['url_fichier'] }),
     ]);
 
     const urlsReferencees = new Set<string>([

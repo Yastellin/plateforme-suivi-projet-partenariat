@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TypeDocument } from '@prisma/client';
+import { TypeDocument } from '../../common/enums/type-document.enum';
 
 export class DocumentResponseDto {
   @ApiProperty()

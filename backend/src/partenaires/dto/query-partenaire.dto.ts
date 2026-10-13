@@ -1,7 +1,8 @@
 import { IsOptional, IsString, IsEnum } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { StatutPartenaire, Visibilite } from '@prisma/client';
+import { StatutPartenaire } from '../../common/enums/statut-partenaire.enum';
+import { Visibilite } from '../../common/enums/visibilite.enum';
 
 export class QueryPartenaireDto extends PaginationQueryDto {
   @ApiPropertyOptional()
