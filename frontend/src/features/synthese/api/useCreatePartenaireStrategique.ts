@@ -1,26 +1,39 @@
-﻿// src/features/synthese/api/useCreatePartenaireStrategique.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import apiClient from "@/lib/api-client"
-import type { SynthesePartenaireStrategique } from "@/types/api"
+// src/features/synthese/api/useCreatePartenaireStrategique.ts
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import type { SynthesePartenaireStrategique } from '@/types/api';
 
-interface PayloadPartenaireStrategique {
-  etablissement_id: string
-  annee: number
-  partenaire_id: string
+export interface PayloadPartenaireStrategique {
+  etablissement_id: string;
+  annee: number;
+  partenaire_id: string;
 }
 
+async function creerPartenaireStrategique(
+  valeurs: PayloadPartenaireStrategique,
+): Promise<SynthesePartenaireStrategique> {
+  const reponse = await apiClient.post<SynthesePartenaireStrategique>(
+    '/synthese/partenaires-strategiques',
+    valeurs,
+  );
+  return reponse.data;
+}
+
+/**
+ * POST /synthese/partenaires-strategiques — réservé à la Présidence.
+ * Un conflit 409 signifie que le partenaire est déjà désigné pour
+ * l'établissement et l'année.
+ */
 export function useCreatePartenaireStrategique() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (valeurs: PayloadPartenaireStrategique) => {
-      const reponse = await apiClient.post<SynthesePartenaireStrategique>("/synthese/partenaires-strategiques", valeurs)
-      return reponse.data
+    mutationFn: creerPartenaireStrategique,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['synthese'] });
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["synthese", { etablissement_id: variables.etablissement_id, annee: variables.annee }],
-      })
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['synthese'] });
     },
-  })
+  });
 }

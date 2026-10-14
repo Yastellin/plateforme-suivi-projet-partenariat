@@ -1,4 +1,4 @@
-﻿// src/types/api.ts
+// src/types/api.ts
 
 export type RoleUtilisateur = 'PRESIDENCE' | 'ETABLISSEMENT' | 'DECIDEUR';
 
@@ -243,6 +243,63 @@ export interface Partenariat {
   updated_at: string;
   etablissements: PartenariatEtablissementRef[];
   partenaires: PartenariatPartenaireRef[];
+}
+
+// --- Synthèse annuelle (module synthese du backend) ---
+
+/** Types d'éléments narratifs acceptés par POST /synthese/items. */
+export type TypeItemSynthese = 'DOMAINE_PRINCIPAL' | 'DEFI_MAJEUR' | 'PRIORITE_FUTURE';
+
+/** Compteurs consolidés d'un établissement pour une année (GET /synthese/:id). */
+export interface SyntheseCompteurs {
+  partenaires: number;
+  conventions_actives: number;
+  conventions_expirees: number;
+  cotutelles: number;
+  projets_actifs: number;
+}
+
+/** Élément narratif : une valeur par (établissement, année, type). */
+export interface SyntheseItem {
+  id: string;
+  etablissement_id: string;
+  annee: number;
+  type: string;
+  valeur: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** Partenaire désigné comme stratégique pour un établissement et une année. */
+export interface SynthesePartenaireStrategique {
+  id: string;
+  etablissement_id?: string;
+  annee?: number;
+  partenaire_id: string;
+  partenaire_nom?: string;
+  partenaire?: Partenaire;
+}
+
+/** Synthèse d'un établissement pour une année. */
+export interface SyntheseEtablissement {
+  etablissement_id: string;
+  etablissement_nom: string;
+  annee: number;
+  compteurs: SyntheseCompteurs;
+  items: SyntheseItem[];
+  partenaires_strategiques: SynthesePartenaireStrategique[];
+}
+
+/** Synthèse globale : tous les établissements pour une année (GET /synthese). */
+export interface SyntheseGlobale {
+  annee: number;
+  etablissements: SyntheseEtablissement[];
+}
+
+/** Réponse de GET /synthese/items (liste non paginée). */
+export interface ListeSyntheseItems {
+  data: SyntheseItem[];
+  total: number;
 }
 
 // Types hérités des modules pas encore reconstruits, à retirer au fur et à mesure

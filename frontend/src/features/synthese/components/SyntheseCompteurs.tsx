@@ -1,24 +1,52 @@
-﻿// src/features/synthese/components/SyntheseCompteurs.tsx
-import { Users, Handshake, GraduationCap, FolderKanban } from "lucide-react"
-import type { SyntheseEtablissement } from "@/types/api"
+// src/features/synthese/components/SyntheseCompteurs.tsx
+import { CalendarX2, FolderKanban, FileCheck2, GraduationCap, Users } from 'lucide-react';
+import { KpiCard } from '@/components/shared/KpiCard';
+import { KpiGrid } from '@/components/shared/KpiGrid';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import type { SyntheseCompteurs as CompteursSynthese } from '@/types/api';
+import { compteursVides } from '../lib/synthese';
 
-export function SyntheseCompteurs({ synthese }: { synthese: SyntheseEtablissement }) {
-  const compteurs = [
-    { icone: Handshake, label: "Partenaires", valeur: synthese.nombre_partenaires },
-    { icone: Users, label: "Conventions actives", valeur: synthese.conventions_actives },
-    { icone: GraduationCap, label: "Cotutelles", valeur: synthese.nombre_cotutelles },
-    { icone: FolderKanban, label: "Projets actifs", valeur: synthese.projets_actifs },
-  ]
+interface SyntheseCompteursProps {
+  compteurs: CompteursSynthese | undefined;
+  enChargement?: boolean;
+  className?: string;
+}
+
+/** Les cinq compteurs de la synthèse d'un établissement. */
+export function SyntheseCompteurs({ compteurs, enChargement = false, className }: SyntheseCompteursProps) {
+  if (enChargement || !compteurs) {
+    return (
+      <KpiGrid className={cn('lg:grid-cols-5', className)}>
+        {[0, 1, 2, 3, 4].map((cle) => (
+          <Skeleton key={cle} className="h-[120px] rounded-[var(--radius)]" />
+        ))}
+      </KpiGrid>
+    );
+  }
+
+  const valeurs = { ...compteursVides(), ...compteurs };
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      {compteurs.map((c) => (
-        <div key={c.label} className="rounded-md border border-border p-4">
-          <c.icone size={18} className="mb-2 text-muted-foreground" />
-          <p className="font-mono text-2xl font-semibold">{c.valeur}</p>
-          <p className="text-xs text-muted-foreground">{c.label}</p>
-        </div>
-      ))}
-    </div>
-  )
+    <KpiGrid className={cn('lg:grid-cols-5', className)}>
+      <KpiCard icone={<Users className="h-4 w-4" />} libelle="Partenaires" valeur={valeurs.partenaires} />
+      <KpiCard
+        icone={<FileCheck2 className="h-4 w-4" />}
+        libelle="Conventions actives"
+        valeur={valeurs.conventions_actives}
+      />
+      <KpiCard
+        icone={<CalendarX2 className="h-4 w-4" />}
+        libelle="Conventions expirées"
+        valeur={valeurs.conventions_expirees}
+        critique={valeurs.conventions_expirees > 0}
+      />
+      <KpiCard icone={<GraduationCap className="h-4 w-4" />} libelle="Cotutelles" valeur={valeurs.cotutelles} />
+      <KpiCard
+        icone={<FolderKanban className="h-4 w-4" />}
+        libelle="Projets actifs"
+        valeur={valeurs.projets_actifs}
+      />
+    </KpiGrid>
+  );
 }
