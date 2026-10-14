@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -12,9 +13,11 @@ import { UpdateProjetDto } from './dto/update-projet.dto';
 import { QueryProjetDto } from './dto/query-projet.dto';
 import { ProjetResponseDto } from './dto/projet-response.dto';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
+import { TypePorteur } from '../common/enums/type-porteur.enum';
 import { TypeNotification } from '../common/enums/type-notification.enum';
 import { PrioriteNotification } from '../common/enums/priorite-notification.enum';
 import { Projet } from './entities/projet.entity';
+import { Porteur } from '../referentiels/porteurs/entities/porteur.entity';
 import { ProjetPartenaire } from './entities/projet-partenaire.entity';
 import { ProjetBeneficiaire } from './entities/projet-beneficiaire.entity';
 import { ProjetBailleur } from './entities/projet-bailleur.entity';
@@ -22,6 +25,7 @@ import { ProjetSite } from './entities/projet-site.entity';
 import { Activite } from './entities/activite.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
+import { PorteurResponseDto } from '../referentiels/porteurs/dto/porteur-response.dto';
 
 @Injectable()
 export class ProjetsService {
@@ -72,6 +76,65 @@ export class ProjetsService {
         }
       }
 
+      // Porteur polymorphe : porteur_id (existant) et porteur (a creer) sont
+      // mutuellement exclusifs. Si un porteur est fourni, on le cree dans la
+      // meme transaction puis on derive son id pour l'attacher au projet.
+      if (dto.porteur_id && dto.porteur) {
+        throw new BadRequestException(
+          'Fournissez porteur_id ou un objet porteur, pas les deux.',
+        );
+      }
+
+      let porteurId: string | null = dto.porteur_id ?? null;
+
+      if (dto.porteur) {
+        const porteurRepo = manager.getRepository(Porteur);
+
+        // Un porteur ETABLISSEMENT doit viser un etablissement reel.
+        if (dto.porteur.type_porteur === TypePorteur.ETABLISSEMENT) {
+          if (!dto.porteur.etablissement_id) {
+            throw new BadRequestException(
+              "Un porteur de type etablissement doit pointer vers un etablissement.",
+            );
+          }
+          const etablissementPorteur = await etablissementRepo.findOneBy({
+            id: dto.porteur.etablissement_id,
+          });
+          if (!etablissementPorteur) {
+            throw new NotFoundException(
+              'Etablissement non trouve pour le porteur.',
+            );
+          }
+        }
+
+        // Doublon sur le nom (seulement quand un nom est fourni).
+        if (dto.porteur.nom) {
+          const doublon = await porteurRepo.findOne({
+            where: { nom: ILike(dto.porteur.nom) },
+          });
+          if (doublon) {
+            throw new ConflictException(
+              `Un porteur nomme "${dto.porteur.nom}" existe deja.`,
+            );
+          }
+        }
+
+        const porteur = porteurRepo.create({
+          type_porteur: dto.porteur.type_porteur,
+          nom:
+            dto.porteur.type_porteur === TypePorteur.ETABLISSEMENT
+              ? null
+              : (dto.porteur.nom ?? null),
+          institution_rattachement: dto.porteur.institution_rattachement ?? null,
+          etablissement_id:
+            dto.porteur.type_porteur === TypePorteur.ETABLISSEMENT
+              ? (dto.porteur.etablissement_id ?? null)
+              : null,
+        });
+        const savedPorteur = await porteurRepo.save(porteur);
+        porteurId = savedPorteur.id;
+      }
+
       const projet = projetRepo.create({
         nom: dto.nom,
         intitule_officiel: dto.intitule_officiel ?? null,
@@ -84,7 +147,7 @@ export class ProjetsService {
         archive: false,
         etablissement_id: etablissementId,
         partenariat_id: dto.partenariat_id ?? null,
-        porteur_id: dto.porteur_id ?? null,
+        porteur_id: porteurId,
       });
 
       const savedProjet = await projetRepo.save(projet);
@@ -167,7 +230,7 @@ export class ProjetsService {
       relations: {
         etablissement: true,
         partenariat: true,
-        porteur: true,
+        porteur: { etablissement: true },
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -196,7 +259,7 @@ export class ProjetsService {
       relations: {
         etablissement: true,
         partenariat: true,
-        porteur: true,
+        porteur: { etablissement: true },
       },
     });
     if (!projet) {
@@ -339,6 +402,16 @@ export class ProjetsService {
       etablissement_id: projet.etablissement_id,
       partenariat_id: projet.partenariat_id,
       porteur_id: projet.porteur_id,
+      porteur: projet.porteur
+        ? {
+            id: projet.porteur.id,
+            type_porteur: projet.porteur.type_porteur,
+            nom: projet.porteur.nom,
+            institution_rattachement: projet.porteur.institution_rattachement,
+            etablissement_id: projet.porteur.etablissement_id,
+            etablissement_nom: projet.porteur.etablissement?.nom ?? null,
+          }
+        : null,
       avancement,
       en_retard: enRetard,
       created_at: projet.created_at,
