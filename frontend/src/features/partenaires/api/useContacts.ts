@@ -39,6 +39,8 @@ export function useCreateContact() {
   });
 }
 
+export const useCreerContact = useCreateContact;
+
 interface VariablesModifierContact {
   id: string;
   partenaireId: string;
@@ -60,6 +62,8 @@ export function useUpdateContact() {
     },
   });
 }
+
+export const useModifierContact = useUpdateContact;
 
 interface VariablesSupprimerContact {
   id: string;

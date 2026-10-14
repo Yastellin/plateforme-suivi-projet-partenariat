@@ -592,3 +592,19 @@ model RefreshToken {
   @@index([expires_at])
   @@index([revoked_at])
 }
+
+model MessageContact {
+  id        String   @id @default(uuid())
+  nom       String
+  email     String
+  telephone String?
+  sujet     String
+  message   String
+  traite    Boolean  @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([traite])
+  @@index([created_at])
+}

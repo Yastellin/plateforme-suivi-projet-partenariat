@@ -35,11 +35,17 @@ function StatistiquesAccueil() {
     return null;
   }
 
+  const statistiques = data.statistiques ?? {
+    partenaires_actifs: 0,
+    projets_en_cours: 0,
+    conventions_signees: 0,
+  };
+
   return (
     <div className="flex gap-7">
-      <StatistiqueAccueil valeur={data.statistiques.partenaires_actifs} libelle="Partenaires actifs" />
-      <StatistiqueAccueil valeur={data.statistiques.projets_en_cours} libelle="Projets en cours" />
-      <StatistiqueAccueil valeur={data.statistiques.conventions_signees} libelle="Conventions signées" />
+      <StatistiqueAccueil valeur={statistiques.partenaires_actifs} libelle="Partenaires actifs" />
+      <StatistiqueAccueil valeur={statistiques.projets_en_cours} libelle="Projets en cours" />
+      <StatistiqueAccueil valeur={statistiques.conventions_signees} libelle="Conventions signées" />
     </div>
   );
 }

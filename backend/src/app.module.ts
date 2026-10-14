@@ -28,6 +28,7 @@ import { ArchivesModule } from './archives/archives.module';
 import { RechercheModule } from './recherche/recherche.module';
 import { HealthModule } from './health/health.module';
 import { CleanupModule } from './cleanup/cleanup.module';
+import { EspacePublicModule } from './espace-public/espace-public.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { CleanupModule } from './cleanup/cleanup.module';
     HealthModule,
     PrismaModule,
     AuthModule,
+    EspacePublicModule,
     EtablissementsModule,
     PartenairesModule,
     PartenariatsModule,

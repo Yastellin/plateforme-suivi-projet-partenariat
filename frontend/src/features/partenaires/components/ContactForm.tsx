@@ -22,8 +22,8 @@ interface ContactFormProps {
 // Formulaire d'ajout ou de modification d'un contact rattache a un
 // partenaire (RG28) : validation temps reel via Zod + react-hook-form.
 export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: ContactFormProps) {
-  const creation = useCreerContact(partenaireId)
-  const modification = useModifierContact(partenaireId)
+  const creation = useCreerContact()
+  const modification = useModifierContact()
   const enCours = creation.isPending || modification.isPending
 
   const {
@@ -62,11 +62,11 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
     }
     if (contact) {
       modification.mutate(
-        { id: contact.id, payload },
+        { id: contact.id, partenaireId, valeurs: { ...payload, nom: payload.nom } },
         { onSuccess: onSucces }
       )
     } else {
-      creation.mutate(payload, { onSuccess: onSucces })
+      creation.mutate({ partenaireId, valeurs: { ...payload, nom: payload.nom } }, { onSuccess: onSucces })
     }
   }
 

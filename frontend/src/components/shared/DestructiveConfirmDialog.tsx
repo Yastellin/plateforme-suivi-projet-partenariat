@@ -18,8 +18,10 @@ interface DestructiveConfirmDialogProps {
   onConfirmer: () => void;
   titre: string;
   description: string;
-  nomCible: string;
+  nomCible?: string;
+  texteConfirmation?: string;
   libelleAction?: string;
+  libelleBouton?: string;
   enCours?: boolean;
 }
 
@@ -30,11 +32,15 @@ export function DestructiveConfirmDialog({
   titre,
   description,
   nomCible,
-  libelleAction = 'Confirmer',
+  texteConfirmation,
+  libelleAction,
+  libelleBouton,
   enCours = false,
 }: DestructiveConfirmDialogProps) {
   const [saisie, setSaisie] = useState('');
-  const correspond = saisie.trim() === nomCible.trim();
+  const nomConfirmation = (texteConfirmation ?? nomCible ?? '').trim();
+  const libelleBoutonFinal = libelleBouton ?? libelleAction ?? 'Confirmer';
+  const correspond = saisie.trim() === nomConfirmation;
 
   useEffect(() => {
     if (ouvert) {
@@ -55,7 +61,7 @@ export function DestructiveConfirmDialog({
 
         <div className="py-2">
           <label htmlFor="confirmation-saisie" className="mb-1.5 block text-[12.5px] font-medium text-[var(--color-text-secondary)]">
-            Tapez « {nomCible} » pour confirmer
+            Tapez « {nomConfirmation || 'CONFIRMATION'} » pour confirmer
           </label>
           <input
             id="confirmation-saisie"
@@ -86,7 +92,7 @@ export function DestructiveConfirmDialog({
             )}
           >
             {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {libelleAction}
+            {libelleBoutonFinal}
           </button>
         </DialogFooter>
       </DialogContent>

@@ -7,7 +7,7 @@ import { useEtablissement } from "@/features/etablissements/api/useEtablissement
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function EtablissementDetailPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = useParams<{ id?: string }>()
   const { data: etablissement, isLoading } = useEtablissement(id)
 
   if (isLoading) {

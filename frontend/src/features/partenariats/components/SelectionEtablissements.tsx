@@ -18,8 +18,8 @@ export function SelectionEtablissements({ selection, libelles, onChange, erreur 
   const terme = recherche.trim().toLowerCase();
 
   const options = (data ?? [])
-    .filter((etablissement) => `${etablissement.nom} ${etablissement.sigle ?? ''}`.toLowerCase().includes(terme))
-    .map((etablissement) => ({
+    .filter((etablissement: { nom: string; sigle?: string | null }) => `${etablissement.nom} ${etablissement.sigle ?? ''}`.toLowerCase().includes(terme))
+    .map((etablissement: { id: string; nom: string; sigle?: string | null }) => ({
       id: etablissement.id,
       libelle: etablissement.sigle ?? etablissement.nom,
       detail: etablissement.sigle ? etablissement.nom : undefined,

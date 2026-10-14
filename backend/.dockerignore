@@ -1,5 +1,8 @@
 node_modules
 dist
+# Artefacts de compilation incrémentale : s'ils sont copiés dans l'image,
+# `tsc --incremental` pense que tout est déjà compilé et n'émet rien (dist vide).
+*.tsbuildinfo
 npm-debug.log
 .env
 .git

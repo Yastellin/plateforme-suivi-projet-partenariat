@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# TypeScript incremental build info (never commit: breaks Docker incremental builds)
+*.tsbuildinfo
+
 # Logs
 logs
 *.log

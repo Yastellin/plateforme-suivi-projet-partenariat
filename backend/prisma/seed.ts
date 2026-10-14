@@ -6,6 +6,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Démarrage du seed...');
 
+  // Seed idempotent : si des utilisateurs existent déjà, on ne réinitialise pas
+  // la base (évite d'écraser les données à chaque redémarrage du conteneur).
+  const existingUsers = await prisma.utilisateur.count();
+  if (existingUsers > 0) {
+    console.log(`Base déjà peuplée (${existingUsers} utilisateurs). Seed ignoré.`);
+    return;
+  }
+
   // Nettoyage
   await prisma.notification.deleteMany();
   await prisma.photoPublication.deleteMany();

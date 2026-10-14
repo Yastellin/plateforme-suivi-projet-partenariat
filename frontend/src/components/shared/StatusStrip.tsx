@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 type ToneStatusStrip = 'attention' | 'info' | 'ok';
 
-interface ItemStatusStrip {
+export interface ItemStatusStrip {
   icone: LucideIcon;
   titre: string;
   description: string;

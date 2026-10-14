@@ -42,8 +42,26 @@ export interface StatistiquesPubliques {
   conventions_signees: number;
 }
 
+export interface PublicationAccueil {
+  id: string;
+  titre: string;
+  description_publique?: string | null;
+  date_publication?: string | null;
+}
+
+export interface CompteursAccueilPublic {
+  nombre_etablissements: number;
+  nombre_partenaires: number;
+  nombre_pays_partenaires: number;
+  nombre_projets_actifs: number;
+}
+
 export interface AccueilPublic {
-  statistiques: StatistiquesPubliques;
+  statistiques?: StatistiquesPubliques;
+  dernieres_publications?: PublicationAccueil[];
+  etablissements_a_la_une?: Etablissement[];
+  partenaires_a_la_une?: Partenaire[];
+  compteurs?: CompteursAccueilPublic;
 }
 
 export type StatutConvention = 'BROUILLON' | 'EN_ATTENTE_SIGNATURE' | 'SIGNEE' | 'ACTIVE' | 'SUSPENDUE' | 'EXPIREE';
@@ -70,6 +88,9 @@ export interface CompteursTableauDeBord {
   conventions_actives: number;
   conventions_a_echeance: number;
   repartition_conventions: Record<StatutConvention, number>;
+  projets_par_statut?: Partial<Record<StatutProjet, number>>;
+  conventions_expirees?: number;
+  conventions_bientot_expirees?: number;
 }
 
 export interface EcheanceProchaine {
