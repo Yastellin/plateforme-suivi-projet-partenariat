@@ -1,6 +1,4 @@
-﻿// src/features/archives/pages/ArchivesPage.tsx
-
-import { useState } from "react"
+﻿import { useState } from "react"
 import { Archive } from "lucide-react"
 import { Link } from "react-router-dom"
 
@@ -12,7 +10,7 @@ import { ArchivesFiltres } from "@/features/archives/components/ArchivesFiltres"
 import { useArchives } from "@/features/archives/api/useArchives"
 import { useDebounce } from "@/hooks/useDebounce"
 import { useAuth } from "@/hooks/useAuth"
-import type { TypeArchive } from "@/types/api"
+import type { LigneArchive, ModeArchives, TypeArchive } from "@/types/api"
 
 const CHAMP_TITRE: Record<TypeArchive, string> = {
   partenaires: "nom",
@@ -20,18 +18,44 @@ const CHAMP_TITRE: Record<TypeArchive, string> = {
   projets: "nom",
   conventions: "titre",
   cotutelles: "nom_doctorant",
+  documents: "nom_fichier",
+}
+
+const LABEL_TYPE: Record<TypeArchive, string> = {
+  partenaires: "Partenaire",
+  partenariats: "Partenariat",
+  projets: "Projet",
+  conventions: "Convention",
+  cotutelles: "Cotutelle",
+  documents: "Document",
+}
+
+function titreArchive(item: Record<string, unknown>, type: TypeArchive): string {
+  return String(item[CHAMP_TITRE[type]] ?? "Sans titre")
+}
+
+function dateArchive(item: Record<string, unknown>): string {
+  const brut = item.updated_at ?? item.created_at
+  if (!brut) return "—"
+  return new Date(String(brut)).toLocaleDateString("fr-FR")
 }
 
 export function ArchivesPage() {
   const { utilisateur } = useAuth()
-  const [type, setType] = useState<TypeArchive>("partenaires")
+  const [mode, setMode] = useState<ModeArchives>("tous")
   const [recherche, setRecherche] = useState("")
   const rechercheDebouncee = useDebounce(recherche, 300)
 
-  const role = utilisateur?.role
-  const cheminBase = role === 'PRESIDENCE' ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur'
+  const cheminBase =
+    utilisateur?.role === "PRESIDENCE"
+      ? "/presidence"
+      : utilisateur?.role === "ETABLISSEMENT"
+        ? "/etablissement"
+        : "/decideur"
 
-  const { data, isLoading } = useArchives<Record<string, unknown>>(type, { recherche: rechercheDebouncee || undefined })
+  const { data, isLoading } = useArchives(mode, {
+    recherche: rechercheDebouncee || undefined,
+  })
 
   return (
     <div>
@@ -45,12 +69,7 @@ export function ArchivesPage() {
           valeurRecherche={recherche}
           onRechercheChange={setRecherche}
           placeholderRecherche="Rechercher dans les archives…"
-          enfants={
-            <ArchivesFiltres
-              type={type}
-              onChangementType={setType}
-            />
-          }
+          enfants={<ArchivesFiltres mode={mode} onChangementMode={setMode} />}
         />
 
         <PanelBody>
@@ -60,20 +79,50 @@ export function ArchivesPage() {
             <EmptyState
               icone={Archive}
               titre="Aucun élément archivé"
-              description="Rien n'a été archivé dans cette catégorie pour l'instant."
+              description={
+                mode === "tous"
+                  ? "Aucun élément n'a été archivé pour l'instant."
+                  : "Rien n'a été archivé dans cette catégorie pour l'instant."
+              }
             />
+          ) : mode === "tous" ? (
+            <div className="flex flex-col gap-2">
+              {(data.data as LigneArchive[]).map((item) => {
+                const id = item.id as string
+                const type = item._type
+                const titre = titreArchive(item, type)
+                return (
+                  <Link
+                    key={`${type}-${id}`}
+                    to={`${cheminBase}/archives/${type}/${id}`}
+                    className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] p-3 text-[13px] transition-colors hover:bg-[var(--color-page-bg)] hover:text-[var(--color-brand)]"
+                  >
+                    <span className="rounded-full bg-[var(--color-page-bg)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+                      {LABEL_TYPE[type]}
+                    </span>
+                    <span className="font-semibold">{titre}</span>
+                    <span className="ml-auto text-[11.5px] text-[var(--color-text-secondary)]">
+                      Archivé le {dateArchive(item)}
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
           ) : (
             <div className="flex flex-col gap-2">
               {data.data.map((item) => {
                 const id = item.id as string
-                const titre = String(item[CHAMP_TITRE[type]] ?? "Sans titre")
+                const titre = titreArchive(item, mode as TypeArchive)
                 return (
                   <Link
                     key={id}
-                    to={`${cheminBase}/${type}/${id}`}
-                    className="rounded-[var(--radius-sm)] border border-[var(--color-border)] p-3 text-[13px] font-semibold transition-colors hover:bg-[var(--color-page-bg)] hover:text-[var(--color-brand)]"
+                    to={`${cheminBase}/archives/${mode}/${id}`}
+                    className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] p-3 text-[13px] transition-colors hover:bg-[var(--color-page-bg)] hover:text-[var(--color-brand)]"
                   >
-                    {titre}
+                    <span className="font-semibold">{titre}</span>
+                    <span className="ml-auto text-[11.5px] text-[var(--color-text-secondary)]">
+                      Archivé le {dateArchive(item)}
+                    </span>
                   </Link>
                 )
               })}

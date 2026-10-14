@@ -280,7 +280,17 @@ export interface ComparatifEtablissement {
   nombre_conventions: number
 }
 
-export type TypeArchive = "partenaires" | "partenariats" | "projets" | "conventions" | "cotutelles"
+export type TypeArchive =
+  | "partenaires"
+  | "partenariats"
+  | "projets"
+  | "conventions"
+  | "cotutelles"
+  | "documents"
+
+export type ModeArchives = TypeArchive | "tous"
+
+export type LigneArchive = Record<string, unknown> & { _type: TypeArchive }
 export type DomainePartenariat =
   | "RECHERCHE" | "FORMATION" | "INNOVATION"
   | "DEVELOPPEMENT" | "COOPERATION_INSTITUTIONNELLE" | "AUTRE"

@@ -16,6 +16,7 @@ import { obtenirInfoStatut } from "@/lib/status-mappings"
 import apiClient from "@/lib/api-client"
 import type { Publication } from "@/types/api"
 import { useState } from "react"
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 // Page detail d'une publication publique (section 7.4 : "detail d'une
 // publication"). Accessible sans authentification.
@@ -32,6 +33,7 @@ export function PublicationDetailPage() {
     },
     enabled: !!id,
   })
+  useTitreBreadcrumb(publication?.titre)
 
   const [photoActive, setPhotoActive] = useState(0)
   const photos = publication?.photos ?? []

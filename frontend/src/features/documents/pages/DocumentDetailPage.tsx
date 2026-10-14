@@ -14,6 +14,7 @@ import { formaterDate } from "@/lib/format"
 import { useAuth } from "@/hooks/useAuth"
 import { DocumentVersionsListe } from "@/features/documents/components/DocumentVersionsListe"
 import type { DocumentFichier } from "@/types/api"
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 function Champ({ libelle, valeur }: { libelle: string; valeur?: string | null }) {
   return (
@@ -39,6 +40,7 @@ export function DocumentDetailPage() {
     },
     enabled: Boolean(id),
   })
+  useTitreBreadcrumb(document?.nom_fichier)
 
   if (isLoading) {
     return (

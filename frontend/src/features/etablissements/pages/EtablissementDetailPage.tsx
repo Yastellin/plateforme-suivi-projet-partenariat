@@ -8,10 +8,12 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import { Panel, PanelHeader, PanelBody } from "@/components/shared/Panel"
 import { useEtablissement } from "@/features/etablissements/api/useEtablissement"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 export function EtablissementDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { data: etablissement, isLoading } = useEtablissement(id ?? "")
+  useTitreBreadcrumb(etablissement?.nom)
 
   if (isLoading) {
     return (

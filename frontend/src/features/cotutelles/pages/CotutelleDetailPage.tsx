@@ -16,6 +16,7 @@ import { useCotutelle } from "@/features/cotutelles/api/useCotutelle"
 import { useArchiverCotutelle } from "@/features/cotutelles/api/useArchiverCotutelle"
 import { usePermissions } from "@/hooks/usePermissions"
 import { formaterDate } from "@/lib/format"
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 function Champ({ libelle, valeur }: { libelle: string; valeur?: string | null }) {
   return (
@@ -32,6 +33,7 @@ export function CotutelleDetailPage() {
   const [modificationOuverte, setModificationOuverte] = useState(false)
   const [archivageOuvert, setArchivageOuvert] = useState(false)
   const { data: cotutelle, isLoading } = useCotutelle(id)
+  useTitreBreadcrumb(cotutelle?.nom_doctorant)
   const archiver = useArchiverCotutelle()
 
   if (isLoading) {

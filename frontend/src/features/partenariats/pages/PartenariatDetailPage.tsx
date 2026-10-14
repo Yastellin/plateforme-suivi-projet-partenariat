@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { LIBELLES_DOMAINE_PARTENARIAT, LIBELLES_STATUT_PARTENARIAT } from '@/lib/status-mappings';
 import type { PartenariatFormValues } from '@/lib/validators/partenariat.schema';
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 export function PartenariatDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,7 @@ export function PartenariatDetailPage() {
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
 
   const { data: partenariat, isLoading } = usePartenariat(id ?? '');
+  useTitreBreadcrumb(partenariat?.intitule)
   const { mutate: mettreAJour, isPending: enCoursMiseAJour } = useUpdatePartenariat();
   const { mutate: archiver, isPending: enCoursArchivage } = useArchiverPartenariat();
 
