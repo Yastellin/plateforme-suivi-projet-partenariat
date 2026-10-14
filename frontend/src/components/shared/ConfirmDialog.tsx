@@ -39,6 +39,7 @@ export function ConfirmDialog({
   libelleConfirmation,
   libelleAnnulation = 'Annuler',
   enCours = false,
+  destructif = false,
 }: ConfirmDialogProps) {
   const isOpen = ouvert ?? open ?? false;
   const handleClose = onFermer ?? ((() => onOpenChange?.(false)) as () => void);
@@ -72,7 +73,7 @@ export function ConfirmDialog({
             type="button"
             onClick={handleConfirm}
             disabled={enCours}
-            className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-60"
+            className={`flex items-center gap-2 rounded-[var(--radius-sm)] border px-3.5 py-2 text-[13px] font-semibold text-white disabled:opacity-60 ${destructif ? 'border-[var(--status-expire-fg)] bg-[var(--status-expire-fg)] hover:opacity-90' : 'border-[var(--color-brand)] bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)]'}`}
           >
             {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {actionLabel}

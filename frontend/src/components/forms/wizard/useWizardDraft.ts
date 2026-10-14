@@ -6,17 +6,19 @@ const INTERVALLE_SAUVEGARDE_MS = 30000;
 
 interface OptionsWizardDraft<T> {
   cle: string;
-  valeurs: T;
-  actif: boolean;
-  onRestaurer: (valeurs: T) => void;
+  valeurs?: T;
+  donnees?: T;
+  actif?: boolean;
+  onRestaurer?: (valeurs: T) => void;
 }
 
-export function useWizardDraft<T>({ cle, valeurs, actif, onRestaurer }: OptionsWizardDraft<T>): { effacerBrouillon: () => void } {
-  const onRestaurerRef = useRef(onRestaurer);
-  onRestaurerRef.current = onRestaurer;
+export function useWizardDraft<T>({ cle, valeurs, donnees, actif = true, onRestaurer }: OptionsWizardDraft<T>): { effacerBrouillon: () => void; viderBrouillon: () => void } {
+  const valeursActuelles = valeurs ?? donnees ?? ({} as T);
+  const onRestaurerRef = useRef(onRestaurer ?? (() => undefined));
+  onRestaurerRef.current = onRestaurer ?? (() => undefined);
 
-  const valeursRef = useRef(valeurs);
-  valeursRef.current = valeurs;
+  const valeursRef = useRef(valeursActuelles);
+  valeursRef.current = valeursActuelles;
 
   useEffect(() => {
     const brouillon = window.localStorage.getItem(cle);
@@ -47,5 +49,5 @@ export function useWizardDraft<T>({ cle, valeurs, actif, onRestaurer }: OptionsW
     window.localStorage.removeItem(cle);
   }
 
-  return { effacerBrouillon };
+  return { effacerBrouillon, viderBrouillon: effacerBrouillon };
 }

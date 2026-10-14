@@ -2,6 +2,8 @@
 
 import { obtenirInfoStatut, type ToneStatut } from '@/lib/status-mappings';
 
+export type StatutMetier = ToneStatut;
+
 interface StatusBadgeProps {
   libelle?: string;
   tonalite?: ToneStatut;

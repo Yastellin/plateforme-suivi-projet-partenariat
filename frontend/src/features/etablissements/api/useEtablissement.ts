@@ -9,10 +9,10 @@ async function recupererEtablissement(id: string): Promise<Etablissement> {
   return reponse.data;
 }
 
-export function useEtablissement(id: string) {
+export function useEtablissement(id?: string) {
   return useQuery({
     queryKey: ['etablissements', id],
-    queryFn: () => recupererEtablissement(id),
+    queryFn: () => recupererEtablissement(id ?? ''),
     enabled: Boolean(id),
   });
 }
