@@ -1,72 +1,82 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { Role } from '../enums/role.enum';
+import { Projet } from '../../projets/entities/projet.entity';
+import { Partenariat } from '../../partenariats/entities/partenariat.entity';
+import { PartenariatEtablissement } from '../../partenariats/entities/partenariat-etablissement.entity';
 
+/**
+ * Restreint l'acces d'un utilisateur ETABLISSEMENT aux ressources de son
+ * propre etablissement (RG « cloisonnement par etablissement »).
+ *
+ * Les autres roles (PRESIDENCE, DECIDEUR) ne sont pas filtres par ce garde.
+ */
 @Injectable()
 export class OwnEtablissementGuard implements CanActivate {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    const params = request.params;
+    const params = request.params ?? {};
 
-    if (user.role !== Role.ETABLISSEMENT) {
+    if (!user || user.role !== Role.ETABLISSEMENT) {
       return true;
     }
 
-    const resourceId = params.id;
+    const resourceId: string | undefined = params.id;
     if (!resourceId) {
       return true;
     }
 
-    const routePath = request.route.path;
+    const routePath: string = request.route?.path ?? '';
 
-    // Partenariat : relation via table d'association
-    if (routePath.includes('/partenariats')) {
-      const partenariat = await this.prisma.partenariat.findUnique({
+    // Projet : l'etablissement est porte directement par la ressource
+    if (routePath.includes('/projets')) {
+      const projet = await this.dataSource.getRepository(Projet).findOne({
         where: { id: resourceId },
-        select: { id: true },
+        select: { id: true, etablissement_id: true },
       });
+      if (!projet) throw new NotFoundException('Ressource non trouvée');
+      if (projet.etablissement_id !== user.etablissement_id) {
+        throw new ForbiddenException(
+          'Vous ne pouvez accéder qu à vos propres données',
+        );
+      }
+      return true;
+    }
+
+    // Partenariat : relation via la table d'association
+    if (routePath.includes('/partenariats')) {
+      const partenariat = await this.dataSource
+        .getRepository(Partenariat)
+        .findOne({
+          where: { id: resourceId },
+          select: { id: true },
+        });
       if (!partenariat) {
         throw new NotFoundException('Partenariat non trouve');
       }
 
-      const association = await this.prisma.partenariatEtablissement.findFirst({
-        where: {
-          partenariat_id: resourceId,
-          etablissement_id: user.etablissement_id,
-        },
-      });
+      const association = await this.dataSource
+        .getRepository(PartenariatEtablissement)
+        .findOne({
+          where: {
+            partenariat_id: resourceId,
+            etablissement_id: user.etablissement_id,
+          },
+          select: { id: true },
+        });
       if (!association) {
-        throw new ForbiddenException('Vous ne pouvez accéder qu à vos propres données');
-      }
-      return true;
-    }
-
-    // Projet : champ direct
-    if (routePath.includes('/projets')) {
-      const entity = await this.prisma.projet.findUnique({
-        where: { id: resourceId },
-        select: { etablissement_id: true },
-      });
-      if (!entity) throw new NotFoundException('Ressource non trouvée');
-      if (entity.etablissement_id !== user.etablissement_id) {
-        throw new ForbiddenException('Vous ne pouvez accéder qu à vos propres données');
-      }
-      return true;
-    }
-
-    // Partenariat : relation via table d'association
-    if (routePath.includes('/partenariats')) {
-      const association = await this.prisma.partenariatEtablissement.findFirst({
-        where: {
-          partenariat_id: resourceId,
-          etablissement_id: user.etablissement_id,
-        },
-      });
-      if (!association) {
-        throw new ForbiddenException('Vous ne pouvez accéder qu à vos propres données');
+        throw new ForbiddenException(
+          'Vous ne pouvez accéder qu à vos propres données',
+        );
       }
       return true;
     }

@@ -11,11 +11,14 @@ import { PartenariatForm } from '../components/PartenariatForm';
 import { PartenariatInformations } from '../components/PartenariatInformations';
 import { BoutonSoumettre } from '../components/BoutonSoumettre';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
 import { DestructiveConfirmDialog } from '@/components/shared/DestructiveConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { LIBELLES_DOMAINE_PARTENARIAT, LIBELLES_STATUT_PARTENARIAT } from '@/lib/status-mappings';
 import type { PartenariatFormValues } from '@/lib/validators/partenariat.schema';
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 export function PartenariatDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +27,7 @@ export function PartenariatDetailPage() {
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
 
   const { data: partenariat, isLoading } = usePartenariat(id ?? '');
+  useTitreBreadcrumb(partenariat?.intitule)
   const { mutate: mettreAJour, isPending: enCoursMiseAJour } = useUpdatePartenariat();
   const { mutate: archiver, isPending: enCoursArchivage } = useArchiverPartenariat();
 
@@ -78,47 +82,52 @@ export function PartenariatDetailPage() {
 
   return (
     <div>
-      <div className="mb-[26px] flex flex-wrap items-start justify-between gap-5">
-        <div>
-          <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
-            <h1 className="text-[24px] font-bold">{partenariat.intitule}</h1>
-            <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
+      <PageHeader
+        titre={partenariat.intitule}
+        description={LIBELLES_DOMAINE_PARTENARIAT[partenariat.domaine]}
+        badge={<StatusBadge libelle={info.libelle} tonalite={info.tonalite} />}
+        actions={
+          <div className="flex gap-2">
+            {peutSoumettre ? <BoutonSoumettre partenariatId={partenariat.id} intitule={partenariat.intitule} /> : null}
+            {estPresidence ? (
+              <button
+                type="button"
+                onClick={() => setDialogueArchivageOuvert(true)}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--status-expire-fg)] hover:text-[var(--status-expire-fg)]"
+              >
+                <Archive className="h-3.5 w-3.5" />
+                Archiver
+              </button>
+            ) : null}
           </div>
-          <p className="text-[13px] text-[var(--color-text-secondary)]">
-            {LIBELLES_DOMAINE_PARTENARIAT[partenariat.domaine]}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          {peutSoumettre ? <BoutonSoumettre partenariatId={partenariat.id} intitule={partenariat.intitule} /> : null}
-          {estPresidence ? (
-            <button
-              type="button"
-              onClick={() => setDialogueArchivageOuvert(true)}
-              className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--status-expire-fg)] hover:text-[var(--status-expire-fg)]"
-            >
-              <Archive className="h-3.5 w-3.5" />
-              Archiver
-            </button>
-          ) : null}
-        </div>
-      </div>
+        }
+      />
 
       {soumisParEtablissement ? (
-        <p className="mb-5 rounded-[var(--radius-sm)] bg-[var(--status-attente-bg)] px-4 py-3 text-[13px] font-medium text-[var(--status-attente-fg)]">
+        <p className="mb-[22px] rounded-[var(--radius-sm)] bg-[var(--status-attente-bg)] px-4 py-3 text-[13px] font-medium text-[var(--status-attente-fg)]">
           Ce partenariat a été soumis. Il n'est plus modifiable.
         </p>
       ) : null}
 
       {peutModifier ? (
-        <PartenariatForm
-          partenariat={partenariat}
-          estPresidence={estPresidence}
-          onSoumettre={onSoumettre}
-          enCours={enCoursMiseAJour}
-        />
+        <Panel>
+          <PanelHeader titre="Modifier le partenariat" />
+          <PanelBody>
+            <PartenariatForm
+              partenariat={partenariat}
+              estPresidence={estPresidence}
+              onSoumettre={onSoumettre}
+              enCours={enCoursMiseAJour}
+            />
+          </PanelBody>
+        </Panel>
       ) : (
-        <PartenariatInformations partenariat={partenariat} cheminBase={cheminBase} />
+        <Panel>
+          <PanelHeader titre="Informations" sousTitre="Fiche du partenariat" />
+          <PanelBody>
+            <PartenariatInformations partenariat={partenariat} cheminBase={cheminBase} />
+          </PanelBody>
+        </Panel>
       )}
 
       {estPresidence ? (

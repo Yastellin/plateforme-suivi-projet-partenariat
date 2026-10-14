@@ -1,5 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { StatistiquesService } from './statistiques.service';
 import { ComparatifEtablissementsResponseDto } from './dto/comparatif-response.dto';
 import { Roles } from '../common/decorators/roles.decorator';

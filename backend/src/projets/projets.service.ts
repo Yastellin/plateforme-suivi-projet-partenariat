@@ -4,7 +4,9 @@ import {
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DataSource, ILike, Repository } from 'typeorm';
 import { CreateProjetDto } from './dto/create-projet.dto';
 import { UpdateProjetDto } from './dto/update-projet.dto';
 import { QueryProjetDto } from './dto/query-projet.dto';
@@ -12,93 +14,168 @@ import { ProjetResponseDto } from './dto/projet-response.dto';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
 import { TypeNotification } from '../common/enums/type-notification.enum';
 import { PrioriteNotification } from '../common/enums/priorite-notification.enum';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Projet } from './entities/projet.entity';
+import { ProjetPartenaire } from './entities/projet-partenaire.entity';
+import { ProjetBeneficiaire } from './entities/projet-beneficiaire.entity';
+import { ProjetBailleur } from './entities/projet-bailleur.entity';
+import { ProjetSite } from './entities/projet-site.entity';
+import { Activite } from './entities/activite.entity';
+import { Etablissement } from '../etablissements/entities/etablissement.entity';
+import { Partenariat } from '../partenariats/entities/partenariat.entity';
 
 @Injectable()
 export class ProjetsService {
   constructor(
-    private prisma: PrismaService,
+    @InjectRepository(Projet)
+    private projetRepo: Repository<Projet>,
+    @InjectRepository(ProjetPartenaire)
+    private projetPartenaireRepo: Repository<ProjetPartenaire>,
+    @InjectRepository(ProjetBeneficiaire)
+    private projetBeneficiaireRepo: Repository<ProjetBeneficiaire>,
+    @InjectRepository(ProjetBailleur)
+    private projetBailleurRepo: Repository<ProjetBailleur>,
+    @InjectRepository(ProjetSite)
+    private projetSiteRepo: Repository<ProjetSite>,
+    @InjectRepository(Activite)
+    private activiteRepo: Repository<Activite>,
+    @InjectRepository(Etablissement)
+    private etablissementRepo: Repository<Etablissement>,
+    @InjectRepository(Partenariat)
+    private partenariatRepo: Repository<Partenariat>,
+    private dataSource: DataSource,
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async create(etablissementId: string, dto: CreateProjetDto): Promise<ProjetResponseDto> {
-  // Transaction : les verifications et la creation sont atomiques.
-  const projetId = await this.prisma.$transaction(async (tx) => {
-    const etablissement = await tx.etablissement.findUnique({
-      where: { id: etablissementId },
-    });
-    if (!etablissement) {
-      throw new NotFoundException('Établissement non trouvé');
-    }
+  async create(
+    etablissementId: string,
+    dto: CreateProjetDto,
+  ): Promise<ProjetResponseDto> {
+    const projetId = await this.dataSource.transaction(async (manager) => {
+      const etablissementRepo = manager.getRepository(Etablissement);
+      const partenariatRepo = manager.getRepository(Partenariat);
+      const projetRepo = manager.getRepository(Projet);
 
-    if (dto.partenariat_id) {
-      const partenariat = await tx.partenariat.findUnique({
-        where: { id: dto.partenariat_id, archive: false },
+      const etablissement = await etablissementRepo.findOneBy({
+        id: etablissementId,
       });
-      if (!partenariat) {
-        throw new NotFoundException('Partenariat non trouvé');
+      if (!etablissement) {
+        throw new NotFoundException('Établissement non trouvé');
       }
-    }
 
-    const projet = await tx.projet.create({
-      data: {
+      if (dto.partenariat_id) {
+        const partenariat = await partenariatRepo.findOneBy({
+          id: dto.partenariat_id,
+          archive: false,
+        });
+        if (!partenariat) {
+          throw new NotFoundException('Partenariat non trouvé');
+        }
+      }
+
+      const projet = projetRepo.create({
         nom: dto.nom,
-        intitule_officiel: dto.intitule_officiel,
+        intitule_officiel: dto.intitule_officiel ?? null,
         type: dto.type,
-        domaine: dto.domaine,
-        budget: dto.budget,
+        domaine: dto.domaine ?? null,
+        budget: dto.budget ?? null,
         date_debut: new Date(dto.date_debut),
         date_fin_prevue: new Date(dto.date_fin_prevue),
         statut: dto.statut || StatutProjet.BROUILLON,
+        archive: false,
         etablissement_id: etablissementId,
-        partenariat_id: dto.partenariat_id,
-        porteur_id: dto.porteur_id,
-        partenaires: dto.partenaires_ids
-          ? { create: dto.partenaires_ids.map((id) => ({ partenaire_id: id })) }
-          : undefined,
-        beneficiaires: dto.beneficiaires_ids
-          ? { create: dto.beneficiaires_ids.map((id) => ({ beneficiaire_id: id })) }
-          : undefined,
-        bailleurs: dto.bailleurs_ids
-          ? { create: dto.bailleurs_ids.map((id) => ({ bailleur_id: id })) }
-          : undefined,
-        sites: dto.sites_ids
-          ? { create: dto.sites_ids.map((id) => ({ site_id: id })) }
-          : undefined,
-      },
+        partenariat_id: dto.partenariat_id ?? null,
+        porteur_id: dto.porteur_id ?? null,
+      });
+
+      const savedProjet = await projetRepo.save(projet);
+      const projetPartenaireRepo = manager.getRepository(ProjetPartenaire);
+      const projetBeneficiaireRepo = manager.getRepository(ProjetBeneficiaire);
+      const projetBailleurRepo = manager.getRepository(ProjetBailleur);
+      const projetSiteRepo = manager.getRepository(ProjetSite);
+
+      if (dto.partenaires_ids) {
+        await projetPartenaireRepo.save(
+          dto.partenaires_ids.map((partenaire_id) =>
+            projetPartenaireRepo.create({
+              projet_id: savedProjet.id,
+              partenaire_id,
+            }),
+          ),
+        );
+      }
+      if (dto.beneficiaires_ids) {
+        await projetBeneficiaireRepo.save(
+          dto.beneficiaires_ids.map((beneficiaire_id) =>
+            projetBeneficiaireRepo.create({
+              projet_id: savedProjet.id,
+              beneficiaire_id,
+            }),
+          ),
+        );
+      }
+      if (dto.bailleurs_ids) {
+        await projetBailleurRepo.save(
+          dto.bailleurs_ids.map((bailleur_id) =>
+            projetBailleurRepo.create({
+              projet_id: savedProjet.id,
+              bailleur_id,
+            }),
+          ),
+        );
+      }
+      if (dto.sites_ids) {
+        await projetSiteRepo.save(
+          dto.sites_ids.map((site_id) =>
+            projetSiteRepo.create({
+              projet_id: savedProjet.id,
+              site_id,
+            }),
+          ),
+        );
+      }
+
+      return savedProjet.id;
     });
 
-    return projet.id;
-  });
-
-  // Lecture enrichie hors transaction (evite de bloquer la transaction
-  // pendant les comptages d'activites).
-  return this.findOne(projetId, etablissementId);
-}
+    return this.findOne(projetId, etablissementId);
+  }
 
   async findAll(query: QueryProjetDto, etablissementId?: string) {
-    const { page = 1, limit = 20, nom, type, statut, partenariat_id, partenaire_id, archive } = query;
+    const {
+      page = 1,
+      limit = 20,
+      nom,
+      type,
+      statut,
+      partenariat_id,
+      partenaire_id,
+      archive,
+    } = query;
 
     const where: any = { archive: archive !== undefined ? archive : false };
     if (etablissementId) where.etablissement_id = etablissementId;
-    if (nom) where.nom = { contains: nom, mode: 'insensitive' };
-    if (type) where.type = { contains: type, mode: 'insensitive' };
+    if (nom) where.nom = ILike(`%${nom}%`);
+    if (type) where.type = ILike(`%${type}%`);
     if (statut) where.statut = statut;
     if (partenariat_id) where.partenariat_id = partenariat_id;
-    if (partenaire_id) where.partenaires = { some: { partenaire_id } };
+    if (partenaire_id) {
+      where.partenaires = { partenaire_id };
+    }
 
-    const [data, total] = await Promise.all([
-      this.prisma.projet.findMany({
-        where,
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { created_at: 'desc' },
-      }),
-      this.prisma.projet.count({ where }),
-    ]);
+    const [data, total] = await this.projetRepo.findAndCount({
+      where,
+      relations: {
+        etablissement: true,
+        partenariat: true,
+        porteur: true,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { created_at: 'DESC' },
+    });
 
     const enriched = await Promise.all(
-      data.map(async (p) => this.enrichir(p)),
+      data.map((projet) => this.enrichir(projet)),
     );
 
     return {
@@ -107,11 +184,21 @@ export class ProjetsService {
     };
   }
 
-  async findOne(id: string, etablissementId?: string): Promise<ProjetResponseDto> {
+  async findOne(
+    id: string,
+    etablissementId?: string,
+  ): Promise<ProjetResponseDto> {
     const where: any = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
-    const projet = await this.prisma.projet.findFirst({ where });   // findFirst
+    const projet = await this.projetRepo.findOne({
+      where,
+      relations: {
+        etablissement: true,
+        partenariat: true,
+        porteur: true,
+      },
+    });
     if (!projet) {
       throw new NotFoundException('Projet non trouvé');
     }
@@ -123,34 +210,48 @@ export class ProjetsService {
     const projet = await this.findOne(id, etablissementId);
 
     if (projet.statut !== StatutProjet.BROUILLON) {
-      throw new ForbiddenException('Ce projet n\'est plus modifiable (statut différent de BROUILLON)');
+      throw new ForbiddenException(
+        "Ce projet n'est plus modifiable (statut différent de BROUILLON)",
+      );
     }
 
-    const { etablissement_id, partenaires_ids, beneficiaires_ids, bailleurs_ids, sites_ids, ...data } = dto;
+    const updateData: Partial<Projet> = {};
+    if (dto.nom !== undefined) updateData.nom = dto.nom;
+    if (dto.intitule_officiel !== undefined) {
+      updateData.intitule_officiel = dto.intitule_officiel ?? null;
+    }
+    if (dto.type !== undefined) updateData.type = dto.type;
+    if (dto.domaine !== undefined) updateData.domaine = dto.domaine ?? null;
+    if (dto.budget !== undefined) updateData.budget = dto.budget ?? null;
+    if (dto.date_debut) updateData.date_debut = new Date(dto.date_debut);
+    if (dto.date_fin_prevue) {
+      updateData.date_fin_prevue = new Date(dto.date_fin_prevue);
+    }
+    if (dto.statut !== undefined) updateData.statut = dto.statut;
+    if (dto.partenariat_id !== undefined) {
+      updateData.partenariat_id = dto.partenariat_id ?? null;
+    }
+    if (dto.porteur_id !== undefined) {
+      updateData.porteur_id = dto.porteur_id ?? null;
+    }
 
-    await this.prisma.projet.update({
-      where: { id },
-      data: {
-        ...data,
-        date_debut: dto.date_debut ? new Date(dto.date_debut) : undefined,
-        date_fin_prevue: dto.date_fin_prevue ? new Date(dto.date_fin_prevue) : undefined,
-      },
-    });
-
+    await this.projetRepo.update(id, updateData);
     return this.findOne(id, etablissementId);
   }
 
-  async soumettre(id: string, etablissementId?: string): Promise<ProjetResponseDto> {
+  async soumettre(
+    id: string,
+    etablissementId?: string,
+  ): Promise<ProjetResponseDto> {
     const projet = await this.findOne(id, etablissementId);
 
     if (projet.statut !== StatutProjet.BROUILLON) {
-      throw new ConflictException('Seul un projet en BROUILLON peut être soumis');
+      throw new ConflictException(
+        'Seul un projet en BROUILLON peut être soumis',
+      );
     }
 
-    await this.prisma.projet.update({
-      where: { id },
-      data: { statut: StatutProjet.EN_ATTENTE },
-    });
+    await this.projetRepo.update(id, { statut: StatutProjet.EN_ATTENTE });
 
     this.eventEmitter.emit('projet.soumis', {
       type: TypeNotification.PROJET_SOUMIS,
@@ -164,79 +265,84 @@ export class ProjetsService {
     return this.findOne(id, etablissementId);
   }
 
-async archiver(id: string): Promise<ProjetResponseDto> {
-  const projet = await this.prisma.projet.findUnique({
-    where: { id, archive: false },
-  });
-  if (!projet) throw new NotFoundException('Projet non trouvé');
-
-  const activitesNonTerminees = await this.prisma.activite.count({
-    where: { projet_id: id, terminee: false },
-  });
-
-  if (activitesNonTerminees > 0) {
-    throw new ConflictException(
-      'Impossible d\'archiver un projet avec des activités non terminées',
-    );
-  }
-
-  const archived = await this.prisma.projet.update({
-    where: { id },
-    data: { archive: true },
-  });
-
-  return this.enrichir(archived);
-}
-
-  async getAvancement(id: string) {
-    const projet = await this.prisma.projet.findUnique({ where: { id, archive: false } });
+  async archiver(id: string): Promise<ProjetResponseDto> {
+    const projet = await this.projetRepo.findOneBy({ id, archive: false });
     if (!projet) throw new NotFoundException('Projet non trouvé');
 
-    const total = await this.prisma.activite.count({ where: { projet_id: id } });
-    const terminees = await this.prisma.activite.count({
-      where: { projet_id: id, terminee: true },
-    });
+    // Un projet déjà terminé peut être archivé, même si certaines activités
+    // n'ont pas été cochées : seul un projet en cours est bloqué.
+    if (projet.statut !== StatutProjet.TERMINE) {
+      const activitesNonTerminees = await this.activiteRepo.count({
+        where: { projet_id: id, terminee: false },
+      });
+
+      if (activitesNonTerminees > 0) {
+        throw new ConflictException(
+          "Impossible d'archiver un projet avec des activités non terminées",
+        );
+      }
+    }
+
+    await this.projetRepo.update(id, { archive: true });
+    projet.archive = true;
+    return this.enrichir(projet);
+  }
+
+  async getAvancement(id: string) {
+    const projet = await this.projetRepo.findOneBy({ id, archive: false });
+    if (!projet) throw new NotFoundException('Projet non trouvé');
+
+    const [total, terminees] = await Promise.all([
+      this.activiteRepo.count({ where: { projet_id: id } }),
+      this.activiteRepo.count({ where: { projet_id: id, terminee: true } }),
+    ]);
 
     const avancement = total === 0 ? 0 : Math.round((terminees / total) * 100);
 
-    return { projet_id: id, avancement, activites_total: total, activites_terminees: terminees };
+    return {
+      projet_id: id,
+      avancement,
+      activites_total: total,
+      activites_terminees: terminees,
+    };
   }
 
-private async enrichir(projet: any): Promise<ProjetResponseDto> {
-  const total = await this.prisma.activite.count({ where: { projet_id: projet.id } });
-  const terminees = await this.prisma.activite.count({
-    where: { projet_id: projet.id, terminee: true },
-  });
-  const avancement = total === 0 ? 0 : Math.round((terminees / total) * 100);
+  private async enrichir(projet: Projet): Promise<ProjetResponseDto> {
+    const [total, terminees] = await Promise.all([
+      this.activiteRepo.count({ where: { projet_id: projet.id } }),
+      this.activiteRepo.count({
+        where: { projet_id: projet.id, terminee: true },
+      }),
+    ]);
+    const avancement = total === 0 ? 0 : Math.round((terminees / total) * 100);
 
-  // Un projet n'est considéré en retard que s'il a démarré et n'est pas finalisé
-  const statutsExclusDuRetard = [
-    StatutProjet.BROUILLON,
-    StatutProjet.TERMINE,
-    StatutProjet.EXPIRE,
-  ];
-  const enRetard =
-    !statutsExclusDuRetard.includes(projet.statut) &&
-    new Date(projet.date_fin_prevue) < new Date();
+    const statutsExclusDuRetard = [
+      StatutProjet.BROUILLON,
+      StatutProjet.TERMINE,
+      StatutProjet.EXPIRE,
+    ];
+    const enRetard =
+      !statutsExclusDuRetard.includes(projet.statut) &&
+      projet.date_fin_prevue < new Date();
 
-  return {
-    id: projet.id,
-    nom: projet.nom,
-    intitule_officiel: projet.intitule_officiel,
-    type: projet.type,
-    domaine: projet.domaine,
-    budget: projet.budget ? Number(projet.budget) : null,
-    date_debut: projet.date_debut,
-    date_fin_prevue: projet.date_fin_prevue,
-    statut: projet.statut,
-    archive: projet.archive,
-    etablissement_id: projet.etablissement_id,
-    partenariat_id: projet.partenariat_id,
-    porteur_id: projet.porteur_id,
-    avancement,
-    en_retard: enRetard,
-    created_at: projet.created_at,
-    updated_at: projet.updated_at,
-  };
-}
+    return {
+      id: projet.id,
+      nom: projet.nom,
+      intitule_officiel: projet.intitule_officiel,
+      type: projet.type,
+      domaine: projet.domaine,
+      budget: projet.budget ? Number(projet.budget) : null,
+      date_debut: projet.date_debut,
+      date_fin_prevue: projet.date_fin_prevue,
+      statut: projet.statut,
+      archive: projet.archive,
+      etablissement_id: projet.etablissement_id,
+      partenariat_id: projet.partenariat_id,
+      porteur_id: projet.porteur_id,
+      avancement,
+      en_retard: enRetard,
+      created_at: projet.created_at,
+      updated_at: projet.updated_at,
+    };
+  }
 }

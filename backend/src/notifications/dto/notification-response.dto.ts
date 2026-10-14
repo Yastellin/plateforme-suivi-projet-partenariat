@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TypeNotification, PrioriteNotification } from '@prisma/client';
+import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { PrioriteNotification } from '../../common/enums/priorite-notification.enum';
 
 export class NotificationResponseDto {
   @ApiProperty()

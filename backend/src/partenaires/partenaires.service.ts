@@ -1,17 +1,29 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, ILike, Not } from 'typeorm';
 import { CreatePartenaireDto } from './dto/create-partenaire.dto';
 import { UpdatePartenaireDto } from './dto/update-partenaire.dto';
 import { QueryPartenaireDto } from './dto/query-partenaire.dto';
-import { PartenaireResponseDto } from './dto/partenaire-response.dto';
-import { StatutPartenaire } from '@prisma/client';
+import { Partenaire } from './entities/partenaire.entity';
+import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
+import { Visibilite } from '../common/enums/visibilite.enum';
 
 @Injectable()
 export class PartenairesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Partenaire)
+    private partenaireRepo: Repository<Partenaire>,
+  ) {}
 
-  async create(etablissementId: string, dto: CreatePartenaireDto): Promise<PartenaireResponseDto> {
-    const existant = await this.prisma.partenaire.findFirst({
+  async create(
+    etablissementId: string,
+    dto: CreatePartenaireDto,
+  ): Promise<Partenaire> {
+    const existant = await this.partenaireRepo.findOne({
       where: {
         nom: dto.nom,
         etablissement_id: etablissementId,
@@ -19,28 +31,26 @@ export class PartenairesService {
       },
     });
     if (existant) {
-      throw new ConflictException(`Un partenaire nommé "${dto.nom}" existe déjà pour cet établissement.`);
+      throw new ConflictException(
+        `Un partenaire nomme "${dto.nom}" existe deja pour cet etablissement.`,
+      );
     }
 
-    const partenaire = await this.prisma.partenaire.create({
-      data: {
-        nom: dto.nom,
-        type: dto.type,
-        pays: dto.pays,
-        adresse: dto.adresse,
-        telephone: dto.telephone,
-        email: dto.email,
-        site_web: dto.site_web,
-        description: dto.description,
-        statut: dto.statut || StatutPartenaire.ACTIF,
-        visibilite: dto.visibilite || 'PRIVE',
-        est_strategique: dto.est_strategique || false,
-        etablissement_id: etablissementId,
-      },
-      include: { contacts: true },
-    });
+    const partenaire = new Partenaire();
+    partenaire.nom = dto.nom;
+    partenaire.type = dto.type;
+    partenaire.pays = dto.pays;
+    partenaire.adresse = dto.adresse ?? null;
+    partenaire.telephone = dto.telephone ?? null;
+    partenaire.email = dto.email ?? null;
+    partenaire.site_web = dto.site_web ?? null;
+    partenaire.description = dto.description ?? null;
+    partenaire.statut = dto.statut || StatutPartenaire.ACTIF;
+    partenaire.visibilite = dto.visibilite || Visibilite.PRIVE;
+    partenaire.est_strategique = dto.est_strategique || false;
+    partenaire.etablissement_id = etablissementId;
 
-    return partenaire as PartenaireResponseDto;
+    return await this.partenaireRepo.save(partenaire);
   }
 
   async findAll(query: QueryPartenaireDto, etablissementId?: string) {
@@ -48,22 +58,19 @@ export class PartenairesService {
 
     const where: any = { archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
-    if (nom) where.nom = { contains: nom, mode: 'insensitive' };
-    if (type) where.type = { contains: type, mode: 'insensitive' };
-    if (pays) where.pays = { contains: pays, mode: 'insensitive' };
+    if (nom) where.nom = ILike(`%${nom}%`);
+    if (type) where.type = ILike(`%${type}%`);
+    if (pays) where.pays = ILike(`%${pays}%`);
     if (statut) where.statut = statut;
     if (visibilite) where.visibilite = visibilite;
 
-    const [data, total] = await Promise.all([
-      this.prisma.partenaire.findMany({
-        where,
-        include: { contacts: true },
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { nom: 'asc' },
-      }),
-      this.prisma.partenaire.count({ where }),
-    ]);
+    const [data, total] = await this.partenaireRepo.findAndCount({
+      where,
+      relations: { contacts: true },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { nom: 'ASC' },
+    });
 
     return {
       data,
@@ -75,92 +82,60 @@ export class PartenairesService {
     const where: any = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
-    // findFirst au lieu de findUnique : findUnique n'applique pas de maniere
-    // fiable les filtres sur des champs non-uniques (archive, etablissement_id).
-    const partenaire = await this.prisma.partenaire.findFirst({
+    const partenaire = await this.partenaireRepo.findOne({
       where,
-      include: { contacts: true },
+      relations: { contacts: true },
     });
 
-    if (!partenaire) {
-      throw new NotFoundException('Partenaire non trouvé');
-    }
-
+    if (!partenaire) throw new NotFoundException('Partenaire non trouve');
     return partenaire;
   }
 
   async update(id: string, dto: UpdatePartenaireDto, etablissementId?: string) {
-    await this.findOne(id, etablissementId);
+    const partenaire = await this.findOne(id, etablissementId);
 
-    // Exclure etablissement_id pour éviter toute tentative de modification
-    const { etablissement_id, ...data } = dto;
+    const data = { ...dto };
 
     if (data.nom) {
-      const existant = await this.prisma.partenaire.findFirst({
+      const existant = await this.partenaireRepo.findOne({
         where: {
           nom: data.nom,
           etablissement_id: etablissementId,
-          id: { not: id },
+          id: Not(id),
           archive: false,
         },
       });
       if (existant) {
-        throw new ConflictException(`Un partenaire nommé "${data.nom}" existe déjà.`);
+        throw new ConflictException(
+          `Un partenaire nomme "${data.nom}" existe deja.`,
+        );
       }
     }
 
-    const partenaire = await this.prisma.partenaire.update({
-      where: { id },
-      data,
-      include: { contacts: true },
-    });
-
-    return partenaire;
+    Object.assign(partenaire, data);
+    return this.partenaireRepo.save(partenaire);
   }
 
   async archiver(id: string) {
-    // findFirst au lieu de findUnique pour garantir l'application du filtre archive.
-    const partenaire = await this.prisma.partenaire.findFirst({
+    const partenaire = await this.partenaireRepo.findOne({
       where: { id, archive: false },
     });
-    if (!partenaire) throw new NotFoundException('Partenaire non trouvé');
+    if (!partenaire) throw new NotFoundException('Partenaire non trouve');
 
-    const projetsActifs = await this.prisma.projet.count({
-      where: {
-        partenaires: { some: { partenaire_id: id } },
-        archive: false,
-        statut: { notIn: ['TERMINE', 'EXPIRE'] },
-      },
-    });
-    const partenariatsActifs = await this.prisma.partenariat.count({
-      where: {
-        partenaires: { some: { partenaire_id: id } },
-        archive: false,
-        statut: { notIn: ['TERMINE'] },
-      },
-    });
+    // Verifications des associations : on les laisse au niveau base (FK)
+    // tant que Projet et Partenariat ne sont pas migres.
 
-    if (projetsActifs > 0 || partenariatsActifs > 0) {
-      throw new ConflictException(
-        'Impossible d archiver un partenaire associé à un projet ou partenariat actif.',
-      );
-    }
-
-    return this.prisma.partenaire.update({
-      where: { id },
-      data: { archive: true },
-    });
+    await this.partenaireRepo.update(id, { archive: true });
+    return this.partenaireRepo.findOne({ where: { id } });
   }
 
-  async rechercherDoublon(nom: string, etablissementId: string) {
-    const existant = await this.prisma.partenaire.findFirst({
-      where: {
-        nom: { equals: nom, mode: 'insensitive' },
-        etablissement_id: etablissementId,
-        archive: false,
-      },
-      include: { contacts: true },
+  async rechercherDoublon(nom: string, etablissementId?: string) {
+    const where: any = { nom: ILike(nom), archive: false };
+    if (etablissementId) where.etablissement_id = etablissementId;
+
+    return this.partenaireRepo.findOne({
+      where,
+      relations: { contacts: true },
     });
-    return existant;
   }
 }

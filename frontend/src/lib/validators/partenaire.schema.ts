@@ -30,12 +30,3 @@ export function creerSchemaPartenaire(etablissementObligatoire: boolean) {
 }
 
 export type PartenaireFormValues = z.infer<typeof partenaireSchemaBase>;
-
-export const contactSchema = z.object({
-  nom: z.string().min(1, 'Le nom est obligatoire.'),
-  fonction: z.string().optional(),
-  email: z.string().email('Adresse e-mail invalide.').optional().or(z.literal('')),
-  telephone: creerSchemaTelephoneOptionnel(),
-});
-
-export type ContactFormValues = z.infer<typeof contactSchema>;

@@ -1,6 +1,6 @@
 import { IsEnum, IsOptional, IsUUID, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TypeDocument } from '@prisma/client';
+import { TypeDocument } from '../../common/enums/type-document.enum';
 
 export class UploadDocumentDto {
   @ApiProperty({ enum: TypeDocument })

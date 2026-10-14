@@ -1,20 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { EtablissementResponseDto } from './dto/etablissement-response.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Etablissement } from './entities/etablissement.entity';
 
 @Injectable()
 export class EtablissementsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Etablissement)
+    private etablissementRepo: Repository<Etablissement>,
+  ) {}
 
-  async findAll(): Promise<EtablissementResponseDto[]> {
-    const etablissements = await this.prisma.etablissement.findMany({
-      orderBy: { nom: 'asc' },
+  async findAll(): Promise<Etablissement[]> {
+    return this.etablissementRepo.find({
+      order: { nom: 'ASC' },
     });
-    return etablissements;
   }
 
-  async findOne(id: string): Promise<EtablissementResponseDto> {
-    const etablissement = await this.prisma.etablissement.findUnique({
+  async findOne(id: string): Promise<Etablissement> {
+    const etablissement = await this.etablissementRepo.findOne({
       where: { id },
     });
     if (!etablissement) {

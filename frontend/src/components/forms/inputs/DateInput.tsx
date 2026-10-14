@@ -8,9 +8,10 @@ interface DateInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'ty
   label: string;
   aide?: string;
   erreur?: string;
+  requis?: boolean;
 }
 
-export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(({ label, aide, erreur, ...props }, ref) => {
+export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(({ label, aide, erreur, requis, ...props }, ref) => {
   return (
     <FloatingLabelInput
       ref={ref}
@@ -18,6 +19,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(({ label, 
       label={label}
       aide={aide}
       erreur={erreur}
+      requis={requis}
       icone={<Calendar />}
       libelleRemonte
       {...props}

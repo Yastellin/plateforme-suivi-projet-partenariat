@@ -2,16 +2,19 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
-import { videsEnNull } from '@/lib/payload';
-import { normaliserTelephone } from '@/lib/validators/phone.schema';
+import { normaliserEmail, normaliserNomPersonne } from '@/lib/normalisation';
+import { normaliserTelephone } from '@/lib/phone';
 import type { Contact } from '@/types/api';
-import type { ContactFormValues } from '@/lib/validators/partenaire.schema';
+import type { ContactFormValues } from '@/lib/validators/contact.schema';
 
+// Le contrat API contact ne comporte que { nom, fonction, email, telephone } :
+// le champ prenom n'existe pas cote backend (table "Contact" sans colonne prenom).
 function preparerPayloadContact(valeurs: ContactFormValues): Record<string, unknown> {
-  const { telephone, ...reste } = valeurs;
   return {
-    ...videsEnNull(reste),
-    telephone: telephone ? normaliserTelephone(telephone) : null,
+    nom: normaliserNomPersonne(valeurs.nom),
+    fonction: valeurs.fonction || null,
+    email: valeurs.email ? normaliserEmail(valeurs.email) : null,
+    telephone: valeurs.telephone ? normaliserTelephone(valeurs.telephone) : null,
   };
 }
 
@@ -39,7 +42,9 @@ export function useCreateContact() {
   });
 }
 
-export const useCreerContact = useCreateContact;
+export function useCreerContact(_partenaireId?: string) {
+  return useCreateContact();
+}
 
 interface VariablesModifierContact {
   id: string;
@@ -63,7 +68,9 @@ export function useUpdateContact() {
   });
 }
 
-export const useModifierContact = useUpdateContact;
+export function useModifierContact(_partenaireId?: string) {
+  return useUpdateContact();
+}
 
 interface VariablesSupprimerContact {
   id: string;

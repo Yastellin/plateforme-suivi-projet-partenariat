@@ -11,3 +11,7 @@ export function versIso(dateSaisie: string): string {
 export function versChampDate(dateIso: string): string {
   return dateIso.slice(0, 10);
 }
+
+export function formaterMontant(montant: number): string {
+  return new Intl.NumberFormat('fr-FR').format(montant);
+}

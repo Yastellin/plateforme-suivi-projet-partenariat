@@ -2,10 +2,12 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, TriangleAlert } from 'lucide-react';
 import { creerSchemaPartenaire, type PartenaireFormValues } from '@/lib/validators/partenaire.schema';
 import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput';
 import { PhoneInputSanitized } from '@/components/forms/inputs/PhoneInputSanitized';
+import { useRechercheDoublon } from '../api/useRechercheDoublon';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { Etablissement, Partenaire } from '@/types/api';
 
 interface PartenaireFormProps {
@@ -22,6 +24,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<PartenaireFormValues>({
     resolver: zodResolver(creerSchemaPartenaire(afficherSelectionEtablissement)),
@@ -42,12 +45,17 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
     },
   });
 
+  const email = watch('email') ?? '';
+  const emailDifferee = useDebounce(email, 400);
+  const { data: doublonsEmail } = useRechercheDoublon('email', emailDifferee);
+  const doublonEmail = doublonsEmail?.find((d) => d.id !== partenaire?.id);
+
   return (
     <form onSubmit={handleSubmit(onSoumettre)} noValidate className="flex flex-col gap-1">
       {afficherSelectionEtablissement ? (
         <div className="mb-4">
           <label htmlFor="etablissement_id" className="mb-1.5 block text-[12.5px] font-medium text-[var(--color-text-secondary)]">
-            Établissement porteur
+            Établissement porteur <span className="text-[var(--status-expire-fg)]">*</span>
           </label>
           <select
             id="etablissement_id"
@@ -72,6 +80,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <FloatingLabelInput
           label="Nom"
+          requis
           autoFocus
           placeholder="Ex : Airtel Madagascar"
           erreur={errors.nom?.message}
@@ -79,6 +88,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
         />
         <FloatingLabelInput
           label="Type"
+          requis
           placeholder="Ex : Opérateur télécom, ONG, Université"
           erreur={errors.type?.message}
           {...register('type')}
@@ -88,6 +98,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <FloatingLabelInput
           label="Pays"
+          requis
           placeholder="Ex : Madagascar"
           erreur={errors.pays?.message}
           {...register('pays')}
@@ -102,13 +113,21 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
 
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <PhoneInputSanitized erreur={errors.telephone?.message} {...register('telephone')} />
-        <FloatingLabelInput
-          label="Adresse e-mail"
-          type="email"
-          placeholder="contact@exemple.mg"
-          erreur={errors.email?.message}
-          {...register('email')}
-        />
+        <div>
+          <FloatingLabelInput
+            label="Adresse e-mail"
+            type="email"
+            placeholder="contact@exemple.mg"
+            erreur={errors.email?.message}
+            {...register('email')}
+          />
+          {doublonEmail ? (
+            <div className="mb-4 -mt-3 flex items-center gap-2 px-0.5 text-[11.5px] font-medium text-[var(--status-attente-fg)]">
+              <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
+              Un partenaire avec cet e-mail existe déjà dans cet établissement.
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <FloatingLabelInput
@@ -152,8 +171,8 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
 
       <button
         type="submit"
-        disabled={enCours}
-        className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
+        disabled={enCours || Boolean(doublonEmail)}
+        className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         Enregistrer

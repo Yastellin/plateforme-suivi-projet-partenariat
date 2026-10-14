@@ -1,218 +1,182 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { StatutPartenaire, StatutProjet, StatutConvention, StatutPublication } from '@prisma/client';
-import { PublicEtablissementQueryDto, PublicPartenaireQueryDto, PublicPublicationQueryDto } from './dto/public-query.dto';
-import { ContactPublicDto } from './dto/contact-public.dto';
-
-// Agregation renvoyee par GET /public/accueil (hero de la page d'accueil).
-export interface AccueilPublic {
-  statistiques: {
-    partenaires_actifs: number;
-    projets_en_cours: number;
-    conventions_signees: number;
-  };
-  dernieres_publications: Array<{
-    id: string;
-    titre: string;
-    description_publique: string | null;
-    date_publication: Date | null;
-  }>;
-  etablissements_a_la_une: unknown[];
-  partenaires_a_la_une: unknown[];
-  compteurs: {
-    nombre_etablissements: number;
-    nombre_partenaires: number;
-    nombre_pays_partenaires: number;
-    nombre_projets_actifs: number;
-  };
-}
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
+import { Etablissement } from '../etablissements/entities/etablissement.entity';
+import { Partenaire } from '../partenaires/entities/partenaire.entity';
+import { Projet } from '../projets/entities/projet.entity';
+import { Convention } from '../conventions/entities/convention.entity';
+import { Publication } from '../publications/enitities/publication.entity';
+import { StatutProjet } from '../common/enums/statut-projet.enum';
+import { StatutConvention } from '../common/enums/statut-convention.enum';
+import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
+import { StatutPublication } from '../common/enums/statut-publication.enum';
+import { Visibilite } from '../common/enums/visibilite.enum';
+import {
+  AccueilPublicDto,
+  PublicationRecenteDto,
+} from './dto/accueil-public.dto';
+import { PartenairePublicDto } from './dto/partenaire-public.dto';
+import { PublicationPubliqueDto } from './dto/publication-publique.dto';
 
 @Injectable()
 export class EspacePublicService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectRepository(Etablissement)
+    private etablissementRepo: Repository<Etablissement>,
+    @InjectRepository(Partenaire)
+    private partenaireRepo: Repository<Partenaire>,
+    @InjectRepository(Projet) private projetRepo: Repository<Projet>,
+    @InjectRepository(Convention)
+    private conventionRepo: Repository<Convention>,
+    @InjectRepository(Publication)
+    private publicationRepo: Repository<Publication>,
+  ) {}
 
-  /**
-   * Page d'accueil publique : statistiques synthetiques, dernieres publications,
-   * etablissements et partenaires mis en avant, ainsi que les compteurs animes.
-   */
-  async accueil(): Promise<AccueilPublic> {
+  async getAccueil(): Promise<AccueilPublicDto> {
     const [
-      partenairesActifs,
-      projetsEnCours,
-      conventionsSignees,
-      nombreEtablissements,
-      nombrePartenaires,
-      paysPartenaires,
-      nombreProjetsActifs,
-      dernieresPublications,
-      etablissements,
-      partenaires,
+      partenaires_actifs,
+      projets_en_cours,
+      conventions_signees,
+      publications,
     ] = await Promise.all([
-      this.prisma.partenaire.count({
-        where: { archive: false, statut: StatutPartenaire.ACTIF, visibilite: 'PUBLIC' },
+      this.partenaireRepo.count({
+        where: {
+          visibilite: Visibilite.PUBLIC,
+          statut: StatutPartenaire.ACTIF,
+          archive: false,
+        },
       }),
-      this.prisma.projet.count({
-        where: { archive: false, statut: StatutProjet.EN_COURS },
-      }),
-      this.prisma.convention.count({
-        where: { archive: false, statut: StatutConvention.SIGNEE },
-      }),
-      this.prisma.etablissement.count(),
-      this.prisma.partenaire.count({ where: { archive: false, visibilite: 'PUBLIC' } }),
-      this.prisma.partenaire.findMany({
-        where: { archive: false, visibilite: 'PUBLIC' },
-        distinct: ['pays'],
-        select: { pays: true },
-      }),
-      this.prisma.projet.count({
+      this.projetRepo.count({
         where: {
           archive: false,
-          statut: { in: [StatutProjet.EN_COURS, StatutProjet.EN_ATTENTE] },
+          statut: In([StatutProjet.EN_COURS, StatutProjet.EN_ATTENTE]),
         },
       }),
-      this.prisma.publication.findMany({
+      this.conventionRepo.count({
+        where: {
+          archive: false,
+          statut: In([StatutConvention.SIGNEE, StatutConvention.ACTIVE]),
+        },
+      }),
+      this.publicationRepo.find({
         where: { statut: StatutPublication.PUBLIEE },
-        orderBy: { date_publication: 'desc' },
-        take: 6,
-        select: {
-          id: true,
-          titre: true,
-          description_publique: true,
-          date_publication: true,
-        },
-      }),
-      this.prisma.etablissement.findMany({
-        orderBy: { nom: 'asc' },
-        take: 6,
-      }),
-      this.prisma.partenaire.findMany({
-        where: { archive: false, visibilite: 'PUBLIC' },
-        orderBy: [{ est_strategique: 'desc' }, { nom: 'asc' }],
-        take: 12,
+        relations: { photos: true },
+        order: { date_publication: 'DESC' },
+        take: 5,
       }),
     ]);
+
+    const publications_recentes: PublicationRecenteDto[] = publications.map(
+      (publication) => {
+        const premierePhoto = [...(publication.photos ?? [])].sort(
+          (a, b) => a.ordre - b.ordre,
+        )[0];
+        return {
+          id: publication.id,
+          titre: publication.titre,
+          description_publique: publication.description_publique,
+          date_publication: publication.date_publication,
+          projet_id: publication.projet_id,
+          photo_url: premierePhoto?.url_fichier ?? null,
+        };
+      },
+    );
 
     return {
       statistiques: {
-        partenaires_actifs: partenairesActifs,
-        projets_en_cours: projetsEnCours,
-        conventions_signees: conventionsSignees,
+        partenaires_actifs,
+        projets_en_cours,
+        conventions_signees,
       },
-      dernieres_publications: dernieresPublications,
-      etablissements_a_la_une: etablissements,
-      partenaires_a_la_une: partenaires,
-      compteurs: {
-        nombre_etablissements: nombreEtablissements,
-        nombre_partenaires: nombrePartenaires,
-        nombre_pays_partenaires: paysPartenaires.length,
-        nombre_projets_actifs: nombreProjetsActifs,
-      },
+      publications_recentes,
     };
   }
-  /** Liste publique des etablissements avec recherche (nom / sigle). */
-  async etablissements(query: PublicEtablissementQueryDto) {
-    const { page = 1, limit = 20, recherche } = query;
 
-    const where: any = {};
-    if (recherche) {
-      where.OR = [
-        { nom: { contains: recherche, mode: 'insensitive' } },
-        { sigle: { contains: recherche, mode: 'insensitive' } },
-      ];
+  async listerPublications(): Promise<{
+    data: PublicationPubliqueDto[];
+    total: number;
+  }> {
+    const [publications, total] = await this.publicationRepo.findAndCount({
+      where: { statut: StatutPublication.PUBLIEE },
+      relations: { photos: true },
+      order: { date_publication: 'DESC' },
+    });
+
+    return {
+      data: publications.map((publication) =>
+        this.mapPublicationPublique(publication),
+      ),
+      total,
+    };
+  }
+
+  async getPublication(id: string): Promise<PublicationPubliqueDto> {
+    const publication = await this.publicationRepo.findOne({
+      where: { id, statut: StatutPublication.PUBLIEE },
+      relations: { photos: true },
+    });
+    if (!publication) {
+      throw new NotFoundException('Publication introuvable.');
     }
 
-    const [data, total] = await Promise.all([
-      this.prisma.etablissement.findMany({
-        where,
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { nom: 'asc' },
-      }),
-      this.prisma.etablissement.count({ where }),
-    ]);
-
-    return {
-      data,
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    };
+    return this.mapPublicationPublique(publication);
   }
 
-  /** Liste publique des partenaires (uniquement visibilite = PUBLIC). */
-  async partenaires(query: PublicPartenaireQueryDto) {
-    const { page = 1, limit = 20, recherche, pays, type } = query;
-
-    const where: any = { archive: false, visibilite: 'PUBLIC' };
-    if (recherche) where.nom = { contains: recherche, mode: 'insensitive' };
-    if (pays) where.pays = { contains: pays, mode: 'insensitive' };
-    if (type) where.type = { contains: type, mode: 'insensitive' };
-
-    const [data, total] = await Promise.all([
-      this.prisma.partenaire.findMany({
-        where,
-        include: { contacts: true },
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { nom: 'asc' },
-      }),
-      this.prisma.partenaire.count({ where }),
-    ]);
-
-    return {
-      data,
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    };
-  }
-
-  /** Liste publique des publications (uniquement statut = PUBLIEE). */
-  async publications(query: PublicPublicationQueryDto) {
-    const { page = 1, limit = 20, recherche } = query;
-
-    const where: any = { statut: StatutPublication.PUBLIEE };
-    if (recherche) where.titre = { contains: recherche, mode: 'insensitive' };
-
-    const [data, total] = await Promise.all([
-      this.prisma.publication.findMany({
-        where,
-        include: { photos: { orderBy: { ordre: 'asc' } } },
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { date_publication: 'desc' },
-      }),
-      this.prisma.publication.count({ where }),
-    ]);
-
-    return {
-      data,
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    };
-  }
-
-  /** Detail public d'une publication (uniquement si publiee). */
-  async publication(id: string) {
-    const publication = await this.prisma.publication.findFirst({
-      where: { id, statut: StatutPublication.PUBLIEE },
-      include: { photos: { orderBy: { ordre: 'asc' } } },
+  async listerEtablissements(): Promise<
+    Array<
+      Pick<Etablissement, 'id' | 'nom' | 'sigle' | 'logo_url' | 'description'>
+    >
+  > {
+    const etablissements = await this.etablissementRepo.find({
+      order: { nom: 'ASC' },
     });
-    // On masque l'existence des publications non publiees (404 generique).
-    if (!publication) throw new NotFoundException('Publication non trouvee');
-    return publication;
+
+    return etablissements.map(({ id, nom, sigle, logo_url, description }) => ({
+      id,
+      nom,
+      sigle,
+      logo_url,
+      description,
+    }));
   }
 
-  /** Enregistre un message envoye depuis le formulaire de contact public. */
-  async contact(dto: ContactPublicDto) {
-    const message = await this.prisma.messageContact.create({
-      data: {
-        nom: dto.nom,
-        email: dto.email,
-        telephone: dto.telephone,
-        sujet: dto.sujet,
-        message: dto.message,
-      },
+  async listerPartenaires(): Promise<PartenairePublicDto[]> {
+    const partenaires = await this.partenaireRepo.find({
+      where: { visibilite: Visibilite.PUBLIC, archive: false },
+      order: { nom: 'ASC' },
     });
+
+    return partenaires.map(
+      ({ id, nom, type, pays, description, logo_url, site_web }) => ({
+        id,
+        nom,
+        type,
+        pays,
+        description,
+        logo_url,
+        site_web,
+      }),
+    );
+  }
+
+  private mapPublicationPublique(
+    publication: Publication,
+  ): PublicationPubliqueDto {
     return {
-      id: message.id,
-      message: 'Votre message a bien ete envoye. Nous vous repondrons dans les meilleurs delais.',
+      id: publication.id,
+      titre: publication.titre,
+      description_publique: publication.description_publique,
+      date_publication: publication.date_publication,
+      resultats: publication.resultats,
+      projet_id: publication.projet_id,
+      photos: [...(publication.photos ?? [])]
+        .sort((a, b) => a.ordre - b.ordre)
+        .map(({ id, url_fichier, legende, ordre }) => ({
+          id,
+          url_fichier,
+          legende,
+          ordre,
+        })),
     };
   }
 }
-

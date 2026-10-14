@@ -22,12 +22,15 @@ import { SelectionBeneficiaires } from "@/features/projets/components/SelectionB
 import { SelectionSites } from "@/features/projets/components/SelectionSites"
 import { useCreateProjet } from "@/features/projets/api/useCreateProjet"
 import { useWizardDraft } from "@/components/forms/wizard/useWizardDraft"
-import { schemaProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
-import type { Projet } from "@/types/api"
+import { creerSchemaProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
+import type { Etablissement, Projet } from "@/types/api"
 
 interface ProjetWizardProps {
   onSucces: (projet: Projet) => void
   onAnnuler: () => void
+  // Fourni a la presidence uniquement : son compte n'est rattache a aucun
+  // etablissement, elle doit donc designer le porteur du projet.
+  etablissements?: Etablissement[]
 }
 
 const STATUTS = [
@@ -50,18 +53,25 @@ const ETAPES = [
 // Wizard multi-etapes pour la creation d'un projet (section 7.2 :
 // "wizard de creation"). L'etablissement cree toujours en BROUILLON
 // (section 5). Etapes numerotees, barre de progression, recapitulatif.
-export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
+export function ProjetWizard({ onSucces, onAnnuler, etablissements }: ProjetWizardProps) {
   const [etapeActive, setEtapeActive] = useState(0)
   const creation = useCreateProjet()
+  const afficherSelectionEtablissement = etablissements !== undefined
 
   const {
     register,
     control,
     handleSubmit,
     watch,
+    trigger,
     formState: { errors },
   } = useForm<ProjetFormValues>({
-    resolver: zodResolver(schemaProjet) as any,
+    resolver: zodResolver(
+      creerSchemaProjet({
+        exigerDateDebutFuture: true,
+        etablissementObligatoire: afficherSelectionEtablissement,
+      }),
+    ) as any,
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
@@ -73,10 +83,11 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
       date_debut: "",
       date_fin_prevue: "",
       statut: "BROUILLON",
+      etablissement_id: "",
       porteur_id: undefined,
-      bailleur_ids: [],
-      beneficiaire_ids: [],
-      site_ids: [],
+      bailleurs_ids: [],
+      beneficiaires_ids: [],
+      sites_ids: [],
     },
   })
 
@@ -84,20 +95,27 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const derniereEtape = etapeActive === ETAPES.length - 1
 
   // Sauvegarde auto brouillon toutes les 30s (section 8.2)
-  const { viderBrouillon } = useWizardDraft({
+  const { effacerBrouillon } = useWizardDraft({
     cle: "projet-wizard",
-    donnees: { ...valeurs, etapeActive },
+    valeurs: { ...valeurs, etapeActive },
+    actif: !creation.isPending,
     onRestaurer: (d) => {
       if (d.etapeActive !== undefined) setEtapeActive(d.etapeActive as number)
     },
   })
 
-  const suivant = () => {
+  const suivant = async () => {
     if (derniereEtape) {
       handleSubmit(onSubmit)()
-    } else {
-      setEtapeActive((e) => e + 1)
+      return
     }
+
+    if (etapeActive === 0 && afficherSelectionEtablissement) {
+      const valide = await trigger("etablissement_id")
+      if (!valide) return
+    }
+
+    setEtapeActive((e) => e + 1)
   }
 
   const precedent = () => setEtapeActive((e) => Math.max(0, e - 1))
@@ -105,12 +123,12 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   function onSubmit(valeurs: ProjetFormValues) {
     creation.mutate(valeurs, {
       onSuccess: (projet) => {
-        viderBrouillon()
-        toast.success("Projet cree avec succes !")
+        effacerBrouillon()
+        toast.success("Projet créé avec succès !")
         onSucces(projet)
       },
       onError: (erreur) => {
-        toast.error(erreur.message || "Erreur lors de la creation.")
+        toast.error(erreur.message || "Erreur lors de la création.")
       },
     })
   }
@@ -118,6 +136,29 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const contenuEtapes = [
     // Etape 1 : Informations generales
     <div key="info" className="flex flex-col gap-4">
+      {afficherSelectionEtablissement && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="etablissement_id" requis>
+            Établissement porteur
+          </Label>
+          <select
+            id="etablissement_id"
+            className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            aria-invalid={!!errors.etablissement_id}
+            {...register("etablissement_id")}
+          >
+            <option value="">Sélectionnez un établissement</option>
+            {(etablissements ?? []).map((etablissement) => (
+              <option key={etablissement.id} value={etablissement.id}>
+                {etablissement.sigle ? `${etablissement.sigle} — ${etablissement.nom}` : etablissement.nom}
+              </option>
+            ))}
+          </select>
+          {errors.etablissement_id && (
+            <p className="text-sm text-destructive">{errors.etablissement_id.message}</p>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="nom">
@@ -133,7 +174,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
           )}
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="intitule_officiel">Intitule officiel</Label>
+          <Label htmlFor="intitule_officiel">Intitulé officiel</Label>
           <Input id="intitule_officiel" {...register("intitule_officiel")} />
         </div>
       </div>
@@ -174,7 +215,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
       <div className="grid grid-cols-3 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_debut">
-            Date de debut <span className="text-destructive">*</span>
+            Date de début <span className="text-destructive">*</span>
           </Label>
           <Input
             id="date_debut"
@@ -188,7 +229,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_fin_prevue">
-            Date de fin prevue <span className="text-destructive">*</span>
+            Date de fin prévue <span className="text-destructive">*</span>
           </Label>
           <Input
             id="date_fin_prevue"
@@ -223,8 +264,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         </div>
       </div>
       <p className="text-xs text-muted-foreground">
-        Le statut est defini a BROUILLON par defaut. Vous pourrez le modifier
-        ulterieurement.
+        Le statut est défini à BROUILLON par défaut. Vous pourrez le modifier ultérieurement.
       </p>
     </div>,
 
@@ -246,27 +286,27 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         <Label>Bailleurs</Label>
         <Controller
           control={control}
-          name="bailleur_ids"
+          name="bailleurs_ids"
           render={({ field }) => (
             <SelectionBailleurs valeur={field.value ?? []} onChange={field.onChange} />
           )}
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label>Beneficiaires</Label>
+        <Label>Bénéficiaires</Label>
         <Controller
           control={control}
-          name="beneficiaire_ids"
+          name="beneficiaires_ids"
           render={({ field }) => (
             <SelectionBeneficiaires valeur={field.value ?? []} onChange={field.onChange} />
           )}
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label>Sites concernes</Label>
+        <Label>Sites concernés</Label>
         <Controller
           control={control}
-          name="site_ids"
+          name="sites_ids"
           render={({ field }) => (
             <SelectionSites valeur={field.value ?? []} onChange={field.onChange} />
           )}
@@ -277,30 +317,38 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
     // Etape 5 : Recapitulatif
     <div key="recap" className="flex flex-col gap-4">
       <h3 className="font-heading text-sm font-medium text-muted-foreground">
-        Verifiez les informations avant la creation
+        Vérifiez les informations avant la création
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
         <RecapChamp label="Nom" valeur={valeurs.nom || "—"} />
+        {afficherSelectionEtablissement && (
+          <RecapChamp
+            label="Établissement porteur"
+            valeur={
+              etablissements?.find((e) => e.id === valeurs.etablissement_id)?.nom ?? "—"
+            }
+          />
+        )}
         <RecapChamp label="Type" valeur={valeurs.type || "—"} />
         <RecapChamp label="Domaine" valeur={valeurs.domaine || "—"} />
         <RecapChamp
           label="Budget"
           valeur={valeurs.budget ? `${valeurs.budget.toLocaleString("fr-FR")} MGA` : "—"}
         />
-        <RecapChamp label="Date de debut" valeur={valeurs.date_debut || "—"} />
-        <RecapChamp label="Date de fin prevue" valeur={valeurs.date_fin_prevue || "—"} />
+        <RecapChamp label="Date de début" valeur={valeurs.date_debut || "—"} />
+        <RecapChamp label="Date de fin prévue" valeur={valeurs.date_fin_prevue || "—"} />
         <RecapChamp label="Statut" valeur={STATUTS.find((s) => s.value === valeurs.statut)?.label ?? valeurs.statut} />
         <RecapChamp
           label="Porteur"
-          valeur={valeurs.porteur_id ? "Selectionne" : "Non defini"}
+          valeur={valeurs.porteur_id ? "Sélectionné" : "Non défini"}
         />
-        <RecapChamp label="Bailleurs" valeur={`${valeurs.bailleur_ids?.length ?? 0} selectionne(s)`} />
-        <RecapChamp label="Beneficiaires" valeur={`${valeurs.beneficiaire_ids?.length ?? 0} selectionne(s)`} />
-        <RecapChamp label="Sites" valeur={`${valeurs.site_ids?.length ?? 0} selectionne(s)`} />
+        <RecapChamp label="Bailleurs" valeur={`${valeurs.bailleurs_ids?.length ?? 0} sélectionné(s)`} />
+        <RecapChamp label="Bénéficiaires" valeur={`${valeurs.beneficiaires_ids?.length ?? 0} sélectionné(s)`} />
+        <RecapChamp label="Sites" valeur={`${valeurs.sites_ids?.length ?? 0} sélectionné(s)`} />
       </div>
       {valeurs.intitule_officiel && (
         <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Intitule officiel</span>
+          <span className="text-xs text-muted-foreground">Intitulé officiel</span>
           <p className="text-sm text-foreground">{valeurs.intitule_officiel}</p>
         </div>
       )}
@@ -320,7 +368,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
           onClick={precedent}
           disabled={etapeActive === 0 || creation.isPending}
         >
-          Precedent
+          Précédent
         </Button>
         <div className="flex gap-2">
           <Button
@@ -337,7 +385,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
             disabled={creation.isPending}
           >
             {creation.isPending && <LoaderCircle className="animate-spin" />}
-            {derniereEtape ? "Creer le projet" : "Suivant"}
+            {derniereEtape ? "Créer le projet" : "Suivant"}
           </Button>
         </div>
       </div>

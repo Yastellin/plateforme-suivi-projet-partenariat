@@ -41,13 +41,24 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # CORRIGE : charger toutes les variables du backend/.env.
+    # Sans cette directive, docker compose ne lit que le .env a la racine
+    # du projet (ou les variables du shell), pas le backend/.env.
+    env_file:
+      - ./backend/.env
+    # CORRIGE : ne garder dans 'environment' que ce qui doit etre
+    # specifique au conteneur (hote 'db' au lieu de 'localhost').
+    # Les variables MAIL_*, SMTP_*, FRONTEND_URL, MOT_DE_PASSE_RESET_EXPIRATION_MINUTES
+    # et TZ_APPLICATION viennent maintenant de backend/.env via env_file.
+    # NOTE : 'environment' ecrase toujours 'env_file' en cas de conflit,
+    # donc DATABASE_URL est volontairement conserve ici avec 'db' comme hote.
     environment:
-      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/plateforme_partenariat?schema=public
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/plateforme_partenariat
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       NODE_ENV: development
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
     volumes:
-      - ./backend/prisma:/app/prisma
       - ./backend/uploads:/app/uploads
 
 volumes:

@@ -10,15 +10,8 @@ RUN npm config set fetch-retries 5 \
  && npm config set fetch-retry-mintimeout 1000 \
  && npm ci --legacy-peer-deps
 
-# Copier tout le code source (y compris prisma/schema.prisma)
+# Copier tout le code source
 COPY . .
-
-# S'assurer qu'aucun artefact de compilation incrémentale résiduel n'est présent :
-# un *.tsbuildinfo périmé ferait que `tsc --incremental` n'émet aucun fichier.
-RUN rm -f *.tsbuildinfo
-
-# Générer le client Prisma (indispensable avant la compilation)
-RUN npx prisma generate
 
 # Compiler le projet TypeScript
 RUN npm run build
@@ -30,13 +23,9 @@ WORKDIR /app
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/tsconfig.json ./tsconfig.json
-# Script de démarrage dédié (nom unique pour ne pas entrer en collision avec le
-# "docker-entrypoint.sh" fourni par l'image node, qui existe déjà dans le PATH).
-COPY docker-entrypoint.sh /app/start-backend.sh
-RUN chmod +x /app/start-backend.sh
 
 EXPOSE 3000
 
-ENTRYPOINT ["/app/start-backend.sh"]
+# Applique les migrations TypeORM puis demarre l'API.
+# Le DataSource compile (dist) est utilise : aucune dependance a ts-node.
+CMD ["sh", "-c", "npx typeorm migration:run -d dist/database/data-source.js && node dist/main"]

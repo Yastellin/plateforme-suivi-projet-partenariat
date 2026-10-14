@@ -9,7 +9,12 @@ import {
   ParseUUIDPipe,
   HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { CotutellesService } from './cotutelles.service';
 import { CreateCotutelleDto } from './dto/create-cotutelle.dto';
 import { UpdateCotutelleDto } from './dto/update-cotutelle.dto';
@@ -44,13 +49,17 @@ export class CotutellesController {
   @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({ summary: 'Obtenir une cotutelle par ID' })
   @ApiResponse({ status: 200, type: CotutelleResponseDto })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<CotutelleResponseDto> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CotutelleResponseDto> {
     return this.cotutellesService.findOne(id);
   }
 
   @Patch(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Mettre a jour une cotutelle (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Mettre a jour une cotutelle (Presidence uniquement)',
+  })
   @ApiResponse({ status: 200, type: CotutelleResponseDto })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -64,7 +73,9 @@ export class CotutellesController {
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Archiver une cotutelle (Presidence uniquement)' })
   @ApiResponse({ status: 200, type: CotutelleResponseDto })
-  archiver(@Param('id', ParseUUIDPipe) id: string): Promise<CotutelleResponseDto> {
+  archiver(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CotutelleResponseDto> {
     return this.cotutellesService.archiver(id);
   }
 }

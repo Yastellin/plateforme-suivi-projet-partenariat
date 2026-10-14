@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Save } from 'lucide-react';
-import { Mail, User, Briefcase } from 'lucide-react';
+import { Briefcase, Loader2, Mail, Save, TriangleAlert, User } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,9 @@ import {
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput';
 import { PhoneInputSanitized } from '@/components/forms/inputs/PhoneInputSanitized';
-import { contactSchema, type ContactFormValues } from '@/lib/validators/partenaire.schema';
+import { contactSchema, type ContactFormValues } from '@/lib/validators/contact.schema';
+import { useRechercheDoublonContact } from '../api/useRechercheDoublonContact';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { Contact } from '@/types/api';
 
 interface ContactDialogProps {
@@ -22,6 +23,7 @@ interface ContactDialogProps {
   onFermer: () => void;
   onSoumettre: (valeurs: ContactFormValues) => void;
   enCours: boolean;
+  partenaireId: string;
   contact?: Contact;
 }
 
@@ -34,12 +36,13 @@ function valeursInitiales(contact?: Contact): ContactFormValues {
   };
 }
 
-export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, contact }: ContactDialogProps) {
+export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, partenaireId, contact }: ContactDialogProps) {
   const [confirmationPerte, setConfirmationPerte] = useState(false);
 
   const {
     register,
     handleSubmit,
+    watch,
     reset,
     formState: { errors, isDirty },
   } = useForm<ContactFormValues>({
@@ -54,6 +57,11 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, contact 
       reset(valeursInitiales(contact));
     }
   }, [ouvert, contact, reset]);
+
+  const email = watch('email') ?? '';
+  const emailDifferee = useDebounce(email, 400);
+  const { data: doublonsEmail } = useRechercheDoublonContact(partenaireId, 'email', emailDifferee);
+  const doublonEmail = doublonsEmail?.find((d) => d.id !== contact?.id);
 
   function tenterFermeture() {
     if (isDirty) {
@@ -78,13 +86,15 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, contact 
 
           <form onSubmit={handleSubmit(onSoumettre)} noValidate className="pt-2">
             <FloatingLabelInput
-              label="Nom"
+              label="Nom complet"
+              requis
               autoFocus
               icone={<User />}
-              placeholder="Ex : Rakoto Andriamihaja"
+              placeholder="Ex : Marie Dupont"
               erreur={errors.nom?.message}
               {...register('nom')}
             />
+
             <FloatingLabelInput
               label="Fonction"
               icone={<Briefcase />}
@@ -92,6 +102,7 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, contact 
               erreur={errors.fonction?.message}
               {...register('fonction')}
             />
+
             <FloatingLabelInput
               label="Adresse e-mail"
               type="email"
@@ -100,6 +111,13 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, contact 
               erreur={errors.email?.message}
               {...register('email')}
             />
+            {doublonEmail ? (
+              <div className="mb-4 -mt-2.5 flex items-center gap-2 px-0.5 text-[11.5px] font-medium text-[var(--status-attente-fg)]">
+                <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
+                Un contact avec cet e-mail existe déjà pour ce partenaire.
+              </div>
+            ) : null}
+
             <PhoneInputSanitized erreur={errors.telephone?.message} {...register('telephone')} />
 
             <div className="mt-2 flex justify-end gap-2.5">
@@ -113,8 +131,8 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, contact 
               </button>
               <button
                 type="submit"
-                disabled={enCours}
-                className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
+                disabled={enCours || Boolean(doublonEmail)}
+                className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Enregistrer

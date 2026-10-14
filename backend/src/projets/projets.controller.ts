@@ -12,7 +12,12 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { ProjetsService } from './projets.service';
 import { CreateProjetDto } from './dto/create-projet.dto';
 import { UpdateProjetDto } from './dto/update-projet.dto';
@@ -39,11 +44,15 @@ export class ProjetsController {
     if (user.role === Role.ETABLISSEMENT) {
       etablissementId = user.etablissement_id;
       if (!etablissementId) {
-        throw new BadRequestException('Aucun établissement associé à ce compte.');
+        throw new BadRequestException(
+          'Aucun établissement associé à ce compte.',
+        );
       }
     } else if (user.role === Role.PRESIDENCE) {
       if (!dto.etablissement_id) {
-        throw new BadRequestException('Pour la PRÉSIDENCE, l\'ID de l\'établissement est requis.');
+        throw new BadRequestException(
+          "Pour la PRÉSIDENCE, l'ID de l'établissement est requis.",
+        );
       }
       etablissementId = dto.etablissement_id;
     } else {
@@ -55,7 +64,8 @@ export class ProjetsController {
   @Get()
   @ApiOperation({ summary: 'Lister les projets' })
   findAll(@CurrentUser() user: any, @Query() query: QueryProjetDto) {
-    const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
     return this.projetsService.findAll(query, etablissementId);
   }
 
@@ -63,12 +73,13 @@ export class ProjetsController {
   @ApiOperation({ summary: 'Obtenir un projet par ID' })
   @ApiResponse({ status: 200, type: ProjetResponseDto })
   findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
-    const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
     return this.projetsService.findOne(id, etablissementId);
   }
 
   @Get(':id/avancement')
-  @ApiOperation({ summary: 'Calculer l\'avancement d\'un projet' })
+  @ApiOperation({ summary: "Calculer l'avancement d'un projet" })
   getAvancement(@Param('id', ParseUUIDPipe) id: string) {
     return this.projetsService.getAvancement(id);
   }
@@ -82,26 +93,28 @@ export class ProjetsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateProjetDto,
   ) {
-    const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
     return this.projetsService.update(id, dto, etablissementId);
   }
 
-@Post(':id/soumettre')
-@HttpCode(200)
-@Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
-@ApiOperation({ summary: 'Soumettre un projet à la Présidence' })
-@ApiResponse({ status: 200, type: ProjetResponseDto })
-soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
-  const etablissementId = user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-  return this.projetsService.soumettre(id, etablissementId);
-}
+  @Post(':id/soumettre')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un projet à la Présidence' })
+  @ApiResponse({ status: 200, type: ProjetResponseDto })
+  soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.projetsService.soumettre(id, etablissementId);
+  }
 
-@Post(':id/archiver')
-@HttpCode(200)
-@Roles(Role.PRESIDENCE)
-@ApiOperation({ summary: 'Archiver un projet (Présidence uniquement)' })
-@ApiResponse({ status: 200, type: ProjetResponseDto })
-archiver(@Param('id', ParseUUIDPipe) id: string) {
-  return this.projetsService.archiver(id);
-}
+  @Post(':id/archiver')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({ summary: 'Archiver un projet (Présidence uniquement)' })
+  @ApiResponse({ status: 200, type: ProjetResponseDto })
+  archiver(@Param('id', ParseUUIDPipe) id: string) {
+    return this.projetsService.archiver(id);
+  }
 }

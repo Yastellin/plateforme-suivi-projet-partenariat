@@ -1,86 +1,41 @@
-import { useAuth } from "./useAuth";
+// src/hooks/usePermissions.ts
+
+import { useAuth } from '@/hooks/useAuth';
+import type { RoleUtilisateur } from '@/types/api';
 
 interface Permissions {
-  canCreateProject: boolean;
-  canEditProject: boolean;
-  canViewDetail: boolean;
-  canManagePartenaires: boolean;
-  canManageConventions: boolean;
-  canManageCotutelles: boolean;
-  canManageDocuments: boolean;
-  canManageEtablissements: boolean;
-  canManagePublications: boolean;
-  canAccessTableauDeBord: boolean;
+  role: RoleUtilisateur | null;
+  peutCreer: boolean;
+  peutModifier: boolean;
+  peutArchiver: boolean;
+  peutSoumettre: boolean;
+  peutTeleverser: boolean;
+  peutExporter: boolean;
+  estLectureSeule: boolean;
   estPresidence: boolean;
   estEtablissement: boolean;
+  estDecideur: boolean;
 }
 
-const AUCUNE_PERMISSION: Omit<Permissions, "estPresidence" | "estEtablissement"> = {
-  canCreateProject: false,
-  canEditProject: false,
-  canViewDetail: false,
-  canManagePartenaires: false,
-  canManageConventions: false,
-  canManageCotutelles: false,
-  canManageDocuments: false,
-  canManageEtablissements: false,
-  canManagePublications: false,
-  canAccessTableauDeBord: false,
-};
-
-function permissionsParRole(role: string | null) {
-  switch (role) {
-    case "PRESIDENCE":
-      return {
-        canCreateProject: true,
-        canEditProject: true,
-        canViewDetail: true,
-        canManagePartenaires: true,
-        canManageConventions: true,
-        canManageCotutelles: true,
-        canManageDocuments: true,
-        canManageEtablissements: true,
-        canManagePublications: true,
-        canAccessTableauDeBord: true,
-      };
-    case "ETABLISSEMENT":
-      return {
-        canCreateProject: true,
-        canEditProject: false,
-        canViewDetail: true,
-        canManagePartenaires: true,
-        canManageConventions: true,
-        canManageCotutelles: true,
-        canManageDocuments: true,
-        canManageEtablissements: true,
-        canManagePublications: false,
-        canAccessTableauDeBord: true,
-      };
-    case "DECIDEUR":
-      return {
-        canCreateProject: false,
-        canEditProject: false,
-        canViewDetail: true,
-        canManagePartenaires: false,
-        canManageConventions: true,
-        canManageCotutelles: true,
-        canManageDocuments: true,
-        canManageEtablissements: false,
-        canManagePublications: true,
-        canAccessTableauDeBord: true,
-      };
-    default:
-      return AUCUNE_PERMISSION;
-  }
-}
+const ROLES_ECRITURE: RoleUtilisateur[] = ['PRESIDENCE', 'ETABLISSEMENT'];
 
 export function usePermissions(): Permissions {
   const { utilisateur } = useAuth();
   const role = utilisateur?.role ?? null;
 
+  const peutEcrire = role !== null && ROLES_ECRITURE.includes(role);
+
   return {
-    ...permissionsParRole(role),
-    estPresidence: role === "PRESIDENCE",
-    estEtablissement: role === "ETABLISSEMENT",
+    role,
+    peutCreer: peutEcrire,
+    peutModifier: peutEcrire,
+    peutArchiver: role === 'PRESIDENCE',
+    peutSoumettre: peutEcrire,
+    peutTeleverser: peutEcrire,
+    peutExporter: role === 'PRESIDENCE',
+    estLectureSeule: role === 'DECIDEUR',
+    estPresidence: role === 'PRESIDENCE',
+    estEtablissement: role === 'ETABLISSEMENT',
+    estDecideur: role === 'DECIDEUR',
   };
 }

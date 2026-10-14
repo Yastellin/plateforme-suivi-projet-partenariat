@@ -1,8 +1,9 @@
-﻿// src/router.tsx
+// src/router.tsx
 
 import { lazy, Suspense, useState, useEffect } from "react"
 import { createBrowserRouter, Navigate, RouterProvider, Outlet } from "react-router-dom"
 import type { ReactNode } from "react"
+import { X } from "lucide-react"
 
 import { useAuth } from "@/hooks/useAuth"
 import type { RoleUtilisateur } from "@/types/api"
@@ -15,8 +16,11 @@ import { ForbiddenPage } from "@/components/shared/ForbiddenPage"
 import { NotFoundPage } from "@/components/shared/NotFoundPage"
 import { PageTransition } from "@/components/shared/PageTransition"
 import { Skeleton } from "@/components/ui/skeleton"
+import { TitreBreadcrumbProvider } from "@/contexts/TitreBreadcrumbContext"
 
 const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage").then((m) => ({ default: m.LoginPage })))
+const MotDePasseOubliePage = lazy(() => import("@/features/auth/pages/MotDePasseOubliePage").then((m) => ({ default: m.MotDePasseOubliePage })))
+const ResetPasswordPage = lazy(() => import("@/features/auth/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })))
 const TableauDeBordPresidence = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordPresidence").then((m) => ({ default: m.TableauDeBordPresidence })))
 const TableauDeBordEtablissement = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordEtablissement").then((m) => ({ default: m.TableauDeBordEtablissement })))
 const TableauDeBordDecideur = lazy(() => import("@/features/tableau-de-bord/pages/TableauDeBordDecideur").then((m) => ({ default: m.TableauDeBordDecideur })))
@@ -32,6 +36,7 @@ const CotutelleDetailPage = lazy(() => import("@/features/cotutelles/pages/Cotut
 const PublicationEditPage = lazy(() => import("@/features/publications/pages/PublicationEditPage").then((m) => ({ default: m.PublicationEditPage })))
 const NotificationsPage = lazy(() => import("@/features/notifications/pages/NotificationsPage").then((m) => ({ default: m.NotificationsPage })))
 const ArchivesPage = lazy(() => import("./features/archives/pages/ArchivesPage").then((m) => ({ default: m.ArchivesPage })))
+const ArchiveDetailPage = lazy(() => import("./features/archives/pages/ArchiveDetailPage").then((m) => ({ default: m.ArchiveDetailPage })))
 const ReferentielsPage = lazy(() => import("@/features/referentiels/pages/ReferentielsPage").then((m) => ({ default: m.ReferentielsPage })))
 const EtablissementsListePage = lazy(() => import("@/features/etablissements/pages/EtablissementsListePage").then((m) => ({ default: m.EtablissementsListePage })))
 const EtablissementDetailPage = lazy(() => import("@/features/etablissements/pages/EtablissementDetailPage").then((m) => ({ default: m.EtablissementDetailPage })))
@@ -47,6 +52,8 @@ const RecherchePage = lazy(() => import("@/features/recherche/pages/RecherchePag
 const SynthesePage = lazy(() => import("@/features/synthese/pages/SynthesePage").then((m) => ({ default: m.SynthesePage })))
 const DocumentsListePage = lazy(() => import("@/features/documents/pages/DocumentsListePage").then((m) => ({ default: m.DocumentsListePage })))
 const PublicationsListePage = lazy(() => import("@/features/publications/pages/PublicationsListePage").then((m) => ({ default: m.PublicationsListePage })))
+const ProjetCreatePage = lazy(() => import("@/features/projets/pages/ProjetCreatePage").then((m) => ({ default: m.ProjetCreatePage })))
+const ProjetEditPage = lazy(() => import("@/features/projets/pages/ProjetEditPage").then((m) => ({ default: m.ProjetEditPage })))
 const PartenariatsListePage = lazy(() => import("@/features/partenariats/pages/PartenariatsListePage").then((m) => ({ default: m.PartenariatsListePage })))
 const PartenariatCreatePage = lazy(() => import("@/features/partenariats/pages/PartenariatCreatePage").then((m) => ({ default: m.PartenariatCreatePage })))
 const PartenariatDetailPage = lazy(() => import("@/features/partenariats/pages/PartenariatDetailPage").then((m) => ({ default: m.PartenariatDetailPage })))
@@ -127,6 +134,7 @@ function LayoutPublic() {
 function LayoutInterne() {
   const [drawerNotifs, setDrawerNotifs] = useState(false)
   const [paletteOuverte, setPaletteOuverte] = useState(false)
+  const [menuMobileOuvert, setMenuMobileOuvert] = useState(false)
 
   useEffect(() => {
     function gererTouche(e: KeyboardEvent) {
@@ -140,17 +148,49 @@ function LayoutInterne() {
   }, [])
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <SidebarInterne />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <TopbarInterne onOuvrirRecherche={() => setPaletteOuverte(true)} onOuvrirNotifications={() => setDrawerNotifs(true)} />
-        <main className="flex-1 overflow-y-auto p-[28px_32px_52px]">
-          <Outlet />
-        </main>
+    <TitreBreadcrumbProvider>
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar desktop */}
+        <div className="hidden lg:block">
+          <SidebarInterne />
+        </div>
+
+        {/* Tiroir sidebar mobile */}
+        {menuMobileOuvert ? (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="absolute inset-0 bg-black/30"
+              onClick={() => setMenuMobileOuvert(false)}
+              aria-hidden="true"
+            />
+            <div className="absolute left-0 top-0 h-full w-[248px] max-w-[85vw]">
+              <button
+                type="button"
+                onClick={() => setMenuMobileOuvert(false)}
+                aria-label="Fermer la navigation"
+                className="absolute -right-10 top-4 z-10 grid h-8 w-8 place-items-center rounded-full bg-[var(--color-surface)] text-[var(--color-text-secondary)] shadow-[var(--shadow-md)]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <SidebarInterne />
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <TopbarInterne
+            onOuvrirRecherche={() => setPaletteOuverte(true)}
+            onOuvrirNotifications={() => setDrawerNotifs(true)}
+            onOuvrirMenu={() => setMenuMobileOuvert(true)}
+          />
+          <main className="flex-1 overflow-y-auto p-[22px_28px_44px]">
+            <Outlet />
+          </main>
+        </div>
+        <NotificationsDrawer ouvert={drawerNotifs} onFermer={() => setDrawerNotifs(false)} />
+        <CommandPalette ouvert={paletteOuverte} onFermer={() => setPaletteOuverte(false)} />
       </div>
-      <NotificationsDrawer ouvert={drawerNotifs} onFermer={() => setDrawerNotifs(false)} />
-      <CommandPalette ouvert={paletteOuverte} onFermer={() => setPaletteOuverte(false)} />
-    </div>
+    </TitreBreadcrumbProvider>
   )
 }
 
@@ -168,6 +208,8 @@ const router = createBrowserRouter([
     ],
   },
   { path: "/connexion", element: <Charge><LoginPage /></Charge> },
+  { path: "/mot-de-passe-oublie", element: <Charge><MotDePasseOubliePage /></Charge> },
+  { path: "/reset-password", element: <Charge><ResetPasswordPage /></Charge> },
   {
     element: <LayoutInterne />,
     children: [
@@ -178,6 +220,7 @@ const router = createBrowserRouter([
       { path: "/presidence/etablissements", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><EtablissementsListePage /></Charge></RouteProtegee> },
       { path: "/presidence/etablissements/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><EtablissementDetailPage /></Charge></RouteProtegee> },
       { path: "/presidence/archives", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ArchivesPage /></Charge></RouteProtegee> },
+      { path: "/presidence/archives/:type/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ArchiveDetailPage /></Charge></RouteProtegee> },
       { path: "/presidence/export", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ExportPage /></Charge></RouteProtegee> },
       { path: "/presidence/recherche", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><RecherchePage /></Charge></RouteProtegee> },
       { path: "/presidence/synthese", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><SynthesePage /></Charge></RouteProtegee> },
@@ -188,10 +231,16 @@ const router = createBrowserRouter([
       { path: "/presidence/notifications", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><NotificationsPage /></Charge></RouteProtegee> },
       { path: "/etablissement/notifications", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><NotificationsPage /></Charge></RouteProtegee> },
       { path: "/presidence/projets", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ProjetsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/projets/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ProjetCreatePage /></Charge></RouteProtegee> },
+      { path: "/presidence/projets/:id/modifier", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ProjetEditPage /></Charge></RouteProtegee> },
       { path: "/presidence/publications/:projetId", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PublicationEditPage /></Charge></RouteProtegee> },
       { path: "/presidence/projets/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ProjetDetailPage /></Charge></RouteProtegee> },
       { path: "/etablissement/projets", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ProjetsListePage /></Charge></RouteProtegee> },
+      { path: "/etablissement/projets/nouveau", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ProjetCreatePage /></Charge></RouteProtegee> },
+      { path: "/etablissement/projets/:id/modifier", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ProjetEditPage /></Charge></RouteProtegee> },
       { path: "/etablissement/projets/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ProjetDetailPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/archives", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ArchivesPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/archives/:type/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ArchiveDetailPage /></Charge></RouteProtegee> },
       { path: "/presidence/parametres", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ParametresCompte /></Charge></RouteProtegee> },
       { path: "/presidence/cotutelles", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><CotutellesListePage /></Charge></RouteProtegee> },
       { path: "/presidence/cotutelles/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><CotutelleDetailPage /></Charge></RouteProtegee> },
@@ -211,7 +260,12 @@ const router = createBrowserRouter([
       { path: "/decideur/documents/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><DocumentDetailPage /></Charge></RouteProtegee> },
       { path: "/decideur/etablissements", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><EtablissementsListePage /></Charge></RouteProtegee> },
       { path: "/decideur/etablissements/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><EtablissementDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/archives", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ArchivesPage /></Charge></RouteProtegee> },
+      { path: "/decideur/archives/:type/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ArchiveDetailPage /></Charge></RouteProtegee> },
 
+      { path: "/presidence/partenaires-partenariats", element: <Navigate to="/presidence/partenaires-partenariats/partenaires" replace /> },
+      { path: "/etablissement/partenaires-partenariats", element: <Navigate to="/etablissement/partenaires-partenariats/partenaires" replace /> },
+      { path: "/decideur/partenaires-partenariats", element: <Navigate to="/decideur/partenaires-partenariats/partenaires" replace /> },
       { path: "/presidence/partenaires-partenariats/partenaires", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenairesListePage /></Charge></RouteProtegee> },
       { path: "/presidence/partenaires-partenariats/partenaires/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenaireCreatePage /></Charge></RouteProtegee> },
       { path: "/presidence/partenaires-partenariats/partenaires/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PartenaireDetailPage /></Charge></RouteProtegee> },

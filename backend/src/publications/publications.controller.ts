@@ -9,7 +9,12 @@ import {
   ParseUUIDPipe,
   HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
@@ -44,13 +49,17 @@ export class PublicationsController {
   @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({ summary: 'Obtenir une publication par ID' })
   @ApiResponse({ status: 200, type: PublicationResponseDto })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<PublicationResponseDto> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<PublicationResponseDto> {
     return this.publicationsService.findOne(id);
   }
 
   @Patch(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Mettre a jour une publication (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Mettre a jour une publication (Presidence uniquement)',
+  })
   @ApiResponse({ status: 200, type: PublicationResponseDto })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -64,7 +73,9 @@ export class PublicationsController {
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Publier une publication (Presidence uniquement)' })
   @ApiResponse({ status: 200, type: PublicationResponseDto })
-  publier(@Param('id', ParseUUIDPipe) id: string): Promise<PublicationResponseDto> {
+  publier(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<PublicationResponseDto> {
     return this.publicationsService.publier(id);
   }
 }

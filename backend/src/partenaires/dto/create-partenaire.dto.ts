@@ -1,6 +1,15 @@
-import { IsString, IsOptional, IsEmail, IsEnum, IsBoolean, Length, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsBoolean,
+  Length,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { StatutPartenaire, Visibilite } from '@prisma/client';
+import { StatutPartenaire } from '../../common/enums/statut-partenaire.enum';
+import { Visibilite } from '../../common/enums/visibilite.enum';
 
 export class CreatePartenaireDto {
   @ApiProperty({ example: 'Université de Toulouse' })
@@ -54,7 +63,9 @@ export class CreatePartenaireDto {
   @IsBoolean()
   est_strategique?: boolean;
 
-  @ApiPropertyOptional({ description: 'ID de l\'établissement (uniquement pour la PRÉSIDENCE)' })
+  @ApiPropertyOptional({
+    description: "ID de l'établissement (uniquement pour la PRÉSIDENCE)",
+  })
   @IsOptional()
   @IsUUID()
   etablissement_id?: string;

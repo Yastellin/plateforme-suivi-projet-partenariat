@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TypeCotutelle } from '@prisma/client';
+import { TypeCotutelle } from '../../common/enums/type-cotutelle.enum';
 
 export class EtablissementSimpleDto {
   @ApiProperty()

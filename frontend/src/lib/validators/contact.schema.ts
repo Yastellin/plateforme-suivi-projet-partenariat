@@ -1,11 +1,19 @@
-// src/lib/validators/compte.schema.ts
-import { z } from "zod"
+// src/lib/validators/contact.schema.ts
 
-export const schemaContact = z.object({
-  nom: z.string().trim().min(1, "Le nom est requis").max(255, "Le nom ne doit pas dépasser 255 caractères"),
-  fonction: z.string().trim().max(255, "La fonction ne doit pas dépasser 255 caractères").optional().or(z.literal("")),
-  email: z.string().trim().email("Email invalide").max(255, "L'email ne doit pas dépasser 255 caractères").optional().or(z.literal("")),
-  telephone: z.string().trim().max(20, "Le téléphone ne doit pas dépasser 20 caractères").optional().or(z.literal("")),
-})
+import { z } from 'zod';
+import { creerSchemaTelephoneOptionnel } from './phone.schema';
 
-export type ContactFormValues = z.infer<typeof schemaContact>
+// Le contrat API contact accepte un seul champ nom (pas de prenom cote backend).
+export const contactSchema = z.object({
+  nom: z
+    .string()
+    .min(2, 'Le nom complet doit contenir au moins 2 caracteres.')
+    .max(100, 'Le nom complet ne peut pas depasser 100 caracteres.'),
+  fonction: z.string().optional(),
+  email: z.string().email('Adresse e-mail invalide.').optional().or(z.literal('')),
+  telephone: creerSchemaTelephoneOptionnel(),
+});
+
+export const schemaContact = contactSchema;
+
+export type ContactFormValues = z.infer<typeof contactSchema>;

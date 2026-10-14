@@ -1,79 +1,60 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  ParseUUIDPipe,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { EspacePublicService } from './espace-public.service';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
-import {
-  PublicEtablissementQueryDto,
-  PublicPartenaireQueryDto,
-  PublicPublicationQueryDto,
-} from './dto/public-query.dto';
-import { ContactPublicDto } from './dto/contact-public.dto';
+import { EtablissementResponseDto } from '../etablissements/dto/etablissement-response.dto';
+import { AccueilPublicDto } from './dto/accueil-public.dto';
+import { PartenairePublicDto } from './dto/partenaire-public.dto';
+import { PublicationPubliqueDto } from './dto/publication-publique.dto';
+import { EspacePublicService } from './espace-public.service';
 
-// Espace public (vitrine) : toutes les routes sont accessibles SANS authentification.
-// Elles n'exposent que les donnees marquees publiques cote metier.
 @ApiTags('Espace public')
 @Controller('public')
 export class EspacePublicController {
   constructor(private readonly espacePublicService: EspacePublicService) {}
 
-  @Public()
   @Get('accueil')
-  @ApiOperation({ summary: "Donnees agrégées de la page d'accueil publique" })
-  @ApiResponse({ status: 200, description: 'Statistiques, publications et mises en avant' })
-  accueil() {
-    return this.espacePublicService.accueil();
+  @Public()
+  @ApiOperation({
+    summary: 'Obtenir les informations de la page d’accueil publique',
+  })
+  @ApiResponse({ status: 200, type: AccueilPublicDto })
+  getAccueil(): Promise<AccueilPublicDto> {
+    return this.espacePublicService.getAccueil();
   }
 
-  @Public()
-  @Get('etablissements')
-  @ApiOperation({ summary: 'Liste publique des établissements' })
-  @ApiResponse({ status: 200, description: 'Établissements paginés' })
-  etablissements(@Query() query: PublicEtablissementQueryDto) {
-    return this.espacePublicService.etablissements(query);
-  }
-
-  @Public()
-  @Get('partenaires')
-  @ApiOperation({ summary: 'Liste publique des partenaires (visibilité PUBLIQUE)' })
-  @ApiResponse({ status: 200, description: 'Partenaires paginés' })
-  partenaires(@Query() query: PublicPartenaireQueryDto) {
-    return this.espacePublicService.partenaires(query);
-  }
-
-  @Public()
   @Get('publications')
-  @ApiOperation({ summary: 'Liste publique des publications (statut PUBLIEE)' })
-  @ApiResponse({ status: 200, description: 'Publications paginées' })
-  publications(@Query() query: PublicPublicationQueryDto) {
-    return this.espacePublicService.publications(query);
+  @Public()
+  @ApiOperation({ summary: 'Lister les publications publiques' })
+  @ApiResponse({ status: 200, type: [PublicationPubliqueDto] })
+  async listerPublications(): Promise<PublicationPubliqueDto[]> {
+    const resultat = await this.espacePublicService.listerPublications();
+    return resultat.data;
   }
 
-  @Public()
   @Get('publications/:id')
-  @ApiOperation({ summary: "Détail public d'une publication" })
-  @ApiResponse({ status: 200, description: 'Publication publiée' })
-  @ApiResponse({ status: 404, description: 'Publication introuvable ou non publiée' })
-  publication(@Param('id', ParseUUIDPipe) id: string) {
-    return this.espacePublicService.publication(id);
+  @Public()
+  @ApiOperation({ summary: 'Obtenir une publication publique' })
+  @ApiResponse({ status: 200, type: PublicationPubliqueDto })
+  @ApiResponse({ status: 404, description: 'Publication introuvable.' })
+  getPublication(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<PublicationPubliqueDto> {
+    return this.espacePublicService.getPublication(id);
   }
 
+  @Get('etablissements')
   @Public()
-  @Post('contact')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Envoi du formulaire de contact public' })
-  @ApiResponse({ status: 201, description: 'Message enregistré' })
-  contact(@Body() dto: ContactPublicDto) {
-    return this.espacePublicService.contact(dto);
+  @ApiOperation({ summary: 'Lister les établissements publics' })
+  @ApiResponse({ status: 200, type: [EtablissementResponseDto] })
+  listerEtablissements() {
+    return this.espacePublicService.listerEtablissements();
+  }
+
+  @Get('partenaires')
+  @Public()
+  @ApiOperation({ summary: 'Lister les partenaires visibles publiquement' })
+  @ApiResponse({ status: 200, type: [PartenairePublicDto] })
+  listerPartenaires(): Promise<PartenairePublicDto[]> {
+    return this.espacePublicService.listerPartenaires();
   }
 }
-

@@ -19,7 +19,7 @@
   --color-muted-foreground: var(--color-text-secondary);
   --color-accent: var(--color-active-zone);
   --color-accent-foreground: var(--color-brand-deep);
-  --color-destructive: #A82A2A;
+  --color-destructive: #B91C1C;
   --color-destructive-foreground: #FFFFFF;
   --color-border: var(--color-border);
   --color-input: var(--color-border);

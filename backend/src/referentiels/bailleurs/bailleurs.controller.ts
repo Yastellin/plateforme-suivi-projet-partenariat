@@ -9,7 +9,12 @@ import {
   Query,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { BailleursService } from './bailleurs.service';
 import { CreateBailleurDto } from './dto/create-bailleur.dto';
 import { UpdateBailleurDto } from './dto/update-bailleur.dto';
@@ -43,13 +48,17 @@ export class BailleursController {
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
   @ApiOperation({ summary: 'Obtenir un bailleur par ID' })
   @ApiResponse({ status: 200, type: BailleurResponseDto })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<BailleurResponseDto> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<BailleurResponseDto> {
     return this.bailleursService.findOne(id);
   }
 
   @Patch(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Mettre a jour un bailleur (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Mettre a jour un bailleur (Presidence uniquement)',
+  })
   @ApiResponse({ status: 200, type: BailleurResponseDto })
   update(
     @Param('id', ParseUUIDPipe) id: string,

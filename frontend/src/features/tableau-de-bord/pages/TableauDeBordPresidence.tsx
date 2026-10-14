@@ -1,47 +1,74 @@
 ﻿// src/features/tableau-de-bord/pages/TableauDeBordPresidence.tsx
 
 import { Link } from 'react-router-dom';
+import { Download } from 'lucide-react';
 import { useTableauDeBord } from '../api/useTableauDeBord';
-import { useEcheancier } from '../api/useEcheancier';
 import { CompteursGlobaux } from '../components/CompteursGlobaux';
 import { GraphiqueStatuts } from '../components/GraphiqueStatuts';
+import { ActiviteMensuelle } from '../components/ActiviteMensuelle';
 import { EcheancierListe } from '../components/EcheancierListe';
+import { BandeauEtat } from '../components/BandeauEtat';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
 
 export function TableauDeBordPresidence() {
   const { data: compteurs, isLoading: chargementCompteurs } = useTableauDeBord();
-  const { data: echeances, isLoading: chargementEcheancier } = useEcheancier();
+
+  const anneeCourante = new Date().getFullYear();
 
   return (
     <div>
-      <div className="mb-[26px]">
-        <h1 className="text-[24px] font-bold">Tableau de bord</h1>
-      </div>
+      <PageHeader
+        titre={`Tableau de bord — Synthèse ${anneeCourante}`}
+        description="Vue consolidée des projets, partenariats et conventions sur l'ensemble des établissements."
+        actions={
+          <Link
+            to="/presidence/export"
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Exporter
+          </Link>
+        }
+      />
 
       <CompteursGlobaux compteurs={compteurs} chargement={chargementCompteurs} />
 
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[2fr_1fr]">
-        <section className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
-          <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
-            <h3 className="text-[15px] font-bold">Conventions à traiter</h3>
-            <Link
-              to="/presidence/conventions"
-              className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
-            >
-              Tout voir
-            </Link>
-          </div>
-          <EcheancierListe echeances={echeances} chargement={chargementEcheancier} />
-        </section>
+      <div className="mb-[22px] grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Panel>
+          <PanelHeader
+            titre="Conventions à traiter"
+            sousTitre="Renouvellements, avenants et circuits en attente"
+            action={
+              <Link
+                to="/presidence/conventions"
+                className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+              >
+                Tout voir
+              </Link>
+            }
+          />
+          <EcheancierListe />
+        </Panel>
 
-        <section className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)]">
-          <div className="border-b border-[var(--color-border)] px-5 py-4">
-            <h3 className="text-[15px] font-bold">Répartition des conventions</h3>
-          </div>
-          <div className="p-[18px_20px]">
-            <GraphiqueStatuts compteurs={compteurs} chargement={chargementCompteurs} />
-          </div>
-        </section>
+        <div className="flex flex-col gap-4">
+          <Panel>
+            <PanelHeader titre="Activité mensuelle" sousTitre="Conventions signées vs projets soumis" />
+            <PanelBody>
+              <ActiviteMensuelle />
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader titre="Répartition des conventions" sousTitre="Par statut" />
+            <PanelBody>
+              <GraphiqueStatuts compteurs={compteurs} chargement={chargementCompteurs} />
+            </PanelBody>
+          </Panel>
+        </div>
       </div>
+
+      <BandeauEtat compteurs={compteurs} chargement={chargementCompteurs} />
     </div>
   );
 }

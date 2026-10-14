@@ -1,172 +1,166 @@
 ﻿// src/features/projets/pages/ProjetsListePage.tsx
-import { useMemo, useState } from "react"
-import { ChevronLeft, ChevronRight, Plus, UserPlus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle,} from "@/components/ui/dialog"
-import { EmptyState } from "@/components/shared/EmptyState"
-import { SkeletonCard } from "@/components/shared/SkeletonCard"
-import { ProjetFiltres } from "@/features/projets/components/ProjetFiltres"
-import { ProjetForm } from "@/features/projets/components/ProjetForm"
-import { useProjets } from "@/features/projets/api/useProjets"
-import { useDebounce } from "@/hooks/useDebounce"
-import { toast } from "sonner"
-import { Link } from "react-router-dom"
-import { StatusBadge } from "@/components/shared/StatusBadge"
-import { useAuth } from "@/hooks/useAuth"
 
-const LIMITE_PAR_PAGE = 20
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FolderKanban, Plus } from 'lucide-react';
+import { useProjets } from '../api/useProjets';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Panel, PanelBody } from '@/components/shared/Panel';
+import { TableToolbar } from '@/components/shared/TableToolbar';
+import { FilterChips } from '@/components/shared/FilterChips';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
+import { formaterDate } from '@/lib/format';
+import { LIBELLES_STATUT_PROJET } from '@/lib/status-mappings';
+import type { StatutProjet } from '@/types/api';
+
+const LIMITE_PAR_PAGE = 20;
+
+type FiltreProjet = 'tous' | 'BROUILLON' | 'EN_ATTENTE' | 'EN_COURS' | 'SUSPENDU' | 'TERMINE' | 'EXPIRE';
+
+const OPTIONS_FILTRE = [
+  { cle: 'tous', libelle: 'Tous' },
+  { cle: 'BROUILLON', libelle: 'Brouillons' },
+  { cle: 'EN_ATTENTE', libelle: 'En attente' },
+  { cle: 'EN_COURS', libelle: 'En cours' },
+  { cle: 'SUSPENDU', libelle: 'Suspendus' },
+  { cle: 'TERMINE', libelle: 'Terminés' },
+  { cle: 'EXPIRE', libelle: 'Expirés' },
+];
 
 export function ProjetsListePage() {
-  const { utilisateur } = useAuth()
-  const baseChemin = utilisateur?.role === "PRESIDENCE" ? "/presidence" : "/etablissement"
-  
-  const [recherche, setRecherche] = useState("")
-  const [statut, setStatut] = useState<string[]>([])
-  const [bailleur, setBailleur] = useState<string[]>([])
-  const [beneficiaire, setBeneficiaire] = useState<string[]>([])
-  const [page, setPage] = useState(1)
-  const [dialogueOuvert, setDialogueOuvert] = useState(false)
+  const { utilisateur } = useAuth();
+  const permissions = usePermissions();
+  const [page, setPage] = useState(1);
+  const [recherche, setRecherche] = useState('');
+  const [filtre, setFiltre] = useState<FiltreProjet>('tous');
 
-  const rechercheDebouncee = useDebounce(recherche, 300)
+  const { data, isLoading } = useProjets({ page, limit: LIMITE_PAR_PAGE, recherche });
 
-  const filtres = useMemo(
-    () => ({
-      page,
-      limit: LIMITE_PAR_PAGE,
-      nom: rechercheDebouncee || undefined,
-      statut: statut.length === 1 ? statut[0] : undefined,
-      bailleur: bailleur.length === 1 ? bailleur[0] : undefined,
-      beneficiaire: beneficiaire.length === 1 ? beneficiaire[0] : undefined,
-    }),
-    [page, rechercheDebouncee, statut, bailleur, beneficiaire]
-  )
+  const role = utilisateur?.role;
+  const cheminBase = role === 'PRESIDENCE' ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur';
 
-  const { data, isLoading } = useProjets(filtres)
-
-  const changementFiltres = (valeurs: {
-    recherche: string
-    statut: string[]
-    bailleur: string[]
-    beneficiaire: string[]
-  }) => {
-    setRecherche(valeurs.recherche)
-    setStatut(valeurs.statut)
-    setBailleur(valeurs.bailleur)
-    setBeneficiaire(valeurs.beneficiaire)
-    setPage(1)
-  }
+  const projetsFiltres = (data?.data ?? []).filter((projet) => {
+    if (filtre === 'tous') return true;
+    return projet.statut === filtre;
+  });
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-semibold">Projets</h1>
-          <p className="text-sm text-muted-foreground">
-            {data
-              ? `${data.meta.total} projet${data.meta.total > 1 ? "s" : ""} reference${data.meta.total > 1 ? "s" : ""}`
-              : "Chargement..."}
-          </p>
-        </div>
-        <Button onClick={() => setDialogueOuvert(true)}>
-          <Plus />
-          Nouveau projet
-        </Button>
-      </div>
+    <div>
+      <PageHeader
+        titre="Projets"
+        description="Tous les projets de la plateforme."
+        actions={
+          permissions.peutCreer ? (
+            <Link
+              to={`${cheminBase}/projets/nouveau`}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nouveau projet
+            </Link>
+          ) : null
+        }
+      />
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <aside className="w-full shrink-0 lg:w-64">
-          <ProjetFiltres
-            valeurs={{ recherche, statut, bailleur, beneficiaire }}
-            onChangement={changementFiltres}
-          />
-        </aside>
-
-        <div className="min-w-0 flex-1">
-          {isLoading && !data ? (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </div>
-          ) : data && data.data.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {data.data.map((projet) => (
-                <Link
-                  key={projet.id}
-                  to={`${baseChemin}/projets/${projet.id}`}
-                  className="group rounded-md border border-border p-4 transition-colors hover:bg-sidebar-accent"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="truncate font-heading text-sm font-semibold">{projet.nom}</h3>
-                    <StatusBadge statut={projet.statut} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">{projet.type}</p>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon={recherche || statut.length > 0 || bailleur.length > 0 || beneficiaire.length > 0 ? Plus : UserPlus}
-              titre={
-                recherche || statut.length > 0 || bailleur.length > 0 || beneficiaire.length > 0
-                  ? "Aucun projet ne correspond aux filtres"
-                  : "Aucun projet pour le moment"
-              }
-              message={
-                recherche || statut.length > 0 || bailleur.length > 0 || beneficiaire.length > 0
-                  ? "Essayez de modifier la recherche ou de reinitialiser les filtres."
-                  : "Enregistrez votre premier projet avant de créer un partenariat ou un autre projet."
-              }
-              action={
-                !recherche && statut.length === 0 && bailleur.length === 0 && beneficiaire.length === 0 ? (
-                  <Button onClick={() => setDialogueOuvert(true)}>
-                    <Plus />
-                    Nouveau projet
-                  </Button>
-                ) : undefined
-              }
+      <Panel>
+        <TableToolbar
+          valeurRecherche={recherche}
+          onRechercheChange={(valeur) => {
+            setRecherche(valeur);
+            setPage(1);
+          }}
+          placeholderRecherche="Rechercher un projet…"
+          enfants={
+            <FilterChips
+              options={OPTIONS_FILTRE}
+              valeur={filtre}
+              onChange={(valeur) => {
+                setFiltre(valeur as FiltreProjet);
+                setPage(1);
+              }}
             />
-          )}
-          
+          }
+        />
 
-          {data && data.meta.totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-end gap-2 text-sm text-muted-foreground">
-              <Button variant="outline" size="icon-sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                <ChevronLeft />
-              </Button>
-              <span>
-                Page {data.meta.page} sur {data.meta.totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                disabled={page >= data.meta.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                <ChevronRight />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <Dialog open={dialogueOuvert} onOpenChange={setDialogueOuvert}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Nouveau projet</DialogTitle>
-            <DialogDescription>
-              Remplissez le formulaire ci-dessous pour créer un nouveau projet.
-            </DialogDescription>
-          </DialogHeader>
-          <ProjetForm
-            onSucces={() => {
-              setDialogueOuvert(false)
-              toast.success("Projet créé")
-            }}
-            onAnnuler={() => setDialogueOuvert(false)}
+        {isLoading ? (
+          <div className="flex flex-col gap-3 p-[16px_18px]">
+            {[0, 1, 2, 3, 4].map((cle) => (
+              <Skeleton key={cle} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : projetsFiltres.length === 0 ? (
+          <EmptyState
+            icone={FolderKanban}
+            titre={recherche ? 'Aucun résultat pour cette recherche' : 'Aucun projet enregistré'}
+            description={recherche ? 'Essayez avec un autre terme de recherche.' : 'Les projets ajoutés apparaîtront ici.'}
           />
-        </DialogContent>
-      </Dialog>
+        ) : (
+          <PanelBody>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[13px]">
+                <thead>
+                  <tr>
+                    <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">Nom</th>
+                    <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">Type</th>
+                    <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">Échéance</th>
+                    <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">Avancement</th>
+                    <th scope="col" className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]">Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projetsFiltres.map((projet) => {
+                    const info = LIBELLES_STATUT_PROJET[projet.statut as StatutProjet] ?? LIBELLES_STATUT_PROJET.BROUILLON;
+
+                    return (
+                      <tr key={projet.id} className="hover:bg-[var(--color-page-bg)]">
+                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                          <Link
+                            to={`${cheminBase}/projets/${projet.id}`}
+                            className="text-[13.5px] font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand)]"
+                          >
+                            {projet.nom}
+                          </Link>
+                        </td>
+                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
+                          {projet.type}
+                        </td>
+                        <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
+                          {formaterDate(projet.date_fin_prevue)}
+                          {projet.en_retard ? (
+                            <span className="ml-1.5 text-[var(--status-expire-fg)]">retard</span>
+                          ) : null}
+                        </td>
+                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                          <div className="flex items-center gap-2">
+                            <div className="h-[6px] w-20 overflow-hidden rounded-full bg-[var(--color-page-bg)]">
+                              <div
+                                className="h-full rounded-full bg-[var(--color-brand)]"
+                                style={{ width: `${projet.avancement}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-xs text-[var(--color-text-secondary)]">
+                              {projet.avancement}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                          <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {data?.meta && <TablePagination meta={data.meta} onChangerPage={setPage} />}
+          </PanelBody>
+        )}
+      </Panel>
     </div>
-  )
+  );
 }

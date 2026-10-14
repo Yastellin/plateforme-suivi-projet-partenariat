@@ -22,8 +22,8 @@ interface ContactFormProps {
 // Formulaire d'ajout ou de modification d'un contact rattache a un
 // partenaire (RG28) : validation temps reel via Zod + react-hook-form.
 export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: ContactFormProps) {
-  const creation = useCreerContact()
-  const modification = useModifierContact()
+  const creation = useCreerContact(partenaireId)
+  const modification = useModifierContact(partenaireId)
   const enCours = creation.isPending || modification.isPending
 
   const {
@@ -54,27 +54,21 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
   }, [contact, reset])
 
   const onSubmit = (valeurs: ContactFormValues) => {
-    const payload = {
-      nom: valeurs.nom,
-      fonction: valeurs.fonction || undefined,
-      email: valeurs.email || undefined,
-      telephone: valeurs.telephone || undefined,
-    }
     if (contact) {
       modification.mutate(
-        { id: contact.id, partenaireId, valeurs: { ...payload, nom: payload.nom } },
+        { id: contact.id, partenaireId, valeurs },
         { onSuccess: onSucces }
       )
     } else {
-      creation.mutate({ partenaireId, valeurs: { ...payload, nom: payload.nom } }, { onSuccess: onSucces })
+      creation.mutate({ partenaireId, valeurs }, { onSuccess: onSucces })
     }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="contact-nom">Nom</Label>
-        <TextInputSanitized id="contact-nom" maxLength={255} aria-invalid={!!errors.nom} {...register("nom")} />
+        <Label htmlFor="contact-nom" requis>Nom complet</Label>
+        <TextInputSanitized id="contact-nom" maxLength={100} aria-invalid={!!errors.nom} {...register("nom")} />
         {errors.nom && <p className="text-sm text-destructive">{errors.nom.message}</p>}
       </div>
 

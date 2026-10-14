@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications.service';
-import { TypeNotification, PrioriteNotification } from '@prisma/client';
+import { TypeNotification } from '../../common/enums/type-notification.enum';
+import { PrioriteNotification } from '../../common/enums/priorite-notification.enum';
 
 @Injectable()
 export class SoumissionListener {
@@ -9,12 +10,20 @@ export class SoumissionListener {
 
   @OnEvent('projet.soumis')
   async onProjetSoumis(payload: any): Promise<void> {
-    await this.notifierPresidence(payload, TypeNotification.PROJET_SOUMIS, 'Projet');
+    await this.notifierPresidence(
+      payload,
+      TypeNotification.PROJET_SOUMIS,
+      'Projet',
+    );
   }
 
   @OnEvent('partenariat.soumis')
   async onPartenariatSoumis(payload: any): Promise<void> {
-    await this.notifierPresidence(payload, TypeNotification.PARTENARIAT_SOUMIS, 'Partenariat');
+    await this.notifierPresidence(
+      payload,
+      TypeNotification.PARTENARIAT_SOUMIS,
+      'Partenariat',
+    );
   }
 
   private async notifierPresidence(
@@ -22,7 +31,8 @@ export class SoumissionListener {
     typeDefaut: TypeNotification,
     refDefaut: string,
   ): Promise<void> {
-    const presidenceUsers = await this.notificationsService.trouverUtilisateursPresidence();
+    const presidenceUsers =
+      await this.notificationsService.trouverUtilisateursPresidence();
     for (const userId of presidenceUsers) {
       await this.notificationsService.creer({
         titre: payload.titre || 'Nouvelle information',

@@ -1,36 +1,24 @@
-﻿// src/features/auth/components/LoginForm.tsx
+// src/features/auth/components/LoginForm.tsx
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, LogIn, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { connexionSchema, type ConnexionFormValues } from '@/lib/validators/auth.schema';
-import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput';
-import { PasswordInput } from '@/components/forms/inputs/PasswordInput';
-import { useLogin } from '../api/useLogin';
-import { useAuth } from '@/hooks/useAuth';
-import { cheminTableauDeBord } from '@/router';
-
-const DUREE_BLOCAGE_SECONDES = 60;
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Mail, LogIn, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { connexionSchema, type ConnexionFormValues } from "@/lib/validators/auth.schema";
+import { FloatingLabelInput } from "@/components/forms/inputs/FloatingLabelInput";
+import { PasswordInput } from "@/components/forms/inputs/PasswordInput";
+import { useBlocageTemporaire } from "@/hooks/useBlocageTemporaire";
+import { useLogin } from "../api/useLogin";
+import { useAuth } from "@/hooks/useAuth";
+import { cheminTableauDeBord } from "@/router";
 
 export function LoginForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { connecter } = useAuth();
   const { mutate, isPending } = useLogin();
-  const [secondesRestantes, setSecondesRestantes] = useState(0);
-
-  useEffect(() => {
-    if (secondesRestantes <= 0) {
-      return;
-    }
-    const intervalle = window.setInterval(() => {
-      setSecondesRestantes((valeur) => Math.max(valeur - 1, 0));
-    }, 1000);
-    return () => window.clearInterval(intervalle);
-  }, [secondesRestantes]);
+  const { secondesRestantes, bloque, bloquer, estTropDeRequetes } = useBlocageTemporaire();
 
   const {
     register,
@@ -53,8 +41,8 @@ export function LoginForm() {
           navigate(destination, { replace: true });
         },
         onError: (erreur) => {
-          if (erreur.message.includes('Trop de requetes')) {
-            setSecondesRestantes(DUREE_BLOCAGE_SECONDES);
+          if (estTropDeRequetes(erreur.message)) {
+            bloquer();
             toast.error('Trop de tentatives', {
               description: 'Veuillez patienter avant de réessayer.',
             });
@@ -68,12 +56,13 @@ export function LoginForm() {
     );
   }
 
-  const boutonBloque = isPending || secondesRestantes > 0;
+  const boutonBloque = isPending || bloque;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <FloatingLabelInput
         label="Adresse e-mail"
+        requis
         type="email"
         autoComplete="email"
         autoFocus
@@ -85,6 +74,7 @@ export function LoginForm() {
       />
 
       <PasswordInput
+        requis
         aide="8 caractères minimum"
         erreur={errors.motDePasse?.message}
         {...register('motDePasse')}
@@ -95,9 +85,12 @@ export function LoginForm() {
           <input type="checkbox" className="h-[15px] w-[15px] accent-[var(--color-brand)]" {...register('seSouvenir')} />
           Se souvenir de moi
         </label>
-        <a href="#" className="text-[12.5px] font-semibold text-[var(--color-brand)] hover:text-[var(--color-brand-hover)] hover:underline">
+        <Link
+          to="/mot-de-passe-oublie"
+          className="text-[12.5px] font-semibold text-[var(--color-brand)] hover:text-[var(--color-brand-hover)] hover:underline"
+        >
           Mot de passe oublié ?
-        </a>
+        </Link>
       </div>
 
       <button

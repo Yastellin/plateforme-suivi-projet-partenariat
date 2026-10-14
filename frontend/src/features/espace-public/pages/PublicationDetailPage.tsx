@@ -12,9 +12,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatusBadge } from "@/components/shared/StatusBadge"
+import { obtenirInfoStatut } from "@/lib/status-mappings"
 import apiClient from "@/lib/api-client"
 import type { Publication } from "@/types/api"
 import { useState } from "react"
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 // Page detail d'une publication publique (section 7.4 : "detail d'une
 // publication"). Accessible sans authentification.
@@ -31,6 +33,7 @@ export function PublicationDetailPage() {
     },
     enabled: !!id,
   })
+  useTitreBreadcrumb(publication?.titre)
 
   const [photoActive, setPhotoActive] = useState(0)
   const photos = publication?.photos ?? []
@@ -86,7 +89,7 @@ export function PublicationDetailPage() {
             {publication.titre}
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <StatusBadge statut={publication.statut} />
+            <StatusBadge libelle={obtenirInfoStatut(publication.statut).libelle} tonalite={obtenirInfoStatut(publication.statut).tonalite} />
             {publication.date_publication && (
               <span className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Calendar size={14} />

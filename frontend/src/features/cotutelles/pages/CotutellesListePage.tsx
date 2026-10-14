@@ -1,139 +1,151 @@
 ﻿// src/features/cotutelles/pages/CotutellesListePage.tsx
+
 import { useMemo, useState } from "react"
-import { ChevronLeft, ChevronRight, Plus, UserPlus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Link } from "react-router-dom"
+import { Plus, GraduationCap } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
-import { SkeletonCard } from "@/components/shared/SkeletonCard"
-import { ConventionFiltres } from "@/features/conventions/components/ConventionFiltres"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { Panel, PanelBody } from "@/components/shared/Panel"
+import { TableToolbar } from "@/components/shared/TableToolbar"
+import { TablePagination } from "@/components/shared/TablePagination"
+import { Skeleton } from "@/components/ui/skeleton"
 import { CotutelleForm } from "@/features/cotutelles/components/CotutelleForm"
 import { useCotutelles } from "@/features/cotutelles/api/useCotutelles"
 import { useDebounce } from "@/hooks/useDebounce"
+import { useAuth } from "@/hooks/useAuth"
+import { usePermissions } from "@/hooks/usePermissions"
+import { formaterDate } from "@/lib/format"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
 
 const LIMITE_PAR_PAGE = 20
 
 export function CotutellesListePage() {
-  
+  const { utilisateur } = useAuth()
+  const permissions = usePermissions()
   const [recherche, setRecherche] = useState("")
   const [page, setPage] = useState(1)
   const [dialogueOuvert, setDialogueOuvert] = useState(false)
 
   const rechercheDebouncee = useDebounce(recherche, 300)
 
+  const role = utilisateur?.role
+  const cheminBase = role === 'PRESIDENCE' ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur'
+
   const filtres = useMemo(
     () => ({
       page,
       limit: LIMITE_PAR_PAGE,
-      nom: rechercheDebouncee || undefined,
+      nom_doctorant: rechercheDebouncee || undefined,
     }),
     [page, rechercheDebouncee]
   )
 
   const { data, isLoading } = useCotutelles(filtres)
 
-  const changementFiltres = (valeurs: { recherche: string }) => {
-    setRecherche(valeurs.recherche)
-    setPage(1)
-  }
-
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-semibold">Cotutelles</h1>
-          <p className="text-sm text-muted-foreground">
-            {data
-              ? `${data.meta.total} cotutelle${data.meta.total > 1 ? "s" : ""} reference${data.meta.total > 1 ? "s" : ""}`
-              : "Chargement..."}
-          </p>
-        </div>
-        <Button onClick={() => setDialogueOuvert(true)}>
-          <Plus />
-          Nouvelle cotutelle
-        </Button>
-      </div>
+    <div>
+      <PageHeader
+        titre="Cotutelles"
+        description={data ? `${data.meta.total} cotutelle${data.meta.total > 1 ? "s" : ""} enregistrée${data.meta.total > 1 ? "s" : ""}` : "Chargement…"}
+        actions={
+          permissions.peutCreer ? (
+            <button
+              type="button"
+              onClick={() => setDialogueOuvert(true)}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nouvelle cotutelle
+            </button>
+          ) : null
+        }
+      />
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <aside className="w-full shrink-0 lg:w-64">
-          <ConventionFiltres
-            valeurs={{ recherche, statut: [], etablissement: [] }}
-            onChangement={(vals) => changementFiltres({ recherche: vals.recherche })}
-          />
-        </aside>
+      <Panel>
+        <TableToolbar
+          valeurRecherche={recherche}
+          onRechercheChange={(valeur) => {
+            setRecherche(valeur)
+            setPage(1)
+          }}
+          placeholderRecherche="Rechercher une cotutelle…"
+        />
 
-        <div className="min-w-0 flex-1">
-          {isLoading && !data ? (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </div>
-          ) : data && data.data.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {data.data.map((cotutelle) => (
-                <div
-                  key={cotutelle.id}
-                  className="rounded-md border border-border p-4 hover:bg-sidebar-accent transition-colors"
+        {isLoading && !data ? (
+          <div className="flex flex-col gap-3 p-[16px_18px]">
+            {[0, 1, 2, 3, 4].map((cle) => (
+              <Skeleton key={cle} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : !data || data.data.length === 0 ? (
+          <EmptyState
+            icone={GraduationCap}
+            titre={recherche ? "Aucune cotutelle ne correspond à la recherche" : "Aucune cotutelle pour le moment"}
+            description={
+              recherche
+                ? "Essayez de modifier la recherche."
+                : "Enregistrez votre première cotutelle pour commencer le suivi."
+            }
+            action={
+              !recherche && permissions.peutCreer ? (
+                <button
+                  type="button"
+                  onClick={() => setDialogueOuvert(true)}
+                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
                 >
-                  <h3 className="font-heading text-sm font-semibold truncate">
-                    {cotutelle.nom_doctorant}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {cotutelle.specialite || "Non rattaché à un établissement spécifique"}
-                  </p>
-                </div>
-              ))}
+                  <Plus className="h-3.5 w-3.5" />
+                  Nouvelle cotutelle
+                </button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <PanelBody>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[13px]">
+                <thead>
+                  <tr>
+                    {['Doctorant', 'Spécialité', 'Type', 'Date de début'].map((entete) => (
+                      <th
+                        key={entete}
+                        scope="col"
+                        className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
+                      >
+                        {entete}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.data.map((cotutelle) => (
+                    <tr key={cotutelle.id} className="hover:bg-[var(--color-page-bg)]">
+                      <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                        <Link
+                          to={`${cheminBase}/cotutelles/${cotutelle.id}`}
+                          className="text-[13.5px] font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand)]"
+                        >
+                          {cotutelle.nom_doctorant}
+                        </Link>
+                      </td>
+                      <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
+                        {cotutelle.specialite || "—"}
+                      </td>
+                      <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
+                        {cotutelle.type === "COTUTELLE" ? "Co-tutelle" : "Co-encadrement"}
+                      </td>
+                      <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
+                        {formaterDate(cotutelle.date_debut)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            <EmptyState
-              icon={recherche ? Plus : UserPlus}
-              titre={
-                recherche ? "Aucune cotutelle ne correspond aux filtres"
-                : "Aucune cotutelle pour le moment"
-              }
-              message={
-                recherche
-                  ? "Essayez de modifier la recherche ou de reinitialiser les filtres."
-                  : "Enregistrez votre première cotutelle avant de la créer."
-              }
-              action={
-                !recherche ? (
-                  <Button onClick={() => setDialogueOuvert(true)}>
-                    <Plus />
-                    Nouvelle cotutelle
-                  </Button>
-                ) : undefined
-              }
-            />
-          )}
-
-          {data && data.meta.totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-end gap-2 text-sm text-muted-foreground">
-              <Button variant="outline" size="icon-sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                <ChevronLeft />
-              </Button>
-              <span>
-                Page {data.meta.page} sur {data.meta.totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                disabled={page >= data.meta.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                <ChevronRight />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+            {data.meta && <TablePagination meta={data.meta} onChangerPage={setPage} />}
+          </PanelBody>
+        )}
+      </Panel>
 
       <Dialog open={dialogueOuvert} onOpenChange={setDialogueOuvert}>
         <DialogContent className="sm:max-w-2xl">
