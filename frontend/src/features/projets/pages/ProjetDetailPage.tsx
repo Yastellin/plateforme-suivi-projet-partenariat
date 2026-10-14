@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { LIBELLES_STATUT_PROJET } from '@/lib/status-mappings';
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 export function ProjetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +25,7 @@ export function ProjetDetailPage() {
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
 
   const { data: projet, isLoading } = useProjet(id ?? '');
+  useTitreBreadcrumb(projet?.nom)
   const { mutate: archiver, isPending: enCoursArchivage } = useArchiverProjet();
 
   const role = utilisateur?.role;

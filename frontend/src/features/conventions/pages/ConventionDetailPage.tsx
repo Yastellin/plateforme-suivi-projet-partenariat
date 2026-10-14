@@ -21,6 +21,7 @@ import { useConvention } from "@/features/conventions/api/useConvention"
 import { useArchiverConvention } from "@/features/conventions/api/useArchiverConvention"
 import { usePermissions } from "@/hooks/usePermissions"
 import { formaterDate } from "@/lib/format"
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 export function ConventionDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -28,6 +29,7 @@ export function ConventionDetailPage() {
   const [modificationOuverte, setModificationOuverte] = useState(false)
   const [archivageOuvert, setArchivageOuvert] = useState(false)
   const { data: convention, isLoading } = useConvention(id)
+  useTitreBreadcrumb(convention?.titre)
   const archiver = useArchiverConvention()
 
   if (isLoading) {

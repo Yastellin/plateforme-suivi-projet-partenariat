@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import type { PartenaireFormValues } from '@/lib/validators/partenaire.schema';
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 export function PartenaireDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +29,7 @@ export function PartenaireDetailPage() {
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
 
   const { data: partenaire, isLoading } = usePartenaire(id ?? '');
+  useTitreBreadcrumb(partenaire?.nom)
   const { mutate: mettreAJour, isPending: enCoursMiseAJour } = useUpdatePartenaire();
   const { mutate: archiver, isPending: enCoursArchivage } = useArchiverPartenaire();
 
