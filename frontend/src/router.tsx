@@ -4,11 +4,13 @@ import { lazy, Suspense, useState, useEffect } from "react"
 import { createBrowserRouter, Navigate, RouterProvider, Outlet } from "react-router-dom"
 import type { ReactNode } from "react"
 import { X } from "lucide-react"
+import { MotionConfig } from "framer-motion"
 
 import { useAuth } from "@/hooks/useAuth"
 import type { RoleUtilisateur } from "@/types/api"
 import { SidebarInterne } from "@/components/layout/SidebarInterne"
 import { TopbarPublique } from "@/components/layout/TopbarPublique"
+import { FooterPublique } from "@/components/layout/FooterPublique"
 import { TopbarInterne } from "@/components/layout/TopbarInterne"
 import { NotificationsDrawer } from "@/components/layout/NotificationsDrawer"
 import { CommandPalette } from "@/components/layout/CommandPalette"
@@ -116,19 +118,15 @@ function RouteProtegee({
 
 function LayoutPublic() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <TopbarPublique />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      <footer className="border-t border-border bg-muted/50 py-8">
-        <div className="mx-auto max-w-7xl px-4 text-center text-sm text-muted-foreground sm:px-6 lg:px-8">
-          <p>
-            &copy; {new Date().getFullYear()} Université de Fianarantsoa — Plateforme de suivi des projets et partenariats
-          </p>
-        </div>
-      </footer>
-    </div>
+    <MotionConfig reducedMotion="user">
+      <div className="flex min-h-screen flex-col">
+        <TopbarPublique />
+        <main className="flex-1">
+          <Outlet />
+        </main>
+        <FooterPublique />
+      </div>
+    </MotionConfig>
   )
 }
 

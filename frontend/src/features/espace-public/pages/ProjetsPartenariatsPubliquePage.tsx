@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
 import { useDebounce } from "@/hooks/useDebounce"
 import { EmptyState } from "@/components/shared/EmptyState"
+import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
+import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
 // Page "Projets & partenariats" de la vitrine publique (section 7.4 :
 // "Projets et Partenariats → publications publiees, filtres simples →
@@ -24,35 +26,30 @@ export function ProjetsPartenariatsPubliquePage() {
   const publications = data?.data ?? []
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="text-center">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
-          Projets & partenariats
-        </h1>
-        <p className="mt-3 max-w-xl text-muted-foreground">
-          Consultez les publications et résultats de nos projets et
-          partenariats en cours ou terminés.
-        </p>
-      </div>
-
-      {/* Barre de recherche */}
-      <div className="mx-auto mt-8 max-w-md">
+    <div className="pb-24">
+      <PageHeaderPublique
+        etiquette="Publications"
+        icone={Newspaper}
+        titre="Projets & partenariats"
+        description="Consultez les publications et résultats de nos projets et partenariats en cours ou terminés."
+      >
         <div className="relative">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
           <Input
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             placeholder="Rechercher une publication..."
-            className="pl-9"
+            className="h-12 rounded-full border-border/70 bg-background/80 pl-11 shadow-sm backdrop-blur"
           />
         </div>
-      </div>
+      </PageHeaderPublique>
 
+      <div className="mx-auto mt-12 max-w-6xl px-4 sm:px-6 lg:px-8">
       {/* Liste des publications */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <RevealGroup className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {isLoading
           ? [...Array(6)].map((_, i) => (
               <Card key={i}>
@@ -65,18 +62,18 @@ export function ProjetsPartenariatsPubliquePage() {
               </Card>
             ))
           : publications.map((publication) => (
+              <RevealItem key={publication.id}>
               <Link
-                key={publication.id}
                 to={`/projets-partenariats/publication/${publication.id}`}
-                className="group"
+                className="group block h-full"
               >
-                <Card className="h-full transition-colors group-hover:bg-accent/50">
+                <Card className="h-full transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-primary/10">
                   <CardContent className="flex flex-col gap-2 p-5">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-heading text-sm font-semibold text-foreground group-hover:text-primary">
                         {publication.titre}
                       </h3>
-                      <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                      <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                         Publiée
                       </span>
                     </div>
@@ -123,8 +120,9 @@ export function ProjetsPartenariatsPubliquePage() {
                   </CardContent>
                 </Card>
               </Link>
+              </RevealItem>
             ))}
-      </div>
+      </RevealGroup>
 
       {!isLoading && publications.length === 0 && (
         <EmptyState
@@ -137,6 +135,7 @@ export function ProjetsPartenariatsPubliquePage() {
           }
         />
       )}
+      </div>
     </div>
   )
 }

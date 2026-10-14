@@ -13,6 +13,8 @@ export default defineConfig({
   },
   server: {
     host: true,
+    // Prévisualisation sandbox (hôtes *.e2b.app) — ne concerne que le serveur de dev.
+    allowedHosts: [".e2b.app"],
     watch: {
       usePolling: true,
       interval: 300,
