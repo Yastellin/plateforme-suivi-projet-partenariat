@@ -5,6 +5,7 @@ import { Partenariat } from '../partenariats/entities/partenariat.entity';
 import { Projet } from '../projets/entities/projet.entity';
 import { Convention } from '../conventions/entities/convention.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
+import { Document } from '../documents/entities/document.entity';
 import { ArchivesController } from './archives.controller';
 import { ArchivesService } from './archives.service';
 
@@ -16,6 +17,7 @@ import { ArchivesService } from './archives.service';
       Projet,
       Convention,
       CotutelleThese,
+      Document,
     ]),
   ],
   controllers: [ArchivesController],

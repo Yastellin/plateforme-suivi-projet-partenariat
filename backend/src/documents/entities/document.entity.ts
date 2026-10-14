@@ -1,3 +1,4 @@
+//backend/src/documents/entities/document.entity.ts
 import {
   Entity,
   PrimaryColumn,
