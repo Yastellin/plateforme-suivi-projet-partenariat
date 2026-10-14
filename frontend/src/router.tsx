@@ -50,6 +50,7 @@ const PublicationDetailPage = lazy(() => import("@/features/espace-public/pages/
 const ContactPage = lazy(() => import("@/features/espace-public/pages/ContactPage").then((m) => ({ default: m.ContactPage })))
 const RecherchePage = lazy(() => import("@/features/recherche/pages/RecherchePage").then((m) => ({ default: m.RecherchePage })))
 const SynthesePage = lazy(() => import("@/features/synthese/pages/SynthesePage").then((m) => ({ default: m.SynthesePage })))
+const SyntheseEtablissementPage = lazy(() => import("@/features/synthese/pages/SyntheseEtablissementPage").then((m) => ({ default: m.SyntheseEtablissementPage })))
 const DocumentsListePage = lazy(() => import("@/features/documents/pages/DocumentsListePage").then((m) => ({ default: m.DocumentsListePage })))
 const PublicationsListePage = lazy(() => import("@/features/publications/pages/PublicationsListePage").then((m) => ({ default: m.PublicationsListePage })))
 const ProjetCreatePage = lazy(() => import("@/features/projets/pages/ProjetCreatePage").then((m) => ({ default: m.ProjetCreatePage })))
@@ -224,6 +225,9 @@ const router = createBrowserRouter([
       { path: "/presidence/export", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ExportPage /></Charge></RouteProtegee> },
       { path: "/presidence/recherche", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><RecherchePage /></Charge></RouteProtegee> },
       { path: "/presidence/synthese", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><SynthesePage /></Charge></RouteProtegee> },
+      { path: "/presidence/synthese/:etablissementId", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><SyntheseEtablissementPage /></Charge></RouteProtegee> },
+      { path: "/decideur/synthese", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><SynthesePage /></Charge></RouteProtegee> },
+      { path: "/decideur/synthese/:etablissementId", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><SyntheseEtablissementPage /></Charge></RouteProtegee> },
       { path: "/presidence/documents", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentsListePage /></Charge></RouteProtegee> },
       { path: "/presidence/documents/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentUploadPage /></Charge></RouteProtegee> },
       { path: "/presidence/documents/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentDetailPage /></Charge></RouteProtegee> },

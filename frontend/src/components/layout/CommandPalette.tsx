@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, LayoutDashboard, Users, Handshake, FileText } from 'lucide-react';
+import { Search, LayoutDashboard, Users, Handshake, FileText, ChartPie } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CommandPaletteProps {
@@ -22,6 +22,7 @@ const ACTIONS_RAPIDES: ActionRapide[] = [
   { id: 'partenaires', label: 'Partenaires', chemin: '/presidence/partenaires-partenariats/partenaires', icone: Users },
   { id: 'partenariats', label: 'Partenariats', chemin: '/presidence/partenaires-partenariats/partenariats', icone: Handshake },
   { id: 'conventions', label: 'Conventions', chemin: '/presidence/conventions', icone: FileText },
+  { id: 'synthese', label: 'Synthèse annuelle', chemin: '/presidence/synthese', icone: ChartPie },
 ];
 
 export function CommandPalette({ ouvert, onFermer }: CommandPaletteProps) {

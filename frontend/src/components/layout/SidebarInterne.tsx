@@ -1,4 +1,4 @@
-﻿// src/components/layout/SidebarInterne.tsx
+// src/components/layout/SidebarInterne.tsx
 
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -146,7 +146,10 @@ function construireNavigation(role: RoleUtilisateur, base: string): GroupeNaviga
     {
       cle: 'diffusion',
       libelle: 'Diffusion',
-      items: [{ cle: 'parametres', libelle: 'Paramètres', icone: Settings, chemin: `${base}/parametres` }],
+      items: [
+        { cle: 'synthese', libelle: 'Synthèse annuelle', icone: ChartPie, chemin: `${base}/synthese` },
+        { cle: 'parametres', libelle: 'Paramètres', icone: Settings, chemin: `${base}/parametres` },
+      ],
     },
   ];
 }

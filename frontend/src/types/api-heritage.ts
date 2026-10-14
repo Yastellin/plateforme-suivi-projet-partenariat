@@ -1,4 +1,4 @@
-﻿// src/types/api.ts
+// src/types/api.ts
 export type RoleUtilisateur = "PRESIDENCE" | "ETABLISSEMENT" | "DECIDEUR"
 export type TypeCotutelle = "COTUTELLE" | "COENCADREMENT"
 
@@ -225,35 +225,8 @@ export interface Notification {
   reference_type: string
   reference_id: string
 }
-// à ajouter dans src/types/api.ts
-export interface SyntheseItem {
-  id: string
-  etablissement_id: string
-  annee: number
-  type: string
-  valeur: string
-}
-
-export interface SynthesePartenaireStrategique {
-  id: string
-  etablissement_id: string
-  annee: number
-  partenaire_id: string
-  partenaire?: Partenaire
-}
-
-export interface SyntheseEtablissement {
-  etablissement_id: string
-  etablissement_nom: string
-  annee: number
-  nombre_partenaires: number
-  conventions_actives: number
-  conventions_expirees: number
-  nombre_cotutelles: number
-  projets_actifs: number
-  items_narratifs: SyntheseItem[]
-  partenaires_strategiques: SynthesePartenaireStrategique[]
-}
+// Types de la synthèse annuelle : déplacés dans src/types/api.ts
+// (contrat réel du module `synthese` du backend).
 
 export interface CompteursTableauDeBord {
   nombre_partenaires: number

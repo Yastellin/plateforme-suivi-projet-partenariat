@@ -11,6 +11,8 @@ interface Permissions {
   peutSoumettre: boolean;
   peutTeleverser: boolean;
   peutExporter: boolean;
+  /** Création / suppression des contenus de synthèse (Présidence uniquement). */
+  peutGererSynthese: boolean;
   estLectureSeule: boolean;
   estPresidence: boolean;
   estEtablissement: boolean;
@@ -33,6 +35,7 @@ export function usePermissions(): Permissions {
     peutSoumettre: peutEcrire,
     peutTeleverser: peutEcrire,
     peutExporter: role === 'PRESIDENCE',
+    peutGererSynthese: role === 'PRESIDENCE',
     estLectureSeule: role === 'DECIDEUR',
     estPresidence: role === 'PRESIDENCE',
     estEtablissement: role === 'ETABLISSEMENT',
