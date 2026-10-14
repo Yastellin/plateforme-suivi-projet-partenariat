@@ -31,12 +31,27 @@ export class PorteursService {
     return this.porteurRepo.save(porteur);
   }
 
-  async findAll(nom?: string): Promise<Porteur[]> {
+  async findAll(
+    page: number = 1,
+    limit: number = 20,
+    nom?: string,
+  ): Promise<{
+    data: Porteur[];
+    meta: { page: number; limit: number; total: number; totalPages: number };
+  }> {
     const where = nom ? { nom: ILike(`%${nom}%`) } : {};
-    return this.porteurRepo.find({
+
+    const [data, total] = await this.porteurRepo.findAndCount({
       where,
       order: { nom: 'ASC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return {
+      data,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string): Promise<Porteur> {
