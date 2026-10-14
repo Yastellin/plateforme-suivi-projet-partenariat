@@ -2,14 +2,15 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
-import { normaliserEmail, normaliserNomPersonne, normaliserPrenom } from '@/lib/normalisation';
+import { normaliserEmail, normaliserNomPersonne } from '@/lib/normalisation';
 import { normaliserTelephone } from '@/lib/phone';
 import type { Contact } from '@/types/api';
 import type { ContactFormValues } from '@/lib/validators/contact.schema';
 
+// Le contrat API contact ne comporte que { nom, fonction, email, telephone } :
+// le champ prenom n'existe pas cote backend (table "Contact" sans colonne prenom).
 function preparerPayloadContact(valeurs: ContactFormValues): Record<string, unknown> {
   return {
-    prenom: normaliserPrenom(valeurs.prenom),
     nom: normaliserNomPersonne(valeurs.nom),
     fonction: valeurs.fonction || null,
     email: valeurs.email ? normaliserEmail(valeurs.email) : null,
