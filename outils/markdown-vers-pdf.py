@@ -5,6 +5,14 @@ pieds de page) avec ReportLab.
 
 Usage :
     python3 outils/markdown-vers-pdf.py docs/cahier-des-charges-v5.md docs/Cahier_des_charges_v5.pdf
+    python3 outils/markdown-vers-pdf.py --chapitres-enchaines --toc-profondeur 1 source.md destination.pdf
+
+Par défaut, chaque chapitre (titre de niveau 1) commence sur une nouvelle page.
+L'option `--chapitres-enchaines` enchaîne les chapitres sans saut de page forcé :
+utile pour les documents courts dont le nombre de pages est contraint.
+L'option `--toc-profondeur n` (1 à 3, défaut 3) limite la table des matières aux
+n premiers niveaux de titres : 1 = chapitres seuls, 2 = chapitres et sections,
+3 = tous les niveaux.
 
 Le sous-ensemble de Markdown pris en charge est volontairement limité à ce
 qu'utilise le cahier des charges :
@@ -108,6 +116,10 @@ def enregistrer_polices() -> dict[str, str]:
 # --------------------------------------------------------------------------
 # Styles
 # --------------------------------------------------------------------------
+CHAPITRES_ENCHAINES = False
+TOC_PROFONDEUR = 3
+
+
 def construire_styles(polices: dict[str, str]) -> dict[str, ParagraphStyle]:
     base = getSampleStyleSheet()
     styles: dict[str, ParagraphStyle] = {}
@@ -453,12 +465,24 @@ class DocumentCahier(BaseDocTemplate):
             style = flowable.style.name
             if style in {"chapitre", "section", "sous_section"}:
                 niveau = {"chapitre": 0, "section": 1, "sous_section": 2}[style]
+                if niveau > TOC_PROFONDEUR - 1:
+                    return
                 texte = flowable.getPlainText()
                 if texte.strip().lower() == "sommaire":
                     return
                 cle = f"toc-{id(flowable)}"
                 self.canv.bookmarkPage(cle)
                 self.notify("TOCEntry", (niveau, texte, self.page, cle))
+
+
+def libelle_ajuste(canevas, libelle: str, largeur_max: float, taille: float) -> str:
+    """Réduit le libellé du pied de page pour qu'il n'atteigne pas le numéro de page."""
+    if canevas.stringWidth(libelle, "DejaVu", taille) <= largeur_max:
+        return libelle
+    coupe = libelle
+    while coupe and canevas.stringWidth(coupe + "…", "DejaVu", taille) > largeur_max:
+        coupe = coupe[:-1]
+    return coupe.rstrip(" ,;:-—") + "…"
 
 
 def dessiner_pied_de_page(canevas, document) -> None:
@@ -476,10 +500,13 @@ def dessiner_pied_de_page(canevas, document) -> None:
     )
     canevas.setFont("DejaVu", 6.6)
     canevas.setFillColor(GRIS_SECONDAIRE)
+    largeur_utile_pied = (
+        document.pagesize[0] - document.leftMargin - document.rightMargin - 44
+    )
     canevas.drawString(
         document.leftMargin,
         document.bottomMargin - 10.4 * mm,
-        LIBELLE_COURANT,
+        libelle_ajuste(canevas, LIBELLE_COURANT, largeur_utile_pied, 6.6),
     )
     canevas.setFont("DejaVu-Bold", 7.6)
     canevas.setFillColor(VERT_PROFOND)
@@ -711,7 +738,7 @@ def rendre_blocs(
             niveau = bloc.donnees["niveau"]
             texte = mettre_en_forme(bloc.donnees["texte"], polices)
             if niveau == 1:
-                if not tete_de_page:
+                if not tete_de_page and not CHAPITRES_ENCHAINES:
                     corps.append(PageBreak())
                 tete_de_page = True
                 corps.append(Paragraph(texte, styles["chapitre"]))
@@ -886,8 +913,15 @@ def rendre_blocs(
     return page_de_garde, corps
 
 
-def convertir(source: Path, destination: Path) -> None:
-    global LIBELLE_COURANT
+def convertir(
+    source: Path,
+    destination: Path,
+    chapitres_enchaines: bool = False,
+    toc_profondeur: int = 3,
+) -> None:
+    global LIBELLE_COURANT, CHAPITRES_ENCHAINES, TOC_PROFONDEUR
+    CHAPITRES_ENCHAINES = chapitres_enchaines
+    TOC_PROFONDEUR = max(1, min(3, toc_profondeur))
     polices = enregistrer_polices()
     styles = construire_styles(polices)
     blocs = analyser(source.read_text(encoding="utf-8"))
@@ -921,16 +955,46 @@ def convertir(source: Path, destination: Path) -> None:
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
+    brut = sys.argv[1:]
+    arguments: list[str] = []
+    options: set[str] = set()
+    profondeur = 3
+    attend_valeur = False
+    for element in brut:
+        if attend_valeur:
+            if not element.isdigit():
+                print(__doc__)
+                return 1
+            profondeur = int(element)
+            attend_valeur = False
+            continue
+        if element == "--toc-profondeur":
+            options.add(element)
+            attend_valeur = True
+            continue
+        if element.startswith("--"):
+            options.add(element)
+        else:
+            arguments.append(element)
+    if attend_valeur:
         print(__doc__)
         return 1
-    source = Path(sys.argv[1])
-    destination = Path(sys.argv[2])
+    inconnues = options - {"--chapitres-enchaines", "--toc-profondeur"}
+    if len(arguments) != 2 or inconnues:
+        print(__doc__)
+        return 1
+    source = Path(arguments[0])
+    destination = Path(arguments[1])
     if not source.exists():
         print(f"Fichier source introuvable : {source}")
         return 1
     destination.parent.mkdir(parents=True, exist_ok=True)
-    convertir(source, destination)
+    convertir(
+        source,
+        destination,
+        chapitres_enchaines="--chapitres-enchaines" in options,
+        toc_profondeur=profondeur if "--toc-profondeur" in options else 3,
+    )
     print(f"PDF généré : {destination}")
     return 0
 
