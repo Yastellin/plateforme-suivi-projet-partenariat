@@ -1,2 +1,10 @@
 
 .env
+
+# Python (outillage docs)
+__pycache__/
+*.pyc
+
+# Export PDF du cahier des charges — conservé hors dépôt
+# (le Markdown source docs/cahier-des-charges-v5.md reste versionné)
+docs/*.pdf
