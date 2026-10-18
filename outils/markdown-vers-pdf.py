@@ -13,6 +13,9 @@ utile pour les documents courts dont le nombre de pages est contraint.
 L'option `--toc-profondeur n` (1 à 3, défaut 3) limite la table des matières aux
 n premiers niveaux de titres : 1 = chapitres seuls, 2 = chapitres et sections,
 3 = tous les niveaux.
+L'option `--toc-sur-place` place la table des matières à la suite du contenu
+précédent (fiche du document) au lieu de lui ouvrir une page : le sommaire
+partage alors la page de la fiche, ce qui évite une page presque vide.
 
 Le sous-ensemble de Markdown pris en charge est volontairement limité à ce
 qu'utilise le cahier des charges :
@@ -118,6 +121,7 @@ def enregistrer_polices() -> dict[str, str]:
 # --------------------------------------------------------------------------
 CHAPITRES_ENCHAINES = False
 TOC_PROFONDEUR = 3
+TOC_SUR_PLACE = False
 
 
 def construire_styles(polices: dict[str, str]) -> dict[str, ParagraphStyle]:
@@ -740,6 +744,10 @@ def rendre_blocs(
             if niveau == 1:
                 if not tete_de_page and not CHAPITRES_ENCHAINES:
                     corps.append(PageBreak())
+                if CHAPITRES_ENCHAINES and not tete_de_page:
+                    # Sans saut de page, un chapitre enchaîné a besoin d'air
+                    # au-dessus de son titre pour rester lisible.
+                    corps.append(Spacer(1, 14))
                 tete_de_page = True
                 corps.append(Paragraph(texte, styles["chapitre"]))
                 corps.append(
@@ -892,7 +900,7 @@ def rendre_blocs(
                 and corps[-1].getPlainText().strip().lower() == "sommaire"
             ):
                 titre_deplace = corps.pop()
-            if corps and not isinstance(corps[-1], PageBreak):
+            if corps and not isinstance(corps[-1], PageBreak) and not TOC_SUR_PLACE:
                 corps.append(PageBreak())
             if titre_deplace is not None:
                 corps.append(titre_deplace)
@@ -918,10 +926,12 @@ def convertir(
     destination: Path,
     chapitres_enchaines: bool = False,
     toc_profondeur: int = 3,
+    toc_sur_place: bool = False,
 ) -> None:
-    global LIBELLE_COURANT, CHAPITRES_ENCHAINES, TOC_PROFONDEUR
+    global LIBELLE_COURANT, CHAPITRES_ENCHAINES, TOC_PROFONDEUR, TOC_SUR_PLACE
     CHAPITRES_ENCHAINES = chapitres_enchaines
     TOC_PROFONDEUR = max(1, min(3, toc_profondeur))
+    TOC_SUR_PLACE = toc_sur_place
     polices = enregistrer_polices()
     styles = construire_styles(polices)
     blocs = analyser(source.read_text(encoding="utf-8"))
@@ -935,8 +945,15 @@ def convertir(
         (b.donnees["texte"] for b in blocs if b.genre == "titre" and b.donnees["niveau"] == 2),
         "",
     )
-    titre_court = titre if len(titre) <= 90 else "Plateforme de gestion et de suivi des projets et partenariats de l'Université de Fianarantsoa"
-    LIBELLE_COURANT = f"{sous_titre} — {titre_court}" if sous_titre else titre_court
+    # Le pied de page retient le sous-titre (qui nomme le document) suivi de
+    # l'Université, plutôt que le titre complet : celui-ci dépasse la largeur
+    # disponible et se retrouverait tronqué au milieu d'un mot.
+    if sous_titre:
+        LIBELLE_COURANT = f"{sous_titre} — Université de Fianarantsoa"
+    elif len(titre) <= 110:
+        LIBELLE_COURANT = titre
+    else:
+        LIBELLE_COURANT = "Projets et partenariats — Université de Fianarantsoa"
 
     page_de_garde, corps = rendre_blocs(blocs, styles, polices, [])
 
@@ -979,7 +996,7 @@ def main() -> int:
     if attend_valeur:
         print(__doc__)
         return 1
-    inconnues = options - {"--chapitres-enchaines", "--toc-profondeur"}
+    inconnues = options - {"--chapitres-enchaines", "--toc-profondeur", "--toc-sur-place"}
     if len(arguments) != 2 or inconnues:
         print(__doc__)
         return 1
@@ -994,6 +1011,7 @@ def main() -> int:
         destination,
         chapitres_enchaines="--chapitres-enchaines" in options,
         toc_profondeur=profondeur if "--toc-profondeur" in options else 3,
+        toc_sur_place="--toc-sur-place" in options,
     )
     print(f"PDF généré : {destination}")
     return 0

@@ -344,7 +344,7 @@ Le document v4 ne tranche pas les points ci-dessous ; ils doivent être décidé
 | `cahier-des-charges-fonctionnel.md` | Version complète : mêmes besoins, chacun détaillé avec sa justification, sa vérification et la traçabilité règle par règle |
 | `cahier-des-charges-v5.md` | Analyse technique : description du logiciel, de son état d'implémentation et des écarts constatés |
 | `Cahier des de charges.pdf` | Cahier des charges version 4 fourni par la maîtrise d'ouvrage : source du présent document |
-| Export PDF | `python3 outils/markdown-vers-pdf.py --chapitres-enchaines --toc-profondeur 1 <source.md> <destination.pdf>` |
+| Export PDF | `python3 outils/markdown-vers-pdf.py --chapitres-enchaines --toc-profondeur 1 --toc-sur-place <source.md> <destination.pdf>` |
 
 ## 11.3. Historique des versions
 
