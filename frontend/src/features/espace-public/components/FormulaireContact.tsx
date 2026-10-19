@@ -2,7 +2,7 @@
 import { useMemo, useState, type FormEvent } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Send, Loader2, AlertCircle } from "lucide-react"
+import { Send, Loader2, AlertCircle, CheckCircle2, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,44 +13,57 @@ import { usePublicEtablissements } from "@/features/espace-public/api/usePublicE
 import {
   LIMITES_CONTACT,
   VALEURS_CONTACT_VIDES,
+  filtrerSaisie,
   validerContact,
   type ChampContact,
   type ValeursContact,
 } from "@/lib/validators/message-contact"
 
-// Formulaire de contact public. Les regles de saisie sont verifiees pendant
-// la frappe (une fois le champ touche) et a l'envoi. Le message est transmis
-// a la Presidence, ou directement a l'etablissement choisi.
+interface ConfirmationEnvoi {
+  reference: string
+}
+
+// Formulaire de contact public.
+// - Pendant la frappe : les caracteres interdits n'entrent pas dans le champ,
+//   et chaque champ est controle en direct des sa premiere saisie.
+// - A l'envoi : une reference unique est attribuee au message et affichee
+//   a l'expediteur pour un suivi.
 export function FormulaireContact() {
   const [valeurs, setValeurs] = useState<ValeursContact>(VALEURS_CONTACT_VIDES)
   const [touches, setTouches] = useState<Partial<Record<ChampContact, boolean>>>({})
   const [tentativeEnvoi, setTentativeEnvoi] = useState(false)
+  const [confirmation, setConfirmation] = useState<ConfirmationEnvoi | null>(null)
 
   const { data: etablissementsData } = usePublicEtablissements({ limit: 100 })
   const etablissements = etablissementsData?.data ?? []
 
-  // Erreurs recalculees a chaque frappe ; affichees seulement apres interaction.
+  // Erreurs recalculees a chaque frappe, affichees des que le champ a ete touche.
   const erreurs = useMemo(() => validerContact(valeurs), [valeurs])
   const erreurAffichee = (champ: ChampContact) =>
     (touches[champ] || tentativeEnvoi) ? erreurs[champ] : undefined
+  const champValide = (champ: ChampContact) =>
+    Boolean(touches[champ]) && valeurs[champ].trim() !== "" && !erreurs[champ]
 
   const mutation = useMutation({
-    mutationFn: (donnees: ValeursContact) =>
-      apiClient.post("/public/contact", {
+    mutationFn: async (donnees: ValeursContact) => {
+      const reponse = await apiClient.post<{ reference: string }>("/public/contact", {
         nom: donnees.nom.trim(),
         email: donnees.email.trim(),
         telephone: donnees.telephone.trim() || undefined,
         sujet: donnees.sujet.trim(),
         message: donnees.message.trim(),
         etablissement_id: donnees.etablissement_id || undefined,
-      }),
-    onSuccess: () => {
-      toast.success("Message envoyé", {
-        description: "Merci. Votre message a bien été transmis à l'équipe concernée.",
       })
+      return reponse.data
+    },
+    onSuccess: (donnees) => {
+      setConfirmation({ reference: donnees.reference })
       setValeurs(VALEURS_CONTACT_VIDES)
       setTouches({})
       setTentativeEnvoi(false)
+      toast.success("Message envoyé", {
+        description: `Référence : ${donnees.reference}`,
+      })
     },
     onError: (erreur: Error) => {
       toast.error("Envoi impossible", {
@@ -59,8 +72,10 @@ export function FormulaireContact() {
     },
   })
 
-  function modifier(champ: ChampContact, valeur: string) {
+  function modifier(champ: ChampContact, saisie: string) {
+    const valeur = filtrerSaisie(champ, saisie)
     setValeurs((prev) => ({ ...prev, [champ]: valeur }))
+    setTouches((prev) => ({ ...prev, [champ]: true }))
   }
 
   function marquerTouche(champ: ChampContact) {
@@ -79,13 +94,58 @@ export function FormulaireContact() {
     mutation.mutate(valeurs)
   }
 
+  async function copierReference() {
+    if (!confirmation) return
+    try {
+      await navigator.clipboard.writeText(confirmation.reference)
+      toast.success("Référence copiée")
+    } catch {
+      toast.error("Copie impossible", { description: "Recopiez la référence manuellement." })
+    }
+  }
+
   const compteurMessage = valeurs.message.trim().length
   const compteurSujet = valeurs.sujet.trim().length
+
+  if (confirmation) {
+    return (
+      <div role="status" className="flex flex-col gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-6">
+        <div className="flex items-center gap-2 text-primary">
+          <CheckCircle2 size={20} />
+          <h3 className="font-heading text-lg font-semibold">Message bien reçu</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Votre message a été transmis à l'équipe concernée. Conservez cette référence pour toute relance :
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <code className="rounded-md bg-background px-4 py-2 font-mono text-lg tracking-wider text-foreground ring-1 ring-border">
+            {confirmation.reference}
+          </code>
+          <Button type="button" variant="outline" onClick={copierReference} className="rounded-full">
+            <Copy size={16} />
+            Copier
+          </Button>
+        </div>
+        <div>
+          <Button type="button" variant="ghost" onClick={() => setConfirmation(null)} className="px-0">
+            Envoyer un autre message
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <form onSubmit={gererSoumission} noValidate className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        <Champ id="contact-nom" label="Nom complet" requis erreur={erreurAffichee("nom")}>
+        <Champ
+          id="contact-nom"
+          label="Nom complet"
+          requis
+          aide="Lettres, espaces, apostrophes et tirets uniquement"
+          erreur={erreurAffichee("nom")}
+          valide={champValide("nom")}
+        >
           <Input
             id="contact-nom"
             autoComplete="name"
@@ -98,7 +158,7 @@ export function FormulaireContact() {
           />
         </Champ>
 
-        <Champ id="contact-email" label="Adresse e-mail" requis erreur={erreurAffichee("email")}>
+        <Champ id="contact-email" label="Adresse e-mail" requis erreur={erreurAffichee("email")} valide={champValide("email")}>
           <Input
             id="contact-email"
             type="email"
@@ -114,14 +174,20 @@ export function FormulaireContact() {
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Champ id="contact-telephone" label="Téléphone" aide="Facultatif — format international conseillé" erreur={erreurAffichee("telephone")}>
+        <Champ
+          id="contact-telephone"
+          label="Téléphone"
+          aide="Facultatif — format international, ex. +261 34 22 330 54"
+          erreur={erreurAffichee("telephone")}
+          valide={champValide("telephone")}
+        >
           <Input
             id="contact-telephone"
             type="tel"
             autoComplete="tel"
             inputMode="tel"
             value={valeurs.telephone}
-            maxLength={30}
+            maxLength={LIMITES_CONTACT.telephone.max}
             onChange={(e) => modifier("telephone", e.target.value)}
             onBlur={() => marquerTouche("telephone")}
             placeholder="+261 34 00 000 00"
@@ -147,7 +213,15 @@ export function FormulaireContact() {
         </Champ>
       </div>
 
-      <Champ id="contact-sujet" label="Sujet" requis erreur={erreurAffichee("sujet")} compteur={`${compteurSujet}/${LIMITES_CONTACT.sujet.max}`}>
+      <Champ
+        id="contact-sujet"
+        label="Sujet"
+        requis
+        aide="Pas de caractères < ou >"
+        erreur={erreurAffichee("sujet")}
+        valide={champValide("sujet")}
+        compteur={`${compteurSujet}/${LIMITES_CONTACT.sujet.max}`}
+      >
         <Input
           id="contact-sujet"
           value={valeurs.sujet}
@@ -159,7 +233,14 @@ export function FormulaireContact() {
         />
       </Champ>
 
-      <Champ id="contact-message" label="Message" requis erreur={erreurAffichee("message")} compteur={`${compteurMessage}/${LIMITES_CONTACT.message.max}`}>
+      <Champ
+        id="contact-message"
+        label="Message"
+        requis
+        erreur={erreurAffichee("message")}
+        valide={champValide("message")}
+        compteur={`${compteurMessage}/${LIMITES_CONTACT.message.max}`}
+      >
         <Textarea
           id="contact-message"
           rows={6}
@@ -192,17 +273,19 @@ interface ChampProps {
   requis?: boolean
   aide?: string
   erreur?: string
+  valide?: boolean
   compteur?: string
 }
 
-// Enveloppe commune : libelle, aide, message d'erreur et compteur.
-function Champ({ id, label, children, requis, aide, erreur, compteur }: ChampProps) {
+// Enveloppe commune : libelle, aide, erreur en direct, indicateur de validite et compteur.
+function Champ({ id, label, children, requis, aide, erreur, valide, compteur }: ChampProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
         <Label htmlFor={id} className="font-medium">
           {label}
           {requis && <span className="ml-0.5 text-destructive">*</span>}
+          {valide && <CheckCircle2 size={14} aria-label="Champ valide" className="ml-1.5 inline text-primary" />}
         </Label>
         {compteur && <span className="text-xs tabular-nums text-muted-foreground">{compteur}</span>}
       </div>
@@ -218,4 +301,3 @@ function Champ({ id, label, children, requis, aide, erreur, compteur }: ChampPro
     </div>
   )
 }
-

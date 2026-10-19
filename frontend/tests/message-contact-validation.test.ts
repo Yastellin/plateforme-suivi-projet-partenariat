@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   VALEURS_CONTACT_VIDES,
+  filtrerSaisie,
   validerChampContact,
   validerContact,
   type ValeursContact,
@@ -66,12 +67,41 @@ describe("validerChampContact", () => {
 
   it("exige un message d'au moins 10 caractères et au plus 2000", () => {
     expect(validerChampContact("message", "court")).toBeDefined()
-    expect(validerChampContact("message", "x".repeat(10))).toBeUndefined()
+    expect(validerChampContact("message", "abcdefghij")).toBeUndefined()
     expect(validerChampContact("message", "x".repeat(2001))).toBeDefined()
   })
 
   it("ignore les espaces de début et de fin", () => {
     expect(validerChampContact("nom", "   J   ")).toBeDefined()
     expect(validerChampContact("nom", "   Jean   ")).toBeUndefined()
+  })
+})
+
+describe("filtrerSaisie (pendant la frappe)", () => {
+  it("retire les chiffres et symboles interdits du nom", () => {
+    expect(filtrerSaisie("nom", "Jean2 Rak@oto")).toBe("Jean Rakoto")
+    expect(filtrerSaisie("nom", "Marie-Claire d'Ark")).toBe("Marie-Claire d'Ark")
+  })
+  it("ne garde qu'un + en tête pour le téléphone", () => {
+    expect(filtrerSaisie("telephone", "+261 34 22 330 54")).toBe("+261 34 22 330 54")
+    expect(filtrerSaisie("telephone", "34+22abc")).toBe("3422")
+    expect(filtrerSaisie("telephone", "+26+1")).toBe("+261")
+  })
+  it("retire les espaces de l'e-mail et les chevrons du sujet et du message", () => {
+    expect(filtrerSaisie("email", " jean @mail.mg ")).toBe("jean@mail.mg")
+    expect(filtrerSaisie("sujet", "<b>Sujet</b>")).toBe("bSujet/b")
+  })
+})
+
+describe("règles de contenu", () => {
+  it("refuse les balises HTML", () => {
+    expect(validerChampContact("message", "Bonjour <img src=x> à tous")).toBeDefined()
+  })
+  it("refuse une répétition abusive ou un texte sans lettres", () => {
+    expect(validerChampContact("message", "aaaaaaaaaaaa bonjour")).toBeDefined()
+    expect(validerChampContact("sujet", "!!!!!")).toBeDefined()
+  })
+  it("accepte un texte réel", () => {
+    expect(validerChampContact("sujet", "Demande de partenariat")).toBeUndefined()
   })
 })
