@@ -1,11 +1,10 @@
 // src/features/espace-public/components/SectionPartenaires.tsx
-import { Link } from "react-router-dom"
-import { ArrowRight } from "lucide-react"
 import { HybridCarousel } from "@/components/shared/HybridCarousel"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { CartePartenaire } from "@/features/espace-public/components/CartesPubliques"
 import { decouper } from "@/features/espace-public/lib/publique"
+import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 
 // Carrousel des partenaires a la une, avec description de chaque partenaire.
 export function SectionPartenaires() {
@@ -17,16 +16,12 @@ export function SectionPartenaires() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Coopération</p>
-          <h2 className="mt-1 font-heading text-2xl font-bold text-foreground">Nos partenaires</h2>
-        </div>
-        <Link to="/projets-partenariats?onglet=partenaires" className="group flex items-center gap-1 text-sm font-medium text-primary">
-          Tous les partenaires
-          <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
-        </Link>
-      </div>
+      <EnTeteSection
+        etiquette="Coopération"
+        titre="Nos partenaires"
+        description="Les institutions qui accompagnent l'Université dans ses projets de recherche et de formation."
+        lien={{ to: "/projets-partenariats?onglet=partenaires", libelle: "Tous les partenaires" }}
+      />
 
       {isLoading ? (
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">

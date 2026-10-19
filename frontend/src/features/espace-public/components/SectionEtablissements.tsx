@@ -1,10 +1,10 @@
 // src/features/espace-public/components/SectionEtablissements.tsx
-import { Link } from "react-router-dom"
-import { Building2, ArrowRight } from "lucide-react"
+import { Building2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 
 // Section etablissements mis en avant sur la page d'accueil publique.
 // Affiche les etablissements a la une renvoyes par /public/accueil.
@@ -17,21 +17,12 @@ export function SectionEtablissements() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-      <Reveal className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Réseau</p>
-          <h2 className="mt-1 font-heading text-2xl font-bold text-foreground">
-            Nos établissements
-          </h2>
-        </div>
-        <Link
-          to="/etablissements"
-          className="group flex items-center gap-1 text-sm font-medium text-primary"
-        >
-          Voir tous
-          <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-        </Link>
-      </Reveal>
+      <EnTeteSection
+        etiquette="Réseau"
+        titre="Nos établissements"
+        description="Les facultés, écoles et instituts qui composent l'Université de Fianarantsoa."
+        lien={{ to: "/etablissements", libelle: "Voir tous" }}
+      />
 
       <RevealGroup className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {isLoading

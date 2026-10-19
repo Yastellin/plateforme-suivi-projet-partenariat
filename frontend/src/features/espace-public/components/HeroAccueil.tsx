@@ -73,8 +73,8 @@ export function HeroAccueil() {
             </span>
           </motion.h1>
           <motion.p variants={elementHero} className="mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Projets, partenariats et résultats de recherche de l'Université, réunis sur une même plateforme
-            pour une coopération transparente.
+            Projets, partenariats et actualités de l'Université de Fianarantsoa, réunis sur une seule plateforme
+            pour une coopération transparente et accessible.
           </motion.p>
           <motion.div variants={elementHero} className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="rounded-full px-6 shadow-lg shadow-primary/25">
