@@ -1,140 +1,266 @@
 // src/features/espace-public/pages/ProjetsPartenariatsPubliquePage.tsx
+// Page unique de la vitrine publique regroupant tous les projets, partenaires
+// et publications de l'Universite (onglets, recherche et pagination).
 import { useState } from "react"
-import { Link } from "react-router-dom"
-import { Newspaper, Search, Calendar } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useSearchParams } from "react-router-dom"
+import { Briefcase, Handshake, Newspaper, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
-import { useDebounce } from "@/hooks/useDebounce"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EmptyState } from "@/components/shared/EmptyState"
+import { useDebounce } from "@/hooks/useDebounce"
+import type { MetaPagination } from "@/types/api"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
-import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { CarteProjet, CartePartenaire, CartePublication } from "@/features/espace-public/components/CartesPubliques"
+import { usePublicProjets } from "@/features/espace-public/api/usePublicProjets"
+import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPartenaires"
+import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
+import { usePublicEtablissements } from "@/features/espace-public/api/usePublicEtablissements"
 
-// Page "Projets & partenariats" de la vitrine publique (section 7.4 :
-// "Projets et Partenariats → publications publiees, filtres simples →
-// detail d'une publication").
-export function ProjetsPartenariatsPubliquePage() {
+type Onglet = "projets" | "partenaires" | "publications"
+const ONGLETS: Onglet[] = ["projets", "partenaires", "publications"]
+const TAILLE_PAGE = 9
+
+function ongletDepuisUrl(valeur: string | null): Onglet {
+  return ONGLETS.includes(valeur as Onglet) ? (valeur as Onglet) : "projets"
+}
+
+// Pagination simple : precedent / suivant, avec le nombre de resultats.
+function Pagination({ meta, onChange }: { meta: MetaPagination | undefined; onChange: (page: number) => void }) {
+  if (!meta || meta.totalPages <= 1) return null
+  return (
+    <nav aria-label="Pagination" className="mt-10 flex items-center justify-center gap-4">
+      <Button variant="outline" size="sm" className="rounded-full" disabled={meta.page <= 1} onClick={() => onChange(meta.page - 1)}>
+        <ChevronLeft size={16} /> Précédent
+      </Button>
+      <span className="text-sm text-muted-foreground">
+        Page {meta.page} sur {meta.totalPages}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-full"
+        disabled={meta.page >= meta.totalPages}
+        onClick={() => onChange(meta.page + 1)}
+      >
+        Suivant <ChevronRight size={16} />
+      </Button>
+    </nav>
+  )
+}
+
+function Grille({ children }: { children: React.ReactNode }) {
+  return <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
+}
+
+function Chargement() {
+  return (
+    <Grille>
+      {[...Array(6)].map((_, i) => (
+        <Skeleton key={i} className="h-72 rounded-2xl" />
+      ))}
+    </Grille>
+  )
+}
+
+function BarreRecherche({ valeur, onChange, placeholder }: { valeur: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div className="relative mx-auto max-w-xl">
+      <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        aria-label={placeholder}
+        value={valeur}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-12 rounded-full border-border/70 bg-background/80 pl-11 shadow-sm backdrop-blur"
+      />
+    </div>
+  )
+}
+
+function ListeProjets() {
   const [recherche, setRecherche] = useState("")
+  const [etablissementId, setEtablissementId] = useState("")
+  const [page, setPage] = useState(1)
   const rechercheDebounced = useDebounce(recherche, 300)
-
-  const { data, isLoading } = usePublicPublications({
+  const { data: etablissementsData } = usePublicEtablissements({ limit: 100 })
+  const { data, isLoading } = usePublicProjets({
     recherche: rechercheDebounced || undefined,
-    limit: 24,
+    etablissement_id: etablissementId || undefined,
+    page,
+    limit: TAILLE_PAGE,
   })
 
+  const projets = data?.data ?? []
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <BarreRecherche
+            valeur={recherche}
+            onChange={(v) => {
+              setRecherche(v)
+              setPage(1)
+            }}
+            placeholder="Rechercher un projet…"
+          />
+        </div>
+        <select
+          aria-label="Filtrer par établissement"
+          value={etablissementId}
+          onChange={(e) => {
+            setEtablissementId(e.target.value)
+            setPage(1)
+          }}
+          className="h-12 rounded-full border border-border/70 bg-background/80 px-4 text-sm shadow-sm sm:w-64"
+        >
+          <option value="">Tous les établissements</option>
+          {(etablissementsData?.data ?? []).map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.nom}
+              {e.sigle ? ` (${e.sigle})` : ""}
+            </option>
+          ))}
+        </select>
+      </div>
+      {isLoading ? (
+        <Chargement />
+      ) : projets.length === 0 ? (
+        <EmptyState icone={Briefcase} titre="Aucun projet" description="Aucun projet ne correspond à votre recherche." />
+      ) : (
+        <>
+          <Grille>
+            {projets.map((projet) => (
+              <CarteProjet key={projet.id} projet={projet} />
+            ))}
+          </Grille>
+          <Pagination meta={data?.meta} onChange={setPage} />
+        </>
+      )}
+    </div>
+  )
+}
+
+function ListePartenaires() {
+  const [recherche, setRecherche] = useState("")
+  const [page, setPage] = useState(1)
+  const rechercheDebounced = useDebounce(recherche, 300)
+  const { data, isLoading } = usePublicPartenaires({
+    recherche: rechercheDebounced || undefined,
+    page,
+    limit: TAILLE_PAGE,
+  })
+  const partenaires = data?.data ?? []
+
+  return (
+    <div className="flex flex-col gap-8">
+      <BarreRecherche
+        valeur={recherche}
+        onChange={(v) => {
+          setRecherche(v)
+          setPage(1)
+        }}
+        placeholder="Rechercher un partenaire…"
+      />
+      {isLoading ? (
+        <Chargement />
+      ) : partenaires.length === 0 ? (
+        <EmptyState icone={Handshake} titre="Aucun partenaire" description="Aucun partenaire visible ne correspond à votre recherche." />
+      ) : (
+        <>
+          <Grille>
+            {partenaires.map((partenaire) => (
+              <CartePartenaire key={partenaire.id} partenaire={partenaire} />
+            ))}
+          </Grille>
+          <Pagination meta={data?.meta} onChange={setPage} />
+        </>
+      )}
+    </div>
+  )
+}
+
+function ListePublications() {
+  const [recherche, setRecherche] = useState("")
+  const [page, setPage] = useState(1)
+  const rechercheDebounced = useDebounce(recherche, 300)
+  const { data, isLoading } = usePublicPublications({
+    recherche: rechercheDebounced || undefined,
+    page,
+    limit: TAILLE_PAGE,
+  })
   const publications = data?.data ?? []
+
+  return (
+    <div className="flex flex-col gap-8">
+      <BarreRecherche
+        valeur={recherche}
+        onChange={(v) => {
+          setRecherche(v)
+          setPage(1)
+        }}
+        placeholder="Rechercher une publication…"
+      />
+      {isLoading ? (
+        <Chargement />
+      ) : publications.length === 0 ? (
+        <EmptyState icone={Newspaper} titre="Aucune publication" description="Aucune publication ne correspond à votre recherche." />
+      ) : (
+        <>
+          <Grille>
+            {publications.map((publication) => (
+              <CartePublication key={publication.id} publication={publication} />
+            ))}
+          </Grille>
+          <Pagination meta={data?.meta} onChange={setPage} />
+        </>
+      )}
+    </div>
+  )
+}
+
+export function ProjetsPartenariatsPubliquePage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const onglet = ongletDepuisUrl(searchParams.get("onglet"))
+
+  function changerOnglet(valeur: string) {
+    setSearchParams(valeur === "projets" ? {} : { onglet: valeur }, { replace: true })
+  }
 
   return (
     <div className="pb-24">
       <PageHeaderPublique
-        etiquette="Publications"
-        icone={Newspaper}
-        titre="Projets & partenariats"
-        description="Consultez les publications et résultats de nos projets et partenariats en cours ou terminés."
-      >
-        <div className="relative">
-          <Search
-            size={16}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            placeholder="Rechercher une publication..."
-            className="h-12 rounded-full border-border/70 bg-background/80 pl-11 shadow-sm backdrop-blur"
-          />
-        </div>
-      </PageHeaderPublique>
+        etiquette="Écosystème"
+        icone={Briefcase}
+        titre="Projets & partenaires"
+        description="Tous les projets, partenaires et publications de l'Université de Fianarantsoa, réunis au même endroit."
+      />
 
       <div className="mx-auto mt-12 max-w-6xl px-4 sm:px-6 lg:px-8">
-      {/* Liste des publications */}
-      <RevealGroup className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading
-          ? [...Array(6)].map((_, i) => (
-              <Card key={i}>
-                <CardContent className="flex flex-col gap-3 p-5">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-3 w-2/3" />
-                  <Skeleton className="h-3 w-1/3" />
-                </CardContent>
-              </Card>
-            ))
-          : publications.map((publication) => (
-              <RevealItem key={publication.id}>
-              <Link
-                to={`/projets-partenariats/publication/${publication.id}`}
-                className="group block h-full"
-              >
-                <Card className="h-full transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-primary/10">
-                  <CardContent className="flex flex-col gap-2 p-5">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-heading text-sm font-semibold text-foreground group-hover:text-primary">
-                        {publication.titre}
-                      </h3>
-                      <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                        Publiée
-                      </span>
-                    </div>
-                    {publication.description_publique && (
-                      <p className="line-clamp-3 text-xs text-muted-foreground">
-                        {publication.description_publique}
-                      </p>
-                    )}
-                    {publication.resultats && (
-                      <p className="line-clamp-2 text-xs text-muted-foreground italic">
-                        Résultats : {publication.resultats}
-                      </p>
-                    )}
-                    {publication.date_publication && (
-                      <div className="mt-auto flex items-center gap-1 text-xs text-muted-foreground">
-                        <Calendar size={12} />
-                        {new Date(
-                          publication.date_publication
-                        ).toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </div>
-                    )}
-                    {publication.photos &&
-                      publication.photos.length > 0 && (
-                        <div className="mt-2 flex gap-1">
-                          {publication.photos.slice(0, 3).map((photo) => (
-                            <img
-                              key={photo.id}
-                              src={photo.url_fichier}
-                              alt={photo.legende ?? ""}
-                              className="h-16 w-16 rounded object-cover"
-                            />
-                          ))}
-                          {publication.photos.length > 3 && (
-                            <span className="flex h-16 w-16 items-center justify-center rounded bg-muted text-xs text-muted-foreground">
-                              +{publication.photos.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                  </CardContent>
-                </Card>
-              </Link>
-              </RevealItem>
-            ))}
-      </RevealGroup>
+        <Tabs value={onglet} onValueChange={changerOnglet} className="flex flex-col gap-10">
+          <TabsList className="mx-auto h-auto flex-wrap justify-center gap-2 bg-transparent p-0">
+            <TabsTrigger value="projets" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Briefcase size={14} /> Projets
+            </TabsTrigger>
+            <TabsTrigger value="partenaires" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Handshake size={14} /> Partenaires
+            </TabsTrigger>
+            <TabsTrigger value="publications" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Newspaper size={14} /> Publications
+            </TabsTrigger>
+          </TabsList>
 
-      {!isLoading && publications.length === 0 && (
-        <EmptyState
-          icone={Newspaper}
-          titre="Aucune publication trouvée"
-          description={
-            recherche
-              ? "Aucune publication ne correspond à votre recherche."
-              : "Aucune publication n'est actuellement disponible."
-          }
-        />
-      )}
+          <TabsContent value="projets">
+            <ListeProjets />
+          </TabsContent>
+          <TabsContent value="partenaires">
+            <ListePartenaires />
+          </TabsContent>
+          <TabsContent value="publications">
+            <ListePublications />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

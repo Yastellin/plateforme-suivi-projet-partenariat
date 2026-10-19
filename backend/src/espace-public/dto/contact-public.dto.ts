@@ -1,4 +1,10 @@
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 // Corps du formulaire de contact public (section 7.4). Aucune authentification
@@ -26,7 +32,9 @@ export class ContactPublicDto {
   @MaxLength(200)
   sujet: string;
 
-  @ApiProperty({ example: 'Bonjour, je souhaite vous contacter au sujet de...' })
+  @ApiProperty({
+    example: 'Bonjour, je souhaite vous contacter au sujet de...',
+  })
   @IsString()
   @MinLength(10)
   @MaxLength(5000)

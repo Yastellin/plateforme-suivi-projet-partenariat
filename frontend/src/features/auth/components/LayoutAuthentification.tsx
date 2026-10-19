@@ -28,7 +28,7 @@ function StatistiquesAccueil() {
     )
   }
 
-  const statistiques = data?.statistiques
+  const statistiques = data?.compteurs
 
   if (isError || !data || !statistiques) {
     return null
@@ -36,9 +36,9 @@ function StatistiquesAccueil() {
 
   return (
     <div className="flex gap-7">
-      <StatistiqueAccueil valeur={statistiques.partenaires_actifs} libelle="Partenaires actifs" />
-      <StatistiqueAccueil valeur={statistiques.projets_en_cours} libelle="Projets en cours" />
-      <StatistiqueAccueil valeur={statistiques.conventions_signees} libelle="Conventions signées" />
+      <StatistiqueAccueil valeur={statistiques.nombre_partenaires} libelle="Partenaires actifs" />
+      <StatistiqueAccueil valeur={statistiques.nombre_projets_actifs} libelle="Projets en cours" />
+      <StatistiqueAccueil valeur={statistiques.nombre_conventions_actives} libelle="Conventions signées" />
     </div>
   )
 }

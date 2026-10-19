@@ -1,44 +1,43 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EtablissementPublicDto } from './etablissement-public.dto';
+import { PartenairePublicDto } from './partenaire-public.dto';
+import { ProjetPublicDto } from './projet-public.dto';
+import { PublicationPubliqueDto } from './publication-publique.dto';
 
-export class StatistiquesPubliquesDto {
-  @ApiProperty({
-    description: 'Nombre de partenaires actifs visibles publiquement',
-  })
-  partenaires_actifs: number;
+// Compteurs calculés sur la base de données (aucune valeur codée en dur).
+export class CompteursPublicsDto {
+  @ApiProperty({ description: 'Établissements membres' })
+  nombre_etablissements: number;
 
-  @ApiProperty({
-    description: 'Nombre de projets en cours (statut EN_COURS ou EN_ATTENTE)',
-  })
-  projets_en_cours: number;
+  @ApiProperty({ description: 'Partenaires actifs et visibles publiquement' })
+  nombre_partenaires: number;
 
-  @ApiProperty({ description: 'Nombre de conventions signees ou actives' })
-  conventions_signees: number;
-}
+  @ApiProperty({ description: 'Pays distincts des partenaires visibles' })
+  nombre_pays_partenaires: number;
 
-export class PublicationRecenteDto {
-  @ApiProperty()
-  id: string;
+  @ApiProperty({ description: 'Projets en cours ou en attente' })
+  nombre_projets_actifs: number;
 
-  @ApiProperty()
-  titre: string;
+  @ApiProperty({ description: 'Publications publiées par la Présidence' })
+  nombre_publications: number;
 
-  @ApiProperty({ nullable: true })
-  description_publique: string | null;
-
-  @ApiProperty({ nullable: true })
-  date_publication: Date | null;
-
-  @ApiProperty({ nullable: true })
-  projet_id: string;
-
-  @ApiProperty({ nullable: true })
-  photo_url: string | null;
+  @ApiProperty({ description: 'Conventions signées ou actives' })
+  nombre_conventions_actives: number;
 }
 
 export class AccueilPublicDto {
-  @ApiProperty({ type: StatistiquesPubliquesDto })
-  statistiques: StatistiquesPubliquesDto;
+  @ApiProperty({ type: CompteursPublicsDto })
+  compteurs: CompteursPublicsDto;
 
-  @ApiProperty({ type: [PublicationRecenteDto] })
-  publications_recentes: PublicationRecenteDto[];
+  @ApiProperty({ type: [PublicationPubliqueDto] })
+  dernieres_publications: PublicationPubliqueDto[];
+
+  @ApiProperty({ type: [ProjetPublicDto] })
+  projets_a_la_une: ProjetPublicDto[];
+
+  @ApiProperty({ type: [PartenairePublicDto] })
+  partenaires_a_la_une: PartenairePublicDto[];
+
+  @ApiProperty({ type: [EtablissementPublicDto] })
+  etablissements_a_la_une: EtablissementPublicDto[];
 }
