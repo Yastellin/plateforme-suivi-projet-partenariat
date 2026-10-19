@@ -62,6 +62,7 @@ const PartenariatCreatePage = lazy(() => import("@/features/partenariats/pages/P
 const PartenariatDetailPage = lazy(() => import("@/features/partenariats/pages/PartenariatDetailPage").then((m) => ({ default: m.PartenariatDetailPage })))
 const DocumentDetailPage = lazy(() => import("@/features/documents/pages/DocumentDetailPage").then((m) => ({ default: m.DocumentDetailPage })))
 const DocumentUploadPage = lazy(() => import("@/features/documents/pages/DocumentUploadPage").then((m) => ({ default: m.DocumentUploadPage })))
+const MessagesContactPage = lazy(() => import("@/features/messages-contact/pages/MessagesContactPage").then((m) => ({ default: m.MessagesContactPage })))
 const ExportPage = lazy(() => import("@/features/export/pages/ExportPage").then((m) => ({ default: m.ExportPage })))
 
 function ChargementRoute() {
@@ -230,6 +231,8 @@ const router = createBrowserRouter([
       { path: "/presidence/documents/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentUploadPage /></Charge></RouteProtegee> },
       { path: "/presidence/documents/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentDetailPage /></Charge></RouteProtegee> },
       { path: "/presidence/publications", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PublicationsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/messages", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><MessagesContactPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/messages", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><MessagesContactPage /></Charge></RouteProtegee> },
       { path: "/presidence/notifications", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><NotificationsPage /></Charge></RouteProtegee> },
       { path: "/etablissement/notifications", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><NotificationsPage /></Charge></RouteProtegee> },
       { path: "/presidence/projets", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ProjetsListePage /></Charge></RouteProtegee> },

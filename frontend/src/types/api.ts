@@ -304,3 +304,16 @@ export interface ListeSyntheseItems {
 
 // Types hérités des modules pas encore reconstruits, à retirer au fur et à mesure
 export * from './api-heritage';
+// Message recu via le formulaire de contact public (espace interne).
+export interface MessageContact {
+  id: string
+  nom: string
+  email: string
+  telephone: string | null
+  sujet: string
+  message: string
+  est_lu: boolean
+  date_lecture: string | null
+  date_creation: string
+  destinataire: { id: string; nom: string; sigle: string | null } | null
+}
