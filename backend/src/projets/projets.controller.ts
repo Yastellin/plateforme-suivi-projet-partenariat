@@ -40,7 +40,7 @@ export class ProjetsController {
   @ApiOperation({ summary: 'Créer un projet' })
   @ApiResponse({ status: 201, type: ProjetResponseDto })
   create(@CurrentUser() user: any, @Body() dto: CreateProjetDto) {
-    let etablissementId: string;
+    let etablissementId: string | null;
     if (user.role === Role.ETABLISSEMENT) {
       etablissementId = user.etablissement_id;
       if (!etablissementId) {
@@ -49,12 +49,9 @@ export class ProjetsController {
         );
       }
     } else if (user.role === Role.PRESIDENCE) {
-      if (!dto.etablissement_id) {
-        throw new BadRequestException(
-          "Pour la PRÉSIDENCE, l'ID de l'établissement est requis.",
-        );
-      }
-      etablissementId = dto.etablissement_id;
+      // La Presidence peut creer des projets sans etablissement (projets
+      // transversaux) : le token n'ecrase rien, le DTO fait foi.
+      etablissementId = dto.etablissement_id ?? null;
     } else {
       throw new ForbiddenException('Rôle non autorisé pour cette action.');
     }

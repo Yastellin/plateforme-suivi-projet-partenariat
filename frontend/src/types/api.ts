@@ -212,7 +212,7 @@ export interface Projet {
   date_fin_prevue: string;
   statut: StatutProjet;
   archive: boolean;
-  etablissement_id: string;
+  etablissement_id: string | null;
   partenariat_id: string | null;
   porteur_id: string | null;
   avancement: number;

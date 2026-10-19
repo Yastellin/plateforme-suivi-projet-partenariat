@@ -216,23 +216,42 @@ function TableauReferentiel({
   )
 }
 
-function PorteursTab() {
-  const { data, isLoading } = usePorteurs()
-  const createPorteur = useCreatePorteur()
-  const updatePorteur = useUpdatePorteur()
-  const deletePorteur = useDeletePorteur()
+  function PorteursTab() {
+    const { data, isLoading } = usePorteurs()
+    const createPorteur = useCreatePorteur()
+    const updatePorteur = useUpdatePorteur()
+    const deletePorteur = useDeletePorteur()
 
-  return (
-    <TableauReferentiel
-      donnees={data?.data}
-      isLoading={isLoading}
-      onCreer={(nom, extra) => createPorteur.mutate({ nom, institution_rattachement: extra })}
-      onModifier={(id, nom, extra) => updatePorteur.mutate({ id, donnees: { nom, institution_rattachement: extra } }, { onSuccess: () => toast.success("Porteur modifié") })}
-      onSupprimer={(id) => deletePorteur.mutate(id)}
-      champExtra={{ label: "Institution", key: "institution_rattachement", get: (el) => String((el as Record<string, unknown>).institution_rattachement ?? "") }}
-    />
-  )
-}
+    // Un porteur peut avoir un nom null (type ETABLISSEMENT).
+    // On affiche le nom de l'etablissement rattache en priorite.
+    const donneesFormatees = data?.data?.map((porteur) => ({
+      ...porteur,
+      nom:
+        porteur.type_porteur === "ETABLISSEMENT"
+          ? (porteur.etablissement_nom ?? "Etablissement sans nom")
+          : (porteur.nom ?? "Porteur sans nom"),
+    }))
+
+    return (
+      <TableauReferentiel
+        donnees={donneesFormatees}
+        isLoading={isLoading}
+        onCreer={(nom, extra) => createPorteur.mutate({ nom, institution_rattachement: extra })}
+        onModifier={(id, nom, extra) =>
+          updatePorteur.mutate(
+            { id, donnees: { nom, institution_rattachement: extra } },
+            { onSuccess: () => toast.success("Porteur modifié") },
+          )
+        }
+        onSupprimer={(id) => deletePorteur.mutate(id)}
+        champExtra={{
+          label: "Institution",
+          key: "institution_rattachement",
+          get: (el) => String((el as Record<string, unknown>).institution_rattachement ?? ""),
+        }}
+      />
+    )
+  }
 
 function BailleursTab() {
   const { data, isLoading } = useBailleurs()
