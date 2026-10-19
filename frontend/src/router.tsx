@@ -46,7 +46,6 @@ const ParametresCompte = lazy(() => import("@/features/comptes/pages/ParametresC
 const AccueilPage = lazy(() => import("@/features/espace-public/pages/AccueilPage").then((m) => ({ default: m.AccueilPage })))
 const AProposPage = lazy(() => import("@/features/espace-public/pages/AProposPage").then((m) => ({ default: m.AProposPage })))
 const EtablissementsPage = lazy(() => import("@/features/espace-public/pages/EtablissementsPage").then((m) => ({ default: m.EtablissementsPage })))
-const PartenairesPubliquePage = lazy(() => import("@/features/espace-public/pages/PartenairesPubliquePage").then((m) => ({ default: m.PartenairesPubliquePage })))
 const ProjetsPartenariatsPubliquePage = lazy(() => import("@/features/espace-public/pages/ProjetsPartenariatsPubliquePage").then((m) => ({ default: m.ProjetsPartenariatsPubliquePage })))
 const PublicationDetailPage = lazy(() => import("@/features/espace-public/pages/PublicationDetailPage").then((m) => ({ default: m.PublicationDetailPage })))
 const ContactPage = lazy(() => import("@/features/espace-public/pages/ContactPage").then((m) => ({ default: m.ContactPage })))
@@ -62,6 +61,7 @@ const PartenariatCreatePage = lazy(() => import("@/features/partenariats/pages/P
 const PartenariatDetailPage = lazy(() => import("@/features/partenariats/pages/PartenariatDetailPage").then((m) => ({ default: m.PartenariatDetailPage })))
 const DocumentDetailPage = lazy(() => import("@/features/documents/pages/DocumentDetailPage").then((m) => ({ default: m.DocumentDetailPage })))
 const DocumentUploadPage = lazy(() => import("@/features/documents/pages/DocumentUploadPage").then((m) => ({ default: m.DocumentUploadPage })))
+const MessagesContactPage = lazy(() => import("@/features/messages-contact/pages/MessagesContactPage").then((m) => ({ default: m.MessagesContactPage })))
 const ExportPage = lazy(() => import("@/features/export/pages/ExportPage").then((m) => ({ default: m.ExportPage })))
 
 function ChargementRoute() {
@@ -200,7 +200,7 @@ const router = createBrowserRouter([
       { path: "/", element: <Charge><RedirectionAccueil /></Charge> },
       { path: "/a-propos", element: <Charge><AProposPage /></Charge> },
       { path: "/etablissements", element: <Charge><EtablissementsPage /></Charge> },
-      { path: "/partenaires", element: <Charge><PartenairesPubliquePage /></Charge> },
+      { path: "/partenaires", element: <Navigate to="/projets-partenariats?onglet=partenaires" replace /> },
       { path: "/projets-partenariats", element: <Charge><ProjetsPartenariatsPubliquePage /></Charge> },
       { path: "/projets-partenariats/publication/:id", element: <Charge><PublicationDetailPage /></Charge> },
       { path: "/contact", element: <Charge><ContactPage /></Charge> },
@@ -230,6 +230,8 @@ const router = createBrowserRouter([
       { path: "/presidence/documents/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentUploadPage /></Charge></RouteProtegee> },
       { path: "/presidence/documents/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><DocumentDetailPage /></Charge></RouteProtegee> },
       { path: "/presidence/publications", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><PublicationsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/messages", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><MessagesContactPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/messages", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><MessagesContactPage /></Charge></RouteProtegee> },
       { path: "/presidence/notifications", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><NotificationsPage /></Charge></RouteProtegee> },
       { path: "/etablissement/notifications", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><NotificationsPage /></Charge></RouteProtegee> },
       { path: "/presidence/projets", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ProjetsListePage /></Charge></RouteProtegee> },
