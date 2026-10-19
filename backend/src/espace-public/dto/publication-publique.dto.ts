@@ -25,8 +25,8 @@ export class ProjetRefPubliqueDto {
   @ApiProperty({ nullable: true })
   intitule_officiel: string | null;
 
-  @ApiProperty({ type: EtablissementRefPublicDto })
-  etablissement: EtablissementRefPublicDto;
+  @ApiProperty({ type: EtablissementRefPublicDto, nullable: true })
+  etablissement: EtablissementRefPublicDto | null;
 }
 
 // Publication publiée par la Présidence (statut = PUBLIEE, projet non archivé).

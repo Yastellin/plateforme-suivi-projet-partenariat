@@ -325,11 +325,14 @@ export class EspacePublicService {
       date_fin_prevue: projet.date_fin_prevue,
       description: publication?.description_publique ?? null,
       publication_id: publication?.id ?? null,
-      etablissement: {
-        id: projet.etablissement.id,
-        nom: projet.etablissement.nom,
-        sigle: projet.etablissement.sigle,
-      },
+      // L'etablissement est facultatif (projet porte par la Presidence seule).
+      etablissement: projet.etablissement
+        ? {
+            id: projet.etablissement.id,
+            nom: projet.etablissement.nom,
+            sigle: projet.etablissement.sigle,
+          }
+        : null,
       // Seuls les partenaires publics et actifs sont exposés.
       partenaires: (projet.partenaires ?? [])
         .map((pp) => pp.partenaire)
@@ -357,11 +360,13 @@ export class EspacePublicService {
         id: p.projet.id,
         nom: p.projet.nom,
         intitule_officiel: p.projet.intitule_officiel,
-        etablissement: {
-          id: p.projet.etablissement.id,
-          nom: p.projet.etablissement.nom,
-          sigle: p.projet.etablissement.sigle,
-        },
+        etablissement: p.projet.etablissement
+          ? {
+              id: p.projet.etablissement.id,
+              nom: p.projet.etablissement.nom,
+              sigle: p.projet.etablissement.sigle,
+            }
+          : null,
       },
       photo_url: photos[0]?.url_fichier ?? null,
       photos: photos.map(({ id, url_fichier, legende, ordre }) => ({
