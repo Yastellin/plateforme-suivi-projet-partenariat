@@ -19,6 +19,7 @@ import {
   Handshake,
   LayoutDashboard,
   LogOut,
+  Mail,
   Newspaper,
   Search,
   Settings,
@@ -83,6 +84,7 @@ function construireNavigation(role: RoleUtilisateur, base: string): GroupeNaviga
         items: [
           { cle: 'recherche', libelle: 'Recherche', icone: Search, chemin: `${base}/recherche` },
           { cle: 'synthese', libelle: 'Synthèse annuelle', icone: ChartPie, chemin: `${base}/synthese` },
+          { cle: 'messages', libelle: 'Messages de contact', icone: Mail, chemin: `${base}/messages` },
           { cle: 'notifications', libelle: 'Notifications', icone: Bell, chemin: `${base}/notifications` },
           { cle: 'parametres', libelle: 'Paramètres', icone: Settings, chemin: `${base}/parametres` },
         ],
@@ -114,6 +116,7 @@ function construireNavigation(role: RoleUtilisateur, base: string): GroupeNaviga
         cle: 'diffusion',
         libelle: 'Diffusion',
         items: [
+          { cle: 'messages', libelle: 'Messages de contact', icone: Mail, chemin: `${base}/messages` },
           { cle: 'notifications', libelle: 'Notifications', icone: Bell, chemin: `${base}/notifications` },
           { cle: 'parametres', libelle: 'Paramètres', icone: Settings, chemin: `${base}/parametres` },
         ],

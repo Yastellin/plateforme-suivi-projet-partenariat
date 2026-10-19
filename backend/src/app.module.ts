@@ -32,6 +32,7 @@ import { SyntheseModule } from './synthese/synthese.module';
 import { EspacePublicModule } from './espace-public/espace-public.module';
 import { ExportModule } from './export/export.module';
 import { MailModule } from './mail/mail.module';
+import { MessagesContactModule } from './messages-contact/messages-contact.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { MailModule } from './mail/mail.module';
     EspacePublicModule,
     ExportModule,
     MailModule,
+    MessagesContactModule,
   ],
   controllers: [AppController],
   providers: [
