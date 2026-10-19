@@ -5,7 +5,7 @@ import { Mail, MapPin, Phone } from "lucide-react"
 const LIENS_RAPIDES = [
   { label: "À propos", href: "/a-propos" },
   { label: "Établissements", href: "/etablissements" },
-  { label: "Partenaires", href: "/partenaires" },
+  { label: "Partenaires", href: "/projets-partenariats?onglet=partenaires" },
   { label: "Projets & partenariats", href: "/projets-partenariats" },
   { label: "Contact", href: "/contact" },
 ]

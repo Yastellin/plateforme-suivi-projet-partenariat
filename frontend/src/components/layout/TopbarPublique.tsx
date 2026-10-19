@@ -19,7 +19,7 @@ const LIENS_NAV: LienNav[] = [
   { label: "Accueil", href: "/" },
   { label: "À propos", href: "/a-propos" },
   { label: "Établissements", href: "/etablissements" },
-  { label: "Partenaires", href: "/partenaires" },
+  { label: "Partenaires", href: "/projets-partenariats?onglet=partenaires" },
   { label: "Projets & partenariats", href: "/projets-partenariats" },
   { label: "Contact", href: "/contact" },
 ]

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+// Partenaire visible publiquement (visibilite = PUBLIC, statut = ACTIF).
 export class PartenairePublicDto {
   @ApiProperty()
   id: string;
@@ -19,6 +20,9 @@ export class PartenairePublicDto {
   @ApiProperty({ nullable: true })
   logo_url: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ nullable: true })
   site_web: string | null;
+
+  @ApiProperty({ description: 'Partenaire stratégique de l’Université' })
+  est_strategique: boolean;
 }

@@ -36,45 +36,88 @@ export interface ConnexionReponse {
   utilisateur: Utilisateur;
 }
 
-export interface StatistiquesPubliques {
-  partenaires_actifs: number;
-  projets_en_cours: number;
-  conventions_signees: number;
-}
+// ---- Espace public : contrat strict de l'API /api/public/* ----
+// Toutes les valeurs proviennent de la base de donnees (aucune donnee codee en dur).
 
-export interface PublicationAccueil {
-  id: string;
-  titre: string;
-  description_publique?: string | null;
-  date_publication?: string | null;
-}
-
-export interface EtablissementAccueil {
-  id: string;
-  nom: string;
-  sigle?: string | null;
-  logo_url?: string | null;
-}
-
-export interface PartenaireAccueil {
-  id: string;
-  nom: string;
-  logo_url?: string | null;
-}
-
-export interface CompteursAccueilPublic {
+export interface CompteursPublics {
   nombre_etablissements: number;
   nombre_partenaires: number;
   nombre_pays_partenaires: number;
   nombre_projets_actifs: number;
+  nombre_publications: number;
+  nombre_conventions_actives: number;
+}
+
+export interface EtablissementRefPublic {
+  id: string;
+  nom: string;
+  sigle: string | null;
+}
+
+export interface EtablissementPublic {
+  id: string;
+  nom: string;
+  sigle: string | null;
+  logo_url: string | null;
+  description: string | null;
+}
+
+export interface PartenairePublic {
+  id: string;
+  nom: string;
+  type: string;
+  pays: string;
+  description: string | null;
+  logo_url: string | null;
+  site_web: string | null;
+  est_strategique: boolean;
+}
+
+export interface ProjetPublic {
+  id: string;
+  nom: string;
+  intitule_officiel: string | null;
+  type: string;
+  domaine: string | null;
+  statut: StatutProjet;
+  date_debut: string;
+  date_fin_prevue: string;
+  description: string | null;
+  publication_id: string | null;
+  etablissement: EtablissementRefPublic;
+  partenaires: PartenairePublic[];
+}
+
+export interface PhotoPublique {
+  id: string;
+  url_fichier: string;
+  legende: string | null;
+  ordre: number;
+}
+
+export interface PublicationPublique {
+  id: string;
+  titre: string;
+  description_publique: string | null;
+  date_publication: string | null;
+  resultats: string | null;
+  projet_id: string;
+  projet: {
+    id: string;
+    nom: string;
+    intitule_officiel: string | null;
+    etablissement: EtablissementRefPublic;
+  };
+  photo_url: string | null;
+  photos: PhotoPublique[];
 }
 
 export interface AccueilPublic {
-  statistiques?: StatistiquesPubliques;
-  dernieres_publications?: PublicationAccueil[];
-  etablissements_a_la_une?: EtablissementAccueil[];
-  partenaires_a_la_une?: PartenaireAccueil[];
-  compteurs?: CompteursAccueilPublic;
+  compteurs: CompteursPublics;
+  dernieres_publications: PublicationPublique[];
+  projets_a_la_une: ProjetPublic[];
+  partenaires_a_la_une: PartenairePublic[];
+  etablissements_a_la_une: EtablissementPublic[];
 }
 
 export type StatutConvention = 'BROUILLON' | 'EN_ATTENTE_SIGNATURE' | 'SIGNEE' | 'ACTIVE' | 'SUSPENDUE' | 'EXPIREE';
