@@ -84,7 +84,7 @@ export interface ProjetPublic {
   date_fin_prevue: string;
   description: string | null;
   publication_id: string | null;
-  etablissement: EtablissementRefPublic;
+  etablissement: EtablissementRefPublic | null;
   partenaires: PartenairePublic[];
 }
 
@@ -106,7 +106,7 @@ export interface PublicationPublique {
     id: string;
     nom: string;
     intitule_officiel: string | null;
-    etablissement: EtablissementRefPublic;
+    etablissement: EtablissementRefPublic | null;
   };
   photo_url: string | null;
   photos: PhotoPublique[];

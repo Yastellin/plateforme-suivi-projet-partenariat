@@ -46,8 +46,8 @@ export class ProjetPublicDto {
   @ApiProperty({ nullable: true })
   publication_id: string | null;
 
-  @ApiProperty({ type: EtablissementRefPublicDto })
-  etablissement: EtablissementRefPublicDto;
+  @ApiProperty({ type: EtablissementRefPublicDto, nullable: true })
+  etablissement: EtablissementRefPublicDto | null;
 
   @ApiProperty({ type: [PartenairePublicDto] })
   partenaires: PartenairePublicDto[];

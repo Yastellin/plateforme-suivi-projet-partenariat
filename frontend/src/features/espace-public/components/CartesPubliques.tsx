@@ -63,7 +63,7 @@ export function CarteProjet({ projet, className }: { projet: ProjetPublic; class
           {libelleStatutProjet(projet.statut)}
         </span>
         <span className="truncate text-xs text-muted-foreground">
-          {projet.etablissement.sigle ?? projet.etablissement.nom}
+          {projet.etablissement ? (projet.etablissement.sigle ?? projet.etablissement.nom) : null}
         </span>
       </div>
       <h3 className="font-heading text-lg font-semibold leading-snug text-foreground">{projet.nom}</h3>
@@ -123,7 +123,7 @@ export function CartePublication({ publication, className }: { publication: Publ
         </div>
         <CardContent className="flex flex-1 flex-col gap-2 p-5">
           <p className="truncate text-xs text-muted-foreground">
-            {publication.projet.etablissement.sigle ?? publication.projet.etablissement.nom}
+            {publication.projet.etablissement ? (publication.projet.etablissement.sigle ?? publication.projet.etablissement.nom) : null}
             {publication.date_publication && <> · {formaterDate(publication.date_publication)}</>}
           </p>
           <h3 className="font-heading text-lg font-semibold leading-snug text-foreground">{publication.titre}</h3>

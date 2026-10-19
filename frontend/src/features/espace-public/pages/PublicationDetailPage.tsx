@@ -87,7 +87,9 @@ export function PublicationDetailPage() {
             {publication.titre}
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{publication.projet.etablissement.nom}</span>
+            {publication.projet.etablissement && (
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{publication.projet.etablissement.nom}</span>
+            )}
             {publication.date_publication && (
               <span className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Calendar size={14} />
