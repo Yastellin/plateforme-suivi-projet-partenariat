@@ -52,7 +52,7 @@ export class ProjetsService {
   ) {}
 
   async create(
-    etablissementId: string,
+    etablissementId: string | null,
     dto: CreateProjetDto,
   ): Promise<ProjetResponseDto> {
     const projetId = await this.dataSource.transaction(async (manager) => {
@@ -60,11 +60,15 @@ export class ProjetsService {
       const partenariatRepo = manager.getRepository(Partenariat);
       const projetRepo = manager.getRepository(Projet);
 
-      const etablissement = await etablissementRepo.findOneBy({
-        id: etablissementId,
-      });
-      if (!etablissement) {
-        throw new NotFoundException('Établissement non trouvé');
+      // L'etablissement est facultatif (projet transversal ou gere par la
+      // Presidence) : on ne verifie son existence que s'il est fourni.
+      if (etablissementId) {
+        const etablissement = await etablissementRepo.findOneBy({
+          id: etablissementId,
+        });
+        if (!etablissement) {
+          throw new NotFoundException('Établissement non trouvé');
+        }
       }
 
       if (dto.partenariat_id) {
@@ -191,7 +195,7 @@ export class ProjetsService {
 
   async findOne(
     id: string,
-    etablissementId?: string,
+    etablissementId?: string | null,
   ): Promise<ProjetResponseDto> {
     const where: any = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;

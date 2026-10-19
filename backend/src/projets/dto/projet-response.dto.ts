@@ -33,13 +33,13 @@ export class ProjetResponseDto {
   archive: boolean;
 
   @ApiProperty({ nullable: true })
+  etablissement_id: string | null;
+
+  @ApiProperty({ nullable: true })
   soumis_le: Date | null;
 
   @ApiProperty({ nullable: true })
   publie_le: Date | null;
-
-  @ApiProperty()
-  etablissement_id: string;
 
   @ApiProperty({ nullable: true })
   partenariat_id: string | null;

@@ -94,9 +94,11 @@ export class CreateProjetDto {
   sites_ids?: string[];
 
   @ApiPropertyOptional({
-    description: "ID de l'établissement (PRÉSIDENCE uniquement)",
+    description:
+      "ID de l'établissement cible (PRÉSIDENCE uniquement). Facultatif : un projet peut etre transversal ou gere par la Presidence.",
+    nullable: true,
   })
   @IsOptional()
   @IsUUID()
-  etablissement_id?: string;
+  etablissement_id?: string | null;
 }

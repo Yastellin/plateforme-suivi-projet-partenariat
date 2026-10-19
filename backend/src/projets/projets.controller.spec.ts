@@ -45,12 +45,10 @@ describe('ProjetsController', () => {
       expect(service.create).toHaveBeenCalledWith('etab-1', dto);
     });
 
-    it('exige un etablissement cible pour la PRESIDENCE', async () => {
-      expect(() => controller.create({ role: Role.PRESIDENCE }, dto)).toThrow(
-        BadRequestException,
-      );
+    it('accepte la PRESIDENCE sans etablissement (projet transversal)', async () => {
+      await controller.create({ role: Role.PRESIDENCE }, dto);
 
-      expect(service.create).not.toHaveBeenCalled();
+      expect(service.create).toHaveBeenCalledWith(null, dto);
     });
 
     it('accepte la PRESIDENCE lorsqu un etablissement est fourni', async () => {

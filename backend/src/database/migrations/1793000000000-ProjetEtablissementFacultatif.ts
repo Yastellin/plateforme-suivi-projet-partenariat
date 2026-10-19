@@ -1,4 +1,3 @@
-// backend/src/database/migrations/1793000000000-ProjetEtablissementFacultatif.ts
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
