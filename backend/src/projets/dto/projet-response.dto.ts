@@ -53,8 +53,8 @@ export class ProjetResponseDto {
   @ApiProperty()
   archive: boolean;
 
-  @ApiProperty()
-  etablissement_id: string;
+  @ApiProperty({ nullable: true })
+  etablissement_id: string | null;
 
   @ApiProperty({ nullable: true })
   partenariat_id: string | null;

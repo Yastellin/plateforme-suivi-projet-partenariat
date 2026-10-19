@@ -1,7 +1,6 @@
-﻿// src/features/projets/api/useCreateProjet.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+﻿import { useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { ProjetFormValues } from "@/lib/validators/projet.schema"
+import { preparerPayloadProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
 import type { Projet } from "@/types/api"
 
 export function useCreateProjet() {
@@ -9,7 +8,8 @@ export function useCreateProjet() {
 
   return useMutation({
     mutationFn: async (valeurs: ProjetFormValues) => {
-      const reponse = await apiClient.post<Projet>("/projets", valeurs)
+      const payload = preparerPayloadProjet(valeurs)
+      const reponse = await apiClient.post<Projet>("/projets", payload)
       return reponse.data
     },
     onSuccess: () => {

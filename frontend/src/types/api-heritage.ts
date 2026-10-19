@@ -1,4 +1,4 @@
-// src/types/api.ts
+// src/types/api-heritage.ts
 export type RoleUtilisateur = "PRESIDENCE" | "ETABLISSEMENT" | "DECIDEUR"
 export type TypeCotutelle = "COTUTELLE" | "COENCADREMENT"
 
@@ -66,12 +66,18 @@ export type Visibilite = "PUBLIC" | "PRIVE"
 
 export type StatutPartenariat = "BROUILLON" | "EN_ATTENTE" | "EN_COURS" | "SUSPENDU" | "TERMINE"
 export type StatutProjet = "BROUILLON" | "EN_ATTENTE" | "EN_COURS" | "SUSPENDU" | "EXPIRE" | "TERMINE"
+export type TypePorteur = "PERSONNE" | "ETABLISSEMENT" | "AUTRE"
+
 export interface Porteur {
   id: string
-  nom: string
-  institution_rattachement?: string
+  type_porteur: TypePorteur
+  nom: string | null
+  institution_rattachement: string | null
+  etablissement_id: string | null
+  etablissement_nom: string | null
+  created_at: string
+  updated_at: string
 }
-
 export interface Bailleur {
   id: string
   nom: string
@@ -103,8 +109,8 @@ export interface Projet {
   archive: boolean
   etablissement_id: string
   partenariat_id?: string
-  porteur_id?: string
-  porteur?: Porteur
+  porteur_id?: string | null
+  porteur?: Porteur | null
   bailleurs?: { bailleur_id: string; bailleur?: Bailleur }[]
   beneficiaires?: { beneficiaire_id: string; beneficiaire?: Beneficiaire }[]
   sites?: { site_id: string; site?: Site }[]
