@@ -35,9 +35,9 @@ export class Porteur {
   @Column({ type: 'varchar', nullable: true })
   institution_rattachement: string | null;
 
-  // Type text pour matcher la cle primaire "Etablissement"."id" (text en base,
-  // heritage Prisma). Une FK text -> uuid echouerait sous PostgreSQL.
-  @Column({ type: 'text', nullable: true })
+  // Type uuid, comme la cle primaire "Etablissement"."id" (une FK de type
+  // differant de la cle referencee echoue sous PostgreSQL).
+  @Column({ type: 'uuid', nullable: true })
   etablissement_id: string | null;
 
   @ManyToOne(() => Etablissement, { onDelete: 'SET NULL', nullable: true })
