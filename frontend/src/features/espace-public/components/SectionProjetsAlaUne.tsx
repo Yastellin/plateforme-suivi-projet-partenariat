@@ -1,11 +1,10 @@
 // src/features/espace-public/components/SectionProjetsAlaUne.tsx
-import { Link } from "react-router-dom"
-import { ArrowRight } from "lucide-react"
 import { HybridCarousel } from "@/components/shared/HybridCarousel"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { CarteProjet } from "@/features/espace-public/components/CartesPubliques"
 import { decouper } from "@/features/espace-public/lib/publique"
+import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 
 // Carrousel des projets a la une : nom, etablissement, statut, description,
 // periode et partenaires de chaque projet.
@@ -18,16 +17,12 @@ export function SectionProjetsAlaUne() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Réalisations</p>
-          <h2 className="mt-1 font-heading text-2xl font-bold text-foreground">Projets à la une</h2>
-        </div>
-        <Link to="/projets-partenariats?onglet=projets" className="group flex items-center gap-1 text-sm font-medium text-primary">
-          Tous les projets
-          <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
-        </Link>
-      </div>
+      <EnTeteSection
+        etiquette="Réalisations"
+        titre="Projets à la une"
+        description="Des projets menés par les établissements de l'Université, avec leurs partenaires."
+        lien={{ to: "/projets-partenariats?onglet=projets", libelle: "Tous les projets" }}
+      />
 
       {isLoading ? (
         <div className="grid gap-6 md:grid-cols-3">

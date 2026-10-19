@@ -127,7 +127,15 @@ function ListeProjets() {
       {isLoading ? (
         <Chargement />
       ) : projets.length === 0 ? (
-        <EmptyState icone={Briefcase} titre="Aucun projet" description="Aucun projet ne correspond à votre recherche." />
+        <EmptyState
+          icone={Briefcase}
+          titre={recherche.trim() || etablissementId ? "Aucun projet trouvé" : "Aucun projet pour le moment"}
+          description={
+            recherche.trim() || etablissementId
+              ? "Essayez d'autres termes ou retirez le filtre d'établissement."
+              : "Les projets de l'Université apparaîtront ici dès leur publication."
+          }
+        />
       ) : (
         <>
           <Grille>
@@ -166,7 +174,15 @@ function ListePartenaires() {
       {isLoading ? (
         <Chargement />
       ) : partenaires.length === 0 ? (
-        <EmptyState icone={Handshake} titre="Aucun partenaire" description="Aucun partenaire visible ne correspond à votre recherche." />
+        <EmptyState
+          icone={Handshake}
+          titre={recherche.trim() ? "Aucun partenaire trouvé" : "Aucun partenaire pour le moment"}
+          description={
+            recherche.trim()
+              ? "Essayez avec le nom du partenaire, son pays ou son type."
+              : "Les partenaires visibles de l'Université apparaîtront ici."
+          }
+        />
       ) : (
         <>
           <Grille>
@@ -205,7 +221,15 @@ function ListePublications() {
       {isLoading ? (
         <Chargement />
       ) : publications.length === 0 ? (
-        <EmptyState icone={Newspaper} titre="Aucune publication" description="Aucune publication ne correspond à votre recherche." />
+        <EmptyState
+          icone={Newspaper}
+          titre={recherche.trim() ? "Aucune publication trouvée" : "Aucune publication pour le moment"}
+          description={
+            recherche.trim()
+              ? "Essayez avec un mot du titre ou le nom d'un projet."
+              : "Les actualités publiées par la Présidence apparaîtront ici."
+          }
+        />
       ) : (
         <>
           <Grille>
