@@ -11,6 +11,11 @@ import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { CreateMessageContactDto } from './dto/create-message-contact.dto';
 import { QueryMessageContactDto } from './dto/query-message-contact.dto';
 import { Role } from '../common/enums/role.enum';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  MESSAGE_CONTACT_RECU,
+  type MessageContactRecuEvent,
+} from './events/message-contact-recu.event';
 
 export interface UtilisateurConnecte {
   id: string;
@@ -25,6 +30,7 @@ export class MessagesContactService {
     private readonly messageRepo: Repository<MessageContact>,
     @InjectRepository(Etablissement)
     private readonly etablissementRepo: Repository<Etablissement>,
+    private readonly events: EventEmitter2,
   ) {}
 
   // Enregistre le message et renvoie un accusé de réception (sans donnée
@@ -69,6 +75,18 @@ export class MessagesContactService {
         date_creation: new Date(),
       }),
     );
+
+    // Notifications et e-mails envoyes en arriere-plan : l'envoi ne doit pas
+    // attendre le serveur SMTP ni echouer a cause de lui.
+    const evenement: MessageContactRecuEvent = {
+      messageId: enregistre.id,
+      nom: enregistre.nom,
+      email: enregistre.email,
+      telephone: enregistre.telephone,
+      sujet: enregistre.sujet,
+      etablissementId: enregistre.etablissement_id,
+    };
+    this.events.emit(MESSAGE_CONTACT_RECU, evenement);
 
     return { id: enregistre.id, date_creation: enregistre.date_creation };
   }

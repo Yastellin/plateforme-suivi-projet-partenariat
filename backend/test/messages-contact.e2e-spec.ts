@@ -14,6 +14,25 @@ import { donnees, enteteBearer } from './harness/jetons';
 import { Etablissement } from '../src/etablissements/entities/etablissement.entity';
 import { Utilisateur } from '../src/auth/entities/utilisateur.entity';
 import { Role } from '../src/common/enums/role.enum';
+import { Notification } from '../src/notifications/entities/notification.entity';
+import { TypeNotification } from '../src/common/enums/type-notification.enum';
+import { MAIL_PORT, type MailPort } from '../src/mail/mail.port';
+
+// Les notifications et e-mails sont envoyes en arriere-plan : on attend
+// leur apparition (les envois sont asynchrones par conception).
+async function attendre<T>(
+  lire: () => Promise<T>,
+  pret: (v: T) => boolean,
+  delaiMs = 3000,
+): Promise<T> {
+  const fin = Date.now() + delaiMs;
+  let valeur = await lire();
+  while (!pret(valeur) && Date.now() < fin) {
+    await new Promise((r) => setTimeout(r, 50));
+    valeur = await lire();
+  }
+  return valeur;
+}
 
 describe('Messages de contact (e2e)', () => {
   let ctx: ApplicationTest;
@@ -200,6 +219,95 @@ describe('Messages de contact (e2e)', () => {
       .patch(`/api/messages-contact/${messageSansEtab.id}/lu`)
       .set(...enteteBearer(userEtab1));
     expect(r.status).toBe(404);
+  });
+
+  describe('Notifications et e-mails', () => {
+    let mail: MailPort;
+    let espion: jest.SpyInstance;
+
+    beforeAll(() => {
+      mail = ctx.app.get<MailPort>(MAIL_PORT);
+      espion = jest.spyOn(mail, 'envoyer');
+    });
+
+    afterAll(() => espion.mockRestore());
+
+    const notificationsDe = (messageId: string) =>
+      ctx.dataSource.getRepository(Notification).find({
+        where: { reference_type: 'MessageContact', reference_id: messageId },
+      });
+
+    it('un message pour un établissement notifie ses utilisateurs uniquement', async () => {
+      const r = await request(url())
+        .post('/api/public/contact')
+        .send({
+          ...valide,
+          sujet: 'Message pour la faculté',
+          message: 'Bonjour, question pour la faculté des sciences.',
+          etablissement_id: etab1.id,
+        });
+      expect(r.status).toBe(201);
+      const messageId = donnees(r.body).id;
+
+      const notifs = await attendre(
+        () => notificationsDe(messageId),
+        (n) => n.length > 0,
+      );
+      expect(notifs).toHaveLength(1);
+      expect(notifs[0].utilisateur_id).toBe(userEtab1.id);
+      expect(notifs[0].type).toBe(TypeNotification.MESSAGE_CONTACT);
+    });
+
+    it('un message général notifie la Présidence, pas les établissements ni le DÉCIDEUR', async () => {
+      const r = await request(url())
+        .post('/api/public/contact')
+        .send({
+          ...valide,
+          sujet: 'Message général',
+          message: 'Bonjour, message à la présidence.',
+        });
+      expect(r.status).toBe(201);
+      const messageId = donnees(r.body).id;
+
+      const notifs = await attendre(
+        () => notificationsDe(messageId),
+        (n) => n.length > 0,
+      );
+      expect(notifs.map((n) => n.utilisateur_id)).toEqual([presidence.id]);
+      expect(notifs.map((n) => n.utilisateur_id)).not.toContain(decideur.id);
+    });
+
+    it('envoie un e-mail au destinataire avec un lien vers son espace, sans le contenu du message', async () => {
+      const contenuSecret = 'Contenu confidentiel du message de test';
+      await request(url())
+        .post('/api/public/contact')
+        .send({
+          ...valide,
+          sujet: 'Sujet <b>test</b>',
+          message: contenuSecret,
+          etablissement_id: etab2.id,
+        })
+        .expect(201);
+
+      await attendre(
+        async () => espion.mock.calls.map((c) => c[0]),
+        (appels: any[]) =>
+          appels.some((a) => a.destinataire === userEtab2.email),
+      );
+      const envoi = espion.mock.calls
+        .map((c) => c[0])
+        .find((a: any) => a.destinataire === userEtab2.email);
+      expect(envoi).toBeDefined();
+      expect(envoi.sujet).toContain('Nouveau message de contact');
+      expect(envoi.contenu_html).toContain('/etablissement/messages');
+      expect(envoi.contenu_html).toContain('Sujet &lt;b&gt;test&lt;/b&gt;');
+      expect(envoi.contenu_texte).not.toContain(contenuSecret);
+      expect(envoi.contenu_html).not.toContain(contenuSecret);
+      // Le DÉCIDEUR ne reçoit jamais d'e-mail de message de contact
+      expect(espion.mock.calls.map((c) => c[0].destinataire)).not.toContain(
+        decideur.email,
+      );
+    });
   });
 
   it('refuse l’accès sans authentification (401) et aux autres rôles (403)', async () => {

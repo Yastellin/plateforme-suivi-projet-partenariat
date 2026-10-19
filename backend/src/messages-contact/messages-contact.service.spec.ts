@@ -74,7 +74,9 @@ describe('MessagesContactService', () => {
       findOne: jest.fn(),
     };
     etablissementRepo = { findOneBy: jest.fn() };
-    service = new MessagesContactService(messageRepo, etablissementRepo);
+    service = new MessagesContactService(messageRepo, etablissementRepo, {
+      emit: jest.fn(),
+    } as any);
   });
 
   it('refuse un établissement destinataire inconnu', async () => {
