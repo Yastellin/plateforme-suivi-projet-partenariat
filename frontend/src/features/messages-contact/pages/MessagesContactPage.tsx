@@ -91,6 +91,7 @@ export function MessagesContactPage() {
                   <time className="shrink-0 text-xs text-muted-foreground">{formaterDate(m.date_creation)}</time>
                 </div>
                 <p className="truncate text-sm text-foreground">{m.sujet}</p>
+                <p className="font-mono text-xs text-muted-foreground">{m.reference}</p>
                 <p className="line-clamp-1 text-xs text-muted-foreground">{m.message}</p>
               </button>
             ))
@@ -105,7 +106,7 @@ export function MessagesContactPage() {
                   <div>
                     <h2 className="font-heading text-lg font-semibold text-foreground">{selection.sujet}</h2>
                     <p className="text-sm text-muted-foreground">
-                      Reçu le {formaterDate(selection.date_creation)}
+                      Référence <span className="font-mono">{selection.reference}</span> · Reçu le {formaterDate(selection.date_creation)}
                     </p>
                   </div>
                   {selection.est_lu ? (

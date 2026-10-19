@@ -283,7 +283,7 @@ describe('Messages de contact (e2e)', () => {
         .post('/api/public/contact')
         .send({
           ...valide,
-          sujet: 'Sujet <b>test</b>',
+          sujet: 'Sujet A&B "test"',
           message: contenuSecret,
           etablissement_id: etab2.id,
         })
@@ -300,13 +300,56 @@ describe('Messages de contact (e2e)', () => {
       expect(envoi).toBeDefined();
       expect(envoi.sujet).toContain('Nouveau message de contact');
       expect(envoi.contenu_html).toContain('/etablissement/messages');
-      expect(envoi.contenu_html).toContain('Sujet &lt;b&gt;test&lt;/b&gt;');
+      expect(envoi.contenu_html).toContain('Sujet A&amp;B &quot;test&quot;');
+      expect(envoi.contenu_html).toMatch(
+        /Référence :<\/strong> MC-[A-HJ-NP-Z2-9]{8}/,
+      );
       expect(envoi.contenu_texte).not.toContain(contenuSecret);
       expect(envoi.contenu_html).not.toContain(contenuSecret);
       // Le DÉCIDEUR ne reçoit jamais d'e-mail de message de contact
       expect(espion.mock.calls.map((c) => c[0].destinataire)).not.toContain(
         decideur.email,
       );
+    });
+  });
+
+  describe('Contrôle du contenu et référence', () => {
+    it('refuse les balises HTML dans le sujet et le message (400)', async () => {
+      await request(url())
+        .post('/api/public/contact')
+        .send({ ...valide, sujet: 'Test <script>x</script>' })
+        .expect(400);
+      await request(url())
+        .post('/api/public/contact')
+        .send({ ...valide, message: 'Bonjour <img src=x onerror=alert(1)>' })
+        .expect(400);
+    });
+
+    it('refuse un message symbolique ou une répétition abusive (400)', async () => {
+      await request(url())
+        .post('/api/public/contact')
+        .send({ ...valide, message: '!!!!!!!!!!!!!!!!' })
+        .expect(400);
+      await request(url())
+        .post('/api/public/contact')
+        .send({ ...valide, message: 'aaaaaaaaaaaa bonjour' })
+        .expect(400);
+    });
+
+    it('renvoie une référence unique et lisible à l’expéditeur', async () => {
+      const r1 = await request(url())
+        .post('/api/public/contact')
+        .send(valide)
+        .expect(201);
+      const r2 = await request(url())
+        .post('/api/public/contact')
+        .send(valide)
+        .expect(201);
+      const ref1 = donnees(r1.body).reference;
+      const ref2 = donnees(r2.body).reference;
+      expect(ref1).toMatch(/^MC-[A-HJ-NP-Z2-9]{8}$/);
+      expect(ref2).toMatch(/^MC-[A-HJ-NP-Z2-9]{8}$/);
+      expect(ref1).not.toEqual(ref2);
     });
   });
 

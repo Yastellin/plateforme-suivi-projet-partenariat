@@ -77,7 +77,7 @@ export class MessageContactRecuListener {
     try {
       await this.notificationsService.creer({
         titre: 'Nouveau message de contact',
-        message: `${event.nom} : ${event.sujet}`,
+        message: `${event.reference} : ${event.nom} — ${event.sujet}`,
         type: TypeNotification.MESSAGE_CONTACT,
         priorite: PrioriteNotification.HAUTE,
         utilisateur_id: destinataire.id,
@@ -107,6 +107,7 @@ export class MessageContactRecuListener {
     const lignes = [
       'Un nouveau message a été reçu via le formulaire de contact.',
       '',
+      `Référence : ${event.reference}`,
       `Expéditeur : ${event.nom}`,
       `E-mail : ${event.email}`,
       ...(event.telephone ? [`Téléphone : ${event.telephone}`] : []),
@@ -118,6 +119,7 @@ export class MessageContactRecuListener {
     const html =
       '<p>Un nouveau message a été reçu via le formulaire de contact.</p>' +
       '<ul>' +
+      `<li><strong>Référence :</strong> ${echapper(event.reference)}</li>` +
       `<li><strong>Expéditeur :</strong> ${echapper(event.nom)}</li>` +
       `<li><strong>E-mail :</strong> ${echapper(event.email)}</li>` +
       (event.telephone
@@ -131,10 +133,11 @@ export class MessageContactRecuListener {
       await this.mail.envoyer({
         destinataire: destinataire.email,
         // Pas de retour a la ligne dans un en-tete d'e-mail.
-        sujet: `Nouveau message de contact : ${event.sujet}`.replace(
-          /[\r\n]+/g,
-          ' ',
-        ),
+        sujet:
+          `Nouveau message de contact ${event.reference} : ${event.sujet}`.replace(
+            /[\r\n]+/g,
+            ' ',
+          ),
         contenu_texte: texte,
         contenu_html: html,
       });

@@ -80,6 +80,7 @@ export class MessagesContactService {
     // attendre le serveur SMTP ni echouer a cause de lui.
     const evenement: MessageContactRecuEvent = {
       messageId: enregistre.id,
+      reference: enregistre.reference,
       nom: enregistre.nom,
       email: enregistre.email,
       telephone: enregistre.telephone,
@@ -88,7 +89,11 @@ export class MessagesContactService {
     };
     this.events.emit(MESSAGE_CONTACT_RECU, evenement);
 
-    return { id: enregistre.id, date_creation: enregistre.date_creation };
+    return {
+      id: enregistre.id,
+      reference: enregistre.reference,
+      date_creation: enregistre.date_creation,
+    };
   }
 
   // Périmètre de visibilité : la Présidence voit tout ; un utilisateur d'un
@@ -158,6 +163,7 @@ export class MessagesContactService {
   private versReponse(m: MessageContact) {
     return {
       id: m.id,
+      reference: m.reference,
       nom: m.nom,
       email: m.email,
       telephone: m.telephone,

@@ -7,8 +7,20 @@ import {
   BeforeInsert,
   Index,
 } from 'typeorm';
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { Etablissement } from '../../etablissements/entities/etablissement.entity';
+
+// Référence lisible et unique d'un message (ex. MC-7K2QF9XM). Alphabet sans
+// caractères ambigus (0/O, 1/I/L) pour pouvoir la dicter ou la recopier.
+const ALPHABET_REFERENCE = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+export function genererReferenceMessage(): string {
+  const octets = randomBytes(8);
+  let suffixe = '';
+  for (const octet of octets) {
+    suffixe += ALPHABET_REFERENCE[octet % ALPHABET_REFERENCE.length];
+  }
+  return `MC-${suffixe}`;
+}
 
 // Message envoye depuis le formulaire de contact public.
 // etablissement_id = null : destine a la Presidence (vue par tous les
@@ -21,6 +33,10 @@ import { Etablissement } from '../../etablissements/entities/etablissement.entit
 export class MessageContact {
   @PrimaryColumn('uuid')
   id: string;
+
+  // Identifiant lisible communiqué à l'expéditeur et utilisé dans l'espace interne.
+  @Column({ type: 'varchar', length: 20, unique: true })
+  reference: string;
 
   @Column({ type: 'varchar', length: 100 })
   nom: string;
@@ -57,6 +73,9 @@ export class MessageContact {
   preparerInsertion() {
     if (!this.id) {
       this.id = randomUUID();
+    }
+    if (!this.reference) {
+      this.reference = genererReferenceMessage();
     }
     if (!this.date_creation) {
       this.date_creation = new Date();

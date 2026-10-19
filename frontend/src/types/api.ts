@@ -307,6 +307,7 @@ export * from './api-heritage';
 // Message recu via le formulaire de contact public (espace interne).
 export interface MessageContact {
   id: string
+  reference: string
   nom: string
   email: string
   telephone: string | null

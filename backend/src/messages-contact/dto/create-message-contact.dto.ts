@@ -9,6 +9,12 @@ import {
   MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  REGLE_CONTENU_REEL,
+  REGLE_SANS_BALISES,
+  REGLE_SANS_CONTROLE,
+  REGLE_SANS_REPETITION,
+} from './regles-saisie';
 
 const espaces = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
@@ -50,6 +56,18 @@ export class CreateMessageContactDto {
   @IsString()
   @MinLength(3, { message: 'Le sujet doit contenir au moins 3 caractères.' })
   @MaxLength(200, { message: 'Le sujet ne peut pas dépasser 200 caractères.' })
+  @Matches(REGLE_SANS_BALISES, {
+    message: 'Les caractères < et > ne sont pas autorisés.',
+  })
+  @Matches(REGLE_SANS_CONTROLE, {
+    message: 'Caractères invisibles non autorisés.',
+  })
+  @Matches(REGLE_SANS_REPETITION, {
+    message: 'Le sujet contient une répétition abusive de caractères.',
+  })
+  @Matches(REGLE_CONTENU_REEL, {
+    message: 'Le sujet doit contenir au moins 3 lettres ou chiffres.',
+  })
   sujet: string;
 
   @ApiProperty({
@@ -62,6 +80,18 @@ export class CreateMessageContactDto {
   })
   @MaxLength(2000, {
     message: 'Le message ne peut pas dépasser 2000 caractères.',
+  })
+  @Matches(REGLE_SANS_BALISES, {
+    message: 'Les caractères < et > ne sont pas autorisés dans le message.',
+  })
+  @Matches(REGLE_SANS_CONTROLE, {
+    message: 'Caractères invisibles non autorisés.',
+  })
+  @Matches(REGLE_SANS_REPETITION, {
+    message: 'Le message contient une répétition abusive de caractères.',
+  })
+  @Matches(REGLE_CONTENU_REEL, {
+    message: 'Le message doit contenir au moins 3 lettres ou chiffres.',
   })
   message: string;
 
