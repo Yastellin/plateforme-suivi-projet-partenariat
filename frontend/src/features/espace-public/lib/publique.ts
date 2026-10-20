@@ -79,3 +79,12 @@ export function resumePublication(publication: {
   if (publication.description_publique) return publication.description_publique
   return `Actualité issue du projet « ${publication.projet.nom} ».`
 }
+
+const TEINTES_VIGNETTE = ["#367D56", "#27435F", "#8A5A00", "#7A2E3A", "#4A5A2B", "#1B4D34"]
+
+// Couleur stable par nom, pour les vignettes sans logo.
+export function teinteDe(nom: string): string {
+  let somme = 0
+  for (const caractere of nom) somme += caractere.charCodeAt(0)
+  return TEINTES_VIGNETTE[somme % TEINTES_VIGNETTE.length]
+}

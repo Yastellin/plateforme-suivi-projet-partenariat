@@ -1,4 +1,4 @@
-// src/types/api-heritage.ts
+// src/types/api.ts
 export type RoleUtilisateur = "PRESIDENCE" | "ETABLISSEMENT" | "DECIDEUR"
 export type TypeCotutelle = "COTUTELLE" | "COENCADREMENT"
 
@@ -66,18 +66,12 @@ export type Visibilite = "PUBLIC" | "PRIVE"
 
 export type StatutPartenariat = "BROUILLON" | "EN_ATTENTE" | "EN_COURS" | "SUSPENDU" | "TERMINE"
 export type StatutProjet = "BROUILLON" | "EN_ATTENTE" | "EN_COURS" | "SUSPENDU" | "EXPIRE" | "TERMINE"
-export type TypePorteur = "PERSONNE" | "ETABLISSEMENT" | "AUTRE"
-
 export interface Porteur {
   id: string
-  type_porteur: TypePorteur
-  nom: string | null
-  institution_rattachement: string | null
-  etablissement_id: string | null
-  etablissement_nom: string | null
-  created_at: string
-  updated_at: string
+  nom: string
+  institution_rattachement?: string
 }
+
 export interface Bailleur {
   id: string
   nom: string
@@ -109,8 +103,8 @@ export interface Projet {
   archive: boolean
   etablissement_id: string
   partenariat_id?: string
-  porteur_id?: string | null
-  porteur?: Porteur | null
+  porteur_id?: string
+  porteur?: Porteur
   bailleurs?: { bailleur_id: string; bailleur?: Bailleur }[]
   beneficiaires?: { beneficiaire_id: string; beneficiaire?: Beneficiaire }[]
   sites?: { site_id: string; site?: Site }[]
@@ -216,7 +210,7 @@ export interface Publication {
 export type TypeNotification =
   | "PROJET_SOUMIS" | "PARTENARIAT_SOUMIS" | "EXPIRATION_CONVENTION" | "CONVENTION_EXPIREE"
   | "ACTIVITE_ECHEANCE" | "ACTIVITE_RETARD" | "PROJET_RETARD" | "DOCUMENT_AJOUTE"
-  | "DOCUMENT_MODIFIE" | "CHANGEMENT_STATUT" | "MESSAGE_CONTACT"
+  | "DOCUMENT_MODIFIE" | "CHANGEMENT_STATUT"
 
 export type PrioriteNotification = "BASSE" | "MOYENNE" | "HAUTE"
 

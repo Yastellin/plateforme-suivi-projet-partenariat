@@ -22,7 +22,6 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { EtablissementsService } from './etablissements.service';
 import { EtablissementResponseDto } from './dto/etablissement-response.dto';
-import { QueryEtablissementDto } from './dto/query-etablissement.dto';
 
 @ApiTags('Établissements')
 @ApiBearerAuth()
@@ -31,11 +30,10 @@ export class EtablissementsController {
   constructor(private etablissementsService: EtablissementsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Lister les établissements (paginé)' })
+  @ApiOperation({ summary: 'Lister tous les établissements' })
   @ApiResponse({ status: 200, type: [EtablissementResponseDto] })
-  findAll(@Query() query: QueryEtablissementDto) {
-    const { page, limit, recherche } = query;
-    return this.etablissementsService.findAll(page, limit, recherche);
+  findAll(): Promise<EtablissementResponseDto[]> {
+    return this.etablissementsService.findAll();
   }
 
   @Get(':id')

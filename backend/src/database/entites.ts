@@ -13,6 +13,8 @@ import { Convention } from '../conventions/entities/convention.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 import { Document } from '../documents/entities/document.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
+import { Configuration } from '../configuration/entities/configuration.entity';
+import { HistoriqueAction } from '../historique/entities/historique-action.entity';
 import { MessageContact } from '../messages-contact/entities/message-contact.entity';
 import { Configuration } from '../configuration/entities/configuration.entity';
 import { HistoriqueAction } from '../historique/entities/historique-action.entity';

@@ -72,8 +72,8 @@ Write-Host "[OK] Login DECIDEUR" -ForegroundColor Green
 Section "1. Recuperation d'un etablissement"
 
 $r = Invoke-Api -Method GET -Url "$API/etablissements" -Token $TOKEN_PRES
-$ETAB_ID = $r.Content.data.data[0].id
-$ETAB_NOM = $r.Content.data.data[0].nom
+$ETAB_ID = $r.Content.data[0].id
+$ETAB_NOM = $r.Content.data[0].nom
 Write-Host "ETABLISSEMENT ID : $ETAB_ID ($ETAB_NOM)"
 
 $r = Invoke-Api -Method GET -Url "$API/partenaires" -Token $TOKEN_PRES

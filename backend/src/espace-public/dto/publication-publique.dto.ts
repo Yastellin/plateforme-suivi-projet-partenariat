@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EtablissementRefPublicDto } from './projet-public.dto';
+import { ProjetPublicDto } from './projet-public.dto';
 
 export class PhotoPubliqueDto {
   @ApiProperty()
@@ -15,21 +15,6 @@ export class PhotoPubliqueDto {
   ordre: number;
 }
 
-export class ProjetRefPubliqueDto {
-  @ApiProperty()
-  id: string;
-
-  @ApiProperty()
-  nom: string;
-
-  @ApiProperty({ nullable: true })
-  intitule_officiel: string | null;
-
-  @ApiProperty({ type: EtablissementRefPublicDto, nullable: true })
-  etablissement: EtablissementRefPublicDto | null;
-}
-
-// Publication publiée par la Présidence (statut = PUBLIEE, projet non archivé).
 export class PublicationPubliqueDto {
   @ApiProperty()
   id: string;
@@ -49,8 +34,8 @@ export class PublicationPubliqueDto {
   @ApiProperty()
   projet_id: string;
 
-  @ApiProperty({ type: ProjetRefPubliqueDto })
-  projet: ProjetRefPubliqueDto;
+  @ApiProperty({ type: () => ProjetPublicDto })
+  projet: ProjetPublicDto;
 
   @ApiProperty({ nullable: true })
   photo_url: string | null;

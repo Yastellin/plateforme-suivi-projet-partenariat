@@ -68,10 +68,14 @@ export class Projet {
   @Column({ default: false })
   archive: boolean;
 
-  // Facultatif : un projet peut etre transversal ou gere directement par la
-  // Presidence, sans etablissement rattaché.
-  @Column({ type: 'text', nullable: true })
-  etablissement_id: string | null;
+  @Column({ type: 'timestamp', precision: 3, nullable: true })
+  soumis_le: Date | null;
+
+  @Column({ type: 'timestamp', precision: 3, nullable: true })
+  publie_le: Date | null;
+
+  @Column({ type: 'uuid' })
+  etablissement_id: string;
 
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   soumis_le: Date | null;
@@ -85,9 +89,9 @@ export class Projet {
   @Column({ type: 'uuid', nullable: true })
   porteur_id: string | null;
 
-  @ManyToOne(() => Etablissement, { onDelete: 'CASCADE', nullable: true })
+  @ManyToOne(() => Etablissement, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'etablissement_id' })
-  etablissement: Etablissement | null;
+  etablissement: Etablissement;
 
   @ManyToOne(() => Partenariat, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'partenariat_id' })

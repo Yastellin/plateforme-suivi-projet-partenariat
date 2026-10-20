@@ -12,7 +12,10 @@ import { StatutConvention } from '../common/enums/statut-convention.enum';
 import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
 import { StatutPublication } from '../common/enums/statut-publication.enum';
 import { Visibilite } from '../common/enums/visibilite.enum';
-import { AccueilPublicDto } from './dto/accueil-public.dto';
+import {
+  AccueilPublicDto,
+  CompteursPublicsDto,
+} from './dto/accueil-public.dto';
 import { EtablissementPublicDto } from './dto/etablissement-public.dto';
 import { PartenairePublicDto } from './dto/partenaire-public.dto';
 import { PartenariatPublicDto } from './dto/partenariat-public.dto';
@@ -38,7 +41,7 @@ export interface PageServeurPublique<T> {
   meta: { page: number; limit: number; total: number; totalPages: number };
 }
 
-// Regles de visibilite publique, appliquees a toutes les requetes de l'espace public.
+// Règles de visibilité publique, appliquées à toutes les requêtes de l'espace public.
 const PARTENAIRE_VISIBLE: FindOptionsWhere<Partenaire> = {
   visibilite: Visibilite.PUBLIC,
   statut: StatutPartenaire.ACTIF,
@@ -121,17 +124,19 @@ export class EspacePublicService {
       this.etablissementRepo.find({ order: { nom: 'ASC' }, take: 12 }),
     ]);
 
+    const compteurs: CompteursPublicsDto = {
+      nombre_etablissements,
+      nombre_partenaires: partenaires.length,
+      nombre_pays_partenaires: new Set(
+        partenaires.map((p) => p.pays.trim().toLowerCase()).filter(Boolean),
+      ).size,
+      nombre_projets_actifs,
+      nombre_publications,
+      nombre_conventions_actives,
+    };
+
     return {
-      compteurs: {
-        nombre_etablissements,
-        nombre_partenaires: partenaires.length,
-        nombre_pays_partenaires: new Set(
-          partenaires.map((p) => p.pays.trim().toLowerCase()).filter(Boolean),
-        ).size,
-        nombre_projets_actifs,
-        nombre_publications,
-        nombre_conventions_actives,
-      },
+      compteurs,
       dernieres_publications: publications.map((p) => this.versPublication(p)),
       projets_a_la_une: projets.map((p) => this.versProjet(p)),
       partenaires_a_la_une: partenaires_a_la_une.map((p) =>
@@ -213,6 +218,19 @@ export class EspacePublicService {
     );
   }
 
+  /** Projets soumis et publiés par la Présidence (drapeau publie_le). */
+  async listerProjetsPublies(): Promise<ProjetPublicDto[]> {
+    const projets = await this.projetRepo.find({
+      where: {
+        archive: false,
+        publie_le: Not(null) as unknown as never,
+      },
+      relations: this.relationsProjet(),
+      order: { publie_le: 'DESC' },
+    });
+    return projets.map((p) => this.versProjet(p));
+  }
+
   async listerEtablissements(
     query: PublicEtablissementQueryDto,
   ): Promise<PageServeurPublique<EtablissementPublicDto>> {
@@ -264,20 +282,6 @@ export class EspacePublicService {
       limit,
       total,
     );
-  }
-
-  /** Projets soumis et publies par la Presidence (etablissements inclus). */
-  async listerProjetsPublies(): Promise<ProjetPublicDto[]> {
-    const projets = await this.projetRepo.find({
-      where: {
-        archive: false,
-        publie_le: Not(null) as unknown as never,
-      },
-      relations: this.relationsProjet(),
-      order: { publie_le: 'DESC' },
-    });
-
-    return projets.map((projet) => this.versProjet(projet));
   }
 
   /** Partenariats soumis et publies par la Presidence (etablissements inclus). */
@@ -355,8 +359,13 @@ export class EspacePublicService {
     };
   }
 
-  private versProjet(projet: Projet): ProjetPublicDto {
+  // inclurePublication évite la récursion infinie projet ↔ publication.
+  private versProjet(
+    projet: Projet,
+    inclurePublication = true,
+  ): ProjetPublicDto {
     const publication =
+      inclurePublication &&
       projet.publication?.statut === StatutPublication.PUBLIEE
         ? projet.publication
         : null;
@@ -371,9 +380,6 @@ export class EspacePublicService {
       date_fin_prevue: projet.date_fin_prevue,
       description: publication?.description_publique ?? null,
       publication_id: publication?.id ?? null,
-      // L'etablissement est facultatif (projet porte par la Presidence seule) :
-      // un projet peut ne plus avoir d'etablissement rattaché (nullable), le
-      // champ est alors absent de la fiche publique.
       etablissement: projet.etablissement
         ? {
             id: projet.etablissement.id,
@@ -406,18 +412,7 @@ export class EspacePublicService {
       date_publication: p.date_publication,
       resultats: p.resultats,
       projet_id: p.projet_id,
-      projet: {
-        id: p.projet.id,
-        nom: p.projet.nom,
-        intitule_officiel: p.projet.intitule_officiel,
-        etablissement: p.projet.etablissement
-          ? {
-              id: p.projet.etablissement.id,
-              nom: p.projet.etablissement.nom,
-              sigle: p.projet.etablissement.sigle,
-            }
-          : null,
-      },
+      projet: this.versProjet(p.projet, false),
       photo_url: photos[0]?.url_fichier ?? null,
       photos: photos.map(({ id, url_fichier, legende, ordre }) => ({
         id,

@@ -12,11 +12,6 @@ import { DataSource } from 'typeorm';
 import { ENTITES } from '../../src/database/entites';
 import { InitSchema1791200000000 } from '../../src/database/migrations/1791200000000-InitSchema';
 import { CreatePasswordResetTokens1791292246344 } from '../../src/database/migrations/1791292246344-CreatePasswordResetTokens';
-import { CreateMessageContact1791400000000 } from '../../src/database/migrations/1791400000000-CreateMessageContact';
-import { NotificationMessageContact1791500000000 } from '../../src/database/migrations/1791500000000-NotificationMessageContact';
-import { ReferenceMessageContact1791600000000 } from '../../src/database/migrations/1791600000000-ReferenceMessageContact';
-import { AddTypePorteurToPorteur1791965000000 } from '../../src/database/migrations/1791965000000-AddTypePorteurToPorteur';
-import { ProjetEtablissementFacultatif1793000000000 } from '../../src/database/migrations/1793000000000-ProjetEtablissementFacultatif';
 import { demarrerBaseTest, type BaseTest } from './base-postgres';
 
 export const JWT_SECRET_TEST =
@@ -54,11 +49,6 @@ export async function creerApplicationTest(): Promise<ApplicationTest> {
     migrations: [
       InitSchema1791200000000,
       CreatePasswordResetTokens1791292246344,
-      CreateMessageContact1791400000000,
-      NotificationMessageContact1791500000000,
-      ReferenceMessageContact1791600000000,
-      AddTypePorteurToPorteur1791965000000,
-      ProjetEtablissementFacultatif1793000000000,
     ],
     migrationsTableName: 'migrations_typeorm',
     synchronize: false,

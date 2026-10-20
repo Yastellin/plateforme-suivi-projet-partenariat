@@ -113,13 +113,8 @@ export class NotificationsService {
   }
 
   async trouverUtilisateursEtablissement(
-    etablissementId: string | null,
+    etablissementId: string,
   ): Promise<string[]> {
-    // Un projet sans etablissement (transversal / Presidence) n'a pas
-    // d'utilisateurs d'etablissement a notifier.
-    if (!etablissementId) {
-      return [];
-    }
     const users = await this.utilisateurRepo.find({
       where: {
         etablissement_id: etablissementId,

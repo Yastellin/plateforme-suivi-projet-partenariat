@@ -36,88 +36,45 @@ export interface ConnexionReponse {
   utilisateur: Utilisateur;
 }
 
-// ---- Espace public : contrat strict de l'API /api/public/* ----
-// Toutes les valeurs proviennent de la base de donnees (aucune donnee codee en dur).
+export interface StatistiquesPubliques {
+  partenaires_actifs: number;
+  projets_en_cours: number;
+  conventions_signees: number;
+}
 
-export interface CompteursPublics {
+export interface PublicationAccueil {
+  id: string;
+  titre: string;
+  description_publique?: string | null;
+  date_publication?: string | null;
+}
+
+export interface EtablissementAccueil {
+  id: string;
+  nom: string;
+  sigle?: string | null;
+  logo_url?: string | null;
+}
+
+export interface PartenaireAccueil {
+  id: string;
+  nom: string;
+  logo_url?: string | null;
+}
+
+export interface CompteursAccueilPublic {
   nombre_etablissements: number;
   nombre_partenaires: number;
   nombre_pays_partenaires: number;
   nombre_projets_actifs: number;
-  nombre_publications: number;
-  nombre_conventions_actives: number;
-}
-
-export interface EtablissementRefPublic {
-  id: string;
-  nom: string;
-  sigle: string | null;
-}
-
-export interface EtablissementPublic {
-  id: string;
-  nom: string;
-  sigle: string | null;
-  logo_url: string | null;
-  description: string | null;
-}
-
-export interface PartenairePublic {
-  id: string;
-  nom: string;
-  type: string;
-  pays: string;
-  description: string | null;
-  logo_url: string | null;
-  site_web: string | null;
-  est_strategique: boolean;
-}
-
-export interface ProjetPublic {
-  id: string;
-  nom: string;
-  intitule_officiel: string | null;
-  type: string;
-  domaine: string | null;
-  statut: StatutProjet;
-  date_debut: string;
-  date_fin_prevue: string;
-  description: string | null;
-  publication_id: string | null;
-  etablissement: EtablissementRefPublic | null;
-  partenaires: PartenairePublic[];
-}
-
-export interface PhotoPublique {
-  id: string;
-  url_fichier: string;
-  legende: string | null;
-  ordre: number;
-}
-
-export interface PublicationPublique {
-  id: string;
-  titre: string;
-  description_publique: string | null;
-  date_publication: string | null;
-  resultats: string | null;
-  projet_id: string;
-  projet: {
-    id: string;
-    nom: string;
-    intitule_officiel: string | null;
-    etablissement: EtablissementRefPublic | null;
-  };
-  photo_url: string | null;
-  photos: PhotoPublique[];
 }
 
 export interface AccueilPublic {
-  compteurs: CompteursPublics;
-  dernieres_publications: PublicationPublique[];
-  projets_a_la_une: ProjetPublic[];
-  partenaires_a_la_une: PartenairePublic[];
-  etablissements_a_la_une: EtablissementPublic[];
+  statistiques?: StatistiquesPubliques;
+  dernieres_publications?: PublicationAccueil[];
+  etablissements_a_la_une?: EtablissementAccueil[];
+  partenaires_a_la_une?: PartenaireAccueil[];
+  compteurs?: CompteursAccueilPublic;
 }
 
 export type StatutConvention = 'BROUILLON' | 'EN_ATTENTE_SIGNATURE' | 'SIGNEE' | 'ACTIVE' | 'SUSPENDUE' | 'EXPIREE';
@@ -257,7 +214,7 @@ export interface Projet {
   date_fin_prevue: string;
   statut: StatutProjet;
   archive: boolean;
-  etablissement_id: string | null;
+  etablissement_id: string;
   partenariat_id: string | null;
   porteur_id: string | null;
   etablissement_nom: string | null;
@@ -355,17 +312,86 @@ export interface ListeSyntheseItems {
 
 // Types hérités des modules pas encore reconstruits, à retirer au fur et à mesure
 export * from './api-heritage';
-// Message recu via le formulaire de contact public (espace interne).
+
+/** Partenaire exposé publiquement (espace public). */
+export interface PartenairePublic {
+  id: string;
+  nom: string;
+  type: string;
+  pays: string;
+  description: string | null;
+  logo_url: string | null;
+  site_web: string | null;
+  est_strategique: boolean;
+}
+
+/** Projet exposé publiquement (espace public). */
+export interface EtablissementPublicRef {
+  id: string;
+  nom: string;
+  sigle: string | null;
+}
+
+export interface PartenairePublicRef {
+  id: string;
+  nom: string;
+  type: string;
+  pays: string;
+  logo_url: string | null;
+}
+
+export interface ProjetPublic {
+  id: string;
+  nom: string;
+  intitule_officiel: string | null;
+  type: string;
+  domaine: string | null;
+  statut: StatutProjet;
+  date_debut: string;
+  date_fin_prevue: string;
+  description: string | null;
+  publication_id: string | null;
+  etablissement: EtablissementPublicRef | null;
+  partenaires: PartenairePublicRef[];
+}
+
+/** Publication exposée publiquement (espace public). */
+export interface PhotoPublique {
+  id: string;
+  url_fichier: string;
+  legende: string | null;
+  ordre: number;
+}
+
+export interface PublicationPublique {
+  id: string;
+  titre: string;
+  description_publique: string | null;
+  date_publication: string | null;
+  resultats: string | null;
+  projet_id: string;
+  projet: {
+    id: string;
+    nom: string;
+    intitule_officiel: string | null;
+    etablissement: EtablissementPublicRef | null;
+  };
+  photo_url: string | null;
+  photos: PhotoPublique[];
+}
+
+/** Message envoyé via le formulaire de contact public. */
 export interface MessageContact {
-  id: string
-  reference: string
-  nom: string
-  email: string
-  telephone: string | null
-  sujet: string
-  message: string
-  est_lu: boolean
-  date_lecture: string | null
-  date_creation: string
-  destinataire: { id: string; nom: string; sigle: string | null } | null
+  id: string;
+  reference: string;
+  nom: string;
+  email: string;
+  telephone: string | null;
+  sujet: string;
+  message: string;
+  etablissement_id: string | null;
+  destinataire: { nom: string; sigle: string | null } | null;
+  est_lu: boolean;
+  date_lecture: string | null;
+  date_creation: string;
 }

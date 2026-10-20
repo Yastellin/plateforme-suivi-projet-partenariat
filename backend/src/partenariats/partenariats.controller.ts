@@ -105,8 +105,8 @@ export class PartenariatsController {
 
   @Post(':id/soumettre')
   @HttpCode(200)
-  @Roles(Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence (etablissement uniquement)' })
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence' })
   @ApiResponse({ status: 200, type: PartenariatResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =

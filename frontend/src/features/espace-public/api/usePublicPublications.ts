@@ -9,7 +9,8 @@ export interface FiltresPublicPublications {
   recherche?: string
 }
 
-// Publications publiees par la Presidence (statut PUBLIEE, projet non archive).
+// Liste publique des publications (page /projets-partenariats et fil de
+// la page d'accueil). Le backend ne renvoie que statut = "PUBLIEE".
 export function usePublicPublications(filtres: FiltresPublicPublications = {}) {
   return useQuery({
     queryKey: ["public-publications", filtres],

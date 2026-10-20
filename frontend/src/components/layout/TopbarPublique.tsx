@@ -1,78 +1,163 @@
 // src/components/layout/TopbarPublique.tsx
-import { useState } from "react"
-import { Link, useLocation } from "react-router-dom"
-import { LockKeyhole, Menu, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { NavLink, Link } from "react-router-dom"
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion"
+import { Menu, X, LogIn } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { cn } from "@/lib/utils"
 
 interface LienNav {
   label: string
   href: string
 }
 
-// Navigation de la vitrine publique (accessible sans authentification).
+// Navigation de l'espace public (section 3 : vitrine accessible sans
+// authentification). Distincte de <SidebarInterne> qui gere l'espace
+// authentifie par role.
 const LIENS_NAV: LienNav[] = [
   { label: "Accueil", href: "/" },
   { label: "À propos", href: "/a-propos" },
   { label: "Établissements", href: "/etablissements" },
-  { label: "Partenaires", href: "/projets-partenariats?onglet=partenaires" },
-  { label: "Projets et partenariats", href: "/projets-partenariats" },
+  { label: "Partenaires", href: "/partenaires" },
+  { label: "Projets & partenariats", href: "/projets-partenariats" },
   { label: "Contact", href: "/contact" },
 ]
 
-// Deux liens peuvent partager le meme chemin (projets / partenaires) :
-// l'etat actif tient compte du parametre "onglet".
-function estActif(lien: LienNav, chemin: string, requete: string): boolean {
-  const [cheminLien, requeteLien] = lien.href.split("?")
-  if (cheminLien !== chemin) return false
-  const onglet = new URLSearchParams(requete).get("onglet")
-  if (requeteLien) return onglet === new URLSearchParams(requeteLien).get("onglet")
-  return cheminLien !== "/projets-partenariats" || !onglet || onglet === "projets"
-}
-
+// Barre de navigation moderne : verre depoli au defilement, indicateur
+// anime (layoutId) sous le lien actif, menu mobile deroulant.
 export function TopbarPublique() {
-  const location = useLocation()
-  // Le menu mobile est memorise avec la route ouverte : il se ferme seul a la navigation.
-  const cleRoute = `${location.pathname}${location.search}`
-  const [menuPour, setMenuPour] = useState<string | null>(null)
-  const menuOuvert = menuPour === cleRoute
+  const [menuOuvert, setMenuOuvert] = useState(false)
+  const [defile, setDefile] = useState(() => typeof window !== "undefined" && window.scrollY > 8)
+
+  useEffect(() => {
+    const surveiller = () => setDefile(window.scrollY > 8)
+    window.addEventListener("scroll", surveiller, { passive: true })
+    return () => window.removeEventListener("scroll", surveiller)
+  }, [])
 
   return (
-    <header className="vt-header">
-      <div className="vt-wrap vt-header-inner">
-        <Link to="/" className="vt-brand" aria-label="Université de Fianarantsoa, accueil">
-          <span className="vt-logo" aria-hidden="true">UF</span>
-          <span>
-            <span className="vt-brand-name">Partenariats UF</span>
-            <span className="vt-brand-sub">Université de Fianarantsoa</span>
+    <header
+      className={cn(
+        "sticky top-0 z-50 border-b transition-all duration-300",
+        defile
+          ? "border-border/80 bg-background/80 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-background/70"
+          : "border-transparent bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/50"
+      )}
+    >
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link to="/" className="group flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[var(--color-brand-deep)] text-sm font-bold text-primary-foreground shadow-md shadow-primary/30 transition-transform duration-300 group-hover:scale-105">
+            SP
+          </span>
+          <span className="font-heading text-base font-semibold text-foreground">
+            Suivi Partenariats
           </span>
         </Link>
 
-        <button
-          type="button"
-          className="vt-menu-btn"
-          aria-expanded={menuOuvert}
-          aria-controls="vt-nav"
-          aria-label={menuOuvert ? "Fermer le menu" : "Ouvrir le menu"}
-          onClick={() => setMenuPour(menuOuvert ? null : cleRoute)}
-        >
-          {menuOuvert ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
-        </button>
+        <LayoutGroup id="nav-publique">
+          <nav className="hidden items-center gap-1 rounded-full border border-border/70 bg-background/60 p-1 lg:flex">
+            {LIENS_NAV.map((lien) => (
+              <NavLink
+                key={lien.href}
+                to={lien.href}
+                end={lien.href === "/"}
+                className={({ isActive }) =>
+                  cn(
+                    "relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-publique-pastille"
+                        className="absolute inset-0 -z-10 rounded-full bg-accent"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                    {lien.label}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+        </LayoutGroup>
 
-        <nav id="vt-nav" className="vt-nav" aria-label="Navigation principale" data-open={menuOuvert}>
-          {LIENS_NAV.map((lien) => (
-            <Link
-              key={lien.href}
-              to={lien.href}
-              aria-current={estActif(lien, location.pathname, location.search) ? "page" : undefined}
-            >
-              {lien.label}
+        <div className="hidden items-center gap-2 lg:flex">
+          <ThemeToggle />
+          <Button asChild size="sm" className="rounded-full px-4 shadow-md shadow-primary/20">
+            <Link to="/connexion">
+              <LogIn size={16} />
+              Espace privé
             </Link>
-          ))}
-          <Link to="/connexion" className="vt-btn vt-btn-primary vt-nav-cta">
-            <LockKeyhole size={16} aria-hidden="true" />
-            Espace interne
-          </Link>
-        </nav>
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-1 lg:hidden">
+          <ThemeToggle />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-expanded={menuOuvert}
+            aria-label={menuOuvert ? "Fermer le menu" : "Ouvrir le menu"}
+            onClick={() => setMenuOuvert((v) => !v)}
+          >
+            {menuOuvert ? <X size={20} /> : <Menu size={20} />}
+          </Button>
+        </div>
       </div>
+
+      <AnimatePresence initial={false}>
+        {menuOuvert && (
+          <motion.nav
+            key="menu-mobile"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden border-t border-border bg-background/95 backdrop-blur-xl lg:hidden"
+          >
+            <div className="flex flex-col gap-1 px-4 py-3">
+              {LIENS_NAV.map((lien, i) => (
+                <motion.div
+                  key={lien.href}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.03 * i, duration: 0.2 }}
+                >
+                  <NavLink
+                    to={lien.href}
+                    end={lien.href === "/"}
+                    onClick={() => setMenuOuvert(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        "block rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                        isActive && "bg-accent text-accent-foreground"
+                      )
+                    }
+                  >
+                    {lien.label}
+                  </NavLink>
+                </motion.div>
+              ))}
+              <Link
+                to="/connexion"
+                onClick={() => setMenuOuvert(false)}
+                className="mt-2 flex items-center justify-center gap-2 rounded-full bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20"
+              >
+                <LogIn size={16} />
+                Espace privé
+              </Link>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </header>
   )
 }
