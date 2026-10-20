@@ -32,7 +32,7 @@ export function LayoutAuthentification({ titre, description, children }: LayoutA
     <div className="grid min-h-screen grid-cols-1 bg-[#f4f7f5] lg:grid-cols-[1.08fr_1fr]">
       <aside className="relative hidden overflow-hidden lg:block lg:rounded-r-[44px]">
         <div
-          className="absolute inset-0 bg-[#0b4a36] bg-cover bg-center"
+          className="absolute inset-0 bg-[#0b4a36] bg-contain bg-center bg-no-repeat"
           style={{ backgroundImage: `url("${IMAGE_FOND_CONNEXION}")` }}
           role="img"
           aria-label="Image de fond de l'Université de Fianarantsoa"
