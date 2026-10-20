@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Projet } from '../projets/entities/projet.entity';
 import { Convention } from '../conventions/entities/convention.entity';
 import { Publication } from '../publications/enitities/publication.entity';
+import { Partenariat } from '../partenariats/entities/partenariat.entity';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
 import { StatutConvention } from '../common/enums/statut-convention.enum';
 import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
@@ -16,6 +17,8 @@ import {
   PublicationRecenteDto,
 } from './dto/accueil-public.dto';
 import { PartenairePublicDto } from './dto/partenaire-public.dto';
+import { PartenariatPublicDto } from './dto/partenariat-public.dto';
+import { ProjetPublicDto } from './dto/projet-public.dto';
 import { PublicationPubliqueDto } from './dto/publication-publique.dto';
 
 @Injectable()
@@ -26,6 +29,8 @@ export class EspacePublicService {
     @InjectRepository(Partenaire)
     private partenaireRepo: Repository<Partenaire>,
     @InjectRepository(Projet) private projetRepo: Repository<Projet>,
+    @InjectRepository(Partenariat)
+    private partenariatRepo: Repository<Partenariat>,
     @InjectRepository(Convention)
     private conventionRepo: Repository<Convention>,
     @InjectRepository(Publication)
@@ -157,6 +162,58 @@ export class EspacePublicService {
         site_web,
       }),
     );
+  }
+
+  /** Projets soumis et publies par la Presidence (etabliements inclus). */
+  async listerProjetsPublies(): Promise<ProjetPublicDto[]> {
+    const projets = await this.projetRepo.find({
+      where: {
+        archive: false,
+        publie_le: Not(null) as unknown as never,
+      },
+      relations: { etablissement: true },
+      order: { publie_le: 'DESC' },
+    });
+
+    return projets.map((projet) => ({
+      id: projet.id,
+      nom: projet.nom,
+      intitule_officiel: projet.intitule_officiel,
+      type: projet.type,
+      domaine: projet.domaine,
+      date_debut: projet.date_debut,
+      date_fin_prevue: projet.date_fin_prevue,
+      etablissement_nom: projet.etablissement?.nom ?? null,
+      etablissement_sigle: projet.etablissement?.sigle ?? null,
+    }));
+  }
+
+  /** Partenariats soumis et publies par la Presidence (etablissements inclus). */
+  async listerPartenariatsPublies(): Promise<PartenariatPublicDto[]> {
+    const partenariats = await this.partenariatRepo.find({
+      where: {
+        archive: false,
+        publie_le: Not(null) as unknown as never,
+      },
+      relations: {
+        etablissements: { etablissement: true },
+      },
+      order: { publie_le: 'DESC' },
+    });
+
+    return partenariats.map((partenariat) => ({
+      id: partenariat.id,
+      intitule: partenariat.intitule,
+      objet: partenariat.objet,
+      domaine: partenariat.domaine,
+      date_debut: partenariat.date_debut,
+      date_fin: partenariat.date_fin,
+      etablissements: (partenariat.etablissements ?? []).map((lien) => ({
+        id: lien.etablissement.id,
+        nom: lien.etablissement.nom,
+        sigle: lien.etablissement.sigle,
+      })),
+    }));
   }
 
   private mapPublicationPublique(

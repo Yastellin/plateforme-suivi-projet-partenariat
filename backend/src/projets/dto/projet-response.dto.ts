@@ -32,6 +32,12 @@ export class ProjetResponseDto {
   @ApiProperty()
   archive: boolean;
 
+  @ApiProperty({ nullable: true })
+  soumis_le: Date | null;
+
+  @ApiProperty({ nullable: true })
+  publie_le: Date | null;
+
   @ApiProperty()
   etablissement_id: string;
 

@@ -72,6 +72,8 @@ export class DocumentsController {
         nom_fichier: { type: 'string' },
         projet_id: { type: 'string' },
         convention_id: { type: 'string' },
+        cotutelle_id: { type: 'string' },
+        partenariat_id: { type: 'string' },
       },
     },
   })
@@ -87,7 +89,7 @@ export class DocumentsController {
   @Get()
   @Roles(Role.PRESIDENCE)
   @ApiOperation({
-    summary: 'Lister les documents (filtrable par projet ou convention)',
+    summary: 'Lister les documents (filtrable par projet, convention, cotutelle ou partenariat)',
   })
   findAll(@Query() query: QueryDocumentDto) {
     return this.documentsService.findAll(query);

@@ -5,6 +5,7 @@ import { InfiniteMarquee } from "@/components/shared/InfiniteMarquee"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { Reveal } from "@/features/espace-public/components/Reveal"
+import { resoudreUrlFichier } from "@/lib/url"
 
 // Section partenaires mis en avant sur la page d'accueil publique.
 // Bandeau defilant en boucle infinie des logos partenaires (section 7.4 :
@@ -50,7 +51,7 @@ export function SectionPartenaires() {
               <div className="flex h-16 items-center gap-2 rounded-2xl border border-border/70 bg-background/70 px-6 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
                 {partenaire.logo_url ? (
                   <img
-                    src={partenaire.logo_url}
+                    src={resoudreUrlFichier(partenaire.logo_url)}
                     alt={partenaire.nom}
                     className="h-8 w-auto object-contain"
                   />

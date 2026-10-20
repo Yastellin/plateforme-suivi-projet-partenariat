@@ -68,6 +68,12 @@ export class Projet {
   @Column({ default: false })
   archive: boolean;
 
+  @Column({ type: 'timestamp', precision: 3, nullable: true })
+  soumis_le: Date | null;
+
+  @Column({ type: 'timestamp', precision: 3, nullable: true })
+  publie_le: Date | null;
+
   @Column({ type: 'uuid' })
   etablissement_id: string;
 

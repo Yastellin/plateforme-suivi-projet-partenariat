@@ -20,6 +20,10 @@ import { StatutPartenariat } from '../common/enums/statut-partenariat.enum';
 import { TypeNotification } from '../common/enums/type-notification.enum';
 import { PrioriteNotification } from '../common/enums/priorite-notification.enum';
 import { Role } from '../common/enums/role.enum';
+import { HistoriqueService } from '../historique/historique.service';
+import type { ContexteUtilisateur } from '../historique/historique.service';
+import { ActionHistorique } from '../common/enums/action-historique.enum';
+import { BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class PartenariatsService {
@@ -35,6 +39,7 @@ export class PartenariatsService {
     @InjectRepository(Partenaire)
     private partenaireRepo: Repository<Partenaire>,
     private eventEmitter: EventEmitter2,
+    private historique: HistoriqueService,
   ) {}
 
   async create(
@@ -220,7 +225,11 @@ export class PartenariatsService {
     return this.findOne(id, etablissementId);
   }
 
-  async soumettre(id: string, etablissementId?: string) {
+  async soumettre(
+    id: string,
+    etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ) {
     const partenariat = await this.findOne(id, etablissementId);
 
     if (partenariat.statut !== StatutPartenariat.BROUILLON) {
@@ -231,6 +240,7 @@ export class PartenariatsService {
 
     await this.partenariatRepo.update(id, {
       statut: StatutPartenariat.EN_ATTENTE,
+      soumis_le: new Date(),
     });
 
     this.eventEmitter.emit('partenariat.soumis', {
@@ -243,10 +253,96 @@ export class PartenariatsService {
       reference_id: id,
     });
 
+    await this.historique.enregistrer({
+      action: ActionHistorique.SOUMISSION,
+      entite_type: 'Partenariat',
+      entite_id: id,
+      entite_nom: partenariat.intitule,
+      utilisateur: utilisateur ?? null,
+    });
+
     return this.findOne(id, etablissementId);
   }
 
-  async archiver(id: string) {
+  /** Soumission en masse : chaque identifiant est traite individuellement. */
+  async soumettreEnMasse(
+    ids: string[],
+    etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<{ total: number; reussis: string[]; echecs: { id: string; erreur: string }[] }> {
+    if (ids.length === 0) {
+      throw new BadRequestException('Aucun partenariat selectionne');
+    }
+
+    const reussis: string[] = [];
+    const echecs: { id: string; erreur: string }[] = [];
+
+    for (const id of ids) {
+      try {
+        await this.soumettre(id, etablissementId, utilisateur);
+        reussis.push(id);
+      } catch (erreur) {
+        echecs.push({
+          id,
+          erreur: erreur instanceof Error ? erreur.message : String(erreur),
+        });
+      }
+    }
+
+    if (reussis.length === 0 && echecs.length > 0) {
+      throw new BadRequestException(
+        `Aucun partenariat n'a pu etre soumis : ${echecs
+          .map((e) => e.erreur)
+          .join(' ; ')}`,
+      );
+    }
+
+    return { total: ids.length, reussis, echecs };
+  }
+
+  /** La presidence valide et publie un partenariat soumis. */
+  async publier(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ) {
+    const partenariat = await this.findOne(id);
+
+    if (!partenariat.soumis_le) {
+      throw new ConflictException(
+        'Seul un partenariat soumis a la presidence peut etre publie',
+      );
+    }
+
+    await this.partenariatRepo.update(id, { publie_le: new Date() });
+
+    this.eventEmitter.emit('partenariat.publie', {
+      type: TypeNotification.PARTENARIAT_PUBLIE,
+      priorite: PrioriteNotification.MOYENNE,
+      titre: `Partenariat publie : ${partenariat.intitule}`,
+      message: `Le partenariat "${partenariat.intitule}" a ete publie par la presidence.`,
+      utilisateur_id: null,
+      reference_type: 'Partenariat',
+      reference_id: id,
+      etablissements_ids: (partenariat.etablissements ?? []).map(
+        (lien) => (lien as any).etablissement_id,
+      ),
+    });
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.PUBLICATION,
+      entite_type: 'Partenariat',
+      entite_id: id,
+      entite_nom: partenariat.intitule,
+      utilisateur: utilisateur ?? null,
+    });
+
+    return this.findOne(id);
+  }
+
+  async archiver(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ) {
     const partenariat = await this.partenariatRepo.findOne({
       where: { id, archive: false },
       relations: {
@@ -272,6 +368,15 @@ export class PartenariatsService {
     }
 
     await this.partenariatRepo.update(id, { archive: true });
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.ARCHIVAGE,
+      entite_type: 'Partenariat',
+      entite_id: id,
+      entite_nom: partenariat.intitule,
+      utilisateur: utilisateur ?? null,
+    });
+
     return this.findOne(id, undefined, true);
   }
 
@@ -291,6 +396,8 @@ export class PartenariatsService {
       difficultes_contraintes: data.difficultes_contraintes,
       perspectives_recommandations: data.perspectives_recommandations,
       archive: data.archive,
+      soumis_le: data.soumis_le,
+      publie_le: data.publie_le,
       created_at: data.created_at,
       updated_at: data.updated_at,
       etablissements: data.etablissements.map((e: any) => ({

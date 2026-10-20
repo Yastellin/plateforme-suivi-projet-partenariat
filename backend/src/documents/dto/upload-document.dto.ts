@@ -1,4 +1,10 @@
-import { IsEnum, IsOptional, IsUUID, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsUUID,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TypeDocument } from '../../common/enums/type-document.enum';
 
@@ -21,4 +27,14 @@ export class UploadDocumentDto {
   @IsOptional()
   @IsUUID()
   convention_id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  cotutelle_id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  partenariat_id?: string;
 }

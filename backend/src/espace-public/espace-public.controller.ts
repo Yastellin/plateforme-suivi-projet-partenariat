@@ -4,6 +4,8 @@ import { Public } from '../common/decorators/public.decorator';
 import { EtablissementResponseDto } from '../etablissements/dto/etablissement-response.dto';
 import { AccueilPublicDto } from './dto/accueil-public.dto';
 import { PartenairePublicDto } from './dto/partenaire-public.dto';
+import { PartenariatPublicDto } from './dto/partenariat-public.dto';
+import { ProjetPublicDto } from './dto/projet-public.dto';
 import { PublicationPubliqueDto } from './dto/publication-publique.dto';
 import { EspacePublicService } from './espace-public.service';
 
@@ -56,5 +58,21 @@ export class EspacePublicController {
   @ApiResponse({ status: 200, type: [PartenairePublicDto] })
   listerPartenaires(): Promise<PartenairePublicDto[]> {
     return this.espacePublicService.listerPartenaires();
+  }
+
+  @Get('projets')
+  @Public()
+  @ApiOperation({ summary: 'Lister les projets publiés publiquement' })
+  @ApiResponse({ status: 200, type: [ProjetPublicDto] })
+  listerProjetsPublies(): Promise<ProjetPublicDto[]> {
+    return this.espacePublicService.listerProjetsPublies();
+  }
+
+  @Get('partenariats')
+  @Public()
+  @ApiOperation({ summary: 'Lister les partenariats publiés publiquement' })
+  @ApiResponse({ status: 200, type: [PartenariatPublicDto] })
+  listerPartenariatsPublies(): Promise<PartenariatPublicDto[]> {
+    return this.espacePublicService.listerPartenariatsPublies();
   }
 }

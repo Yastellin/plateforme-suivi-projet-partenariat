@@ -11,10 +11,21 @@ interface FloatingLabelInputProps extends InputHTMLAttributes<HTMLInputElement> 
   suffixe?: ReactNode;
   libelleRemonte?: boolean;
   requis?: boolean;
+  /** Regex des caracteres interdits, supprimes a la frappe (validation temps reel). */
+  caracteresInterdits?: RegExp;
+}
+
+function nettoyer(valeur: string, interdits?: RegExp, maxLength?: number) {
+  if (!interdits) return valeur;
+  let resultat = valeur.replace(interdits, "");
+  if (maxLength !== undefined && resultat.length > maxLength) {
+    resultat = resultat.slice(0, maxLength);
+  }
+  return resultat;
 }
 
 export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInputProps>(
-  ({ label, aide, erreur, icone, suffixe, libelleRemonte = false, requis = false, className, id, placeholder, ...props }, ref) => {
+  ({ label, aide, erreur, icone, suffixe, libelleRemonte = false, requis = false, className, id, placeholder, caracteresInterdits, ...props }, ref) => {
     const idGenere = useId();
     const inputId = id ?? idGenere;
 
@@ -44,6 +55,14 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
             )}
             aria-invalid={Boolean(erreur)}
             aria-describedby={aide || erreur ? `${inputId}-aide` : undefined}
+            onChange={(evenement) => {
+              const entree = evenement.target;
+              const propre = nettoyer(entree.value, caracteresInterdits, props.maxLength as number | undefined);
+              if (propre !== entree.value) {
+                entree.value = propre;
+              }
+              props.onChange?.(evenement);
+            }}
             {...props}
           />
 

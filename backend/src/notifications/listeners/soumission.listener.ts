@@ -26,6 +26,15 @@ export class SoumissionListener {
     );
   }
 
+  @OnEvent('partenaire.soumis')
+  async onPartenaireSoumis(payload: any): Promise<void> {
+    await this.notifierPresidence(
+      payload,
+      TypeNotification.PARTENAIRE_SOUMIS,
+      'Partenaire',
+    );
+  }
+
   private async notifierPresidence(
     payload: any,
     typeDefaut: TypeNotification,

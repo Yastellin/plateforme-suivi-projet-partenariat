@@ -8,6 +8,9 @@ import { CotutelleResponseDto } from './dto/cotutelle-response.dto';
 import { CotutelleThese } from './entities/cotutelle-these.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
+import { HistoriqueService } from '../historique/historique.service';
+import type { ContexteUtilisateur } from '../historique/historique.service';
+import { ActionHistorique } from '../common/enums/action-historique.enum';
 
 @Injectable()
 export class CotutellesService {
@@ -18,6 +21,7 @@ export class CotutellesService {
     private etablissementRepo: Repository<Etablissement>,
     @InjectRepository(Partenaire)
     private partenaireRepo: Repository<Partenaire>,
+    private historique: HistoriqueService,
   ) {}
 
   async create(dto: CreateCotutelleDto): Promise<CotutelleResponseDto> {
@@ -160,9 +164,21 @@ export class CotutellesService {
     return this.findOne(id);
   }
 
-  async archiver(id: string): Promise<CotutelleResponseDto> {
-    await this.findOne(id);
+  async archiver(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<CotutelleResponseDto> {
+    const cotutelle = await this.findOne(id);
     await this.cotutelleRepo.update(id, { archive: true });
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.ARCHIVAGE,
+      entite_type: 'CotutelleThese',
+      entite_id: id,
+      entite_nom: cotutelle.nom_doctorant,
+      utilisateur: utilisateur ?? null,
+    });
+
     return this.mapToResponse(await this.cotutelleRepo.findOneByOrFail({ id }));
   }
 

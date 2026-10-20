@@ -12,6 +12,9 @@ import { Convention } from '../conventions/entities/convention.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 import { Document } from '../documents/entities/document.entity';
 import { QueryArchiveDto } from './dto/query-archive.dto';
+import { HistoriqueService } from '../historique/historique.service';
+import type { ContexteUtilisateur } from '../historique/historique.service';
+import { ActionHistorique } from '../common/enums/action-historique.enum';
 
 export const TYPES_ARCHIVE = [
   'partenaires',
@@ -42,6 +45,7 @@ export class ArchivesService {
     private cotutelleRepo: Repository<CotutelleThese>,
     @InjectRepository(Document)
     private documentRepo: Repository<Document>,
+    private historique: HistoriqueService,
   ) {}
 
   async listerPartenaires(query: QueryArchiveDto, etablissementId?: string) {
@@ -246,6 +250,12 @@ export class ArchivesService {
         const entite = await this.partenaireRepo.findOne({ where });
         if (!entite) throw new NotFoundException('Partenaire archive non trouve');
         await this.partenaireRepo.update(id, { archive: false });
+        await this.historique.enregistrer({
+          action: ActionHistorique.RESTAURATION,
+          entite_type: 'Partenaire',
+          entite_id: id,
+          utilisateur: null,
+        });
         return { message: 'Partenaire restaure' };
       }
       case 'partenariats': {
@@ -256,6 +266,12 @@ export class ArchivesService {
         const entite = await this.partenariatRepo.findOne({ where });
         if (!entite) throw new NotFoundException('Partenariat archive non trouve');
         await this.partenariatRepo.update(id, { archive: false });
+        await this.historique.enregistrer({
+          action: ActionHistorique.RESTAURATION,
+          entite_type: 'Partenariat',
+          entite_id: id,
+          utilisateur: null,
+        });
         return { message: 'Partenariat restaure' };
       }
       case 'projets': {
@@ -264,6 +280,12 @@ export class ArchivesService {
         const entite = await this.projetRepo.findOne({ where });
         if (!entite) throw new NotFoundException('Projet archive non trouve');
         await this.projetRepo.update(id, { archive: false });
+        await this.historique.enregistrer({
+          action: ActionHistorique.RESTAURATION,
+          entite_type: 'Projet',
+          entite_id: id,
+          utilisateur: null,
+        });
         return { message: 'Projet restaure' };
       }
       case 'conventions': {
@@ -274,6 +296,12 @@ export class ArchivesService {
         const entite = await this.conventionRepo.findOne({ where });
         if (!entite) throw new NotFoundException('Convention archivee non trouvee');
         await this.conventionRepo.update(id, { archive: false });
+        await this.historique.enregistrer({
+          action: ActionHistorique.RESTAURATION,
+          entite_type: 'Convention',
+          entite_id: id,
+          utilisateur: null,
+        });
         return { message: 'Convention restauree' };
       }
       case 'cotutelles': {
@@ -282,6 +310,12 @@ export class ArchivesService {
         const entite = await this.cotutelleRepo.findOne({ where });
         if (!entite) throw new NotFoundException('Cotutelle archivee non trouvee');
         await this.cotutelleRepo.update(id, { archive: false });
+        await this.historique.enregistrer({
+          action: ActionHistorique.RESTAURATION,
+          entite_type: 'CotutelleThese',
+          entite_id: id,
+          utilisateur: null,
+        });
         return { message: 'Cotutelle restauree' };
       }
       case 'documents': {
@@ -290,6 +324,12 @@ export class ArchivesService {
         });
         if (!entite) throw new NotFoundException('Document archive non trouve');
         await this.documentRepo.update(id, { est_archive: false });
+        await this.historique.enregistrer({
+          action: ActionHistorique.RESTAURATION,
+          entite_type: 'Document',
+          entite_id: id,
+          utilisateur: null,
+        });
         return { message: 'Document restaure' };
       }
       default:
