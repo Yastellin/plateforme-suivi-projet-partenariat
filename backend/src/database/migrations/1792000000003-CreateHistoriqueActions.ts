@@ -24,13 +24,13 @@ export class CreateHistoriqueActions1792000000003
     `);
     await queryRunner.query(`
       CREATE TABLE "HistoriqueAction" (
-        "id" uuid NOT NULL,
-        "utilisateur_id" uuid,
+        "id" text NOT NULL,
+        "utilisateur_id" text,
         "utilisateur_nom" character varying,
         "utilisateur_role" character varying,
         "action" "action_historique" NOT NULL,
         "entite_type" character varying NOT NULL,
-        "entite_id" uuid,
+        "entite_id" text,
         "entite_nom" character varying,
         "details" text,
         "date_creation" TIMESTAMP WITH TIME ZONE NOT NULL,

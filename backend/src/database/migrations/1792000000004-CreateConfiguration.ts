@@ -10,7 +10,7 @@ export class CreateConfiguration1792000000004 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       CREATE TABLE "Configuration" (
-        "id" uuid NOT NULL,
+        "id" text NOT NULL,
         "cle" character varying NOT NULL,
         "valeur" text,
         "logo_url" character varying,

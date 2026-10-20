@@ -11,10 +11,10 @@ export class AddDocumentCotutellePartenariat1792000000001
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "Document" ADD "cotutelle_id" uuid`,
+      `ALTER TABLE "Document" ADD "cotutelle_id" text`,
     );
     await queryRunner.query(
-      `ALTER TABLE "Document" ADD "partenariat_id" uuid`,
+      `ALTER TABLE "Document" ADD "partenariat_id" text`,
     );
     await queryRunner.query(
       `ALTER TABLE "Document" ADD CONSTRAINT "fk_document_cotutelle" FOREIGN KEY ("cotutelle_id") REFERENCES "CotutelleThese"("id") ON DELETE SET NULL`,
