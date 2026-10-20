@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Archive, ExternalLink, Send, Pencil, Newspaper } from 'lucide-react';
+import { Archive, ExternalLink, Pencil, Newspaper } from 'lucide-react';
 import { useProjet } from '../api/useProjet';
 import { useArchiverProjet } from '../api/useArchiverProjet';
+import { BoutonSoumettre } from '../components/BoutonSoumettre';
 import { ProjetInformations } from '../components/ProjetInformations';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -80,13 +81,7 @@ export function ProjetDetailPage() {
             ) : null}
 
             {permissions.peutSoumettre && projet.statut === 'BROUILLON' ? (
-              <Link
-                to={`${cheminBase}/projets/${projet.id}`}
-                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
-              >
-                <Send className="h-3.5 w-3.5" />
-                Soumettre à la Présidence
-              </Link>
+              <BoutonSoumettre projetId={projet.id} />
             ) : null}
 
             {permissions.peutArchiver ? (

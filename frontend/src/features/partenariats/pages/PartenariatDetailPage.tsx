@@ -16,6 +16,7 @@ import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
 import { DestructiveConfirmDialog } from '@/components/shared/DestructiveConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { LIBELLES_DOMAINE_PARTENARIAT, LIBELLES_STATUT_PARTENARIAT } from '@/lib/status-mappings';
 import type { PartenariatFormValues } from '@/lib/validators/partenariat.schema';
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
@@ -24,6 +25,7 @@ export function PartenariatDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { utilisateur } = useAuth();
+  const permissions = usePermissions();
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
 
   const { data: partenariat, isLoading } = usePartenariat(id ?? '');
@@ -77,7 +79,8 @@ export function PartenariatDetailPage() {
   const info = LIBELLES_STATUT_PARTENARIAT[partenariat.statut];
   const estBrouillon = partenariat.statut === 'BROUILLON';
   const peutModifier = estPresidence || (role === 'ETABLISSEMENT' && estBrouillon);
-  const peutSoumettre = (estPresidence || role === 'ETABLISSEMENT') && estBrouillon;
+  // Seul l'etablissement peut soumettre ; la Presidence est le destinataire.
+  const peutSoumettre = permissions.peutSoumettre && estBrouillon;
   const soumisParEtablissement = role === 'ETABLISSEMENT' && !estBrouillon;
 
   return (

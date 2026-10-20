@@ -8,13 +8,13 @@ export class CreateMessageContact1791400000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       CREATE TABLE "MessageContact" (
-        "id" uuid NOT NULL,
+        "id" text NOT NULL,
         "nom" character varying(100) NOT NULL,
         "email" character varying(254) NOT NULL,
         "telephone" character varying(30),
         "sujet" character varying(200) NOT NULL,
         "message" text NOT NULL,
-        "etablissement_id" uuid,
+        "etablissement_id" text,
         "est_lu" boolean NOT NULL DEFAULT false,
         "date_lecture" TIMESTAMP(3),
         "date_creation" TIMESTAMP(3) NOT NULL,
