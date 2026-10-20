@@ -6,8 +6,8 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *
  * - "TypePorteur" : PERSONNE / ETABLISSEMENT / AUTRE.
  * - "type_porteur" : discrimine la nature du porteur (defaut PERSONNE).
- * - "etablissement_id" : FK vers "Etablissement" (type uuid, comme la cle
- *   primaire "Etablissement"."id") ; SET NULL si l'etablissement est supprime.
+ * - "etablissement_id" : FK vers "Etablissement" (meme type que la cle primaire
+ *   "Etablissement"."id", lu dans le schema) ; SET NULL si l'etablissement est supprime.
  * - "nom" devient nullable : un porteur de type ETABLISSEMENT n'a pas de nom
  *   libre (il est represente par l'etablissement rattache).
  * - "institution_rattachement" est deja present et nullable : on le reutilise
@@ -27,7 +27,13 @@ export class AddTypePorteurToPorteur1791965000000 implements MigrationInterface 
     await queryRunner.query(
       `ALTER TABLE "Porteur" ADD "type_porteur" "public"."TypePorteur" NOT NULL DEFAULT 'PERSONNE'`,
     );
-    await queryRunner.query(`ALTER TABLE "Porteur" ADD "etablissement_id" uuid`);
+    // Le type de la cle de "Etablissement" depend du schema deja en place
+    // (text dans le schema initial, uuid dans l'entite) : on aligne la FK dessus.
+    const [colonneId] = await queryRunner.query(
+      `SELECT data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'Etablissement' AND column_name = 'id'`,
+    );
+    const typeEtablissementId = colonneId?.data_type === 'uuid' ? 'uuid' : 'text';
+    await queryRunner.query(`ALTER TABLE "Porteur" ADD "etablissement_id" ${typeEtablissementId}`);
     await queryRunner.query(`ALTER TABLE "Porteur" ALTER COLUMN "nom" DROP NOT NULL`);
     await queryRunner.query(
       `CREATE INDEX "IDX_porteur_etablissement_id" ON "Porteur" ("etablissement_id")`,
