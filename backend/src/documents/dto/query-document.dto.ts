@@ -14,6 +14,16 @@ export class QueryDocumentDto extends PaginationQueryDto {
   @IsUUID()
   convention_id?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  cotutelle_id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  partenariat_id?: string;
+
   @ApiPropertyOptional({ enum: TypeDocument })
   @IsOptional()
   @IsEnum(TypeDocument)

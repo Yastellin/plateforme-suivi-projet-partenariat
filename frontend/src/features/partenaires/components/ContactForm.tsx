@@ -68,7 +68,13 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="contact-nom" requis>Nom complet</Label>
-        <TextInputSanitized id="contact-nom" maxLength={100} aria-invalid={!!errors.nom} {...register("nom")} />
+        <TextInputSanitized
+          id="contact-nom"
+          maxLength={100}
+          caracteresInterdits={/[^a-zA-ZÀ-ÿ\s]/g}
+          aria-invalid={!!errors.nom}
+          {...register("nom")}
+        />
         {errors.nom && <p className="text-sm text-destructive">{errors.nom.message}</p>}
       </div>
 

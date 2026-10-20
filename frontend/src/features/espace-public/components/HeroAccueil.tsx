@@ -8,6 +8,7 @@ import { AnimatedCounter } from "@/components/shared/AnimatedCounter"
 import { InfiniteMarquee } from "@/components/shared/InfiniteMarquee"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
+import { resoudreUrlFichier } from "@/lib/url"
 
 const elementHero: Variants = {
   cache: { opacity: 0, y: 16 },
@@ -233,7 +234,7 @@ export function HeroAccueil() {
               <div className="flex h-16 items-center rounded-lg border border-border bg-card px-6">
                 {partenaire.logo_url ? (
                   <img
-                    src={partenaire.logo_url}
+                    src={resoudreUrlFichier(partenaire.logo_url)}
                     alt={partenaire.nom}
                     className="h-8 w-auto object-contain"
                   />

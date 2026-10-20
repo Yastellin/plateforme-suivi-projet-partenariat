@@ -30,6 +30,7 @@ import {
 } from './dto/echeancier-response.dto';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
 import { StatutConvention } from '../common/enums/statut-convention.enum';
+import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
 import { Role } from '../common/enums/role.enum';
 
 @Injectable()
@@ -74,18 +75,34 @@ export class TableauDeBordService {
   private async getCompteurs(
     etablissementId?: string,
   ): Promise<CompteursGlobauxDto> {
+    const filtreEtab = etablissementId
+      ? { etablissement_id: etablissementId }
+      : {};
+    const filtreEtabProjet = etablissementId
+      ? { projet: { etablissement_id: etablissementId } }
+      : {};
+
     const [
       partenaires,
+      partenaires_actifs,
       partenariats,
       cotutelles,
       projets,
+      projets_en_cours,
       conventions,
+      conventions_signees,
+      conventions_actives,
+      conventions_a_echeance,
       publications,
     ] = await Promise.all([
       this.partenaireRepo.count({
+        where: { archive: false, ...filtreEtab },
+      }),
+      this.partenaireRepo.count({
         where: {
           archive: false,
-          ...(etablissementId ? { etablissement_id: etablissementId } : {}),
+          statut: StatutPartenaire.ACTIF,
+          ...filtreEtab,
         },
       }),
       etablissementId
@@ -99,18 +116,36 @@ export class TableauDeBordService {
             .getCount()
         : this.partenariatRepo.count({ where: { archive: false } }),
       this.cotutelleRepo.count({
-        where: {
-          archive: false,
-          ...(etablissementId ? { etablissement_id: etablissementId } : {}),
-        },
+        where: { archive: false, ...filtreEtab },
+      }),
+      this.projetRepo.count({
+        where: { archive: false, ...filtreEtab },
       }),
       this.projetRepo.count({
         where: {
           archive: false,
-          ...(etablissementId ? { etablissement_id: etablissementId } : {}),
+          statut: StatutProjet.EN_COURS,
+          ...filtreEtab,
         },
       }),
-      this.conventionRepo.count({ where: { archive: false } }),
+      this.conventionRepo.count({
+        where: { archive: false, ...filtreEtabProjet },
+      }),
+      this.conventionRepo.count({
+        where: {
+          archive: false,
+          statut: In([StatutConvention.SIGNEE, StatutConvention.ACTIVE]),
+          ...filtreEtabProjet,
+        },
+      }),
+      this.conventionRepo.count({
+        where: {
+          archive: false,
+          statut: StatutConvention.ACTIVE,
+          ...filtreEtabProjet,
+        },
+      }),
+      this.compterConventionsAEcheance(etablissementId),
       this.publicationRepo.count(),
     ]);
 
@@ -119,13 +154,37 @@ export class TableauDeBordService {
 
     return {
       partenaires,
+      partenaires_actifs,
       partenariats,
       cotutelles,
       projets,
+      projets_en_cours,
       conventions,
+      conventions_signees,
+      conventions_actives,
+      conventions_a_echeance,
       publications,
       repartition_conventions,
     };
+  }
+
+  private async compterConventionsAEcheance(
+    etablissementId?: string,
+  ): Promise<number> {
+    const maintenant = new Date();
+    const dans30Jours = new Date(
+      maintenant.getTime() + 30 * 24 * 60 * 60 * 1000,
+    );
+    return this.conventionRepo.count({
+      where: {
+        archive: false,
+        statut: In([StatutConvention.SIGNEE, StatutConvention.ACTIVE]),
+        date_fin: Between(maintenant, dans30Jours),
+        ...(etablissementId
+          ? { projet: { etablissement_id: etablissementId } }
+          : {}),
+      },
+    });
   }
 
   private async getRepartitionConventions(

@@ -20,6 +20,9 @@ import { ConventionResponseDto } from './dto/convention-response.dto';
 import { StatutConvention } from '../common/enums/statut-convention.enum';
 import { Convention } from './entities/convention.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
+import { HistoriqueService } from '../historique/historique.service';
+import type { ContexteUtilisateur } from '../historique/historique.service';
+import { ActionHistorique } from '../common/enums/action-historique.enum';
 import { Projet } from '../projets/entities/projet.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 
@@ -35,6 +38,7 @@ export class ConventionsService {
     @InjectRepository(CotutelleThese)
     private cotutelleRepo: Repository<CotutelleThese>,
     private dataSource: DataSource,
+    private historique: HistoriqueService,
   ) {}
 
   async create(dto: CreateConventionDto): Promise<ConventionResponseDto> {
@@ -110,7 +114,7 @@ export class ConventionsService {
       return creee;
     });
 
-    return this.mapToResponse(convention);
+    return this.findOne(convention.id);
   }
 
   async findAll(query: QueryConventionDto) {
@@ -148,6 +152,7 @@ export class ConventionsService {
 
     const [data, total] = await this.conventionRepo.findAndCount({
       where,
+      relations: { partenariat: true, projet: true },
       skip: (page - 1) * limit,
       take: limit,
       order: { created_at: 'DESC' },
@@ -162,6 +167,7 @@ export class ConventionsService {
   async findOne(id: string): Promise<ConventionResponseDto> {
     const convention = await this.conventionRepo.findOne({
       where: { id, archive: false },
+      relations: { partenariat: true, projet: true },
     });
     if (!convention) throw new NotFoundException('Convention non trouvee');
     return this.mapToResponse(convention);
@@ -256,9 +262,21 @@ export class ConventionsService {
     return this.findOne(id);
   }
 
-  async archiver(id: string): Promise<ConventionResponseDto> {
-    await this.findOne(id);
+  async archiver(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<ConventionResponseDto> {
+    const convention = await this.findOne(id);
     await this.conventionRepo.update(id, { archive: true });
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.ARCHIVAGE,
+      entite_type: 'Convention',
+      entite_id: id,
+      entite_nom: convention.titre,
+      utilisateur: utilisateur ?? null,
+    });
+
     const archived = await this.conventionRepo.findOneByOrFail({ id });
     return this.mapToResponse(archived);
   }
@@ -276,6 +294,20 @@ export class ConventionsService {
       archive: data.archive,
       partenariat_id: data.partenariat_id,
       projet_id: data.projet_id,
+      partenariat: data.partenariat
+        ? {
+            id: data.partenariat.id,
+            libelle: data.partenariat.intitule,
+            complement: data.partenariat.objet,
+          }
+        : null,
+      projet: data.projet
+        ? {
+            id: data.projet.id,
+            libelle: data.projet.nom,
+            complement: data.projet.intitule_officiel,
+          }
+        : null,
       created_at: data.created_at,
       updated_at: data.updated_at,
     };

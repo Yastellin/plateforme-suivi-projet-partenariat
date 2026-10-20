@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { resoudreUrlFichier } from "@/lib/url"
 
 // Section etablissements mis en avant sur la page d'accueil publique.
 // Affiche les etablissements a la une renvoyes par /public/accueil.
@@ -53,7 +54,7 @@ export function SectionEtablissements() {
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-background text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
                       {etab.logo_url ? (
                         <img
-                          src={etab.logo_url}
+                          src={resoudreUrlFichier(etab.logo_url)}
                           alt={etab.nom}
                           className="h-8 w-8 rounded object-contain"
                         />

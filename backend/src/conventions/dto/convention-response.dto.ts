@@ -1,5 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StatutConvention } from '../../common/enums/statut-convention.enum';
+
+export class ConventionLienDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  libelle: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  complement: string | null;
+}
 
 export class ConventionResponseDto {
   @ApiProperty()
@@ -34,6 +45,12 @@ export class ConventionResponseDto {
 
   @ApiProperty({ nullable: true })
   projet_id: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  partenariat: ConventionLienDto | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  projet: ConventionLienDto | null;
 
   @ApiProperty()
   created_at: Date;

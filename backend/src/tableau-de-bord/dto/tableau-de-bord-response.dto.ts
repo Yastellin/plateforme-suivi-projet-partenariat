@@ -26,6 +26,9 @@ export class CompteursGlobauxDto {
   partenaires: number;
 
   @ApiProperty()
+  partenaires_actifs: number;
+
+  @ApiProperty()
   partenariats: number;
 
   @ApiProperty()
@@ -35,7 +38,19 @@ export class CompteursGlobauxDto {
   projets: number;
 
   @ApiProperty()
+  projets_en_cours: number;
+
+  @ApiProperty()
   conventions: number;
+
+  @ApiProperty()
+  conventions_signees: number;
+
+  @ApiProperty()
+  conventions_actives: number;
+
+  @ApiProperty()
+  conventions_a_echeance: number;
 
   @ApiProperty()
   publications: number;

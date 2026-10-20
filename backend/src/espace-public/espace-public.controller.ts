@@ -1,12 +1,22 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
-import { EtablissementResponseDto } from '../etablissements/dto/etablissement-response.dto';
 import { AccueilPublicDto } from './dto/accueil-public.dto';
+import { EtablissementPublicDto } from './dto/etablissement-public.dto';
 import { PartenairePublicDto } from './dto/partenaire-public.dto';
+import { PartenariatPublicDto } from './dto/partenariat-public.dto';
+import { ProjetPublicDto } from './dto/projet-public.dto';
 import { PublicationPubliqueDto } from './dto/publication-publique.dto';
+import {
+  PublicEtablissementQueryDto,
+  PublicPartenaireQueryDto,
+  PublicProjetQueryDto,
+  PublicPublicationQueryDto,
+} from './dto/public-query.dto';
 import { EspacePublicService } from './espace-public.service';
 
+// Toutes les données de l'espace public viennent de la base de données et
+// respectent les règles de visibilité (voir EspacePublicService).
 @ApiTags('Espace public')
 @Controller('public')
 export class EspacePublicController {
@@ -15,7 +25,8 @@ export class EspacePublicController {
   @Get('accueil')
   @Public()
   @ApiOperation({
-    summary: 'Obtenir les informations de la page d’accueil publique',
+    summary:
+      'Données de la page d’accueil publique (compteurs réels, à la une)',
   })
   @ApiResponse({ status: 200, type: AccueilPublicDto })
   getAccueil(): Promise<AccueilPublicDto> {
@@ -24,11 +35,9 @@ export class EspacePublicController {
 
   @Get('publications')
   @Public()
-  @ApiOperation({ summary: 'Lister les publications publiques' })
-  @ApiResponse({ status: 200, type: [PublicationPubliqueDto] })
-  async listerPublications(): Promise<PublicationPubliqueDto[]> {
-    const resultat = await this.espacePublicService.listerPublications();
-    return resultat.data;
+  @ApiOperation({ summary: 'Publications publiées par la Présidence' })
+  listerPublications(@Query() query: PublicPublicationQueryDto) {
+    return this.espacePublicService.listerPublications(query);
   }
 
   @Get('publications/:id')
@@ -42,19 +51,51 @@ export class EspacePublicController {
     return this.espacePublicService.getPublication(id);
   }
 
+  @Get('projets')
+  @Public()
+  @ApiOperation({
+    summary: 'Projets de l’Université (hors brouillons et expirés)',
+  })
+  @ApiResponse({ status: 200, type: [ProjetPublicDto] })
+  listerProjets(@Query() query: PublicProjetQueryDto) {
+    return this.espacePublicService.listerProjets(query);
+  }
+
+  @Get('projets/publies')
+  @Public()
+  @ApiOperation({
+    summary: 'Projets publiés par la Présidence (drapeau publie_le)',
+  })
+  @ApiResponse({ status: 200, type: [ProjetPublicDto] })
+  listerProjetsPublies(): Promise<ProjetPublicDto[]> {
+    return this.espacePublicService.listerProjetsPublies();
+  }
+
   @Get('etablissements')
   @Public()
-  @ApiOperation({ summary: 'Lister les établissements publics' })
-  @ApiResponse({ status: 200, type: [EtablissementResponseDto] })
-  listerEtablissements() {
-    return this.espacePublicService.listerEtablissements();
+  @ApiOperation({ summary: 'Lister les établissements membres' })
+  @ApiResponse({ status: 200, type: [EtablissementPublicDto] })
+  listerEtablissements(@Query() query: PublicEtablissementQueryDto) {
+    return this.espacePublicService.listerEtablissements(query);
   }
 
   @Get('partenaires')
   @Public()
-  @ApiOperation({ summary: 'Lister les partenaires visibles publiquement' })
+  @ApiOperation({
+    summary: 'Lister les partenaires visibles publiquement (actifs)',
+  })
   @ApiResponse({ status: 200, type: [PartenairePublicDto] })
-  listerPartenaires(): Promise<PartenairePublicDto[]> {
-    return this.espacePublicService.listerPartenaires();
+  listerPartenaires(@Query() query: PublicPartenaireQueryDto) {
+    return this.espacePublicService.listerPartenaires(query);
+  }
+
+  @Get('partenariats')
+  @Public()
+  @ApiOperation({
+    summary: 'Partenariats publiés par la Présidence (drapeau publie_le)',
+  })
+  @ApiResponse({ status: 200, type: [PartenariatPublicDto] })
+  listerPartenariatsPublies(): Promise<PartenariatPublicDto[]> {
+    return this.espacePublicService.listerPartenariatsPublies();
   }
 }

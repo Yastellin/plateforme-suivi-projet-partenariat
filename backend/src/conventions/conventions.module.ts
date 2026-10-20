@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HistoriqueModule } from '../historique/historique.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConventionsController } from './conventions.controller';
 import { ConventionsService } from './conventions.service';
@@ -9,6 +10,7 @@ import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 
 @Module({
   imports: [
+    HistoriqueModule,
     TypeOrmModule.forFeature([Convention, Partenariat, Projet, CotutelleThese]),
   ],
   controllers: [ConventionsController],

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ProjetPublicDto } from './projet-public.dto';
 
 export class PhotoPubliqueDto {
   @ApiProperty()
@@ -32,6 +33,12 @@ export class PublicationPubliqueDto {
 
   @ApiProperty()
   projet_id: string;
+
+  @ApiProperty({ type: () => ProjetPublicDto })
+  projet: ProjetPublicDto;
+
+  @ApiProperty({ nullable: true })
+  photo_url: string | null;
 
   @ApiProperty({ type: [PhotoPubliqueDto] })
   photos: PhotoPubliqueDto[];
