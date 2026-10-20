@@ -16,7 +16,8 @@ export function SectionProjetsAlaUne() {
   const diapositives = decouper(projets, 3)
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="vt-section">
+      <div className="vt-wrap">
       <EnTeteSection
         etiquette="Réalisations"
         titre="Projets à la une"
@@ -44,6 +45,7 @@ export function SectionProjetsAlaUne() {
           )}
         />
       )}
+      </div>
     </section>
   )
 }

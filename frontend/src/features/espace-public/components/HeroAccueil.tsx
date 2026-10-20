@@ -1,127 +1,294 @@
 // src/features/espace-public/components/HeroAccueil.tsx
+// Hero de la vitrine : carrousel "a la une" et chiffres cles. Toutes les
+// diapositives sont construites a partir de l'API (publications de la
+// Presidence, projets et partenaires a la une) : aucun texte code en dur.
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
-import { Building2, Handshake, Globe, FolderKanban, ArrowRight, Sparkles, Newspaper } from "lucide-react"
-import { motion, type Variants } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { AnimatedCounter } from "@/components/shared/AnimatedCounter"
-import { Skeleton } from "@/components/ui/skeleton"
+import { FolderKanban, Handshake, Newspaper, Pause, Play, ChevronLeft, ChevronRight } from "lucide-react"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
+import {
+  initiales,
+  resumePartenaire,
+  resumeProjet,
+  resumePublication,
+} from "@/features/espace-public/lib/publique"
+import type { AccueilPublic } from "@/types/api"
 
-const elementHero: Variants = {
-  cache: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+type Diapositive = {
+  cle: string
+  etiquette: string
+  icone: typeof Newspaper
+  titre: string
+  texte: string
+  image: string | null
+  marque: string
+  cta: { to: string; libelle: string }
 }
 
-function CompteurVerre({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-border/60 bg-background/60 p-5 shadow-sm backdrop-blur transition-transform duration-300 hover:-translate-y-1">
-      {children}
-    </div>
-  )
+const DUREE_DIAPOSITIVE_MS = 6500
+
+// Construit les diapositives a partir des donnees reelles. Une source vide
+// n'produit simplement pas de diapositive.
+function construireDiapositives(donnees: AccueilPublic | undefined): Diapositive[] {
+  if (!donnees) return []
+  const diapos: Diapositive[] = []
+
+  const publication = donnees.dernieres_publications[0]
+  if (publication) {
+    diapos.push({
+      cle: `publication-${publication.id}`,
+      etiquette: "Actualité de la Présidence",
+      icone: Newspaper,
+      titre: publication.titre,
+      texte: resumePublication(publication),
+      image: publication.photo_url,
+      marque: publication.titre,
+      cta: { to: `/projets-partenariats/publication/${publication.id}`, libelle: "Lire l'actualité" },
+    })
+  }
+
+  const projet = donnees.projets_a_la_une[0]
+  if (projet) {
+    diapos.push({
+      cle: `projet-${projet.id}`,
+      etiquette: "Projet à la une",
+      icone: FolderKanban,
+      titre: projet.nom,
+      texte: resumeProjet(projet),
+      image: null,
+      marque: projet.nom,
+      cta: projet.publication_id
+        ? { to: `/projets-partenariats/publication/${projet.publication_id}`, libelle: "Découvrir le projet" }
+        : { to: "/projets-partenariats?onglet=projets", libelle: "Voir les projets" },
+    })
+  }
+
+  const partenaire = donnees.partenaires_a_la_une[0]
+  if (partenaire) {
+    diapos.push({
+      cle: `partenaire-${partenaire.id}`,
+      etiquette: "Partenaire à la une",
+      icone: Handshake,
+      titre: partenaire.nom,
+      texte: resumePartenaire(partenaire),
+      image: partenaire.logo_url,
+      marque: partenaire.nom,
+      cta: { to: "/projets-partenariats?onglet=partenaires", libelle: "Voir les partenaires" },
+    })
+  }
+
+  return diapos
 }
 
-// Hero de la page d'accueil : presentation de l'Universite et compteurs
-// animes. Chaque compteur est un decompte reel de la base de donnees
-// (endpoint /public/accueil).
+function preferenceReduction(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+}
+
+// Compteur qui s'anime une seule fois, a l'entree dans l'ecran.
+function CompteurAnime({ valeur }: { valeur: number }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [affiche, setAffiche] = useState(valeur)
+
+  useEffect(() => {
+    const element = ref.current
+    if (!element || preferenceReduction() || !("IntersectionObserver" in window)) {
+      return
+    }
+    let frame = 0
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        if (!entrees.some((e) => e.isIntersecting)) return
+        observateur.disconnect()
+        setAffiche(0)
+        const debut = performance.now()
+        const pas = (t: number) => {
+          const p = Math.min((t - debut) / 1100, 1)
+          setAffiche(Math.round(valeur * (1 - Math.pow(1 - p, 3))))
+          if (p < 1) frame = requestAnimationFrame(pas)
+        }
+        frame = requestAnimationFrame(pas)
+      },
+      { threshold: 0.6 },
+    )
+    observateur.observe(element)
+    return () => {
+      observateur.disconnect()
+      cancelAnimationFrame(frame)
+    }
+  }, [valeur])
+
+  return <span ref={ref}>{affiche.toLocaleString("fr-FR")}</span>
+}
+
 export function HeroAccueil() {
   const { data, isLoading } = usePublicAccueil()
   const compteurs = data?.compteurs
+  const diapositives = useMemo(() => construireDiapositives(data), [data])
+
+  const [index, setIndex] = useState(0)
+  const [pauseManuelle, setPauseManuelle] = useState(false)
+  const [survol, setSurvol] = useState(false)
+  const reduction = preferenceReduction()
+  const enPause = pauseManuelle || survol || reduction
+
+  // Defilement automatique, suspendu au survol, au focus et sur demande.
+  useEffect(() => {
+    if (enPause || diapositives.length < 2) return
+    const minuteur = window.setInterval(() => {
+      setIndex((i) => (i + 1) % diapositives.length)
+    }, DUREE_DIAPOSITIVE_MS)
+    return () => window.clearInterval(minuteur)
+  }, [enPause, diapositives.length])
+
+  const total = diapositives.length
+  const position = total > 0 ? index % total : 0
+
+  const chiffres = [
+    { valeur: compteurs?.nombre_etablissements, libelle: "établissements" },
+    { valeur: compteurs?.nombre_partenaires, libelle: "partenaires actifs" },
+    { valeur: compteurs?.nombre_pays_partenaires, libelle: "pays partenaires" },
+    { valeur: compteurs?.nombre_projets_actifs, libelle: "projets actifs" },
+    { valeur: compteurs?.nombre_publications, libelle: "publications" },
+  ]
 
   return (
-    <section className="relative isolate overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/40">
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -top-32 -left-24 -z-10 h-96 w-96 rounded-full bg-primary/25 blur-3xl"
-        animate={{ x: [0, 30, 0], y: [0, 20, 0] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-40 -right-20 -z-10 h-96 w-96 rounded-full bg-[var(--color-brand-moment)]/20 blur-3xl"
-        animate={{ x: [0, -25, 0], y: [0, -15, 0] }}
-        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle,var(--color-border)_1px,transparent_1px)] [background-size:24px_24px] opacity-40 [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
-      />
-
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-        <motion.div
-          className="flex flex-col items-center text-center"
-          initial="cache"
-          animate="visible"
-          variants={{
-            cache: {},
-            visible: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
-          }}
-        >
-          <motion.span
-            variants={elementHero}
-            className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3.5 py-1 text-xs font-medium text-primary shadow-sm backdrop-blur"
+    <>
+      <section className="vt-hero" aria-label="À la une">
+        <div className="vt-wrap">
+          <div
+            role="region"
+            aria-roledescription="carrousel"
+            aria-label="Les dernières nouvelles de l'université"
+            onMouseEnter={() => setSurvol(true)}
+            onMouseLeave={() => setSurvol(false)}
+            onFocus={() => setSurvol(true)}
+            onBlur={() => setSurvol(false)}
           >
-            <Sparkles size={14} />
-            Plateforme officielle de coopération universitaire
-          </motion.span>
-          <motion.h1
-            variants={elementHero}
-            className="mt-6 max-w-4xl font-heading text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
-          >
-            Université de{" "}
-            <span className="bg-gradient-to-r from-primary to-[var(--color-brand-deep)] bg-clip-text text-transparent">
-              Fianarantsoa
-            </span>
-          </motion.h1>
-          <motion.p variants={elementHero} className="mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Projets, partenariats et actualités de l'Université de Fianarantsoa, réunis sur une seule plateforme
-            pour une coopération transparente et accessible.
-          </motion.p>
-          <motion.div variants={elementHero} className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button asChild size="lg" className="rounded-full px-6 shadow-lg shadow-primary/25">
-              <Link to="/projets-partenariats">
-                Projets & partenaires
-                <ArrowRight size={16} />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-full bg-background/70 px-6 backdrop-blur">
-              <Link to="/projets-partenariats?onglet=publications">
-                <Newspaper size={16} />
-                Dernières publications
-              </Link>
-            </Button>
-          </motion.div>
-        </motion.div>
-
-        {/* Compteurs animes : decomptes reels de la base de donnees */}
-        <div className="mt-16 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 sm:gap-6">
-          {isLoading ? (
-            [...Array(5)].map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-background/60 p-6">
-                <Skeleton className="h-10 w-20" />
-                <Skeleton className="h-4 w-28" />
+            {isLoading && (
+              <div className="vt-slide" data-on="true" aria-busy="true">
+                <div>
+                  <span className="vt-tag">Chargement</span>
+                  <h1 aria-hidden="true" style={{ opacity: 0.2 }}>Université de Fianarantsoa</h1>
+                </div>
+                <div className="vt-art" aria-hidden="true" />
               </div>
-            ))
-          ) : compteurs ? (
-            <>
-              <CompteurVerre>
-                <AnimatedCounter valeur={compteurs.nombre_etablissements} label="Établissements" icon={Building2} />
-              </CompteurVerre>
-              <CompteurVerre>
-                <AnimatedCounter valeur={compteurs.nombre_partenaires} label="Partenaires actifs" icon={Handshake} />
-              </CompteurVerre>
-              <CompteurVerre>
-                <AnimatedCounter valeur={compteurs.nombre_pays_partenaires} label="Pays partenaires" icon={Globe} />
-              </CompteurVerre>
-              <CompteurVerre>
-                <AnimatedCounter valeur={compteurs.nombre_projets_actifs} label="Projets actifs" icon={FolderKanban} />
-              </CompteurVerre>
-              <CompteurVerre>
-                <AnimatedCounter valeur={compteurs.nombre_publications} label="Publications" icon={Newspaper} />
-              </CompteurVerre>
-            </>
-          ) : null}
+            )}
+
+            {!isLoading && total === 0 && (
+              <div className="vt-slide" data-on="true">
+                <div>
+                  <span className="vt-tag">Université de Fianarantsoa</span>
+                  <h1>Les partenariats de l'université, suivis au grand jour</h1>
+                  <p className="vt-lead">
+                    Projets, partenariats et actualités de l'Université, réunis sur une seule plateforme.
+                  </p>
+                  <div className="vt-cta">
+                    <Link to="/projets-partenariats" className="vt-btn vt-btn-primary">Projets et partenariats</Link>
+                  </div>
+                </div>
+                <div className="vt-art" aria-hidden="true">
+                  <span className="vt-art-mark">UF</span>
+                </div>
+              </div>
+            )}
+
+            {diapositives.map((d, i) => {
+              const Icone = d.icone
+              return (
+                <div
+                  key={d.cle}
+                  className="vt-slide"
+                  data-on={i === position}
+                  role="group"
+                  aria-roledescription="diapositive"
+                  aria-label={`${i + 1} sur ${total}`}
+                  aria-hidden={i !== position}
+                >
+                  <div>
+                    <span className="vt-tag">
+                      <Icone size={16} aria-hidden="true" />
+                      {d.etiquette}
+                    </span>
+                    <h1>{d.titre}</h1>
+                    <p className="vt-lead">{d.texte}</p>
+                    <div className="vt-cta">
+                      <Link to={d.cta.to} className="vt-btn vt-btn-primary" tabIndex={i === position ? 0 : -1}>
+                        {d.cta.libelle}
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="vt-art">
+                    {d.image ? (
+                      <img src={d.image} alt="" className="vt-art-img" loading={i === 0 ? "eager" : "lazy"} />
+                    ) : (
+                      <span className="vt-art-mark" aria-hidden="true">{initiales(d.marque)}</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+
+            {total > 1 && (
+              <div className="vt-car-ctl">
+                <button
+                  type="button"
+                  className="vt-icon-btn"
+                  aria-label="Diapositive précédente"
+                  onClick={() => setIndex((position - 1 + total) % total)}
+                >
+                  <ChevronLeft size={18} aria-hidden="true" />
+                </button>
+                <div className="vt-dots">
+                  {diapositives.map((d, i) => (
+                    <button
+                      key={d.cle}
+                      type="button"
+                      className="vt-dot"
+                      aria-label={`Diapositive ${i + 1}`}
+                      aria-current={i === position ? "true" : undefined}
+                      aria-selected={i === position}
+                      onClick={() => setIndex(i)}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="vt-icon-btn"
+                  aria-label="Diapositive suivante"
+                  onClick={() => setIndex((position + 1) % total)}
+                >
+                  <ChevronRight size={18} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="vt-icon-btn"
+                  aria-label={pauseManuelle ? "Reprendre le défilement" : "Mettre le défilement en pause"}
+                  aria-pressed={pauseManuelle}
+                  onClick={() => setPauseManuelle((p) => !p)}
+                >
+                  {pauseManuelle ? <Play size={16} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+        <div className="vt-woven" aria-hidden="true" />
+      </section>
+
+      <section className="vt-stats" aria-label="Chiffres clés">
+        <div className="vt-wrap">
+          <ul className="vt-stats-grid">
+            {chiffres.map((c) => (
+              <li key={c.libelle} className="vt-stat">
+                <div className="vt-stat-value">
+                  {c.valeur === undefined ? "—" : <CompteurAnime valeur={c.valeur} />}
+                </div>
+                <div className="vt-stat-label">{c.libelle}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </>
   )
 }

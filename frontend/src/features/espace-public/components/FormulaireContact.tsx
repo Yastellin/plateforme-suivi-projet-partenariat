@@ -147,6 +147,7 @@ export function FormulaireContact() {
           valide={champValide("nom")}
         >
           <Input
+            className="vt-input"
             id="contact-nom"
             autoComplete="name"
             value={valeurs.nom}
@@ -160,6 +161,7 @@ export function FormulaireContact() {
 
         <Champ id="contact-email" label="Adresse e-mail" requis erreur={erreurAffichee("email")} valide={champValide("email")}>
           <Input
+            className="vt-input"
             id="contact-email"
             type="email"
             autoComplete="email"
@@ -182,6 +184,7 @@ export function FormulaireContact() {
           valide={champValide("telephone")}
         >
           <Input
+            className="vt-input"
             id="contact-telephone"
             type="tel"
             autoComplete="tel"
@@ -200,7 +203,7 @@ export function FormulaireContact() {
             id="contact-destinataire"
             value={valeurs.etablissement_id}
             onChange={(e) => modifier("etablissement_id", e.target.value)}
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="vt-input"
           >
             <option value="">Présidence de l'Université</option>
             {etablissements.map((etab) => (
@@ -223,6 +226,7 @@ export function FormulaireContact() {
         compteur={`${compteurSujet}/${LIMITES_CONTACT.sujet.max}`}
       >
         <Input
+          className="vt-input"
           id="contact-sujet"
           value={valeurs.sujet}
           maxLength={LIMITES_CONTACT.sujet.max}
@@ -242,6 +246,7 @@ export function FormulaireContact() {
         compteur={`${compteurMessage}/${LIMITES_CONTACT.message.max}`}
       >
         <Textarea
+          className="vt-input vt-input-area"
           id="contact-message"
           rows={6}
           value={valeurs.message}
@@ -277,27 +282,30 @@ interface ChampProps {
   compteur?: string
 }
 
-// Enveloppe commune : libelle, aide, erreur en direct, indicateur de validite et compteur.
+// Enveloppe commune : champ a libelle flottant (le libelle descend dans le champ
+// a la saisie ou au focus), message d'aide ou erreur en direct, compteur.
 function Champ({ id, label, children, requis, aide, erreur, valide, compteur }: ChampProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-baseline justify-between gap-2">
-        <Label htmlFor={id} className="font-medium">
+      <div className="vt-field">
+        {children}
+        <Label htmlFor={id} className="vt-float-label">
           {label}
           {requis && <span className="ml-0.5 text-destructive">*</span>}
           {valide && <CheckCircle2 size={14} aria-label="Champ valide" className="ml-1.5 inline text-primary" />}
         </Label>
-        {compteur && <span className="text-xs tabular-nums text-muted-foreground">{compteur}</span>}
       </div>
-      {children}
-      {erreur ? (
-        <p id={`${id}-erreur`} role="alert" className={cn("flex items-center gap-1 text-xs text-destructive")}>
-          <AlertCircle size={12} />
-          {erreur}
-        </p>
-      ) : (
-        aide && <p className="text-xs text-muted-foreground">{aide}</p>
-      )}
+      <div className="flex items-start justify-between gap-2 px-1">
+        {erreur ? (
+          <p id={`${id}-erreur`} role="alert" className={cn("flex items-center gap-1 text-xs text-destructive")}>
+            <AlertCircle size={12} />
+            {erreur}
+          </p>
+        ) : (
+          aide ? <p className="text-xs text-muted-foreground">{aide}</p> : <span />
+        )}
+        {compteur && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{compteur}</span>}
+      </div>
     </div>
   )
 }
