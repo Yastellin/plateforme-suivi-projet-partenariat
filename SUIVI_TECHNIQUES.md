@@ -5,21 +5,6 @@ des corrections. A traiter dans des commits de housekeeping dedies.
 
 ## Backend
 
-- **Dette technique — Types uuid/text divergents**.
-  Le fichier `backend/src/database/migrations/*-InitSchema.ts` ecrit des
-  colonnes `uuid`, mais la base reelle (heritage Prisma) a ces colonnes en
-  `text`. Les entites TypeORM (`Projet`, `Partenaire`, `Utilisateur`,
-  `Document`, `RefreshToken`, etc.) declarent egalement `uuid` alors que la
-  base est en `text`.
-  Impact actuel : nul en runtime (TypeORM accepte des chaines dans une
-  colonne text). Risque : une nouvelle migration produira des `ALTER TABLE`
-  destructeurs, et une FK `text` -> `uuid` echouera (cas rencontre sur
-  `Porteur.etablissement_id`).
-  Correctif a prevoir : `commit chore(db): aligner les decorateurs sur le
-  type reel text`, qui remplace tous les `type: 'uuid'` par `type: 'text'`
-  dans les entites et DTOs. `@IsUUID()` reste valide pour valider le
-  contenu.
-
 - **`backend/src/partenaires/contacts/dto/contact-response.dto.ts` est vide**.
   `ContactsService` renvoie l'entite `Contact` brute (save/find) sans mapper
   vers un DTO de reponse : les colonnes internes (partenaire_id, created_at,

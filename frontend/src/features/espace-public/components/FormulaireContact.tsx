@@ -1,335 +1,171 @@
 // src/features/espace-public/components/FormulaireContact.tsx
-import { useMemo, useState, type FormEvent, type ReactNode } from "react"
+import { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { AlertCircle, Building2, CheckCircle2, Copy, Loader2, Mail, MessageSquare, Phone, Send, Tag, User } from "lucide-react"
+import { Send, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import apiClient from "@/lib/api-client"
-import { cn } from "@/lib/utils"
-import { usePublicEtablissements } from "@/features/espace-public/api/usePublicEtablissements"
-import {
-  LIMITES_CONTACT,
-  VALEURS_CONTACT_VIDES,
-  filtrerSaisie,
-  validerContact,
-  type ChampContact,
-  type ValeursContact,
-} from "@/lib/validators/message-contact"
 
-interface ConfirmationEnvoi {
-  reference: string
+interface FormulaireContactValeurs {
+  nom: string
+  email: string
+  telephone: string
+  sujet: string
+  message: string
 }
 
-// Formulaire de contact public (style maquette).
-// - Pendant la frappe : les caracteres interdits n'entrent pas dans le champ,
-//   et chaque champ est controle en direct des sa premiere saisie.
-// - A l'envoi : une reference unique est attribuee au message et affichee
-//   a l'expediteur pour un suivi.
+// Formulaire de contact public (section 7.4 : "Contact" → formulaire
+// avec validation temps reel → toast). Aucune authentification requise.
 export function FormulaireContact() {
-  const [valeurs, setValeurs] = useState<ValeursContact>(VALEURS_CONTACT_VIDES)
-  const [touches, setTouches] = useState<Partial<Record<ChampContact, boolean>>>({})
-  const [tentativeEnvoi, setTentativeEnvoi] = useState(false)
-  const [confirmation, setConfirmation] = useState<ConfirmationEnvoi | null>(null)
-
-  const { data: etablissementsData } = usePublicEtablissements({ limit: 100 })
-  const etablissements = etablissementsData?.data ?? []
-
-  // Erreurs recalculees a chaque frappe, affichees des que le champ a ete touche.
-  const erreurs = useMemo(() => validerContact(valeurs), [valeurs])
-  const erreurAffichee = (champ: ChampContact) =>
-    (touches[champ] || tentativeEnvoi) ? erreurs[champ] : undefined
-  const champValide = (champ: ChampContact) =>
-    Boolean(touches[champ]) && valeurs[champ].trim() !== "" && !erreurs[champ]
+  const [valeurs, setValeurs] = useState<FormulaireContactValeurs>({
+    nom: "",
+    email: "",
+    telephone: "",
+    sujet: "",
+    message: "",
+  })
+  const [erreurs, setErreurs] = useState<Partial<Record<keyof FormulaireContactValeurs, string>>>({})
 
   const mutation = useMutation({
-    mutationFn: async (donnees: ValeursContact) => {
-      const reponse = await apiClient.post<{ reference: string }>("/public/contact", {
-        nom: donnees.nom.trim(),
-        email: donnees.email.trim(),
-        telephone: donnees.telephone.trim() || undefined,
-        sujet: donnees.sujet.trim(),
-        message: donnees.message.trim(),
-        etablissement_id: donnees.etablissement_id || undefined,
-      })
-      return reponse.data
-    },
-    onSuccess: (donnees) => {
-      setConfirmation({ reference: donnees.reference })
-      setValeurs(VALEURS_CONTACT_VIDES)
-      setTouches({})
-      setTentativeEnvoi(false)
-      toast.success("Message envoyé", {
-        description: `Référence : ${donnees.reference}`,
-      })
+    mutationFn: (donnees: FormulaireContactValeurs) =>
+      apiClient.post("/public/contact", donnees),
+    onSuccess: () => {
+      toast.success("Message envoyé avec succès !")
+      setValeurs({ nom: "", email: "", telephone: "", sujet: "", message: "" })
+      setErreurs({})
     },
     onError: (erreur: Error) => {
-      toast.error("Envoi impossible", {
-        description: erreur.message || "Une erreur est survenue. Veuillez réessayer.",
-      })
+      toast.error(erreur.message || "Une erreur est survenue lors de l'envoi.")
     },
   })
 
-  function modifier(champ: ChampContact, saisie: string) {
-    const valeur = filtrerSaisie(champ, saisie)
-    setValeurs((prev) => ({ ...prev, [champ]: valeur }))
-    setTouches((prev) => ({ ...prev, [champ]: true }))
-  }
+  function valider(): boolean {
+    const nouvellesErreurs: Partial<Record<keyof FormulaireContactValeurs, string>> = {}
 
-  function marquerTouche(champ: ChampContact) {
-    setTouches((prev) => ({ ...prev, [champ]: true }))
-  }
-
-  function gererSoumission(e: FormEvent) {
-    e.preventDefault()
-    setTentativeEnvoi(true)
-    if (Object.keys(validerContact(valeurs)).length > 0) {
-      toast.warning("Formulaire incomplet", {
-        description: "Corrigez les champs signalés avant d'envoyer.",
-      })
-      return
+    if (!valeurs.nom.trim() || valeurs.nom.trim().length < 2) {
+      nouvellesErreurs.nom = "Le nom doit contenir au moins 2 caractères."
     }
+    if (!valeurs.email.trim()) {
+      nouvellesErreurs.email = "L'email est requis."
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valeurs.email)) {
+      nouvellesErreurs.email = "L'adresse email n'est pas valide."
+    }
+    if (!valeurs.sujet.trim() || valeurs.sujet.trim().length < 3) {
+      nouvellesErreurs.sujet = "Le sujet doit contenir au moins 3 caractères."
+    }
+    if (!valeurs.message.trim() || valeurs.message.trim().length < 10) {
+      nouvellesErreurs.message = "Le message doit contenir au moins 10 caractères."
+    }
+
+    setErreurs(nouvellesErreurs)
+    return Object.keys(nouvellesErreurs).length === 0
+  }
+
+  function gererSoumission(e: React.FormEvent) {
+    e.preventDefault()
+    if (!valider()) return
     mutation.mutate(valeurs)
   }
 
-  async function copierReference() {
-    if (!confirmation) return
-    try {
-      await navigator.clipboard.writeText(confirmation.reference)
-      toast.success("Référence copiée")
-    } catch {
-      toast.error("Copie impossible", { description: "Recopiez la référence manuellement." })
+  function mettreAJour(champ: keyof FormulaireContactValeurs, valeur: string) {
+    setValeurs((prev) => ({ ...prev, [champ]: valeur }))
+    if (erreurs[champ]) {
+      setErreurs((prev) => {
+        const copie = { ...prev }
+        delete copie[champ]
+        return copie
+      })
     }
   }
 
-  const compteurMessage = valeurs.message.trim().length
-  const compteurSujet = valeurs.sujet.trim().length
-
-  if (confirmation) {
-    return (
-      <div role="status" className="vt-confirm">
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <CheckCircle2 size={20} aria-hidden="true" />
-          <h3 style={{ fontSize: 18 }}>Message bien reçu</h3>
-        </div>
-        <p>
-          Votre message a été transmis à l'équipe concernée. Conservez cette référence pour toute relance :
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-          <code
-            style={{
-              background: "#fff",
-              padding: "8px 16px",
-              borderRadius: 8,
-              fontFamily: "var(--font-mono)",
-              fontSize: 18,
-              letterSpacing: "0.08em",
-              color: "var(--text)",
-              border: "1px solid var(--line)",
-            }}
-          >
-            {confirmation.reference}
-          </code>
-          <button type="button" className="vt-btn vt-btn-ghost" onClick={copierReference}>
-            <Copy size={16} aria-hidden="true" />
-            Copier
-          </button>
-        </div>
-        <div>
-          <button type="button" className="vt-btn vt-btn-ghost" onClick={() => setConfirmation(null)}>
-            Envoyer un autre message
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <form onSubmit={gererSoumission} noValidate className="vt-form">
-      <div className="vt-two">
-        <Champ
-          id="contact-nom"
-          label="Nom complet"
-          icone={<User size={18} className="vt-fld-ico" aria-hidden="true" />}
-          requis
-          aide="Lettres, espaces, apostrophes et tirets uniquement"
-          erreur={erreurAffichee("nom")}
-          valide={champValide("nom")}
-        >
-          <input
-            id="contact-nom"
-            className="vt-fld-input"
-            autoComplete="name"
+    <form onSubmit={gererSoumission} className="flex flex-col gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="nom">
+            Nom complet <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="nom"
             value={valeurs.nom}
-            maxLength={LIMITES_CONTACT.nom.max}
-            onChange={(e) => modifier("nom", e.target.value)}
-            onBlur={() => marquerTouche("nom")}
-            placeholder="Nom"
-            aria-invalid={!!erreurAffichee("nom")}
+            onChange={(e) => mettreAJour("nom", e.target.value)}
+            placeholder="Votre nom"
           />
-        </Champ>
-
-        <Champ
-          id="contact-email"
-          label="Adresse e-mail"
-          icone={<Mail size={18} className="vt-fld-ico" aria-hidden="true" />}
-          requis
-          erreur={erreurAffichee("email")}
-          valide={champValide("email")}
-        >
-          <input
-            id="contact-email"
+          {erreurs.nom && <p className="text-xs text-destructive">{erreurs.nom}</p>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">
+            Email <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="email"
             type="email"
-            className="vt-fld-input"
             autoComplete="email"
-            inputMode="email"
             value={valeurs.email}
-            onChange={(e) => modifier("email", e.target.value)}
-            onBlur={() => marquerTouche("email")}
-            placeholder="Courriel"
-            aria-invalid={!!erreurAffichee("email")}
+            onChange={(e) => mettreAJour("email", e.target.value)}
+            placeholder="exemple@domaine.com"
           />
-        </Champ>
+          {erreurs.email && <p className="text-xs text-destructive">{erreurs.email}</p>}
+        </div>
       </div>
-
-      <div className="vt-two">
-        <Champ
-          id="contact-telephone"
-          label="Téléphone (facultatif)"
-          icone={<Phone size={18} className="vt-fld-ico" aria-hidden="true" />}
-          aide="Format 034 12 345 67 ou +261 34 12 345 67."
-          erreur={erreurAffichee("telephone")}
-          valide={champValide("telephone")}
-        >
-          <input
-            id="contact-telephone"
-            type="tel"
-            className="vt-fld-input"
-            autoComplete="tel"
-            inputMode="tel"
-            value={valeurs.telephone}
-            maxLength={LIMITES_CONTACT.telephone.max}
-            onChange={(e) => modifier("telephone", e.target.value)}
-            onBlur={() => marquerTouche("telephone")}
-            placeholder="Téléphone"
-            aria-invalid={!!erreurAffichee("telephone")}
-          />
-        </Champ>
-
-        <Champ
-          id="contact-destinataire"
-          label="Destinataire"
-          icone={<Building2 size={18} className="vt-fld-ico" aria-hidden="true" />}
-          aide="Par défaut : la Présidence"
-        >
-          <select
-            id="contact-destinataire"
-            className="vt-fld-input"
-            value={valeurs.etablissement_id}
-            onChange={(e) => modifier("etablissement_id", e.target.value)}
-          >
-            <option value="">Présidence de l'Université</option>
-            {etablissements.map((etab) => (
-              <option key={etab.id} value={etab.id}>
-                {etab.nom}
-                {etab.sigle ? ` (${etab.sigle})` : ""}
-              </option>
-            ))}
-          </select>
-        </Champ>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="telephone">Téléphone (optionnel)</Label>
+        <Input
+          id="telephone"
+          type="tel"
+          autoComplete="tel"
+          maxLength={20}
+          value={valeurs.telephone}
+          onChange={(e) => {
+            // N'autorise que chiffres, +, espaces, tirets, parentheses
+            const propre = e.target.value.replace(/[^0-9+\s()-]/g, "")
+            mettreAJour("telephone", propre)
+          }}
+          placeholder="+261 34 00 000 00"
+        />
+        {erreurs.telephone && <p className="text-xs text-destructive">{erreurs.telephone}</p>}
       </div>
-
-      <Champ
-        id="contact-sujet"
-        label="Sujet"
-        icone={<Tag size={18} className="vt-fld-ico" aria-hidden="true" />}
-        requis
-        aide="Pas de caractères < ou >"
-        erreur={erreurAffichee("sujet")}
-        valide={champValide("sujet")}
-        compteur={`${compteurSujet}/${LIMITES_CONTACT.sujet.max}`}
-      >
-        <input
-          id="contact-sujet"
-          className="vt-fld-input"
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="sujet">
+          Sujet <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="sujet"
           value={valeurs.sujet}
-          maxLength={LIMITES_CONTACT.sujet.max}
-          onChange={(e) => modifier("sujet", e.target.value)}
-          onBlur={() => marquerTouche("sujet")}
-          placeholder="Sujet"
-          aria-invalid={!!erreurAffichee("sujet")}
+          onChange={(e) => mettreAJour("sujet", e.target.value)}
+          placeholder="Objet de votre message"
         />
-      </Champ>
-
-      <Champ
-        id="contact-message"
-        label="Votre message"
-        icone={<MessageSquare size={18} className="vt-fld-ico" aria-hidden="true" />}
-        requis
-        aide="Au moins 10 caractères."
-        erreur={erreurAffichee("message")}
-        valide={champValide("message")}
-        compteur={`${compteurMessage}/${LIMITES_CONTACT.message.max}`}
-      >
+        {erreurs.sujet && <p className="text-xs text-destructive">{erreurs.sujet}</p>}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="message">
+          Message <span className="text-destructive">*</span>
+        </Label>
         <textarea
-          id="contact-message"
-          rows={6}
-          className="vt-fld-input"
+          id="message"
           value={valeurs.message}
-          maxLength={LIMITES_CONTACT.message.max}
-          onChange={(e) => modifier("message", e.target.value)}
-          onBlur={() => marquerTouche("message")}
-          placeholder="Message"
-          aria-invalid={!!erreurAffichee("message")}
+          onChange={(e) => mettreAJour("message", e.target.value)}
+          placeholder="Décrivez votre demande..."
+          rows={5}
+          className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
-      </Champ>
-
-      <div className="vt-form-foot" style={{ justifyContent: "space-between" }}>
-        <p className="vt-note">
-          <span style={{ color: "var(--err)" }}>*</span> Champs obligatoires. Vos données ne servent qu'à traiter votre demande.
-        </p>
-        <button type="submit" className="vt-btn vt-btn-primary" disabled={mutation.isPending}>
-          {mutation.isPending ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Send size={16} aria-hidden="true" />}
-          {mutation.isPending ? "Envoi en cours…" : "Envoyer le message"}
-        </button>
+        {erreurs.message && <p className="text-xs text-destructive">{erreurs.message}</p>}
       </div>
-    </form>
-  )
-}
-
-interface ChampProps {
-  id: string
-  label: string
-  children: ReactNode
-  icone?: ReactNode
-  requis?: boolean
-  aide?: string
-  erreur?: string
-  valide?: boolean
-  compteur?: string
-}
-
-// Champ a libelle flottant (maquette) : le libelle remonte a la saisie ou au focus.
-// Le libelle est place apres le champ pour que les selecteurs frere (+) fonctionnent.
-function Champ({ id, label, children, icone, requis, aide, erreur, valide, compteur }: ChampProps) {
-  return (
-    <div className={cn("vt-fld", erreur && "vt-bad", !erreur && valide && "vt-good")}>
-      {icone}
-      {children}
-      <label htmlFor={id} className="vt-fld-label">
-        {label}
-        {requis && <span style={{ color: "var(--err)", marginLeft: 2 }}>*</span>}
-        {valide && <CheckCircle2 size={14} aria-label="Champ valide" style={{ display: "inline", marginLeft: 6, color: "var(--brand)" }} />}
-      </label>
-      <div className="vt-help" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-        {erreur ? (
-          <span id={`${id}-erreur`} role="alert" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <AlertCircle size={12} aria-hidden="true" />
-            {erreur}
-          </span>
+      <Button type="submit" disabled={mutation.isPending} className="self-start">
+        {mutation.isPending ? (
+          <>
+            <Loader2 size={16} className="animate-spin" />
+            Envoi en cours...
+          </>
         ) : (
-          <span>{aide}</span>
+          <>
+            <Send size={16} />
+            Envoyer
+          </>
         )}
-        {compteur && <span style={{ fontVariantNumeric: "tabular-nums", flex: "none" }}>{compteur}</span>}
-      </div>
-    </div>
+      </Button>
+    </form>
   )
 }

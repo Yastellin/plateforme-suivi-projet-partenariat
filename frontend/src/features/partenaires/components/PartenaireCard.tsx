@@ -3,6 +3,7 @@ import { Building2, Globe, Star } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { obtenirInfoStatut } from "@/lib/status-mappings"
+import { resoudreUrlFichier } from "@/lib/url"
 import type { Partenaire } from "@/types/api"
 
 interface PartenaireCardProps {
@@ -26,7 +27,7 @@ export function PartenaireCard({ partenaire, onClic }: PartenaireCardProps) {
         <CardContent className="flex items-start gap-3">
           {partenaire.logo_url ? (
             <img
-              src={partenaire.logo_url}
+              src={resoudreUrlFichier(partenaire.logo_url)}
               alt={`Logo de ${partenaire.nom}`}
               className="size-12 shrink-0 rounded-lg border border-border object-contain p-1"
             />

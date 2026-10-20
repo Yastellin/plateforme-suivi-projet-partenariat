@@ -15,10 +15,14 @@ import { randomUUID } from 'crypto';
 import { TypeDocument } from '../../common/enums/type-document.enum';
 import { Projet } from '../../projets/entities/projet.entity';
 import { Convention } from '../../conventions/entities/convention.entity';
+import { CotutelleThese } from '../../cotutelles/entities/cotutelle-these.entity';
+import { Partenariat } from '../../partenariats/entities/partenariat.entity';
 
 @Entity('Document')
 @Index(['projet_id'])
 @Index(['convention_id'])
+@Index(['cotutelle_id'])
+@Index(['partenariat_id'])
 @Index(['est_archive'])
 export class Document {
   @PrimaryColumn('uuid')
@@ -45,6 +49,12 @@ export class Document {
   @Column({ type: 'uuid', nullable: true })
   convention_id: string | null;
 
+  @Column({ type: 'uuid', nullable: true })
+  cotutelle_id: string | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  partenariat_id: string | null;
+
   @ManyToOne(() => Projet, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'projet_id' })
   projet: Projet | null;
@@ -52,6 +62,14 @@ export class Document {
   @ManyToOne(() => Convention, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'convention_id' })
   convention: Convention | null;
+
+  @ManyToOne(() => CotutelleThese, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'cotutelle_id' })
+  cotutelle: CotutelleThese | null;
+
+  @ManyToOne(() => Partenariat, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'partenariat_id' })
+  partenariat: Partenariat | null;
 
   @CreateDateColumn({ type: 'timestamp', precision: 3 })
   created_at: Date;

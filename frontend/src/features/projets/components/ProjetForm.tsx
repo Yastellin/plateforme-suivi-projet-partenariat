@@ -1,3 +1,4 @@
+// src/features/projets/components/ProjetForm.tsx
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
@@ -7,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { creerSchemaProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
-import type { PorteurFormValue } from "@/lib/validators/projet.schema"
 import { useCreateProjet } from "@/features/projets/api/useCreateProjet"
 import { useUpdateProjet } from "@/features/projets/api/useUpdateProjet"
 import { SelectionPorteur } from "@/features/projets/components/SelectionPorteur"
@@ -54,9 +54,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
       date_debut: projet?.date_debut?.slice(0, 10) ?? "",
       date_fin_prevue: projet?.date_fin_prevue?.slice(0, 10) ?? "",
       statut: projet?.statut ?? "BROUILLON",
-      porteur: projet?.porteur_id
-        ? { mode: "existant" as const, porteur_id: projet.porteur_id }
-        : null,
+      porteur_id: projet?.porteur_id ?? undefined,
       bailleurs_ids: projet?.bailleurs?.map((b) => b.bailleur_id) ?? [],
       beneficiaires_ids: projet?.beneficiaires?.map((b) => b.beneficiaire_id) ?? [],
       sites_ids: projet?.sites?.map((s) => s.site_id) ?? [],
@@ -135,13 +133,8 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
         <Label>Porteur</Label>
         <Controller
           control={control}
-          name="porteur"
-          render={({ field }) => (
-            <SelectionPorteur
-              valeur={field.value as PorteurFormValue | null}
-              onChange={field.onChange}
-            />
-          )}
+          name="porteur_id"
+          render={({ field }) => <SelectionPorteur valeur={field.value} onChange={field.onChange} />}
         />
       </div>
 

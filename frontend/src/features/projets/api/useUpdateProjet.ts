@@ -1,6 +1,7 @@
-﻿import { useMutation, useQueryClient } from "@tanstack/react-query"
+﻿// src/features/projets/api/useUpdateProjet.ts
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import { preparerPayloadProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
+import type { ProjetFormValues } from "@/lib/validators/projet.schema"
 import type { Projet } from "@/types/api"
 
 export function useUpdateProjet(id: string) {
@@ -8,8 +9,7 @@ export function useUpdateProjet(id: string) {
 
   return useMutation({
     mutationFn: async (valeurs: Partial<ProjetFormValues>) => {
-      const payload = preparerPayloadProjet(valeurs as ProjetFormValues)
-      const reponse = await apiClient.patch<Projet>(`/projets/${id}`, payload)
+      const reponse = await apiClient.patch<Projet>(`/projets/${id}`, valeurs)
       return reponse.data
     },
     onSuccess: (projet) => {

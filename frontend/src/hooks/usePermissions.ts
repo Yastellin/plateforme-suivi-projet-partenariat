@@ -8,7 +8,6 @@ interface Permissions {
   peutCreer: boolean;
   peutModifier: boolean;
   peutArchiver: boolean;
-  /** Soumission a la Presidence : reservee au compte ETABLISSEMENT. */
   peutSoumettre: boolean;
   peutTeleverser: boolean;
   peutExporter: boolean;
@@ -33,7 +32,7 @@ export function usePermissions(): Permissions {
     peutCreer: peutEcrire,
     peutModifier: peutEcrire,
     peutArchiver: role === 'PRESIDENCE',
-    peutSoumettre: role === 'ETABLISSEMENT',
+    peutSoumettre: peutEcrire,
     peutTeleverser: peutEcrire,
     peutExporter: role === 'PRESIDENCE',
     peutGererSynthese: role === 'PRESIDENCE',

@@ -1,16 +1,11 @@
 // src/features/espace-public/pages/AProposPage.tsx
 import { Building2, Target, Eye, Users, Handshake } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 
 // Page "A propos" de la vitrine publique (section 6.2 : navigation
 // Accueil, A propos, Etablissements...). Presente la mission et la vision
 // de la plateforme de suivi des partenariats.
 export function AProposPage() {
-  const { data, isLoading } = usePublicAccueil()
-  const compteurs = data?.compteurs
-
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       {/* En-tete */}
@@ -108,29 +103,28 @@ export function AProposPage() {
         </div>
       </div>
 
-      {/* Chiffres cles : decomptes reels de la base de donnees */}
+      {/* Chiffres cles */}
       <div className="mt-12 rounded-xl bg-accent/30 p-8 text-center">
         <h2 className="font-heading text-xl font-semibold text-foreground">
           L'Université de Fianarantsoa en chiffres
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Des chiffres mis à jour en temps réel à partir de la plateforme.
+          Une institution historique au cœur de la coopération universitaire internationale.
         </p>
-        <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-5">
-          {isLoading || !compteurs
-            ? [...Array(5)].map((_, i) => <Skeleton key={i} className="mx-auto h-16 w-24" />)
-            : [
-                { valeur: compteurs.nombre_etablissements, label: "Établissements" },
-                { valeur: compteurs.nombre_partenaires, label: "Partenaires actifs" },
-                { valeur: compteurs.nombre_pays_partenaires, label: "Pays partenaires" },
-                { valeur: compteurs.nombre_projets_actifs, label: "Projets actifs" },
-                { valeur: compteurs.nombre_publications, label: "Publications" },
-              ].map((chiffre) => (
-                <div key={chiffre.label}>
-                  <p className="font-heading text-2xl font-bold text-primary">{chiffre.valeur}</p>
-                  <p className="text-xs text-muted-foreground">{chiffre.label}</p>
-                </div>
-              ))}
+        <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-4">
+          {[
+            { valeur: "1961", label: "Année de création" },
+            { valeur: "13", label: "Facultés" },
+            { valeur: "30 000+", label: "Étudiants" },
+            { valeur: "50+", label: "Partenaires internationaux" },
+          ].map((chiffre) => (
+            <div key={chiffre.label}>
+              <p className="font-heading text-2xl font-bold text-primary">
+                {chiffre.valeur}
+              </p>
+              <p className="text-xs text-muted-foreground">{chiffre.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

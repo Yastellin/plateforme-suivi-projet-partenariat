@@ -1,5 +1,5 @@
 // src/features/projets/components/ProjetWizard.tsx
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
@@ -21,15 +21,16 @@ import { SelectionBailleurs } from "@/features/projets/components/SelectionBaill
 import { SelectionBeneficiaires } from "@/features/projets/components/SelectionBeneficiaires"
 import { SelectionSites } from "@/features/projets/components/SelectionSites"
 import { useCreateProjet } from "@/features/projets/api/useCreateProjet"
-import { useEtablissements } from "@/features/etablissements/api/useEtablissements"
 import { useWizardDraft } from "@/components/forms/wizard/useWizardDraft"
 import { creerSchemaProjet, type ProjetFormValues } from "@/lib/validators/projet.schema"
-import type { PorteurFormValue } from "@/lib/validators/projet.schema"
-import type { Projet } from "@/types/api"
+import type { Etablissement, Projet } from "@/types/api"
 
 interface ProjetWizardProps {
   onSucces: (projet: Projet) => void
   onAnnuler: () => void
+  // Fourni a la presidence uniquement : son compte n'est rattache a aucun
+  // etablissement, elle doit donc designer le porteur du projet.
+  etablissements?: Etablissement[]
 }
 
 const STATUTS = [
@@ -52,13 +53,10 @@ const ETAPES = [
 // Wizard multi-etapes pour la creation d'un projet (section 7.2 :
 // "wizard de creation"). L'etablissement cree toujours en BROUILLON
 // (section 5). Etapes numerotees, barre de progression, recapitulatif.
-export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
+export function ProjetWizard({ onSucces, onAnnuler, etablissements }: ProjetWizardProps) {
   const [etapeActive, setEtapeActive] = useState(0)
   const creation = useCreateProjet()
-  // Liste complete des etablissements : alimente l'etape 3 (etablissement
-  // responsable facultatif) et le recapitulatif (une seule requete, cache partage).
-  const { data: pageEtablissements } = useEtablissements({ page: 1, limit: 100 })
-  const etablissements = pageEtablissements?.data ?? []
+  const afficherSelectionEtablissement = etablissements !== undefined
 
   const {
     register,
@@ -69,7 +67,10 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
     formState: { errors },
   } = useForm<ProjetFormValues>({
     resolver: zodResolver(
-      creerSchemaProjet({ exigerDateDebutFuture: true }),
+      creerSchemaProjet({
+        exigerDateDebutFuture: true,
+        etablissementObligatoire: afficherSelectionEtablissement,
+      }),
     ) as any,
     mode: "onChange",
     reValidateMode: "onChange",
@@ -83,14 +84,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
       date_fin_prevue: "",
       statut: "BROUILLON",
       etablissement_id: "",
-      // Porteur obligatoire : on arrive sur l'etape 3 avec le formulaire
-      // "nouveau porteur" deja affiche (champs visibles immediatement).
-      porteur: {
-        mode: "nouveau",
-        type_porteur: "PERSONNE",
-        nom: "",
-        institution_rattachement: "",
-      },
+      porteur_id: undefined,
       bailleurs_ids: [],
       beneficiaires_ids: [],
       sites_ids: [],
@@ -98,20 +92,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   })
 
   const valeurs = watch()
-  const dateDebut = watch("date_debut")
-  const dateFin = watch("date_fin_prevue")
   const derniereEtape = etapeActive === ETAPES.length - 1
-
-  // Les erreurs de dates croisees (fin <= debut) sont rattachees au champ
-  // date_fin_prevue, or React Hook Form ne revalide que le champ modifie.
-  // On relance donc le trigger des deux dates des qu'elles changent, pour que
-  // le message disparaisse des qu'il est corrige. On ne declenche rien tant
-  // que les deux dates ne sont pas renseignees (pas d'erreur a l'arrivee sur
-  // l'etape).
-  useEffect(() => {
-    if (!dateDebut || !dateFin) return
-    void trigger(["date_debut", "date_fin_prevue"])
-  }, [dateDebut, dateFin, trigger])
 
   // Sauvegarde auto brouillon toutes les 30s (section 8.2)
   const { effacerBrouillon } = useWizardDraft({
@@ -129,26 +110,9 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
       return
     }
 
-    // Etape 1 (informations) : les champs obligatoires doivent etre renseignes
-    // avant de passer aux dates (le superRefine de Zod ne s'applique que si le
-    // schema de base est valide, inutile d'avancer avec des champs vides).
-    if (etapeActive === 0) {
-      const infosValides = await trigger(["nom", "type"])
-      if (!infosValides) return
-    }
-
-    // Etape 2 (dates) : le passage est bloque tant que les dates sont invalides.
-    if (etapeActive === 1) {
-      const datesValides = await trigger(["date_debut", "date_fin_prevue"])
-      if (!datesValides) return
-    }
-
-    // Etape 3 (porteur) : le porteur est obligatoire, le schema valide la
-    // union discriminee en entier (porteur existant selectionne ou porteur
-    // nouveau completement renseigne).
-    if (etapeActive === 2) {
-      const porteurValide = await trigger("porteur")
-      if (!porteurValide) return
+    if (etapeActive === 0 && afficherSelectionEtablissement) {
+      const valide = await trigger("etablissement_id")
+      if (!valide) return
     }
 
     setEtapeActive((e) => e + 1)
@@ -172,6 +136,29 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const contenuEtapes = [
     // Etape 1 : Informations generales
     <div key="info" className="flex flex-col gap-4">
+      {afficherSelectionEtablissement && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="etablissement_id" requis>
+            Établissement porteur
+          </Label>
+          <select
+            id="etablissement_id"
+            className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            aria-invalid={!!errors.etablissement_id}
+            {...register("etablissement_id")}
+          >
+            <option value="">Sélectionnez un établissement</option>
+            {(etablissements ?? []).map((etablissement) => (
+              <option key={etablissement.id} value={etablissement.id}>
+                {etablissement.sigle ? `${etablissement.sigle} — ${etablissement.nom}` : etablissement.nom}
+              </option>
+            ))}
+          </select>
+          {errors.etablissement_id && (
+            <p className="text-sm text-destructive">{errors.etablissement_id.message}</p>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="nom">
@@ -281,60 +268,16 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
       </p>
     </div>,
 
-    // Etape 3 : Porteur (obligatoire) et etablissement responsable (facultatif)
-    <div key="porteur" className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <Label>
-          Porteur du projet <span className="text-destructive">*</span>
-        </Label>
-        <Controller
-          control={control}
-          name="porteur"
-          render={({ field }) => (
-            <SelectionPorteur
-              valeur={field.value as PorteurFormValue | null}
-              onChange={field.onChange}
-            />
-          )}
-        />
-        {errors.porteur && (
-          <p className="text-sm text-destructive">
-            {messageErreurPorteur(errors.porteur) ??
-              "Le porteur du projet est obligatoire."}
-          </p>
+    // Etape 3 : Porteur
+    <div key="porteur" className="flex flex-col gap-1.5">
+      <Label>Porteur du projet</Label>
+      <Controller
+        control={control}
+        name="porteur_id"
+        render={({ field }) => (
+          <SelectionPorteur valeur={field.value} onChange={field.onChange} />
         )}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="etablissement_id">
-          Établissement responsable (facultatif)
-        </Label>
-        <Controller
-          control={control}
-          name="etablissement_id"
-          render={({ field }) => (
-            <select
-              id="etablissement_id"
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              aria-invalid={!!errors.etablissement_id}
-              value={field.value ?? ""}
-              onChange={(e) => field.onChange(e.target.value)}
-            >
-              <option value="">Aucun</option>
-              {etablissements.map((etablissement) => (
-                <option key={etablissement.id} value={etablissement.id}>
-                  {etablissement.sigle
-                    ? `${etablissement.sigle} — ${etablissement.nom}`
-                    : etablissement.nom}
-                </option>
-              ))}
-            </select>
-          )}
-        />
-        <p className="text-xs text-muted-foreground">
-          Un projet transversal ou gere par la Présidence peut rester sans
-          etablissement.
-        </p>
-      </div>
+      />
     </div>,
 
     // Etape 4 : Referentiels (bailleurs, beneficiaires, sites)
@@ -378,15 +321,14 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
         <RecapChamp label="Nom" valeur={valeurs.nom || "—"} />
-        <RecapChamp
-          label="Établissement responsable"
-          valeur={
-            valeurs.etablissement_id
-              ? (etablissements.find((e) => e.id === valeurs.etablissement_id)
-                  ?.nom ?? "—")
-              : "Aucun"
-          }
-        />
+        {afficherSelectionEtablissement && (
+          <RecapChamp
+            label="Établissement porteur"
+            valeur={
+              etablissements?.find((e) => e.id === valeurs.etablissement_id)?.nom ?? "—"
+            }
+          />
+        )}
         <RecapChamp label="Type" valeur={valeurs.type || "—"} />
         <RecapChamp label="Domaine" valeur={valeurs.domaine || "—"} />
         <RecapChamp
@@ -398,7 +340,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         <RecapChamp label="Statut" valeur={STATUTS.find((s) => s.value === valeurs.statut)?.label ?? valeurs.statut} />
         <RecapChamp
           label="Porteur"
-          valeur={libellePorteurRecap(valeurs.porteur)}
+          valeur={valeurs.porteur_id ? "Sélectionné" : "Non défini"}
         />
         <RecapChamp label="Bailleurs" valeur={`${valeurs.bailleurs_ids?.length ?? 0} sélectionné(s)`} />
         <RecapChamp label="Bénéficiaires" valeur={`${valeurs.beneficiaires_ids?.length ?? 0} sélectionné(s)`} />
@@ -451,24 +393,6 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   )
 }
 
-// Les erreurs de la union discriminee "porteur" sont parfois imbriquees
-// (porteur.nom, porteur.porteur_id, porteur.etablissement_id) : on en extrait
-// le premier message affichable sous le champ.
-function messageErreurPorteur(erreur: unknown): string | undefined {
-  if (!erreur || typeof erreur !== "object") return undefined
-
-  for (const cle of ["nom", "porteur_id", "etablissement_id"]) {
-    const imbrique = (erreur as Record<string, unknown>)[cle]
-    if (imbrique && typeof imbrique === "object") {
-      const message = (imbrique as { message?: unknown }).message
-      if (typeof message === "string") return message
-    }
-  }
-
-  const message = (erreur as { message?: unknown }).message
-  return typeof message === "string" ? message : undefined
-}
-
 function RecapChamp({ label, valeur }: { label: string; valeur: string }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-md border border-border p-3">
@@ -476,19 +400,4 @@ function RecapChamp({ label, valeur }: { label: string; valeur: string }) {
       <span className="text-sm font-medium text-foreground">{valeur}</span>
     </div>
   )
-}
-
-function libellePorteurRecap(
-  porteur: PorteurFormValue | null | undefined,
-): string {
-  if (!porteur) return "Non defini"
-  if (porteur.mode === "existant") return "Porteur existant selectionne"
-  switch (porteur.type_porteur) {
-    case "PERSONNE":
-      return `Personne : ${porteur.nom}`
-    case "ETABLISSEMENT":
-      return "Etablissement"
-    case "AUTRE":
-      return `Autre : ${porteur.nom}`
-  }
 }

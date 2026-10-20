@@ -7,17 +7,18 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { HistoriqueService } from '../historique/historique.service';
+import type { ContexteUtilisateur } from '../historique/historique.service';
+import { ActionHistorique } from '../common/enums/action-historique.enum';
 import { DataSource, ILike, Repository } from 'typeorm';
 import { CreateProjetDto } from './dto/create-projet.dto';
 import { UpdateProjetDto } from './dto/update-projet.dto';
 import { QueryProjetDto } from './dto/query-projet.dto';
 import { ProjetResponseDto } from './dto/projet-response.dto';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
-import { TypePorteur } from '../common/enums/type-porteur.enum';
 import { TypeNotification } from '../common/enums/type-notification.enum';
 import { PrioriteNotification } from '../common/enums/priorite-notification.enum';
 import { Projet } from './entities/projet.entity';
-import { Porteur } from '../referentiels/porteurs/entities/porteur.entity';
 import { ProjetPartenaire } from './entities/projet-partenaire.entity';
 import { ProjetBeneficiaire } from './entities/projet-beneficiaire.entity';
 import { ProjetBailleur } from './entities/projet-bailleur.entity';
@@ -25,7 +26,6 @@ import { ProjetSite } from './entities/projet-site.entity';
 import { Activite } from './entities/activite.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
-import { PorteurResponseDto } from '../referentiels/porteurs/dto/porteur-response.dto';
 
 @Injectable()
 export class ProjetsService {
@@ -48,10 +48,11 @@ export class ProjetsService {
     private partenariatRepo: Repository<Partenariat>,
     private dataSource: DataSource,
     private eventEmitter: EventEmitter2,
+    private historique: HistoriqueService,
   ) {}
 
   async create(
-    etablissementId: string | null,
+    etablissementId: string,
     dto: CreateProjetDto,
   ): Promise<ProjetResponseDto> {
     const projetId = await this.dataSource.transaction(async (manager) => {
@@ -59,15 +60,11 @@ export class ProjetsService {
       const partenariatRepo = manager.getRepository(Partenariat);
       const projetRepo = manager.getRepository(Projet);
 
-      // L'etablissement est facultatif (projet transversal ou gere par la
-      // Presidence) : on ne verifie son existence que s'il est fourni.
-      if (etablissementId) {
-        const etablissement = await etablissementRepo.findOneBy({
-          id: etablissementId,
-        });
-        if (!etablissement) {
-          throw new NotFoundException('Établissement non trouvé');
-        }
+      const etablissement = await etablissementRepo.findOneBy({
+        id: etablissementId,
+      });
+      if (!etablissement) {
+        throw new NotFoundException('Établissement non trouvé');
       }
 
       if (dto.partenariat_id) {
@@ -78,65 +75,6 @@ export class ProjetsService {
         if (!partenariat) {
           throw new NotFoundException('Partenariat non trouvé');
         }
-      }
-
-      // Porteur polymorphe : porteur_id (existant) et porteur (a creer) sont
-      // mutuellement exclusifs. Si un porteur est fourni, on le cree dans la
-      // meme transaction puis on derive son id pour l'attacher au projet.
-      if (dto.porteur_id && dto.porteur) {
-        throw new BadRequestException(
-          'Fournissez porteur_id ou un objet porteur, pas les deux.',
-        );
-      }
-
-      let porteurId: string | null = dto.porteur_id ?? null;
-
-      if (dto.porteur) {
-        const porteurRepo = manager.getRepository(Porteur);
-
-        // Un porteur ETABLISSEMENT doit viser un etablissement reel.
-        if (dto.porteur.type_porteur === TypePorteur.ETABLISSEMENT) {
-          if (!dto.porteur.etablissement_id) {
-            throw new BadRequestException(
-              "Un porteur de type etablissement doit pointer vers un etablissement.",
-            );
-          }
-          const etablissementPorteur = await etablissementRepo.findOneBy({
-            id: dto.porteur.etablissement_id,
-          });
-          if (!etablissementPorteur) {
-            throw new NotFoundException(
-              'Etablissement non trouve pour le porteur.',
-            );
-          }
-        }
-
-        // Doublon sur le nom (seulement quand un nom est fourni).
-        if (dto.porteur.nom) {
-          const doublon = await porteurRepo.findOne({
-            where: { nom: ILike(dto.porteur.nom) },
-          });
-          if (doublon) {
-            throw new ConflictException(
-              `Un porteur nomme "${dto.porteur.nom}" existe deja.`,
-            );
-          }
-        }
-
-        const porteur = porteurRepo.create({
-          type_porteur: dto.porteur.type_porteur,
-          nom:
-            dto.porteur.type_porteur === TypePorteur.ETABLISSEMENT
-              ? null
-              : (dto.porteur.nom ?? null),
-          institution_rattachement: dto.porteur.institution_rattachement ?? null,
-          etablissement_id:
-            dto.porteur.type_porteur === TypePorteur.ETABLISSEMENT
-              ? (dto.porteur.etablissement_id ?? null)
-              : null,
-        });
-        const savedPorteur = await porteurRepo.save(porteur);
-        porteurId = savedPorteur.id;
       }
 
       const projet = projetRepo.create({
@@ -151,7 +89,7 @@ export class ProjetsService {
         archive: false,
         etablissement_id: etablissementId,
         partenariat_id: dto.partenariat_id ?? null,
-        porteur_id: porteurId,
+        porteur_id: dto.porteur_id ?? null,
       });
 
       const savedProjet = await projetRepo.save(projet);
@@ -234,7 +172,7 @@ export class ProjetsService {
       relations: {
         etablissement: true,
         partenariat: true,
-        porteur: { etablissement: true },
+        porteur: true,
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -253,7 +191,7 @@ export class ProjetsService {
 
   async findOne(
     id: string,
-    etablissementId?: string | null,
+    etablissementId?: string,
   ): Promise<ProjetResponseDto> {
     const where: any = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
@@ -263,7 +201,7 @@ export class ProjetsService {
       relations: {
         etablissement: true,
         partenariat: true,
-        porteur: { etablissement: true },
+        porteur: true,
       },
     });
     if (!projet) {
@@ -309,6 +247,7 @@ export class ProjetsService {
   async soumettre(
     id: string,
     etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
   ): Promise<ProjetResponseDto> {
     const projet = await this.findOne(id, etablissementId);
 
@@ -318,7 +257,10 @@ export class ProjetsService {
       );
     }
 
-    await this.projetRepo.update(id, { statut: StatutProjet.EN_ATTENTE });
+    await this.projetRepo.update(id, {
+      statut: StatutProjet.EN_ATTENTE,
+      soumis_le: new Date(),
+    });
 
     this.eventEmitter.emit('projet.soumis', {
       type: TypeNotification.PROJET_SOUMIS,
@@ -329,10 +271,93 @@ export class ProjetsService {
       reference_id: id,
     });
 
+    await this.historique.enregistrer({
+      action: ActionHistorique.SOUMISSION,
+      entite_type: 'Projet',
+      entite_id: id,
+      entite_nom: projet.nom,
+      utilisateur: utilisateur ?? null,
+    });
+
     return this.findOne(id, etablissementId);
   }
 
-  async archiver(id: string): Promise<ProjetResponseDto> {
+  /** Soumission en masse : chaque identifiant est traite individuellement. */
+  async soumettreEnMasse(
+    ids: string[],
+    etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<{ total: number; reussis: string[]; echecs: { id: string; erreur: string }[] }> {
+    if (ids.length === 0) {
+      throw new BadRequestException('Aucun projet selectionne');
+    }
+
+    const reussis: string[] = [];
+    const echecs: { id: string; erreur: string }[] = [];
+
+    for (const id of ids) {
+      try {
+        await this.soumettre(id, etablissementId, utilisateur);
+        reussis.push(id);
+      } catch (erreur) {
+        echecs.push({
+          id,
+          erreur: erreur instanceof Error ? erreur.message : String(erreur),
+        });
+      }
+    }
+
+    if (reussis.length === 0 && echecs.length > 0) {
+      throw new BadRequestException(
+        `Aucun projet n'a pu etre soumis : ${echecs
+          .map((e) => e.erreur)
+          .join(' ; ')}`,
+      );
+    }
+
+    return { total: ids.length, reussis, echecs };
+  }
+
+  /** La presidence valide et publie un projet soumis. */
+  async publier(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<ProjetResponseDto> {
+    const projet = await this.findOne(id);
+
+    if (!projet.soumis_le) {
+      throw new ConflictException(
+        'Seul un projet soumis a la presidence peut etre publie',
+      );
+    }
+
+    await this.projetRepo.update(id, { publie_le: new Date() });
+
+    this.eventEmitter.emit('projet.publie', {
+      type: TypeNotification.PROJET_PUBLIE,
+      priorite: PrioriteNotification.MOYENNE,
+      titre: `Projet publie : ${projet.nom}`,
+      message: `Le projet "${projet.nom}" a ete publie par la presidence.`,
+      reference_type: 'Projet',
+      reference_id: id,
+      etablissement_id: projet.etablissement_id,
+    });
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.PUBLICATION,
+      entite_type: 'Projet',
+      entite_id: id,
+      entite_nom: projet.nom,
+      utilisateur: utilisateur ?? null,
+    });
+
+    return this.findOne(id);
+  }
+
+  async archiver(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<ProjetResponseDto> {
     const projet = await this.projetRepo.findOneBy({ id, archive: false });
     if (!projet) throw new NotFoundException('Projet non trouvé');
 
@@ -352,6 +377,15 @@ export class ProjetsService {
 
     await this.projetRepo.update(id, { archive: true });
     projet.archive = true;
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.ARCHIVAGE,
+      entite_type: 'Projet',
+      entite_id: projet.id,
+      entite_nom: projet.nom,
+      utilisateur: utilisateur ?? null,
+    });
+
     return this.enrichir(projet);
   }
 
@@ -403,19 +437,11 @@ export class ProjetsService {
       date_fin_prevue: projet.date_fin_prevue,
       statut: projet.statut,
       archive: projet.archive,
+      soumis_le: projet.soumis_le,
+      publie_le: projet.publie_le,
       etablissement_id: projet.etablissement_id,
       partenariat_id: projet.partenariat_id,
       porteur_id: projet.porteur_id,
-      porteur: projet.porteur
-        ? {
-            id: projet.porteur.id,
-            type_porteur: projet.porteur.type_porteur,
-            nom: projet.porteur.nom,
-            institution_rattachement: projet.porteur.institution_rattachement,
-            etablissement_id: projet.porteur.etablissement_id,
-            etablissement_nom: projet.porteur.etablissement?.nom ?? null,
-          }
-        : null,
       avancement,
       en_retard: enRetard,
       created_at: projet.created_at,

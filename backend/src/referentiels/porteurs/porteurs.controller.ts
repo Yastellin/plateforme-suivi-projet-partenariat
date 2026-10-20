@@ -18,7 +18,6 @@ import {
 import { PorteursService } from './porteurs.service';
 import { CreatePorteurDto } from './dto/create-porteur.dto';
 import { UpdatePorteurDto } from './dto/update-porteur.dto';
-import { QueryPorteurDto } from './dto/query-porteur.dto';
 import { PorteurResponseDto } from './dto/porteur-response.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -39,11 +38,10 @@ export class PorteursController {
 
   @Get()
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
-  @ApiOperation({ summary: 'Lister les porteurs (pagine)' })
+  @ApiOperation({ summary: 'Lister les porteurs' })
   @ApiResponse({ status: 200, type: [PorteurResponseDto] })
-  findAll(@Query() query: QueryPorteurDto) {
-    const { page, limit, nom } = query;
-    return this.porteursService.findAll(page, limit, nom);
+  findAll(@Query('nom') nom?: string): Promise<PorteurResponseDto[]> {
+    return this.porteursService.findAll(nom);
   }
 
   @Get(':id')

@@ -88,7 +88,7 @@ Write-Host "[OK] Login DECIDEUR" -ForegroundColor Green
 Section "1. Recuperation des IDs"
 
 $rEtab = Invoke-Api -Method GET -Url "$API/etablissements" -Token $TOKEN_PRES
-$ETAB_ID = $rEtab.Content.data.data[0].id
+$ETAB_ID = $rEtab.Content.data[0].id
 Write-Host "ETABLISSEMENT ID : $ETAB_ID"
 
 $rPart = Invoke-Api -Method GET -Url "$API/partenaires" -Token $TOKEN_PRES

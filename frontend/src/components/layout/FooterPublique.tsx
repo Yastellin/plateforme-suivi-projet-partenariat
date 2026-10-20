@@ -1,48 +1,74 @@
 // src/components/layout/FooterPublique.tsx
 import { Link } from "react-router-dom"
+import { Mail, MapPin, Phone } from "lucide-react"
 
-// Pied de page de la vitrine publique (style maquette). Ne contient que des
-// liens reels de la plateforme : aucune coordonnee de contact n'est inventee.
+const LIENS_RAPIDES = [
+  { label: "À propos", href: "/a-propos" },
+  { label: "Établissements", href: "/etablissements" },
+  { label: "Partenaires", href: "/partenaires" },
+  { label: "Projets & partenariats", href: "/projets-partenariats" },
+  { label: "Contact", href: "/contact" },
+]
+
+// Pied de page de la vitrine publique : identite, liens rapides et coordonnees.
 export function FooterPublique() {
   return (
-    <footer className="vt-footer">
-      <div className="vt-wrap">
-        <div className="vt-footer-cols">
-          <div className="vt-about-f">
-            <Link to="/" className="vt-brandmark">
-              <span className="vt-logo" aria-hidden="true">UF</span>
-              <span>
-                <span className="vt-brand-name">Partenariats UF</span>
-                <span className="vt-brand-sub">Université de Fianarantsoa</span>
-              </span>
-            </Link>
-            <p>Le suivi public des partenariats de l'université et de ses établissements.</p>
+    <footer className="relative mt-24 overflow-hidden border-t border-border bg-gradient-to-b from-background to-accent/30">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3 lg:px-8">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[var(--color-brand-deep)] text-sm font-bold text-primary-foreground">
+              SP
+            </span>
+            <span className="font-heading text-base font-semibold text-foreground">
+              Suivi Partenariats
+            </span>
           </div>
-          <div>
-            <h4>Découvrir</h4>
-            <ul>
-              <li><Link to="/a-propos">À propos</Link></li>
-              <li><Link to="/etablissements">Établissements</Link></li>
-              <li><Link to="/projets-partenariats?onglet=partenaires">Partenaires</Link></li>
-              <li><Link to="/projets-partenariats">Projets et partenariats</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4>Nous joindre</h4>
-            <ul>
-              <li><Link to="/contact">Formulaire de contact</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4>Accès réservé</h4>
-            <ul>
-              <li><Link to="/connexion">Espace interne</Link></li>
-            </ul>
-          </div>
+          <p className="max-w-xs text-sm text-muted-foreground">
+            Plateforme centralisée de suivi des projets et partenariats de
+            l'Université de Fianarantsoa.
+          </p>
         </div>
-        <div className="vt-legal">
-          <span>© {new Date().getFullYear()} Université de Fianarantsoa. Tous droits réservés.</span>
+
+        <div>
+          <h2 className="font-heading text-sm font-semibold text-foreground">Navigation</h2>
+          <ul className="mt-3 flex flex-col gap-2">
+            {LIENS_RAPIDES.map((lien) => (
+              <li key={lien.href}>
+                <Link
+                  to={lien.href}
+                  className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                >
+                  {lien.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
+
+        <div>
+          <h2 className="font-heading text-sm font-semibold text-foreground">Contact</h2>
+          <ul className="mt-3 flex flex-col gap-2.5 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <MapPin size={16} className="mt-0.5 shrink-0 text-primary" />
+              B.P. 402, Fianarantsoa 301, Madagascar
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail size={16} className="shrink-0 text-primary" />
+              partenariats@univ-fianar.mg
+            </li>
+            <li className="flex items-center gap-2">
+              <Phone size={16} className="shrink-0 text-primary" />
+              +261 34 22 330 54
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-border/70">
+        <p className="mx-auto max-w-7xl px-4 py-5 text-center text-xs text-muted-foreground sm:px-6 lg:px-8">
+          &copy; {new Date().getFullYear()} Université de Fianarantsoa — Plateforme de suivi des projets et partenariats
+        </p>
       </div>
     </footer>
   )
