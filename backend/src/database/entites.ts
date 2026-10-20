@@ -15,6 +15,7 @@ import { Document } from '../documents/entities/document.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Configuration } from '../configuration/entities/configuration.entity';
 import { HistoriqueAction } from '../historique/entities/historique-action.entity';
+import { MessageContact } from '../messages-contact/entities/message-contact.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
@@ -47,6 +48,7 @@ export const ENTITES = [
   CotutelleThese,
   Document,
   Etablissement,
+  MessageContact,
   Notification,
   Partenaire,
   Partenariat,

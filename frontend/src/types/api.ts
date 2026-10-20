@@ -312,3 +312,86 @@ export interface ListeSyntheseItems {
 
 // Types hérités des modules pas encore reconstruits, à retirer au fur et à mesure
 export * from './api-heritage';
+
+/** Partenaire exposé publiquement (espace public). */
+export interface PartenairePublic {
+  id: string;
+  nom: string;
+  type: string;
+  pays: string;
+  description: string | null;
+  logo_url: string | null;
+  site_web: string | null;
+  est_strategique: boolean;
+}
+
+/** Projet exposé publiquement (espace public). */
+export interface EtablissementPublicRef {
+  id: string;
+  nom: string;
+  sigle: string | null;
+}
+
+export interface PartenairePublicRef {
+  id: string;
+  nom: string;
+  type: string;
+  pays: string;
+  logo_url: string | null;
+}
+
+export interface ProjetPublic {
+  id: string;
+  nom: string;
+  intitule_officiel: string | null;
+  type: string;
+  domaine: string | null;
+  statut: StatutProjet;
+  date_debut: string;
+  date_fin_prevue: string;
+  description: string | null;
+  publication_id: string | null;
+  etablissement: EtablissementPublicRef | null;
+  partenaires: PartenairePublicRef[];
+}
+
+/** Publication exposée publiquement (espace public). */
+export interface PhotoPublique {
+  id: string;
+  url_fichier: string;
+  legende: string | null;
+  ordre: number;
+}
+
+export interface PublicationPublique {
+  id: string;
+  titre: string;
+  description_publique: string | null;
+  date_publication: string | null;
+  resultats: string | null;
+  projet_id: string;
+  projet: {
+    id: string;
+    nom: string;
+    intitule_officiel: string | null;
+    etablissement: EtablissementPublicRef | null;
+  };
+  photo_url: string | null;
+  photos: PhotoPublique[];
+}
+
+/** Message envoyé via le formulaire de contact public. */
+export interface MessageContact {
+  id: string;
+  reference: string;
+  nom: string;
+  email: string;
+  telephone: string | null;
+  sujet: string;
+  message: string;
+  etablissement_id: string | null;
+  destinataire: { nom: string; sigle: string | null } | null;
+  est_lu: boolean;
+  date_lecture: string | null;
+  date_creation: string;
+}

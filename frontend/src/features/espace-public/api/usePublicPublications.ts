@@ -1,7 +1,7 @@
-﻿// src/features/espace-public/api/usePublicPublications.ts
+// src/features/espace-public/api/usePublicPublications.ts
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { PageServeur, Publication } from "@/types/api"
+import type { PageServeur, PublicationPublique } from "@/types/api"
 
 export interface FiltresPublicPublications {
   page?: number
@@ -15,7 +15,7 @@ export function usePublicPublications(filtres: FiltresPublicPublications = {}) {
   return useQuery({
     queryKey: ["public-publications", filtres],
     queryFn: async () => {
-      const reponse = await apiClient.get<PageServeur<Publication>>("/public/publications", {
+      const reponse = await apiClient.get<PageServeur<PublicationPublique>>("/public/publications", {
         params: filtres,
       })
       return reponse.data
