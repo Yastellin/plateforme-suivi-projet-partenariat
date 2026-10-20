@@ -228,6 +228,8 @@ export interface Partenaire {
   est_strategique: boolean;
   logo_url: string | null;
   archive: boolean;
+  soumis_le: string | null;
+  publie_le: string | null;
   etablissement_id: string;
   created_at: string;
   updated_at: string;
@@ -258,6 +260,10 @@ export interface Projet {
   etablissement_id: string | null;
   partenariat_id: string | null;
   porteur_id: string | null;
+  etablissement_nom: string | null;
+  etablissement_sigle: string | null;
+  soumis_le: string | null;
+  publie_le: string | null;
   avancement: number;
   en_retard: boolean;
   created_at: string;
@@ -282,6 +288,8 @@ export interface Partenariat {
   difficultes_contraintes: string | null;
   perspectives_recommandations: string | null;
   archive: boolean;
+  soumis_le: string | null;
+  publie_le: string | null;
   created_at: string;
   updated_at: string;
   etablissements: PartenariatEtablissementRef[];

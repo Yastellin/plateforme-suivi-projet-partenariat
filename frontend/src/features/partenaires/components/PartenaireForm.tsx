@@ -84,6 +84,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
           autoFocus
           placeholder="Ex : Airtel Madagascar"
           erreur={errors.nom?.message}
+          caracteresInterdits={/[^a-zA-ZÀ-ÿ\s]/g}
           {...register('nom')}
         />
         <FloatingLabelInput

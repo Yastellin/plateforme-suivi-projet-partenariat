@@ -3,23 +3,26 @@
 // et publications de l'Universite (onglets, recherche et pagination).
 import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Briefcase, Handshake, Newspaper, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { Briefcase, Building2, Handshake, Newspaper, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { useDebounce } from "@/hooks/useDebounce"
-import type { MetaPagination } from "@/types/api"
+import type { MetaPagination, Partenariat } from "@/types/api"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
+import { StatusBadge } from "@/components/shared/StatusBadge"
 import { CarteProjet, CartePartenaire, CartePublication } from "@/features/espace-public/components/CartesPubliques"
 import { usePublicProjets } from "@/features/espace-public/api/usePublicProjets"
 import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPartenaires"
+import { usePublicPartenariats } from "@/features/espace-public/api/usePublicPartenariats"
 import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
 import { usePublicEtablissements } from "@/features/espace-public/api/usePublicEtablissements"
 
-type Onglet = "projets" | "partenaires" | "publications"
-const ONGLETS: Onglet[] = ["projets", "partenaires", "publications"]
+type Onglet = "projets" | "partenariats" | "partenaires" | "publications"
+const ONGLETS: Onglet[] = ["projets", "partenariats", "partenaires", "publications"]
 const TAILLE_PAGE = 9
 
 function ongletDepuisUrl(valeur: string | null): Onglet {
@@ -150,6 +153,87 @@ function ListeProjets() {
   )
 }
 
+// Partenariats publies par la Presidence (flux publie_le) : liste non paginee.
+function ListePartenariats() {
+  const [recherche, setRecherche] = useState("")
+  const rechercheDebounced = useDebounce(recherche, 300)
+  const { data, isLoading } = usePublicPartenariats()
+
+  const partenariats = (data ?? []).filter((partenariat) => {
+    if (!rechercheDebounced) return true
+    const terme = rechercheDebounced.toLowerCase()
+    return (
+      partenariat.intitule.toLowerCase().includes(terme) ||
+      (partenariat.objet ?? "").toLowerCase().includes(terme) ||
+      partenariat.domaine.toLowerCase().includes(terme)
+    )
+  })
+
+  return (
+    <div className="flex flex-col gap-8">
+      <BarreRecherche
+        valeur={recherche}
+        onChange={setRecherche}
+        placeholder="Rechercher un partenariat…"
+      />
+      {isLoading ? (
+        <Chargement />
+      ) : partenariats.length === 0 ? (
+        <EmptyState
+          icone={Building2}
+          titre={recherche.trim() ? "Aucun partenariat trouvé" : "Aucun partenariat pour le moment"}
+          description={
+            recherche.trim()
+              ? "Essayez avec l'intitule, l'objet ou le domaine du partenariat."
+              : "Les partenariats publiés par la Présidence apparaîtront ici."
+          }
+        />
+      ) : (
+        <Grille>
+          {partenariats.map((partenariat) => (
+            <CartePartenariat key={partenariat.id} partenariat={partenariat} />
+          ))}
+        </Grille>
+      )}
+    </div>
+  )
+}
+
+// Carte d'un partenariat publie : intitule, domaine et etablissements rattaches.
+function CartePartenariat({ partenariat }: { partenariat: Partenariat }) {
+  return (
+    <Card className="h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+      <CardContent className="flex h-full flex-col gap-2 p-5">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-heading text-sm font-semibold text-foreground">
+            {partenariat.intitule}
+          </h3>
+          <StatusBadge libelle="Publié" tonalite="actif" />
+        </div>
+        {partenariat.objet && (
+          <p className="line-clamp-2 text-xs text-muted-foreground">{partenariat.objet}</p>
+        )}
+        <div className="mt-auto pt-2 text-xs text-muted-foreground">
+          <span className="font-medium">{partenariat.domaine}</span>
+        </div>
+        {partenariat.etablissements.length > 0 && (
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+            {partenariat.etablissements.slice(0, 3).map((etab) => (
+              <span key={etab.id} className="flex items-center gap-1">
+                <Building2 size={12} />
+                {etab.nom}
+              </span>
+            ))}
+            {partenariat.etablissements.length > 3 && (
+              <span>+{partenariat.etablissements.length - 3}</span>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 function ListePartenaires() {
   const [recherche, setRecherche] = useState("")
   const [page, setPage] = useState(1)
@@ -267,6 +351,9 @@ export function ProjetsPartenariatsPubliquePage() {
             <TabsTrigger value="projets" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Briefcase size={14} /> Projets
             </TabsTrigger>
+            <TabsTrigger value="partenariats" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Building2 size={14} /> Partenariats
+            </TabsTrigger>
             <TabsTrigger value="partenaires" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Handshake size={14} /> Partenaires
             </TabsTrigger>
@@ -277,6 +364,9 @@ export function ProjetsPartenariatsPubliquePage() {
 
           <TabsContent value="projets">
             <ListeProjets />
+          </TabsContent>
+          <TabsContent value="partenariats">
+            <ListePartenariats />
           </TabsContent>
           <TabsContent value="partenaires">
             <ListePartenaires />

@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import apiClient from "@/lib/api-client"
 import type { PublicationPublique } from "@/types/api"
 import { useState } from "react"
+import { resoudreUrlFichier } from "@/lib/url"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 // Page detail d'une publication publique (section 7.4 : "detail d'une
@@ -112,7 +113,7 @@ export function PublicationDetailPage() {
         <div className="mt-8">
           <div className="relative overflow-hidden rounded-xl bg-muted">
             <img
-              src={photos[photoActive].url_fichier}
+              src={resoudreUrlFichier(photos[photoActive].url_fichier)}
               alt={photos[photoActive].legende ?? publication.titre}
               className="h-64 w-full object-cover sm:h-96"
             />

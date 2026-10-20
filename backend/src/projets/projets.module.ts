@@ -11,6 +11,7 @@ import { ProjetSite } from './entities/projet-site.entity';
 import { Activite } from './entities/activite.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
+import { HistoriqueModule } from '../historique/historique.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Partenariat } from '../partenariats/entities/partenariat.entity';
       Etablissement,
       Partenariat,
     ]),
+    HistoriqueModule,
   ],
   controllers: [ProjetsController],
   providers: [ProjetsService, AvancementService],

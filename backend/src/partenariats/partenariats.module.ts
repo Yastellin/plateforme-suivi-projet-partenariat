@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HistoriqueModule } from '../historique/historique.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PartenariatsController } from './partenariats.controller';
 import { PartenariatsService } from './partenariats.service';
@@ -10,6 +11,7 @@ import { Partenaire } from '../partenaires/entities/partenaire.entity';
 
 @Module({
   imports: [
+    HistoriqueModule,
     TypeOrmModule.forFeature([
       Partenariat,
       PartenariatEtablissement,

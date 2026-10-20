@@ -7,6 +7,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { HistoriqueService } from '../historique/historique.service';
+import type { ContexteUtilisateur } from '../historique/historique.service';
+import { ActionHistorique } from '../common/enums/action-historique.enum';
 import { DataSource, ILike, Repository } from 'typeorm';
 import { CreateProjetDto } from './dto/create-projet.dto';
 import { UpdateProjetDto } from './dto/update-projet.dto';
@@ -48,6 +51,7 @@ export class ProjetsService {
     private partenariatRepo: Repository<Partenariat>,
     private dataSource: DataSource,
     private eventEmitter: EventEmitter2,
+    private historique: HistoriqueService,
   ) {}
 
   async create(
@@ -309,6 +313,7 @@ export class ProjetsService {
   async soumettre(
     id: string,
     etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
   ): Promise<ProjetResponseDto> {
     const projet = await this.findOne(id, etablissementId);
 
@@ -318,7 +323,10 @@ export class ProjetsService {
       );
     }
 
-    await this.projetRepo.update(id, { statut: StatutProjet.EN_ATTENTE });
+    await this.projetRepo.update(id, {
+      statut: StatutProjet.EN_ATTENTE,
+      soumis_le: new Date(),
+    });
 
     this.eventEmitter.emit('projet.soumis', {
       type: TypeNotification.PROJET_SOUMIS,
@@ -329,10 +337,93 @@ export class ProjetsService {
       reference_id: id,
     });
 
+    await this.historique.enregistrer({
+      action: ActionHistorique.SOUMISSION,
+      entite_type: 'Projet',
+      entite_id: id,
+      entite_nom: projet.nom,
+      utilisateur: utilisateur ?? null,
+    });
+
     return this.findOne(id, etablissementId);
   }
 
-  async archiver(id: string): Promise<ProjetResponseDto> {
+  /** Soumission en masse : chaque identifiant est traite individuellement. */
+  async soumettreEnMasse(
+    ids: string[],
+    etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<{ total: number; reussis: string[]; echecs: { id: string; erreur: string }[] }> {
+    if (ids.length === 0) {
+      throw new BadRequestException('Aucun projet selectionne');
+    }
+
+    const reussis: string[] = [];
+    const echecs: { id: string; erreur: string }[] = [];
+
+    for (const id of ids) {
+      try {
+        await this.soumettre(id, etablissementId, utilisateur);
+        reussis.push(id);
+      } catch (erreur) {
+        echecs.push({
+          id,
+          erreur: erreur instanceof Error ? erreur.message : String(erreur),
+        });
+      }
+    }
+
+    if (reussis.length === 0 && echecs.length > 0) {
+      throw new BadRequestException(
+        `Aucun projet n'a pu etre soumis : ${echecs
+          .map((e) => e.erreur)
+          .join(' ; ')}`,
+      );
+    }
+
+    return { total: ids.length, reussis, echecs };
+  }
+
+  /** La presidence valide et publie un projet soumis. */
+  async publier(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<ProjetResponseDto> {
+    const projet = await this.findOne(id);
+
+    if (!projet.soumis_le) {
+      throw new ConflictException(
+        'Seul un projet soumis a la presidence peut etre publie',
+      );
+    }
+
+    await this.projetRepo.update(id, { publie_le: new Date() });
+
+    this.eventEmitter.emit('projet.publie', {
+      type: TypeNotification.PROJET_PUBLIE,
+      priorite: PrioriteNotification.MOYENNE,
+      titre: `Projet publie : ${projet.nom}`,
+      message: `Le projet "${projet.nom}" a ete publie par la presidence.`,
+      reference_type: 'Projet',
+      reference_id: id,
+      etablissement_id: projet.etablissement_id,
+    });
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.PUBLICATION,
+      entite_type: 'Projet',
+      entite_id: id,
+      entite_nom: projet.nom,
+      utilisateur: utilisateur ?? null,
+    });
+
+    return this.findOne(id);
+  }
+
+  async archiver(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<ProjetResponseDto> {
     const projet = await this.projetRepo.findOneBy({ id, archive: false });
     if (!projet) throw new NotFoundException('Projet non trouvé');
 
@@ -352,6 +443,15 @@ export class ProjetsService {
 
     await this.projetRepo.update(id, { archive: true });
     projet.archive = true;
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.ARCHIVAGE,
+      entite_type: 'Projet',
+      entite_id: projet.id,
+      entite_nom: projet.nom,
+      utilisateur: utilisateur ?? null,
+    });
+
     return this.enrichir(projet);
   }
 
@@ -403,6 +503,8 @@ export class ProjetsService {
       date_fin_prevue: projet.date_fin_prevue,
       statut: projet.statut,
       archive: projet.archive,
+      soumis_le: projet.soumis_le,
+      publie_le: projet.publie_le,
       etablissement_id: projet.etablissement_id,
       partenariat_id: projet.partenariat_id,
       porteur_id: projet.porteur_id,

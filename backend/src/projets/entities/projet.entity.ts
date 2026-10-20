@@ -73,6 +73,12 @@ export class Projet {
   @Column({ type: 'text', nullable: true })
   etablissement_id: string | null;
 
+  @Column({ type: 'timestamp', precision: 3, nullable: true })
+  soumis_le: Date | null;
+
+  @Column({ type: 'timestamp', precision: 3, nullable: true })
+  publie_le: Date | null;
+
   @Column({ type: 'uuid', nullable: true })
   partenariat_id: string | null;
 

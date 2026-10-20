@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, Not, Repository } from 'typeorm';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Projet } from '../projets/entities/projet.entity';
 import { Convention } from '../conventions/entities/convention.entity';
 import { Publication } from '../publications/enitities/publication.entity';
+import { Partenariat } from '../partenariats/entities/partenariat.entity';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
 import { StatutConvention } from '../common/enums/statut-convention.enum';
 import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
@@ -14,6 +15,7 @@ import { Visibilite } from '../common/enums/visibilite.enum';
 import { AccueilPublicDto } from './dto/accueil-public.dto';
 import { EtablissementPublicDto } from './dto/etablissement-public.dto';
 import { PartenairePublicDto } from './dto/partenaire-public.dto';
+import { PartenariatPublicDto } from './dto/partenariat-public.dto';
 import { ProjetPublicDto } from './dto/projet-public.dto';
 import { PublicationPubliqueDto } from './dto/publication-publique.dto';
 import {
@@ -61,6 +63,8 @@ export class EspacePublicService {
     @InjectRepository(Partenaire)
     private partenaireRepo: Repository<Partenaire>,
     @InjectRepository(Projet) private projetRepo: Repository<Projet>,
+    @InjectRepository(Partenariat)
+    private partenariatRepo: Repository<Partenariat>,
     @InjectRepository(Convention)
     private conventionRepo: Repository<Convention>,
     @InjectRepository(Publication)
@@ -262,6 +266,48 @@ export class EspacePublicService {
     );
   }
 
+  /** Projets soumis et publies par la Presidence (etablissements inclus). */
+  async listerProjetsPublies(): Promise<ProjetPublicDto[]> {
+    const projets = await this.projetRepo.find({
+      where: {
+        archive: false,
+        publie_le: Not(null) as unknown as never,
+      },
+      relations: this.relationsProjet(),
+      order: { publie_le: 'DESC' },
+    });
+
+    return projets.map((projet) => this.versProjet(projet));
+  }
+
+  /** Partenariats soumis et publies par la Presidence (etablissements inclus). */
+  async listerPartenariatsPublies(): Promise<PartenariatPublicDto[]> {
+    const partenariats = await this.partenariatRepo.find({
+      where: {
+        archive: false,
+        publie_le: Not(null) as unknown as never,
+      },
+      relations: {
+        etablissements: { etablissement: true },
+      },
+      order: { publie_le: 'DESC' },
+    });
+
+    return partenariats.map((partenariat) => ({
+      id: partenariat.id,
+      intitule: partenariat.intitule,
+      objet: partenariat.objet,
+      domaine: partenariat.domaine,
+      date_debut: partenariat.date_debut,
+      date_fin: partenariat.date_fin,
+      etablissements: (partenariat.etablissements ?? []).map((lien) => ({
+        id: lien.etablissement.id,
+        nom: lien.etablissement.nom,
+        sigle: lien.etablissement.sigle,
+      })),
+    }));
+  }
+
   private relationsProjet() {
     return {
       etablissement: true,
@@ -335,6 +381,8 @@ export class EspacePublicService {
             sigle: projet.etablissement.sigle,
           }
         : null,
+      etablissement_nom: projet.etablissement?.nom ?? null,
+      etablissement_sigle: projet.etablissement?.sigle ?? null,
       // Seuls les partenaires publics et actifs sont exposés.
       partenaires: (projet.partenaires ?? [])
         .map((pp) => pp.partenaire)
@@ -378,5 +426,13 @@ export class EspacePublicService {
         ordre,
       })),
     };
+  }
+
+  // Methode issue de la branche arena : meme mapping que versPublication,
+  // conservee pour les consommateurs existants.
+  private mapPublicationPublique(
+    publication: Publication,
+  ): PublicationPubliqueDto {
+    return this.versPublication(publication);
   }
 }

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { FolderKanban, Handshake, Newspaper, Pause, Play, ChevronLeft, ChevronRight } from "lucide-react"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
+import { resoudreUrlFichier } from "@/lib/url"
 import {
   initiales,
   resumePartenaire,
@@ -41,7 +42,7 @@ function construireDiapositives(donnees: AccueilPublic | undefined): Diapositive
       icone: Newspaper,
       titre: publication.titre,
       texte: resumePublication(publication),
-      image: publication.photo_url,
+      image: resoudreUrlFichier(publication.photo_url),
       marque: publication.titre,
       cta: { to: `/projets-partenariats/publication/${publication.id}`, libelle: "Lire l'actualité" },
     })
@@ -71,7 +72,7 @@ function construireDiapositives(donnees: AccueilPublic | undefined): Diapositive
       icone: Handshake,
       titre: partenaire.nom,
       texte: resumePartenaire(partenaire),
-      image: partenaire.logo_url,
+      image: resoudreUrlFichier(partenaire.logo_url),
       marque: partenaire.nom,
       cta: { to: "/projets-partenariats?onglet=partenaires", libelle: "Voir les partenaires" },
     })
