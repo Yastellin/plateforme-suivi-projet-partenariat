@@ -1,12 +1,8 @@
 // src/features/espace-public/components/FormulaireContact.tsx
-import { useMemo, useState, type FormEvent } from "react"
+import { useMemo, useState, type FormEvent, type ReactNode } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Send, Loader2, AlertCircle, CheckCircle2, Copy } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { AlertCircle, Building2, CheckCircle2, Copy, Loader2, Mail, MessageSquare, Phone, Send, Tag, User } from "lucide-react"
 import apiClient from "@/lib/api-client"
 import { cn } from "@/lib/utils"
 import { usePublicEtablissements } from "@/features/espace-public/api/usePublicEtablissements"
@@ -23,7 +19,7 @@ interface ConfirmationEnvoi {
   reference: string
 }
 
-// Formulaire de contact public.
+// Formulaire de contact public (style maquette).
 // - Pendant la frappe : les caracteres interdits n'entrent pas dans le champ,
 //   et chaque champ est controle en direct des sa premiere saisie.
 // - A l'envoi : une reference unique est attribuee au message et affichee
@@ -109,101 +105,126 @@ export function FormulaireContact() {
 
   if (confirmation) {
     return (
-      <div role="status" className="flex flex-col gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-6">
-        <div className="flex items-center gap-2 text-primary">
-          <CheckCircle2 size={20} />
-          <h3 className="font-heading text-lg font-semibold">Message bien reçu</h3>
+      <div role="status" className="vt-confirm">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <CheckCircle2 size={20} aria-hidden="true" />
+          <h3 style={{ fontSize: 18 }}>Message bien reçu</h3>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p>
           Votre message a été transmis à l'équipe concernée. Conservez cette référence pour toute relance :
         </p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <code className="rounded-md bg-background px-4 py-2 font-mono text-lg tracking-wider text-foreground ring-1 ring-border">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+          <code
+            style={{
+              background: "#fff",
+              padding: "8px 16px",
+              borderRadius: 8,
+              fontFamily: "var(--font-mono)",
+              fontSize: 18,
+              letterSpacing: "0.08em",
+              color: "var(--text)",
+              border: "1px solid var(--line)",
+            }}
+          >
             {confirmation.reference}
           </code>
-          <Button type="button" variant="outline" onClick={copierReference} className="rounded-full">
-            <Copy size={16} />
+          <button type="button" className="vt-btn vt-btn-ghost" onClick={copierReference}>
+            <Copy size={16} aria-hidden="true" />
             Copier
-          </Button>
+          </button>
         </div>
         <div>
-          <Button type="button" variant="ghost" onClick={() => setConfirmation(null)} className="px-0">
+          <button type="button" className="vt-btn vt-btn-ghost" onClick={() => setConfirmation(null)}>
             Envoyer un autre message
-          </Button>
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <form onSubmit={gererSoumission} noValidate className="flex flex-col gap-5">
-      <div className="grid gap-5 sm:grid-cols-2">
+    <form onSubmit={gererSoumission} noValidate className="vt-form">
+      <div className="vt-two">
         <Champ
           id="contact-nom"
           label="Nom complet"
+          icone={<User size={18} className="vt-fld-ico" aria-hidden="true" />}
           requis
           aide="Lettres, espaces, apostrophes et tirets uniquement"
           erreur={erreurAffichee("nom")}
           valide={champValide("nom")}
         >
-          <Input
-            className="vt-input"
+          <input
             id="contact-nom"
+            className="vt-fld-input"
             autoComplete="name"
             value={valeurs.nom}
             maxLength={LIMITES_CONTACT.nom.max}
             onChange={(e) => modifier("nom", e.target.value)}
             onBlur={() => marquerTouche("nom")}
-            placeholder="Votre nom"
+            placeholder="Nom"
             aria-invalid={!!erreurAffichee("nom")}
           />
         </Champ>
 
-        <Champ id="contact-email" label="Adresse e-mail" requis erreur={erreurAffichee("email")} valide={champValide("email")}>
-          <Input
-            className="vt-input"
+        <Champ
+          id="contact-email"
+          label="Adresse e-mail"
+          icone={<Mail size={18} className="vt-fld-ico" aria-hidden="true" />}
+          requis
+          erreur={erreurAffichee("email")}
+          valide={champValide("email")}
+        >
+          <input
             id="contact-email"
             type="email"
+            className="vt-fld-input"
             autoComplete="email"
             inputMode="email"
             value={valeurs.email}
             onChange={(e) => modifier("email", e.target.value)}
             onBlur={() => marquerTouche("email")}
-            placeholder="exemple@domaine.mg"
+            placeholder="Courriel"
             aria-invalid={!!erreurAffichee("email")}
           />
         </Champ>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="vt-two">
         <Champ
           id="contact-telephone"
-          label="Téléphone"
-          aide="Facultatif — format international, ex. +261 34 22 330 54"
+          label="Téléphone (facultatif)"
+          icone={<Phone size={18} className="vt-fld-ico" aria-hidden="true" />}
+          aide="Format 034 12 345 67 ou +261 34 12 345 67."
           erreur={erreurAffichee("telephone")}
           valide={champValide("telephone")}
         >
-          <Input
-            className="vt-input"
+          <input
             id="contact-telephone"
             type="tel"
+            className="vt-fld-input"
             autoComplete="tel"
             inputMode="tel"
             value={valeurs.telephone}
             maxLength={LIMITES_CONTACT.telephone.max}
             onChange={(e) => modifier("telephone", e.target.value)}
             onBlur={() => marquerTouche("telephone")}
-            placeholder="+261 34 00 000 00"
+            placeholder="Téléphone"
             aria-invalid={!!erreurAffichee("telephone")}
           />
         </Champ>
 
-        <Champ id="contact-destinataire" label="Destinataire" aide="Par défaut : la Présidence">
+        <Champ
+          id="contact-destinataire"
+          label="Destinataire"
+          icone={<Building2 size={18} className="vt-fld-ico" aria-hidden="true" />}
+          aide="Par défaut : la Présidence"
+        >
           <select
             id="contact-destinataire"
+            className="vt-fld-input"
             value={valeurs.etablissement_id}
             onChange={(e) => modifier("etablissement_id", e.target.value)}
-            className="vt-input"
           >
             <option value="">Présidence de l'Université</option>
             {etablissements.map((etab) => (
@@ -219,53 +240,56 @@ export function FormulaireContact() {
       <Champ
         id="contact-sujet"
         label="Sujet"
+        icone={<Tag size={18} className="vt-fld-ico" aria-hidden="true" />}
         requis
         aide="Pas de caractères < ou >"
         erreur={erreurAffichee("sujet")}
         valide={champValide("sujet")}
         compteur={`${compteurSujet}/${LIMITES_CONTACT.sujet.max}`}
       >
-        <Input
-          className="vt-input"
+        <input
           id="contact-sujet"
+          className="vt-fld-input"
           value={valeurs.sujet}
           maxLength={LIMITES_CONTACT.sujet.max}
           onChange={(e) => modifier("sujet", e.target.value)}
           onBlur={() => marquerTouche("sujet")}
-          placeholder="Objet de votre message"
+          placeholder="Sujet"
           aria-invalid={!!erreurAffichee("sujet")}
         />
       </Champ>
 
       <Champ
         id="contact-message"
-        label="Message"
+        label="Votre message"
+        icone={<MessageSquare size={18} className="vt-fld-ico" aria-hidden="true" />}
         requis
+        aide="Au moins 10 caractères."
         erreur={erreurAffichee("message")}
         valide={champValide("message")}
         compteur={`${compteurMessage}/${LIMITES_CONTACT.message.max}`}
       >
-        <Textarea
-          className="vt-input vt-input-area"
+        <textarea
           id="contact-message"
           rows={6}
+          className="vt-fld-input"
           value={valeurs.message}
           maxLength={LIMITES_CONTACT.message.max}
           onChange={(e) => modifier("message", e.target.value)}
           onBlur={() => marquerTouche("message")}
-          placeholder="Décrivez votre demande (10 caractères minimum)…"
+          placeholder="Message"
           aria-invalid={!!erreurAffichee("message")}
         />
       </Champ>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-muted-foreground">
-          <span className="text-destructive">*</span> Champs obligatoires. Vos données ne servent qu'à traiter votre demande.
+      <div className="vt-form-foot" style={{ justifyContent: "space-between" }}>
+        <p className="vt-note">
+          <span style={{ color: "var(--err)" }}>*</span> Champs obligatoires. Vos données ne servent qu'à traiter votre demande.
         </p>
-        <Button type="submit" disabled={mutation.isPending} className="rounded-full px-6">
-          {mutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+        <button type="submit" className="vt-btn vt-btn-primary" disabled={mutation.isPending}>
+          {mutation.isPending ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Send size={16} aria-hidden="true" />}
           {mutation.isPending ? "Envoi en cours…" : "Envoyer le message"}
-        </Button>
+        </button>
       </div>
     </form>
   )
@@ -274,7 +298,8 @@ export function FormulaireContact() {
 interface ChampProps {
   id: string
   label: string
-  children: React.ReactNode
+  children: ReactNode
+  icone?: ReactNode
   requis?: boolean
   aide?: string
   erreur?: string
@@ -282,29 +307,28 @@ interface ChampProps {
   compteur?: string
 }
 
-// Enveloppe commune : champ a libelle flottant (le libelle descend dans le champ
-// a la saisie ou au focus), message d'aide ou erreur en direct, compteur.
-function Champ({ id, label, children, requis, aide, erreur, valide, compteur }: ChampProps) {
+// Champ a libelle flottant (maquette) : le libelle remonte a la saisie ou au focus.
+// Le libelle est place apres le champ pour que les selecteurs frere (+) fonctionnent.
+function Champ({ id, label, children, icone, requis, aide, erreur, valide, compteur }: ChampProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="vt-field">
-        {children}
-        <Label htmlFor={id} className="vt-float-label">
-          {label}
-          {requis && <span className="ml-0.5 text-destructive">*</span>}
-          {valide && <CheckCircle2 size={14} aria-label="Champ valide" className="ml-1.5 inline text-primary" />}
-        </Label>
-      </div>
-      <div className="flex items-start justify-between gap-2 px-1">
+    <div className={cn("vt-fld", erreur && "vt-bad", !erreur && valide && "vt-good")}>
+      {icone}
+      {children}
+      <label htmlFor={id} className="vt-fld-label">
+        {label}
+        {requis && <span style={{ color: "var(--err)", marginLeft: 2 }}>*</span>}
+        {valide && <CheckCircle2 size={14} aria-label="Champ valide" style={{ display: "inline", marginLeft: 6, color: "var(--brand)" }} />}
+      </label>
+      <div className="vt-help" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         {erreur ? (
-          <p id={`${id}-erreur`} role="alert" className={cn("flex items-center gap-1 text-xs text-destructive")}>
-            <AlertCircle size={12} />
+          <span id={`${id}-erreur`} role="alert" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <AlertCircle size={12} aria-hidden="true" />
             {erreur}
-          </p>
+          </span>
         ) : (
-          aide ? <p className="text-xs text-muted-foreground">{aide}</p> : <span />
+          <span>{aide}</span>
         )}
-        {compteur && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{compteur}</span>}
+        {compteur && <span style={{ fontVariantNumeric: "tabular-nums", flex: "none" }}>{compteur}</span>}
       </div>
     </div>
   )
