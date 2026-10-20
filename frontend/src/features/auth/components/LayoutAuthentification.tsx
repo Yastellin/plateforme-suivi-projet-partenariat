@@ -7,7 +7,7 @@ import type { ReactNode } from "react"
  * Pour la changer : placer le fichier dans frontend/public/images/ et modifier ce chemin.
  * Si le fichier n'existe pas, le panneau affiche uniquement le dégradé vert.
  */
-export const IMAGE_FOND_CONNEXION = "/images/connexion-fond.jpg"
+export const IMAGE_FOND_CONNEXION = "/images/logo-50-ans.jpeg"
 
 interface LayoutAuthentificationProps {
   titre: string
@@ -32,7 +32,7 @@ export function LayoutAuthentification({ titre, description, children }: LayoutA
     <div className="grid min-h-screen grid-cols-1 bg-[#f4f7f5] lg:grid-cols-[1.08fr_1fr]">
       <aside className="relative hidden overflow-hidden lg:block lg:rounded-r-[44px]">
         <div
-          className="absolute inset-0 bg-[#0b4a36] bg-contain bg-center bg-no-repeat"
+          className="absolute inset-0 bg-[#0b4a36] bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url("${IMAGE_FOND_CONNEXION}")` }}
           role="img"
           aria-label="Image de fond de l'Université de Fianarantsoa"
@@ -41,7 +41,7 @@ export function LayoutAuthentification({ titre, description, children }: LayoutA
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(160deg, rgba(6,95,70,0.94) 0%, rgba(6,95,70,0.82) 48%, rgba(4,60,44,0.92) 100%)",
+              "linear-gradient(160deg, rgba(8,74,56,0.86) 0%, rgba(7,66,50,0.80) 55%, rgba(5,52,40,0.90) 100%)",
           }}
         />
 
