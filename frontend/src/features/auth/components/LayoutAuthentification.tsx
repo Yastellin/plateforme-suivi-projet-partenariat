@@ -1,47 +1,13 @@
 // src/features/auth/components/LayoutAuthentification.tsx
 
 import type { ReactNode } from "react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 
-function StatistiqueAccueil({ valeur, libelle }: { valeur: number; libelle: string }) {
-  return (
-    <div>
-      <strong className="block text-[22px] font-bold text-white" style={{ fontFamily: "var(--font-mono)" }}>
-        {valeur}
-      </strong>
-      <span className="text-[11.5px] text-white/55">{libelle}</span>
-    </div>
-  )
-}
-
-function StatistiquesAccueil() {
-  const { data, isLoading, isError } = usePublicAccueil()
-
-  if (isLoading) {
-    return (
-      <div className="flex gap-7">
-        <Skeleton className="h-10 w-16 bg-white/10" />
-        <Skeleton className="h-10 w-16 bg-white/10" />
-        <Skeleton className="h-10 w-16 bg-white/10" />
-      </div>
-    )
-  }
-
-  const statistiques = data?.compteurs
-
-  if (isError || !data || !statistiques) {
-    return null
-  }
-
-  return (
-    <div className="flex gap-7">
-      <StatistiqueAccueil valeur={statistiques.nombre_partenaires} libelle="Partenaires actifs" />
-      <StatistiqueAccueil valeur={statistiques.nombre_projets_actifs} libelle="Projets en cours" />
-      <StatistiqueAccueil valeur={statistiques.nombre_conventions_actives} libelle="Conventions signées" />
-    </div>
-  )
-}
+/**
+ * Image de fond du panneau gauche de la page de connexion.
+ * Pour la changer : placer le fichier dans frontend/public/images/ et modifier ce chemin.
+ * Si le fichier n'existe pas, le panneau affiche uniquement le dégradé vert.
+ */
+export const IMAGE_FOND_CONNEXION = "/images/connexion-fond.jpg"
 
 interface LayoutAuthentificationProps {
   titre: string
@@ -49,65 +15,93 @@ interface LayoutAuthentificationProps {
   children: ReactNode
 }
 
+function Embleme() {
+  return (
+    <div
+      className="grid h-11 w-11 place-items-center rounded-xl border border-white/25 bg-white/10 text-base font-extrabold text-white backdrop-blur-sm"
+      style={{ fontFamily: "var(--font-heading)" }}
+      aria-hidden="true"
+    >
+      UF
+    </div>
+  )
+}
+
 export function LayoutAuthentification({ titre, description, children }: LayoutAuthentificationProps) {
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[1.1fr_1fr]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-[var(--color-brand-deep)] p-12 lg:flex">
+    <div className="grid min-h-screen grid-cols-1 bg-[#f4f7f5] lg:grid-cols-[1.08fr_1fr]">
+      <aside className="relative hidden overflow-hidden lg:block lg:rounded-r-[44px]">
         <div
-          className="pointer-events-none absolute inset-0"
-          style={{ backgroundImage: "repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 2px, transparent 2px 26px)" }}
+          className="absolute inset-0 bg-[#0b4a36] bg-cover bg-center"
+          style={{ backgroundImage: `url("${IMAGE_FOND_CONNEXION}")` }}
+          role="img"
+          aria-label="Image de fond de l'Université de Fianarantsoa"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(160deg, rgba(6,95,70,0.94) 0%, rgba(6,95,70,0.82) 48%, rgba(4,60,44,0.92) 100%)",
+          }}
         />
 
-        <div className="relative flex items-center gap-3">
-          <div
-            className="grid h-10 w-10 place-items-center rounded-[var(--radius-sm)] border border-white/20 bg-white/10 text-base font-extrabold text-white"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            UF
+        <div className="relative flex h-full flex-col justify-between p-12 xl:p-16">
+          <div className="flex items-center gap-3.5">
+            <Embleme />
+            <div>
+              <strong className="block text-[15px] font-semibold text-white">Université de Fianarantsoa</strong>
+              <span className="text-[13px] text-white/75">Projets &amp; Partenariats</span>
+            </div>
           </div>
-          <div>
-            <strong className="block text-sm font-bold text-white">Université de Fianarantsoa</strong>
-            <span className="text-xs text-white/60">Projets &amp; Partenariats</span>
+
+          <div className="max-w-[460px]">
+            <h1
+              className="text-[38px] font-bold leading-[1.15] tracking-tight text-white xl:text-[44px]"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              Suivi des projets et partenariats institutionnels
+            </h1>
+            <p className="mt-5 text-[16px] leading-relaxed text-white/80">
+              Une plateforme unique pour consulter et gérer les collaborations de l'Université.
+            </p>
+            <span className="mt-8 block h-1 w-14 rounded-full bg-[#34d399]" aria-hidden="true" />
           </div>
-        </div>
 
-        <div className="relative max-w-[400px]">
-          <h1 className="text-[27px] font-bold leading-[1.28] text-white">
-            Suivi des projets et partenariats institutionnels
-          </h1>
-          <p className="mt-3.5 text-[13.5px] leading-relaxed text-white/70">
-            Une plateforme unique pour consulter et gérer les collaborations de l'Université.
-          </p>
-        </div>
-
-        <div className="relative">
-          <StatistiquesAccueil />
+          <p className="text-[12px] text-white/55">© Université de Fianarantsoa</p>
         </div>
       </aside>
 
-      <div className="flex items-center justify-center px-6 py-8">
-        <div className="w-full max-w-[400px]">
-          <div className="mb-7 flex items-center gap-2.5 lg:hidden">
+      <main className="flex items-center justify-center px-6 py-10 sm:px-10">
+        <div className="w-full max-w-[460px]">
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
             <div
-              className="grid h-[34px] w-[34px] place-items-center rounded-[var(--radius-sm)] bg-[var(--color-brand)] text-sm font-extrabold text-white"
+              className="grid h-10 w-10 place-items-center rounded-xl bg-[#047857] text-sm font-extrabold text-white"
               style={{ fontFamily: "var(--font-heading)" }}
+              aria-hidden="true"
             >
               UF
             </div>
             <div>
-              <strong className="block text-[13px] font-bold">Université de Fianarantsoa</strong>
-              <span className="block text-[11px] text-[var(--color-text-secondary)]">Projets &amp; Partenariats</span>
+              <strong className="block text-[14px] font-semibold text-[#0f2f23]">Université de Fianarantsoa</strong>
+              <span className="block text-[12px] text-[#5b6b64]">Projets &amp; Partenariats</span>
             </div>
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-[21px] font-bold">{titre}</h2>
-            <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{description}</p>
-          </div>
+          <div className="rounded-[20px] bg-white p-8 shadow-[0_24px_60px_-28px_rgba(6,64,46,0.35)] ring-1 ring-black/[0.04] sm:p-10">
+            <div className="mb-7">
+              <h2
+                className="text-[28px] font-bold tracking-tight text-[#0b4a36]"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                {titre}
+              </h2>
+              <p className="mt-2 text-[14.5px] text-[#5b6b64]">{description}</p>
+            </div>
 
-          {children}
+            {children}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
