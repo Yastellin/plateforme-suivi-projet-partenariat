@@ -36,9 +36,9 @@ export function TopbarPublique() {
   const menuOuvert = menuPour === cleRoute
 
   return (
-    <header className="vt-header">
-      <div className="vt-wrap vt-header-inner">
-        <Link to="/" className="vt-brand" aria-label="Université de Fianarantsoa, accueil">
+    <header className="vt-top">
+      <div className="vt-wrap">
+        <Link to="/" className="vt-brandmark" aria-label="Université de Fianarantsoa, accueil">
           <span className="vt-logo" aria-hidden="true">UF</span>
           <span>
             <span className="vt-brand-name">Partenariats UF</span>
@@ -67,7 +67,7 @@ export function TopbarPublique() {
               {lien.label}
             </Link>
           ))}
-          <Link to="/connexion" className="vt-btn vt-btn-primary vt-nav-cta">
+          <Link to="/connexion" className="vt-btn vt-btn-primary">
             <LockKeyhole size={16} aria-hidden="true" />
             Espace interne
           </Link>

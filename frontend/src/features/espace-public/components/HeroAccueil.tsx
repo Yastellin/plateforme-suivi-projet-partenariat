@@ -1,34 +1,29 @@
 // src/features/espace-public/components/HeroAccueil.tsx
-// Hero de la vitrine : carrousel "a la une" et chiffres cles. Toutes les
-// diapositives sont construites a partir de l'API (publications de la
-// Presidence, projets et partenaires a la une) : aucun texte code en dur.
+// Hero de la vitrine (maquette) : carrousel "A la une" et chiffres cles.
+// Les diapositives sont construites a partir de l'API (publication de la
+// Presidence, projet et partenaire a la une). Les illustrations sont
+// decoratives : aucun texte ni donnee fictive n'est code en dur.
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
-import { FolderKanban, Handshake, Newspaper, Pause, Play, ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, FolderKanban, Handshake, Newspaper, Pause, Play } from "lucide-react"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import {
-  initiales,
-  resumePartenaire,
-  resumeProjet,
-  resumePublication,
-} from "@/features/espace-public/lib/publique"
+import { resumePartenaire, resumeProjet, resumePublication } from "@/features/espace-public/lib/publique"
+import { Illustration, type TypeIllustration } from "@/features/espace-public/components/Illustrations"
 import type { AccueilPublic } from "@/types/api"
 
-type Diapositive = {
+interface Diapositive {
   cle: string
   etiquette: string
   icone: typeof Newspaper
   titre: string
   texte: string
-  image: string | null
-  marque: string
+  photo: string | null
+  illustration: TypeIllustration
   cta: { to: string; libelle: string }
 }
 
 const DUREE_DIAPOSITIVE_MS = 6500
 
-// Construit les diapositives a partir des donnees reelles. Une source vide
-// n'produit simplement pas de diapositive.
 function construireDiapositives(donnees: AccueilPublic | undefined): Diapositive[] {
   if (!donnees) return []
   const diapos: Diapositive[] = []
@@ -41,8 +36,8 @@ function construireDiapositives(donnees: AccueilPublic | undefined): Diapositive
       icone: Newspaper,
       titre: publication.titre,
       texte: resumePublication(publication),
-      image: publication.photo_url,
-      marque: publication.titre,
+      photo: publication.photo_url,
+      illustration: "montagne",
       cta: { to: `/projets-partenariats/publication/${publication.id}`, libelle: "Lire l'actualité" },
     })
   }
@@ -55,10 +50,10 @@ function construireDiapositives(donnees: AccueilPublic | undefined): Diapositive
       icone: FolderKanban,
       titre: projet.nom,
       texte: resumeProjet(projet),
-      image: null,
-      marque: projet.nom,
+      photo: null,
+      illustration: "reseau",
       cta: projet.publication_id
-        ? { to: `/projets-partenariats/publication/${projet.publication_id}`, libelle: "Découvrir le projet" }
+        ? { to: `/projets-partenariats/publication/${projet.publication_id}`, libelle: "Lire le projet" }
         : { to: "/projets-partenariats?onglet=projets", libelle: "Voir les projets" },
     })
   }
@@ -71,8 +66,8 @@ function construireDiapositives(donnees: AccueilPublic | undefined): Diapositive
       icone: Handshake,
       titre: partenaire.nom,
       texte: resumePartenaire(partenaire),
-      image: partenaire.logo_url,
-      marque: partenaire.nom,
+      photo: null,
+      illustration: "cotutelle",
       cta: { to: "/projets-partenariats?onglet=partenaires", libelle: "Voir les partenaires" },
     })
   }
@@ -91,9 +86,7 @@ function CompteurAnime({ valeur }: { valeur: number }) {
 
   useEffect(() => {
     const element = ref.current
-    if (!element || preferenceReduction() || !("IntersectionObserver" in window)) {
-      return
-    }
+    if (!element || preferenceReduction() || !("IntersectionObserver" in window)) return
     let frame = 0
     const observateur = new IntersectionObserver(
       (entrees) => {
@@ -131,7 +124,7 @@ export function HeroAccueil() {
   const reduction = preferenceReduction()
   const enPause = pauseManuelle || survol || reduction
 
-  // Defilement automatique, suspendu au survol, au focus et sur demande.
+  // Defilement automatique, suspendu au survol, au focus, par bouton ou sur demande.
   useEffect(() => {
     if (enPause || diapositives.length < 2) return
     const minuteur = window.setInterval(() => {
@@ -144,11 +137,10 @@ export function HeroAccueil() {
   const position = total > 0 ? index % total : 0
 
   const chiffres = [
-    { valeur: compteurs?.nombre_etablissements, libelle: "établissements" },
     { valeur: compteurs?.nombre_partenaires, libelle: "partenaires actifs" },
-    { valeur: compteurs?.nombre_pays_partenaires, libelle: "pays partenaires" },
     { valeur: compteurs?.nombre_projets_actifs, libelle: "projets actifs" },
-    { valeur: compteurs?.nombre_publications, libelle: "publications" },
+    { valeur: compteurs?.nombre_etablissements, libelle: "établissements" },
+    { valeur: compteurs?.nombre_pays_partenaires, libelle: "pays partenaires" },
   ]
 
   return (
@@ -156,6 +148,7 @@ export function HeroAccueil() {
       <section className="vt-hero" aria-label="À la une">
         <div className="vt-wrap">
           <div
+            className="vt-car"
             role="region"
             aria-roledescription="carrousel"
             aria-label="Les dernières nouvelles de l'université"
@@ -168,7 +161,6 @@ export function HeroAccueil() {
               <div className="vt-slide" data-on="true" aria-busy="true">
                 <div>
                   <span className="vt-tag">Chargement</span>
-                  <h1 aria-hidden="true" style={{ opacity: 0.2 }}>Université de Fianarantsoa</h1>
                 </div>
                 <div className="vt-art" aria-hidden="true" />
               </div>
@@ -186,8 +178,8 @@ export function HeroAccueil() {
                     <Link to="/projets-partenariats" className="vt-btn vt-btn-primary">Projets et partenariats</Link>
                   </div>
                 </div>
-                <div className="vt-art" aria-hidden="true">
-                  <span className="vt-art-mark">UF</span>
+                <div className="vt-art">
+                  <Illustration type="montagne" />
                 </div>
               </div>
             )}
@@ -206,7 +198,7 @@ export function HeroAccueil() {
                 >
                   <div>
                     <span className="vt-tag">
-                      <Icone size={16} aria-hidden="true" />
+                      <Icone aria-hidden="true" />
                       {d.etiquette}
                     </span>
                     <h1>{d.titre}</h1>
@@ -218,10 +210,10 @@ export function HeroAccueil() {
                     </div>
                   </div>
                   <div className="vt-art">
-                    {d.image ? (
-                      <img src={d.image} alt="" className="vt-art-img" loading={i === 0 ? "eager" : "lazy"} />
+                    {d.photo ? (
+                      <img src={d.photo} alt="" className="vt-art-img" loading={i === 0 ? "eager" : "lazy"} />
                     ) : (
-                      <span className="vt-art-mark" aria-hidden="true">{initiales(d.marque)}</span>
+                      <Illustration type={d.illustration} />
                     )}
                   </div>
                 </div>
@@ -238,14 +230,14 @@ export function HeroAccueil() {
                 >
                   <ChevronLeft size={18} aria-hidden="true" />
                 </button>
-                <div className="vt-dots">
+                <div className="vt-dots" role="tablist" aria-label="Choisir une diapositive">
                   {diapositives.map((d, i) => (
                     <button
                       key={d.cle}
                       type="button"
                       className="vt-dot"
+                      role="tab"
                       aria-label={`Diapositive ${i + 1}`}
-                      aria-current={i === position ? "true" : undefined}
                       aria-selected={i === position}
                       onClick={() => setIndex(i)}
                     />
