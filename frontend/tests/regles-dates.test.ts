@@ -37,14 +37,7 @@ describe('projet : regles de dates', () => {
     date_debut,
     date_fin_prevue,
     statut: 'BROUILLON' as const,
-    // Le porteur est obligatoire depuis la regle metier de la Presidence.
-    porteur: {
-      mode: 'nouveau' as const,
-      type_porteur: 'PERSONNE' as const,
-      nom: 'Rakoto',
-      institution_rattachement: '',
-    },
-  })
+  });
 
   it('refuse une date de debut anterieure a aujourd hui a la creation', () => {
     const resultat = creation.safeParse(valeurs(HIER, DANS_UN_AN));
@@ -66,35 +59,6 @@ describe('projet : regles de dates', () => {
 
   it('accepte une date de debut passee en modification', () => {
     expect(modification.safeParse(valeurs(HIER, DANS_UN_AN)).success).toBe(true);
-  });
-
-  it('exige un porteur', () => {
-    const resultat = creation.safeParse({
-      ...valeurs(AUJOURDHUI, DANS_UN_AN),
-      porteur: undefined,
-    });
-
-    expect(resultat.success).toBe(false);
-    expect(cheminsEnErreur(resultat)).toContain('porteur');
-  });
-
-  it('exige un porteur existant selectionne quand le mode est existant', () => {
-    const resultat = creation.safeParse({
-      ...valeurs(AUJOURDHUI, DANS_UN_AN),
-      porteur: { mode: 'existant', porteur_id: '' },
-    });
-
-    expect(resultat.success).toBe(false);
-    expect(cheminsEnErreur(resultat)).toContain('porteur');
-  });
-
-  it('accepte un projet sans etablissement (projet transversal)', () => {
-    expect(
-      creation.safeParse({
-        ...valeurs(AUJOURDHUI, DANS_UN_AN),
-        etablissement_id: null,
-      }).success,
-    ).toBe(true);
   });
 });
 

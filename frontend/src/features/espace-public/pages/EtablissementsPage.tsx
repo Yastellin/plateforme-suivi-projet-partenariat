@@ -9,6 +9,7 @@ import { useDebounce } from "@/hooks/useDebounce"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { resoudreUrlFichier } from "@/lib/url"
 
 // Page Etablissements de la vitrine publique (section 6.2).
 // Liste publique des etablissements membres avec recherche instantanee.
@@ -67,7 +68,7 @@ export function EtablissementsPage() {
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-background text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
                     {etab.logo_url ? (
                       <img
-                        src={etab.logo_url}
+                        src={resoudreUrlFichier(etab.logo_url)}
                         alt={etab.nom}
                         className="h-10 w-10 rounded object-contain"
                       />

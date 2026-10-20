@@ -16,6 +16,10 @@ import { CreateMessageContact1791400000000 } from '../../src/database/migrations
 import { NotificationMessageContact1791500000000 } from '../../src/database/migrations/1791500000000-NotificationMessageContact';
 import { ReferenceMessageContact1791600000000 } from '../../src/database/migrations/1791600000000-ReferenceMessageContact';
 import { AddTypePorteurToPorteur1791965000000 } from '../../src/database/migrations/1791965000000-AddTypePorteurToPorteur';
+import { AddDocumentCotutellePartenariat1792000000001 } from '../../src/database/migrations/1792000000001-AddDocumentCotutellePartenariat';
+import { AddSoumissionPublication1792000000002 } from '../../src/database/migrations/1792000000002-AddSoumissionPublication';
+import { CreateHistoriqueActions1792000000003 } from '../../src/database/migrations/1792000000003-CreateHistoriqueActions';
+import { CreateConfiguration1792000000004 } from '../../src/database/migrations/1792000000004-CreateConfiguration';
 import { ProjetEtablissementFacultatif1793000000000 } from '../../src/database/migrations/1793000000000-ProjetEtablissementFacultatif';
 import { demarrerBaseTest, type BaseTest } from './base-postgres';
 
@@ -58,6 +62,10 @@ export async function creerApplicationTest(): Promise<ApplicationTest> {
       NotificationMessageContact1791500000000,
       ReferenceMessageContact1791600000000,
       AddTypePorteurToPorteur1791965000000,
+      AddDocumentCotutellePartenariat1792000000001,
+      AddSoumissionPublication1792000000002,
+      CreateHistoriqueActions1792000000003,
+      CreateConfiguration1792000000004,
       ProjetEtablissementFacultatif1793000000000,
     ],
     migrationsTableName: 'migrations_typeorm',

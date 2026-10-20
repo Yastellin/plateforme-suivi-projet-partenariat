@@ -10,8 +10,8 @@ import {
   UseGuards,
   BadRequestException,
   ForbiddenException,
+  HttpCode,
 } from '@nestjs/common';
-import { HttpCode } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -40,7 +40,7 @@ export class ProjetsController {
   @ApiOperation({ summary: 'Créer un projet' })
   @ApiResponse({ status: 201, type: ProjetResponseDto })
   create(@CurrentUser() user: any, @Body() dto: CreateProjetDto) {
-    let etablissementId: string | null;
+    let etablissementId: string;
     if (user.role === Role.ETABLISSEMENT) {
       etablissementId = user.etablissement_id;
       if (!etablissementId) {
@@ -49,9 +49,12 @@ export class ProjetsController {
         );
       }
     } else if (user.role === Role.PRESIDENCE) {
-      // La Presidence peut creer des projets sans etablissement (projets
-      // transversaux) : le token n'ecrase rien, le DTO fait foi.
-      etablissementId = dto.etablissement_id ?? null;
+      if (!dto.etablissement_id) {
+        throw new BadRequestException(
+          "Pour la PRÉSIDENCE, l'ID de l'établissement est requis.",
+        );
+      }
+      etablissementId = dto.etablissement_id;
     } else {
       throw new ForbiddenException('Rôle non autorisé pour cette action.');
     }
@@ -97,13 +100,52 @@ export class ProjetsController {
 
   @Post(':id/soumettre')
   @HttpCode(200)
-  @Roles(Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un projet à la Présidence (etablissement uniquement)' })
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un projet à la Présidence' })
   @ApiResponse({ status: 200, type: ProjetResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-    return this.projetsService.soumettre(id, etablissementId);
+    return this.projetsService.soumettre(id, etablissementId, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+  }
+
+  @Post('soumettre')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({
+    summary: 'Soumettre plusieurs projets a la Presidence en une fois',
+  })
+  @ApiResponse({ status: 200 })
+  soumettreEnMasse(
+    @CurrentUser() user: any,
+    @Body() dto: { ids: string[] },
+  ) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.projetsService.soumettreEnMasse(
+      dto.ids ?? [],
+      etablissementId,
+      { id: user.id, email: user.email, role: user.role },
+    );
+  }
+
+  @Post(':id/publier')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({
+    summary: 'Publier un projet soumis (Presidence uniquement)',
+  })
+  @ApiResponse({ status: 200, type: ProjetResponseDto })
+  publier(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.projetsService.publier(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   @Post(':id/archiver')
@@ -111,7 +153,11 @@ export class ProjetsController {
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Archiver un projet (Présidence uniquement)' })
   @ApiResponse({ status: 200, type: ProjetResponseDto })
-  archiver(@Param('id', ParseUUIDPipe) id: string) {
-    return this.projetsService.archiver(id);
+  archiver(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.projetsService.archiver(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 }

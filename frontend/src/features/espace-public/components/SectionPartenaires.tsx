@@ -1,14 +1,15 @@
 // src/features/espace-public/components/SectionPartenaires.tsx
-// Partenaires a la une (maquette) : bande defilante continue avec la description
-// de chaque partenaire. Pause au survol et au focus, et desactivee si l'utilisateur
-// demande de reduire les animations. Moins de 4 partenaires : grille statique.
 import { Link } from "react-router-dom"
+import { Handshake, ArrowRight } from "lucide-react"
+import { InfiniteMarquee } from "@/components/shared/InfiniteMarquee"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { CartePartenaire } from "@/features/espace-public/components/CartesPubliques"
+import { Reveal } from "@/features/espace-public/components/Reveal"
+import { resoudreUrlFichier } from "@/lib/url"
 
-const SEUIL_DEFILEMENT = 4
-
+// Section partenaires mis en avant sur la page d'accueil publique.
+// Bandeau defilant en boucle infinie des logos partenaires (section 7.4 :
+// "marquee infini de logos partenaires"), dans des pastilles en verre depoli.
 export function SectionPartenaires() {
   const { data, isLoading } = usePublicAccueil()
   const partenaires = data?.partenaires_a_la_une ?? []
@@ -16,46 +17,56 @@ export function SectionPartenaires() {
   if (!isLoading && partenaires.length === 0) return null
 
   return (
-    <section className="vt-section vt-section-alt" id="partenaires" aria-labelledby="titre-partenaires">
-      <div className="vt-wrap">
-        <div className="vt-head">
+    <section className="relative py-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Reveal className="flex items-end justify-between gap-4">
           <div>
-            <h2 id="titre-partenaires">Ils travaillent avec nous</h2>
-            <p>Entreprises, institutions et universités partenaires. Passez la souris sur la bande pour la mettre en pause.</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Confiance</p>
+            <h2 className="mt-1 font-heading text-2xl font-bold text-foreground">
+              Nos partenaires
+            </h2>
           </div>
-          <Link to="/projets-partenariats?onglet=partenaires" className="vt-btn vt-btn-ghost">
-            Voir tous les partenaires
+          <Link
+            to="/partenaires"
+            className="group flex items-center gap-1 text-sm font-medium text-primary"
+          >
+            Voir tous
+            <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </Link>
-        </div>
+        </Reveal>
       </div>
 
-      {isLoading ? (
-        <div className="vt-wrap vt-pt-grid">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-36 rounded-2xl" />
-          ))}
-        </div>
-      ) : partenaires.length < SEUIL_DEFILEMENT ? (
-        <div className="vt-wrap vt-pt-grid">
-          {partenaires.map((p) => (
-            <CartePartenaire key={p.id} partenaire={p} />
-          ))}
-        </div>
-      ) : (
-        <div className="vt-marq" role="region" aria-roledescription="carrousel" aria-label="Partenaires de l'université">
-          <div className="vt-track">
-            {partenaires.map((p) => (
-              <CartePartenaire key={p.id} partenaire={p} />
+      <div className="mt-8">
+        {isLoading ? (
+          <div className="flex justify-center gap-6 px-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-16 w-32 rounded-2xl" />
             ))}
-            {/* Copie decorative pour une boucle continue : non focalisable, masquee aux lecteurs d'ecran */}
-            <div aria-hidden="true" inert style={{ display: "contents" }}>
-              {partenaires.map((p) => (
-                <CartePartenaire key={`copie-${p.id}`} partenaire={p} />
-              ))}
-            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <InfiniteMarquee
+            items={partenaires}
+            cleItem={(p) => p.id}
+            renderItem={(partenaire) => (
+              <div className="flex h-16 items-center gap-2 rounded-2xl border border-border/70 bg-background/70 px-6 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
+                {partenaire.logo_url ? (
+                  <img
+                    src={resoudreUrlFichier(partenaire.logo_url)}
+                    alt={partenaire.nom}
+                    className="h-8 w-auto object-contain"
+                  />
+                ) : (
+                  <span className="flex items-center gap-2 font-heading text-sm font-medium text-muted-foreground">
+                    <Handshake size={16} className="text-primary" />
+                    {partenaire.nom}
+                  </span>
+                )}
+              </div>
+            )}
+            itemClassName="mx-3"
+          />
+        )}
+      </div>
     </section>
   )
 }

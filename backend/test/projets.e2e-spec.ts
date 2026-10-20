@@ -67,15 +67,12 @@ describe('Projets (e2e)', () => {
       expect(projet.statut).toBe('BROUILLON');
     });
 
-    it('accepte un projet transversal sans etablissement pour la PRESIDENCE (201)', async () => {
-      const reponse = await request(ctx.app.getHttpServer())
+    it('exige un etablissement pour la PRESIDENCE (400)', async () => {
+      await request(ctx.app.getHttpServer())
         .post('/api/projets')
         .set(...enteteBearer(presidence))
-        .send(chargeProjet('Projet transversal sans etablissement'))
-        .expect(201);
-
-      const projet = donnees<any>(reponse.body);
-      expect(projet.etablissement_id).toBeNull();
+        .send(chargeProjet('Projet sans etablissement'))
+        .expect(400);
     });
 
     it('accepte la creation par la PRESIDENCE avec etablissement_id', async () => {

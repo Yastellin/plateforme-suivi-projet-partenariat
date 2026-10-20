@@ -26,6 +26,12 @@ export class DocumentResponseDto {
   @ApiProperty({ nullable: true })
   convention_id: string | null;
 
+  @ApiProperty({ nullable: true })
+  cotutelle_id: string | null;
+
+  @ApiProperty({ nullable: true })
+  partenariat_id: string | null;
+
   @ApiProperty()
   created_at: Date;
 

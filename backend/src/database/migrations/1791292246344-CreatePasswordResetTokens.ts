@@ -3,7 +3,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 /**
  * Table des jetons de reinitialisation de mot de passe.
  *
- * Note : "utilisateur_id" est de type text (et non uuid) afin de rester
+ * Note : "utilisateur_id" est de type text (et non text) afin de rester
  * compatible avec la cle primaire "Utilisateur"."id" (text) definie par
  * l'entite Utilisateur et par la migration InitSchema. Une FK de type
  * incompatible est refusee par PostgreSQL.

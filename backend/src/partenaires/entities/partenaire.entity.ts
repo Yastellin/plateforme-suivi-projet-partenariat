@@ -76,6 +76,12 @@ export class Partenaire {
   @Column({ type: 'varchar', nullable: true })
   logo_url: string | null;
 
+  @Column({ type: 'timestamp', precision: 3, nullable: true })
+  soumis_le: Date | null;
+
+  @Column({ type: 'timestamp', precision: 3, nullable: true })
+  publie_le: Date | null;
+
   @Column({ default: false })
   archive: boolean;
 

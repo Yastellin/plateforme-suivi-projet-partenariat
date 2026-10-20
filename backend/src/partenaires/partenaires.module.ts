@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HistoriqueModule } from '../historique/historique.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PartenairesController } from './partenaires.controller';
 import { PartenairesService } from './partenaires.service';
@@ -7,7 +8,8 @@ import { Partenaire } from './entities/partenaire.entity';
 import { Contact } from './entities/contact.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Partenaire, Contact]), ContactsModule],
+  imports: [
+    HistoriqueModule,TypeOrmModule.forFeature([Partenaire, Contact]), ContactsModule],
   controllers: [PartenairesController],
   providers: [PartenairesService],
   exports: [PartenairesService, TypeOrmModule],

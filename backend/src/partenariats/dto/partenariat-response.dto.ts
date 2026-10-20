@@ -61,6 +61,12 @@ export class PartenariatResponseDto {
   @ApiProperty()
   archive: boolean;
 
+  @ApiProperty({ nullable: true })
+  soumis_le: Date | null;
+
+  @ApiProperty({ nullable: true })
+  publie_le: Date | null;
+
   @ApiProperty()
   created_at: Date;
 

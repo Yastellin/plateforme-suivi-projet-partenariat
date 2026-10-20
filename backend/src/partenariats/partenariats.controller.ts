@@ -105,13 +105,52 @@ export class PartenariatsController {
 
   @Post(':id/soumettre')
   @HttpCode(200)
-  @Roles(Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence (etablissement uniquement)' })
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence' })
   @ApiResponse({ status: 200, type: PartenariatResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-    return this.partenariatsService.soumettre(id, etablissementId);
+    return this.partenariatsService.soumettre(id, etablissementId, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+  }
+
+  @Post('soumettre')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({
+    summary: 'Soumettre plusieurs partenariats a la Presidence en une fois',
+  })
+  @ApiResponse({ status: 200 })
+  soumettreEnMasse(
+    @CurrentUser() user: any,
+    @Body() dto: { ids: string[] },
+  ) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.partenariatsService.soumettreEnMasse(
+      dto.ids ?? [],
+      etablissementId,
+      { id: user.id, email: user.email, role: user.role },
+    );
+  }
+
+  @Post(':id/publier')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({
+    summary: 'Publier un partenariat soumis (Presidence uniquement)',
+  })
+  @ApiResponse({ status: 200, type: PartenariatResponseDto })
+  publier(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.partenariatsService.publier(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   @Post(':id/archiver')
@@ -119,7 +158,11 @@ export class PartenariatsController {
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Archiver un partenariat (Présidence uniquement)' })
   @ApiResponse({ status: 200, type: PartenariatResponseDto })
-  archiver(@Param('id', ParseUUIDPipe) id: string) {
-    return this.partenariatsService.archiver(id);
+  archiver(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.partenariatsService.archiver(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 }

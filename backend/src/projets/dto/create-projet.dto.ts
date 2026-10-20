@@ -1,4 +1,3 @@
-// backend/src/projets/dto/create-projet.dto.ts
 import {
   IsString,
   IsOptional,
@@ -8,12 +7,9 @@ import {
   IsUUID,
   IsNumber,
   MinLength,
-  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StatutProjet } from '../../common/enums/statut-projet.enum';
-import { CreatePorteurDto } from '../../referentiels/porteurs/dto/create-porteur.dto';
 import {
   EstDateNonPassee,
   EstPosterieurA,
@@ -73,19 +69,6 @@ export class CreateProjetDto {
   @IsUUID()
   porteur_id?: string;
 
-  // Porteur cree en memoire lors de la creation du projet (porteur polymorphe).
-  // Si fourni, porteur_id doit etre absent : le service derive l'id du porteur
-  // cree dans la transaction et l'attache au projet.
-  @ApiPropertyOptional({
-    description:
-      'Porteur a creer en meme temps que le projet (porteur polymorphe). Mutuellement exclu de porteur_id.',
-    type: CreatePorteurDto,
-  })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => CreatePorteurDto)
-  porteur?: CreatePorteurDto;
-
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
@@ -111,11 +94,9 @@ export class CreateProjetDto {
   sites_ids?: string[];
 
   @ApiPropertyOptional({
-    description:
-      "ID de l'établissement cible (PRÉSIDENCE uniquement). Facultatif : un projet peut etre transversal ou gere par la Presidence.",
-    nullable: true,
+    description: "ID de l'établissement (PRÉSIDENCE uniquement)",
   })
   @IsOptional()
   @IsUUID()
-  etablissement_id?: string | null;
+  etablissement_id?: string;
 }

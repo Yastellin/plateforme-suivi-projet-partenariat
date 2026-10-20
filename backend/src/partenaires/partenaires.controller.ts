@@ -16,7 +16,13 @@ import {
   ApiBearerAuth,
   ApiResponse,
 } from '@nestjs/swagger';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PartenairesService } from './partenaires.service';
 import { CreatePartenaireDto } from './dto/create-partenaire.dto';
 import { UpdatePartenaireDto } from './dto/update-partenaire.dto';
@@ -126,7 +132,92 @@ export class PartenairesController {
   @Roles(Role.PRESIDENCE)
   @ApiOperation({ summary: 'Archiver un partenaire (Présidence uniquement)' })
   @ApiResponse({ status: 200 })
-  archiver(@Param('id', ParseUUIDPipe) id: string) {
-    return this.partenairesService.archiver(id);
+  archiver(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.partenairesService.archiver(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+  }
+
+  @Post(':id/soumettre')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un partenaire à la Présidence' })
+  @ApiResponse({ status: 200, type: PartenaireResponseDto })
+  soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.partenairesService.soumettre(id, etablissementId, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+  }
+
+  @Post('soumettre')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({
+    summary: 'Soumettre plusieurs partenaires a la Presidence en une fois',
+  })
+  @ApiResponse({ status: 200 })
+  soumettreEnMasse(@CurrentUser() user: any, @Body() dto: { ids: string[] }) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.partenairesService.soumettreEnMasse(
+      dto.ids ?? [],
+      etablissementId,
+      { id: user.id, email: user.email, role: user.role },
+    );
+  }
+
+  @Post(':id/publier')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({
+    summary: 'Publier un partenaire soumis (Presidence uniquement)',
+  })
+  @ApiResponse({ status: 200, type: PartenaireResponseDto })
+  publier(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.partenairesService.publier(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+  }
+
+  @Post(':id/logo')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @UseInterceptors(
+    FileInterceptor('fichier', {
+      limits: { fileSize: 2 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(
+            new BadRequestException('Le logo doit etre une image'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  @ApiOperation({ summary: 'Televerser le logo d un partenaire' })
+  @ApiResponse({ status: 200, type: PartenaireResponseDto })
+  televerserLogo(
+    @CurrentUser() user: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() fichier: Express.Multer.File,
+  ) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.partenairesService.televerserLogo(
+      id,
+      fichier,
+      etablissementId,
+      { id: user.id, email: user.email, role: user.role },
+    );
   }
 }

@@ -5,6 +5,7 @@ import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Projet } from '../projets/entities/projet.entity';
 import { Convention } from '../conventions/entities/convention.entity';
 import { Publication } from '../publications/enitities/publication.entity';
+import { Partenariat } from '../partenariats/entities/partenariat.entity';
 import { EspacePublicController } from './espace-public.controller';
 import { EspacePublicService } from './espace-public.service';
 
@@ -14,6 +15,7 @@ import { EspacePublicService } from './espace-public.service';
       Etablissement,
       Partenaire,
       Projet,
+      Partenariat,
       Convention,
       Publication,
     ]),

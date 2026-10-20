@@ -4,6 +4,7 @@ import { Public } from '../common/decorators/public.decorator';
 import { AccueilPublicDto } from './dto/accueil-public.dto';
 import { EtablissementPublicDto } from './dto/etablissement-public.dto';
 import { PartenairePublicDto } from './dto/partenaire-public.dto';
+import { PartenariatPublicDto } from './dto/partenariat-public.dto';
 import { ProjetPublicDto } from './dto/projet-public.dto';
 import { PublicationPubliqueDto } from './dto/publication-publique.dto';
 import {
@@ -14,8 +15,8 @@ import {
 } from './dto/public-query.dto';
 import { EspacePublicService } from './espace-public.service';
 
-// Toutes les donnees de l'espace public viennent de la base de donnees et
-// respectent les regles de visibilite (voir EspacePublicService).
+// Toutes les données de l'espace public viennent de la base de données et
+// respectent les règles de visibilité (voir EspacePublicService).
 @ApiTags('Espace public')
 @Controller('public')
 export class EspacePublicController {
@@ -25,7 +26,7 @@ export class EspacePublicController {
   @Public()
   @ApiOperation({
     summary:
-      'Donnees de la page d’accueil publique (compteurs reels, a la une)',
+      'Données de la page d’accueil publique (compteurs réels, à la une)',
   })
   @ApiResponse({ status: 200, type: AccueilPublicDto })
   getAccueil(): Promise<AccueilPublicDto> {
@@ -34,7 +35,7 @@ export class EspacePublicController {
 
   @Get('publications')
   @Public()
-  @ApiOperation({ summary: 'Publications publiees par la Presidence' })
+  @ApiOperation({ summary: 'Publications publiées par la Présidence' })
   listerPublications(@Query() query: PublicPublicationQueryDto) {
     return this.espacePublicService.listerPublications(query);
   }
@@ -53,11 +54,21 @@ export class EspacePublicController {
   @Get('projets')
   @Public()
   @ApiOperation({
-    summary: 'Projets de l’Universite (hors brouillons et expires)',
+    summary: 'Projets de l’Université (hors brouillons et expirés)',
   })
   @ApiResponse({ status: 200, type: [ProjetPublicDto] })
   listerProjets(@Query() query: PublicProjetQueryDto) {
     return this.espacePublicService.listerProjets(query);
+  }
+
+  @Get('projets/publies')
+  @Public()
+  @ApiOperation({
+    summary: 'Projets publiés par la Présidence (drapeau publie_le)',
+  })
+  @ApiResponse({ status: 200, type: [ProjetPublicDto] })
+  listerProjetsPublies(): Promise<ProjetPublicDto[]> {
+    return this.espacePublicService.listerProjetsPublies();
   }
 
   @Get('etablissements')
@@ -76,5 +87,13 @@ export class EspacePublicController {
   @ApiResponse({ status: 200, type: [PartenairePublicDto] })
   listerPartenaires(@Query() query: PublicPartenaireQueryDto) {
     return this.espacePublicService.listerPartenaires(query);
+  }
+
+  @Get('partenariats')
+  @Public()
+  @ApiOperation({ summary: 'Lister les partenariats publiés publiquement' })
+  @ApiResponse({ status: 200, type: [PartenariatPublicDto] })
+  listerPartenariatsPublies(): Promise<PartenariatPublicDto[]> {
+    return this.espacePublicService.listerPartenariatsPublies();
   }
 }
