@@ -15,7 +15,8 @@ export function SectionPublicationsAlaUne() {
   const diapositives = decouper(publications, 3)
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="vt-section vt-section-alt">
+      <div className="vt-wrap">
       <EnTeteSection
         etiquette="Actualités"
         titre="Publications récentes"
@@ -43,6 +44,7 @@ export function SectionPublicationsAlaUne() {
           )}
         />
       )}
+      </div>
     </section>
   )
 }

@@ -1,14 +1,13 @@
 // src/features/espace-public/components/SectionEtablissements.tsx
-import { Building2 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+// Etablissements mis en avant sur l'accueil, donnees de /public/accueil.
+import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { initiales } from "@/features/espace-public/lib/publique"
 
-// Section etablissements mis en avant sur la page d'accueil publique.
-// Affiche les etablissements a la une renvoyes par /public/accueil.
-// Apparition echelonnee au scroll (framer-motion) et cartes en survol.
+const TEINTES = ["", "vt-mono-2", "vt-mono-3", "vt-mono-4", "vt-mono-5"]
+
 export function SectionEtablissements() {
   const { data, isLoading } = usePublicAccueil()
   const etablissements = data?.etablissements_a_la_une ?? []
@@ -16,55 +15,42 @@ export function SectionEtablissements() {
   if (!isLoading && etablissements.length === 0) return null
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-      <EnTeteSection
-        etiquette="Réseau"
-        titre="Nos établissements"
-        description="Les facultés, écoles et instituts qui composent l'Université de Fianarantsoa."
-        lien={{ to: "/etablissements", libelle: "Voir tous" }}
-      />
+    <section className="vt-section">
+      <div className="vt-wrap">
+        <EnTeteSection
+          etiquette="Réseau"
+          titre="Nos établissements"
+          description="Les facultés, écoles et instituts qui composent l'Université de Fianarantsoa."
+          lien={{ to: "/etablissements", libelle: "Voir tous les établissements" }}
+        />
 
-      <RevealGroup className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading
-          ? [...Array(3)].map((_, i) => (
-              <Card key={i}>
-                <CardContent className="flex items-center gap-3 p-5">
-                  <Skeleton className="h-12 w-12 rounded-xl" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          : etablissements.map((etab) => (
-              <RevealItem key={etab.id}>
-                <Card className="group h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
-                  <CardContent className="flex items-center gap-4 p-5">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-background text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
-                      {etab.logo_url ? (
-                        <img
-                          src={etab.logo_url}
-                          alt={etab.nom}
-                          className="h-8 w-8 rounded object-contain"
-                        />
-                      ) : (
-                        <Building2 size={22} />
-                      )}
+        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
+          {isLoading
+            ? [...Array(3)].map((_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)
+            : etablissements.map((etab, i) => (
+                <article key={etab.id} className="vt-card">
+                  <Link to="/etablissements" className="vt-card-link">
+                    <div className="vt-card-body">
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        {etab.logo_url ? (
+                          <img src={etab.logo_url} alt="" className="h-11 w-11 rounded-lg object-contain ring-1 ring-[var(--color-border)]" loading="lazy" />
+                        ) : (
+                          <span className={`vt-mono ${TEINTES[i % TEINTES.length]}`} aria-hidden="true">
+                            {etab.sigle ?? initiales(etab.nom)}
+                          </span>
+                        )}
+                        <div style={{ minWidth: 0 }}>
+                          <h3 style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.3 }}>{etab.nom}</h3>
+                          {etab.sigle && <p className="vt-muted" style={{ fontSize: 13 }}>{etab.sigle}</p>}
+                        </div>
+                      </div>
+                      {etab.description && <p className="vt-muted">{etab.description}</p>}
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-heading text-sm font-semibold text-foreground">
-                        {etab.nom}
-                      </p>
-                      {etab.sigle && (
-                        <p className="text-xs text-muted-foreground">{etab.sigle}</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </RevealItem>
-            ))}
-      </RevealGroup>
+                  </Link>
+                </article>
+              ))}
+        </div>
+      </div>
     </section>
   )
 }

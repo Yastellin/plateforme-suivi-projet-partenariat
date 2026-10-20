@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth"
 import type { RoleUtilisateur } from "@/types/api"
 import { SidebarInterne } from "@/components/layout/SidebarInterne"
 import { TopbarPublique } from "@/components/layout/TopbarPublique"
+import "@/styles/vitrine.css"
 import { FooterPublique } from "@/components/layout/FooterPublique"
 import { TopbarInterne } from "@/components/layout/TopbarInterne"
 import { NotificationsDrawer } from "@/components/layout/NotificationsDrawer"
@@ -119,7 +120,7 @@ function RouteProtegee({
 function LayoutPublic() {
   return (
     <MotionConfig reducedMotion="user">
-      <div className="flex min-h-screen flex-col">
+      <div className="vitrine flex min-h-screen flex-col">
         <TopbarPublique />
         <main className="flex-1">
           <Outlet />
