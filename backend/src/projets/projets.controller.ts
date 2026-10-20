@@ -97,8 +97,8 @@ export class ProjetsController {
 
   @Post(':id/soumettre')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un projet à la Présidence' })
+  @Roles(Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un projet à la Présidence (etablissement uniquement)' })
   @ApiResponse({ status: 200, type: ProjetResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =

@@ -325,7 +325,9 @@ export class EspacePublicService {
       date_fin_prevue: projet.date_fin_prevue,
       description: publication?.description_publique ?? null,
       publication_id: publication?.id ?? null,
-      // L'etablissement est facultatif (projet porte par la Presidence seule).
+      // L'etablissement est facultatif (projet porte par la Presidence seule) :
+      // un projet peut ne plus avoir d'etablissement rattaché (nullable), le
+      // champ est alors absent de la fiche publique.
       etablissement: projet.etablissement
         ? {
             id: projet.etablissement.id,
