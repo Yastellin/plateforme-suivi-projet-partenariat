@@ -73,16 +73,20 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
     emailsSupplementairesDifferes,
     telephonesSupplementairesDifferes,
   );
+  const listeDoublonsIdentite = Array.isArray(doublonsIdentite) ? doublonsIdentite : [];
+  const listeDoublonsEmail = Array.isArray(doublonsEmail) ? doublonsEmail : [];
+  const listeDoublonsTelephone = Array.isArray(doublonsTelephone) ? doublonsTelephone : [];
+  const listeDoublonsSupplementaires = Array.isArray(doublonsSupplementaires) ? doublonsSupplementaires : [];
   const idProprietaire = (doublon: { id: string; proprietaire_id?: string }) => doublon.proprietaire_id ?? doublon.id;
-  const doublonIdentite = doublonsIdentite?.find((doublon) =>
+  const doublonIdentite = listeDoublonsIdentite.find((doublon) =>
     idProprietaire(doublon) !== partenaire?.id &&
     'raisons_doublon' in doublon &&
     doublon.raisons_doublon?.includes('nom identique') &&
     doublon.raisons_doublon?.includes('pays identique'),
   );
-  const doublonEmail = doublonsEmail?.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
-  const doublonTelephone = doublonsTelephone?.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
-  const doublonSupplementaire = doublonsSupplementaires.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
+  const doublonEmail = listeDoublonsEmail.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
+  const doublonTelephone = listeDoublonsTelephone.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
+  const doublonSupplementaire = listeDoublonsSupplementaires.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
 
   return (
     <form
