@@ -28,6 +28,7 @@ import { QueryDocumentDto } from './dto/query-document.dto';
 import { DocumentResponseDto } from './dto/document-response.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 const MIME_AUTORISES = [
   'application/pdf',
@@ -80,14 +81,19 @@ export class DocumentsController {
   @ApiOperation({ summary: 'Televerser un document (Presidence uniquement)' })
   @ApiResponse({ status: 201, type: DocumentResponseDto })
   upload(
+    @CurrentUser() user: any,
     @UploadedFile() fichier: Express.Multer.File,
     @Body() dto: UploadDocumentDto,
   ): Promise<DocumentResponseDto> {
-    return this.documentsService.upload(fichier, dto);
+    return this.documentsService.upload(fichier, dto, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   @Get()
-  @Roles(Role.PRESIDENCE)
+  @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({
     summary: 'Lister les documents (filtrable par projet, convention, cotutelle ou partenariat)',
   })
@@ -96,7 +102,7 @@ export class DocumentsController {
   }
 
   @Get(':id')
-  @Roles(Role.PRESIDENCE)
+  @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({ summary: 'Obtenir un document par ID' })
   @ApiResponse({ status: 200, type: DocumentResponseDto })
   findOne(
@@ -106,7 +112,7 @@ export class DocumentsController {
   }
 
   @Get(':id/telecharger')
-  @Roles(Role.PRESIDENCE)
+  @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({ summary: 'Telecharger un document' })
   async telecharger(
     @Param('id', ParseUUIDPipe) id: string,
@@ -117,7 +123,7 @@ export class DocumentsController {
   }
 
   @Get(':id/versions')
-  @Roles(Role.PRESIDENCE)
+  @Roles(Role.PRESIDENCE, Role.DECIDEUR)
   @ApiOperation({ summary: 'Lister les versions d un document' })
   @ApiResponse({ status: 200, type: [DocumentResponseDto] })
   findVersions(
@@ -128,8 +134,15 @@ export class DocumentsController {
 
   @Delete(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Supprimer un document (Presidence uniquement)' })
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
-    return this.documentsService.remove(id);
+  @ApiOperation({ summary: 'Archiver un document (Présidence uniquement)' })
+  remove(
+    @CurrentUser() user: any,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ message: string }> {
+    return this.documentsService.remove(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 }

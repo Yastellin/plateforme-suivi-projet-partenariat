@@ -68,9 +68,10 @@ export function PartenariatForm({ partenariat, estPresidence, onSoumettre, enCou
     register,
     handleSubmit,
     watch,
+    trigger,
     setValue,
     reset,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, isValid },
   } = useForm<PartenariatFormValues>({
     resolver: zodResolver(
       creerSchemaPartenariat(estPresidence, { exigerDateDebutFuture: !partenariat }),
@@ -90,6 +91,11 @@ export function PartenariatForm({ partenariat, estPresidence, onSoumettre, enCou
   }, [partenariat, estPresidence, reset]);
 
   const valeurs = watch();
+  useEffect(() => {
+    if (valeurs.date_debut && valeurs.date_fin) {
+      void trigger(['date_debut', 'date_fin']);
+    }
+  }, [valeurs.date_debut, valeurs.date_fin, trigger]);
 
   function mettreAJourSelection(
     champ: 'partenaires_ids' | 'etablissements_ids',
@@ -156,7 +162,7 @@ export function PartenariatForm({ partenariat, estPresidence, onSoumettre, enCou
 
       <button
         type="submit"
-        disabled={enCours}
+        disabled={enCours || !isValid}
         className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
       >
         {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

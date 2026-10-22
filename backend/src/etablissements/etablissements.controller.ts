@@ -4,11 +4,11 @@ import {
   Post,
   Param,
   ParseUUIDPipe,
-  Query,
   UploadedFile,
   UseInterceptors,
   BadRequestException,
   HttpCode,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -47,7 +47,7 @@ export class EtablissementsController {
 
   @Post(':id/logo')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
   @UseInterceptors(
     FileInterceptor('fichier', {
       limits: { fileSize: 2 * 1024 * 1024 },
@@ -62,13 +62,16 @@ export class EtablissementsController {
       },
     }),
   )
-  @ApiOperation({ summary: "Televerser le logo d'un etablissement (Presidence)" })
+  @ApiOperation({ summary: "Téléverser le logo d'un établissement autorisé" })
   @ApiResponse({ status: 200, type: EtablissementResponseDto })
   televerserLogo(
     @CurrentUser() user: any,
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() fichier: Express.Multer.File,
   ) {
+    if (user.role === Role.ETABLISSEMENT && user.etablissement_id !== id) {
+      throw new ForbiddenException("Vous ne pouvez modifier que le logo de votre établissement.");
+    }
     return this.etablissementsService.televerserLogo(id, fichier, {
       id: user.id,
       email: user.email,

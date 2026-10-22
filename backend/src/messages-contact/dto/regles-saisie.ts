@@ -12,5 +12,7 @@ export const REGLE_CONTENU_REEL =
   /^(?:[^\p{L}\p{N}]*[\p{L}\p{N}]){3,}[\s\S]*$/u;
 
 // Caracteres de controle (hors retour a la ligne et tabulation).
+/* eslint-disable no-control-regex -- ces plages sont précisément les caractères refusés */
 export const REGLE_SANS_CONTROLE =
   /^[^\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]*$/;
+/* eslint-enable no-control-regex */

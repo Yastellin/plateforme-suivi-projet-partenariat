@@ -6,6 +6,9 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
+  "moduleNameMapper": {
+    "^bcrypt$": "<rootDir>/mocks/bcrypt.ts"
+  },
   "testTimeout": 120000,
   "maxWorkers": 1
 }

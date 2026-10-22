@@ -1,10 +1,5 @@
 // backend/src/configuration/configuration.service.ts
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Configuration } from './entities/configuration.entity';
@@ -14,7 +9,7 @@ import { HistoriqueService } from '../historique/historique.service';
 import type { ContexteUtilisateur } from '../historique/historique.service';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
 
-const CLE_PRESEIDENCE = 'presidence';
+const CLE_PRESIDENCE = 'presidence';
 
 @Injectable()
 export class ConfigurationService {
@@ -28,12 +23,12 @@ export class ConfigurationService {
   /** Retourne (et cree si besoin) la configuration de la Presidence. */
   async getConfiguration(): Promise<Configuration> {
     let configuration = await this.configurationRepo.findOne({
-      where: { cle: CLE_PRESEIDENCE },
+      where: { cle: CLE_PRESIDENCE },
     });
 
     if (!configuration) {
       configuration = await this.configurationRepo.save(
-        this.configurationRepo.create({ cle: CLE_PRESEIDENCE }),
+        this.configurationRepo.create({ cle: CLE_PRESIDENCE }),
       );
     }
 
@@ -49,15 +44,10 @@ export class ConfigurationService {
       throw new BadRequestException('Aucun fichier fourni');
     }
 
-    const MIME_AUTORISES = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'image/svg+xml',
-    ];
+    const MIME_AUTORISES = ['image/jpeg', 'image/png', 'image/webp'];
     if (!MIME_AUTORISES.includes(fichier.mimetype)) {
       throw new BadRequestException(
-        'Format de logo non autorise (JPEG, PNG, WebP, SVG)',
+        'Format de logo non autorise (JPEG, PNG ou WebP)',
       );
     }
 

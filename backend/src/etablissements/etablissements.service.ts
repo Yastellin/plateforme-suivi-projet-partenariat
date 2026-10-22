@@ -52,11 +52,10 @@ export class EtablissementsService {
       'image/jpeg',
       'image/png',
       'image/webp',
-      'image/svg+xml',
     ];
     if (!MIME_AUTORISES.includes(fichier.mimetype)) {
       throw new BadRequestException(
-        'Format de logo non autorise (JPEG, PNG, WebP, SVG)',
+        'Format de logo non autorise (JPEG, PNG ou WebP)',
       );
     }
 

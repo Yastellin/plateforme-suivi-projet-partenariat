@@ -41,17 +41,17 @@ const COLONNES: Colonne<Publication>[] = [
   {
     id: "action",
     header: "",
-    cell: (p) => (
+    cell: (p) => p.statut === "PUBLIEE" ? (
       <a
         href={`/projets-partenariats/publication/${p.id}`}
         className="rounded p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Voir la publication"
+        aria-label="Voir la publication dans l'espace public"
       >
         <ExternalLink size={14} />
       </a>
-    ),
+    ) : <span className="text-[11.5px] text-[var(--color-text-secondary)]">Non publiée</span>,
   },
 ]
 

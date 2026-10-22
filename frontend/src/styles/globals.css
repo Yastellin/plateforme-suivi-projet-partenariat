@@ -1,4 +1,4 @@
-﻿/* src/styles/globals.css */
+/* src/styles/globals.css */
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -19,8 +19,8 @@
   --color-muted-foreground: var(--color-text-secondary);
   --color-accent: var(--color-active-zone);
   --color-accent-foreground: var(--color-brand-deep);
-  --color-destructive: #B91C1C;
-  --color-destructive-foreground: #FFFFFF;
+  --color-destructive: #b91c1c;
+  --color-destructive-foreground: #ffffff;
   --color-border: var(--color-border);
   --color-input: var(--color-border);
   --color-ring: var(--color-brand);
@@ -49,7 +49,10 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-heading);
     font-weight: 700;
     letter-spacing: -0.015em;
@@ -60,8 +63,37 @@
   height: 5px;
   background: repeating-linear-gradient(
     90deg,
-    var(--color-brand-moment) 0px, var(--color-brand-moment) 9px,
-    var(--color-brand) 9px, var(--color-brand) 18px
+    var(--color-brand-moment) 0px,
+    var(--color-brand-moment) 9px,
+    var(--color-brand) 9px,
+    var(--color-brand) 18px
   );
   border-radius: var(--radius) var(--radius) 0 0;
-}/* src/styles/globals.css */
+}
+
+/* Préférences de compte appliquées globalement. */
+html[data-density="COMPACTE"] table th,
+html[data-density="COMPACTE"] table td {
+  padding-top: 0.45rem !important;
+  padding-bottom: 0.45rem !important;
+}
+
+html[data-density="COMPACTE"] input,
+html[data-density="COMPACTE"] select,
+html[data-density="COMPACTE"] textarea,
+html[data-density="COMPACTE"] button {
+  line-height: 1.2;
+}
+
+html[data-aide-contextuelle="false"] [data-aide-contextuelle-contenu] {
+  display: none !important;
+}
+
+html.animations-reduites *,
+html.animations-reduites *::before,
+html.animations-reduites *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

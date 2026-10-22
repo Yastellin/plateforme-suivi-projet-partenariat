@@ -118,14 +118,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = errorResponse;
     } else if (typeof errorResponse === 'object' && errorResponse !== null) {
       if (Array.isArray(errorResponse.message)) {
-        errors = errorResponse.message;
-        message = 'Donnees invalides';
+        errors = errorResponse.message.map(String);
+        message = errors[0] ?? 'Données invalides';
       } else if (typeof errorResponse.message === 'string') {
         message = errorResponse.message;
         errors = [errorResponse.message];
       }
       if (Array.isArray(errorResponse.errors)) {
-        errors = errorResponse.errors;
+        errors = errorResponse.errors.map(String);
       }
     }
 
@@ -194,53 +194,58 @@ export class AllExceptionsFilter implements ExceptionFilter {
   ): ReponseMappee {
     switch (erreur.code) {
       // --- Contraintes d'integrite ---
-      case '23505': {
-        const champ = this.champConcerne(erreur);
+      case '23505':
+        if (erreur.constraint === 'uq_coordonnee_type_valeur') {
+          return {
+            status: HttpStatus.CONFLICT,
+            message:
+              'Cette adresse e-mail ou ce numéro de téléphone appartient déjà à une autre personne ou un autre partenaire.',
+            errors: [],
+          };
+        }
+        if (erreur.constraint === 'uq_partenaire_identite_active') {
+          return {
+            status: HttpStatus.CONFLICT,
+            message:
+              'Un partenaire actif de même nom et pays existe déjà pour cet établissement.',
+            errors: [],
+          };
+        }
         return {
           status: HttpStatus.CONFLICT,
-          message: `Un enregistrement avec cette valeur existe deja${champ ? ` (${champ})` : ''}`,
-          errors: [
-            `Contrainte d unicite : ${champ || erreur.constraint || 'champ unique'}`,
-          ],
+          message: 'Une donnée identique existe déjà.',
+          errors: [],
         };
-      }
 
-      case '23503': {
-        const champ = this.champConcerne(erreur);
+      case '23503':
         return {
           status: HttpStatus.CONFLICT,
           message:
-            'Operation impossible : des donnees liees existent ou manquent',
-          errors: [champ ? `Reference : ${champ}` : 'Contrainte de reference'],
+            'Cette opération est impossible car une donnée liée est absente ou utilise encore cet élément.',
+          errors: [],
         };
-      }
 
-      case '23502': {
-        const champ = erreur.column || this.champConcerne(erreur);
+      case '23502':
         return {
           status: HttpStatus.BAD_REQUEST,
-          message: `Un champ obligatoire est manquant${champ ? ` (${champ})` : ''}`,
-          errors: [champ ? `Champ : ${champ}` : 'Contrainte de non-nullite'],
+          message: 'Un champ obligatoire est manquant.',
+          errors: [],
         };
-      }
 
       case '23514':
       case '23P01':
         return {
           status: HttpStatus.BAD_REQUEST,
-          message: 'Contrainte de base de donnees non respectee',
-          errors: erreur.constraint
-            ? [`Contrainte : ${erreur.constraint}`]
-            : [],
+          message: 'Les données ne respectent pas les règles métier.',
+          errors: [],
         };
 
       // --- Valeurs invalides ---
       case '22P02':
-        // Exemple : identifiant non-UUID envoye a une colonne uuid
         return {
           status: HttpStatus.BAD_REQUEST,
-          message: 'Identifiant ou valeur de type invalide',
-          errors: [this.detailMessage(erreur)],
+          message: "Le format d'une donnée est invalide.",
+          errors: [],
         };
 
       case '22001':
@@ -255,8 +260,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       case '22008':
         return {
           status: HttpStatus.BAD_REQUEST,
-          message: 'Valeur hors limites ou format invalide pour un champ',
-          errors: [this.detailMessage(erreur)],
+          message:
+            'Une valeur est hors limites ou présente un format invalide.',
+          errors: [],
         };
 
       // --- Disponibilite ---
@@ -301,21 +307,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
           errors: [],
         };
     }
-  }
-
-  /** Extrait le ou les champs concernes depuis le detail PostgreSQL. */
-  private champConcerne(erreur: ErreurPostgres): string | null {
-    if (erreur.detail) {
-      // Exemple : 'Key (email)=(a@b.mg) already exists.'
-      const correspondance = /Key \(([^)]+)\)=/.exec(erreur.detail);
-      if (correspondance) return correspondance[1].replace(/,\s*/g, ', ');
-      // Exemple : 'Key (id)=(...) is not present in table "Projet".'
-      const reference = /is not present in table "([^"]+)"/.exec(erreur.detail);
-      if (reference) return reference[1];
-    }
-    if (erreur.column) return erreur.column;
-    if (erreur.constraint) return erreur.constraint;
-    return null;
   }
 
   private detailMessage(erreur: ErreurPostgres): string {

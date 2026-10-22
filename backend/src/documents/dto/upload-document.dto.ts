@@ -3,7 +3,6 @@ import {
   IsOptional,
   IsUUID,
   IsString,
-  ValidateIf,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TypeDocument } from '../../common/enums/type-document.enum';

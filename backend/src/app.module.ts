@@ -35,6 +35,8 @@ import { MailModule } from './mail/mail.module';
 import { MessagesContactModule } from './messages-contact/messages-contact.module';
 import { ConfigurationModule } from './configuration/configuration.module';
 import { HistoriqueModule } from './historique/historique.module';
+import { CoordonneesModule } from './coordonnees/coordonnees.module';
+import { UtilisateursModule } from './utilisateurs/utilisateurs.module';
 
 @Module({
   imports: [
@@ -53,7 +55,9 @@ import { HistoriqueModule } from './historique/historique.module';
     EventEmitterModule.forRoot(),
     HealthModule,
     AuthModule,
+    UtilisateursModule,
     EtablissementsModule,
+    CoordonneesModule,
     PartenairesModule,
     PartenariatsModule,
     ProjetsModule,
@@ -74,6 +78,7 @@ import { HistoriqueModule } from './historique/historique.module';
     ExportModule,
     MailModule,
     MessagesContactModule,
+    ConfigurationModule,
     HistoriqueModule,
   ],
   controllers: [AppController],

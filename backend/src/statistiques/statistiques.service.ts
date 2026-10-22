@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
@@ -57,7 +57,7 @@ export class StatistiquesService {
             where: {
               archive: false,
               etablissement_id: etab.id,
-              statut: In([StatutProjet.EN_COURS, StatutProjet.EN_ATTENTE]),
+              statut: StatutProjet.EN_COURS,
             },
           }),
           this.cotutelleRepo.count({

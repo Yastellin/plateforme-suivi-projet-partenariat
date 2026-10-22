@@ -7,7 +7,7 @@ import { TriangleAlert } from 'lucide-react';
 import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput';
 import { PartenaireForm } from '../components/PartenaireForm';
 import { useCreatePartenaire } from '../api/useCreatePartenaire';
-import { useRechercheDoublon } from '../api/useRechercheDoublon';
+import { useRechercheDoublon, type PartenaireAvecRaisons } from '../api/useRechercheDoublon';
 import { useEtablissements } from '@/features/etablissements/api/useEtablissements';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +27,9 @@ export function PartenaireCreatePage() {
   const { data: pageEtablissements } = useEtablissements();
   const etablissements = pageEtablissements?.data ?? [];
   const { mutate: creer, isPending } = useCreatePartenaire();
+  const doublonsPartenaires = doublons?.filter(
+    (doublon): doublon is PartenaireAvecRaisons => 'nom' in doublon,
+  );
 
   const cheminBase = estPresidence ? '/presidence' : '/etablissement';
 
@@ -64,14 +67,14 @@ export function PartenaireCreatePage() {
                 <p className="mb-4 text-[12.5px] text-[var(--color-text-secondary)]">Recherche en cours…</p>
               ) : null}
 
-              {doublons && doublons.length > 0 ? (
+              {doublonsPartenaires && doublonsPartenaires.length > 0 ? (
                 <div className="mb-4 flex flex-col gap-2 rounded-[var(--radius-sm)] border border-[var(--status-attente-fg)] bg-[var(--status-attente-bg)] p-3.5">
                   <div className="flex items-center gap-2 text-[12.5px] font-semibold text-[var(--status-attente-fg)]">
                     <TriangleAlert className="h-3.5 w-3.5" />
                     Partenaire(s) similaire(s) déjà enregistré(s)
                   </div>
                   <ul className="flex flex-col gap-1">
-                    {doublons.map((doublon) => (
+                    {doublonsPartenaires.map((doublon) => (
                       <li key={doublon.id}>
                         <button
                           type="button"

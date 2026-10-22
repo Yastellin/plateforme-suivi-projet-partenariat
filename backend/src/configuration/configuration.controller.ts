@@ -31,7 +31,7 @@ export class ConfigurationController {
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
   @ApiOperation({ summary: 'Obtenir la configuration (logo de la Presidence)' })
   @ApiResponse({ status: 200, type: ConfigurationResponseDto })
-  getConfiguration(@CurrentUser() user: any): Promise<ConfigurationResponseDto> {
+  getConfiguration(): Promise<ConfigurationResponseDto> {
     return this.configurationService.getConfiguration().then((c) => ({
       id: c.id,
       cle: c.cle,

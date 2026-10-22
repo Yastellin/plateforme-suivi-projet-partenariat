@@ -184,6 +184,98 @@ describe('Authentification (e2e)', () => {
     });
   });
 
+  describe('Compte, préférences et administration des accès', () => {
+    it('expose le compte établissement et mémorise ses préférences', async () => {
+      const compte = donnees<any>(
+        (
+          await request(ctx.app.getHttpServer())
+            .get('/api/compte')
+            .set(...enteteBearer(utilisateurEtablissement))
+            .expect(200)
+        ).body,
+      );
+      expect(compte.etablissement_nom).toEqual(expect.any(String));
+      expect(compte.preferences).toEqual(expect.any(Object));
+
+      const modifie = donnees<any>(
+        (
+          await request(ctx.app.getHttpServer())
+            .patch('/api/compte/preferences')
+            .set(...enteteBearer(utilisateurEtablissement))
+            .send({
+              theme: 'SOMBRE',
+              densite: 'COMPACTE',
+              animations: false,
+              aide_contextuelle: false,
+            })
+            .expect(200)
+        ).body,
+      );
+      expect(modifie.preferences).toMatchObject({
+        theme: 'SOMBRE',
+        densite: 'COMPACTE',
+        animations: false,
+        aide_contextuelle: false,
+      });
+
+      const profil = donnees<any>(
+        (
+          await request(ctx.app.getHttpServer())
+            .get('/api/auth/me')
+            .set(...enteteBearer(utilisateurEtablissement))
+            .expect(200)
+        ).body,
+      );
+      expect(profil.preferences.theme).toBe('SOMBRE');
+      expect(profil.etablissement_nom).toEqual(expect.any(String));
+    });
+
+    it('réserve la gestion des utilisateurs à la Présidence', async () => {
+      await request(ctx.app.getHttpServer())
+        .get('/api/utilisateurs')
+        .set(...enteteBearer(utilisateurEtablissement))
+        .expect(403);
+
+      const email = `decision-${Date.now()}@univ-toliara.mg`;
+      const cree = donnees<any>(
+        (
+          await request(ctx.app.getHttpServer())
+            .post('/api/utilisateurs')
+            .set(...enteteBearer(utilisateurPresidence))
+            .send({
+              email,
+              mot_de_passe: 'mot-de-passe-123',
+              role: Role.DECIDEUR,
+            })
+            .expect(201)
+        ).body,
+      );
+      expect(cree).toMatchObject({ email, role: Role.DECIDEUR, actif: true });
+
+      const desactive = donnees<any>(
+        (
+          await request(ctx.app.getHttpServer())
+            .patch(`/api/utilisateurs/${cree.id}/acces`)
+            .set(...enteteBearer(utilisateurPresidence))
+            .send({ actif: false })
+            .expect(200)
+        ).body,
+      );
+      expect(desactive.actif).toBe(false);
+
+      await request(ctx.app.getHttpServer())
+        .get('/api/auth/me')
+        .set(
+          ...enteteBearer({
+            id: cree.id,
+            email,
+            role: Role.DECIDEUR,
+          }),
+        )
+        .expect(401);
+    });
+  });
+
   describe('Controle des roles', () => {
     it('interdit a un DECIDEUR de creer un projet (403)', async () => {
       const reponse = await request(ctx.app.getHttpServer())

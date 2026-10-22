@@ -22,6 +22,7 @@ import { QueryCotutelleDto } from './dto/query-cotutelle.dto';
 import { CotutelleResponseDto } from './dto/cotutelle-response.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Cotutelles')
 @ApiBearerAuth()
@@ -38,21 +39,29 @@ export class CotutellesController {
   }
 
   @Get()
-  @Roles(Role.PRESIDENCE, Role.DECIDEUR)
-  @ApiOperation({ summary: 'Lister les cotutelles' })
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
+  @ApiOperation({ summary: 'Lister les cotutelles accessibles' })
   @ApiResponse({ status: 200 })
-  findAll(@Query() query: QueryCotutelleDto) {
-    return this.cotutellesService.findAll(query);
+  findAll(@CurrentUser() user: any, @Query() query: QueryCotutelleDto) {
+    return this.cotutellesService.findAll(
+      user.role === Role.ETABLISSEMENT
+        ? { ...query, etablissement_id: user.etablissement_id }
+        : query,
+    );
   }
 
   @Get(':id')
-  @Roles(Role.PRESIDENCE, Role.DECIDEUR)
-  @ApiOperation({ summary: 'Obtenir une cotutelle par ID' })
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
+  @ApiOperation({ summary: 'Obtenir une cotutelle accessible par ID' })
   @ApiResponse({ status: 200, type: CotutelleResponseDto })
   findOne(
+    @CurrentUser() user: any,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<CotutelleResponseDto> {
-    return this.cotutellesService.findOne(id);
+    return this.cotutellesService.findOne(
+      id,
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined,
+    );
   }
 
   @Patch(':id')
@@ -74,8 +83,13 @@ export class CotutellesController {
   @ApiOperation({ summary: 'Archiver une cotutelle (Presidence uniquement)' })
   @ApiResponse({ status: 200, type: CotutelleResponseDto })
   archiver(
+    @CurrentUser() user: any,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<CotutelleResponseDto> {
-    return this.cotutellesService.archiver(id);
+    return this.cotutellesService.archiver(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 }

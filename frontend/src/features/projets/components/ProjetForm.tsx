@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
@@ -40,7 +41,9 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
     register,
     control,
     handleSubmit,
-    formState: { errors },
+    watch,
+    trigger,
+    formState: { errors, isValid },
   } = useForm<ProjetFormValues>({
     resolver: zodResolver(creerSchemaProjet({ exigerDateDebutFuture: !projet })) as any,
     mode: "onChange",
@@ -62,6 +65,12 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
       sites_ids: projet?.sites?.map((s) => s.site_id) ?? [],
     },
   })
+
+  const dateDebut = watch("date_debut")
+  const dateFin = watch("date_fin_prevue")
+  useEffect(() => {
+    if (dateDebut && dateFin) void trigger(["date_debut", "date_fin_prevue"])
+  }, [dateDebut, dateFin, trigger])
 
   const onSubmit = (valeurs: ProjetFormValues) => {
     if (projet) {
@@ -109,7 +118,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_fin_prevue" requis>Date de fin prévue</Label>
-          <Input id="date_fin_prevue" type="date" aria-invalid={!!errors.date_fin_prevue} {...register("date_fin_prevue")} />
+          <Input id="date_fin_prevue" type="date" min={dateDebut || undefined} aria-invalid={!!errors.date_fin_prevue} {...register("date_fin_prevue")} />
           {errors.date_fin_prevue && <p className="text-sm text-destructive">{errors.date_fin_prevue.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
@@ -143,6 +152,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
             />
           )}
         />
+        {errors.porteur ? <p className="text-sm text-destructive">Le porteur du projet est obligatoire.</p> : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -174,7 +184,7 @@ export function ProjetForm({ projet, onSucces, onAnnuler }: ProjetFormProps) {
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>Annuler</Button>
-        <Button type="submit" disabled={enCours}>
+        <Button type="submit" disabled={enCours || !isValid}>
           {enCours && <LoaderCircle className="animate-spin" />}
           {projet ? "Enregistrer les modifications" : "Créer le projet"}
         </Button>

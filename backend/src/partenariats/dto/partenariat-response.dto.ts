@@ -67,6 +67,9 @@ export class PartenariatResponseDto {
   @ApiProperty({ nullable: true })
   publie_le: Date | null;
 
+  @ApiProperty({ nullable: true })
+  cree_par_role: string | null;
+
   @ApiProperty()
   created_at: Date;
 

@@ -19,6 +19,9 @@ export function configurerApplication(app: NestExpressApplication): void {
     helmet({
       contentSecurityPolicy: false,
       crossOriginEmbedderPolicy: false,
+      // Les photos et logos sont servis par l'API et affichés par le frontend,
+      // souvent depuis une origine distincte en développement.
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
 
@@ -50,8 +53,13 @@ export function configurerApplication(app: NestExpressApplication): void {
   });
   logger.log(`Origines CORS autorisees : ${corsOrigins.join(', ')}`);
 
-  // Servir les fichiers uploades (documents, logos, photos)
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
-    prefix: '/uploads/',
+  // Seuls les medias réellement publics sont servis sans authentification.
+  // Les documents restent hors du middleware statique et passent par
+  // /api/documents/:id/telecharger afin d'appliquer les droits d'accès.
+  app.useStaticAssets(join(process.cwd(), 'uploads', 'logos'), {
+    prefix: '/uploads/logos/',
+  });
+  app.useStaticAssets(join(process.cwd(), 'uploads', 'publications'), {
+    prefix: '/uploads/publications/',
   });
 }

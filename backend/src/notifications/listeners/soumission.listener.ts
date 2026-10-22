@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications.service';
 import { TypeNotification } from '../../common/enums/type-notification.enum';
@@ -6,11 +6,13 @@ import { PrioriteNotification } from '../../common/enums/priorite-notification.e
 
 @Injectable()
 export class SoumissionListener {
+  private readonly logger = new Logger(SoumissionListener.name);
+
   constructor(private notificationsService: NotificationsService) {}
 
   @OnEvent('projet.soumis')
-  async onProjetSoumis(payload: any): Promise<void> {
-    await this.notifierPresidence(
+  onProjetSoumis(payload: any): Promise<void> {
+    return this.notifierAvecGestion(
       payload,
       TypeNotification.PROJET_SOUMIS,
       'Projet',
@@ -18,8 +20,8 @@ export class SoumissionListener {
   }
 
   @OnEvent('partenariat.soumis')
-  async onPartenariatSoumis(payload: any): Promise<void> {
-    await this.notifierPresidence(
+  onPartenariatSoumis(payload: any): Promise<void> {
+    return this.notifierAvecGestion(
       payload,
       TypeNotification.PARTENARIAT_SOUMIS,
       'Partenariat',
@@ -27,12 +29,29 @@ export class SoumissionListener {
   }
 
   @OnEvent('partenaire.soumis')
-  async onPartenaireSoumis(payload: any): Promise<void> {
-    await this.notifierPresidence(
+  onPartenaireSoumis(payload: any): Promise<void> {
+    return this.notifierAvecGestion(
       payload,
       TypeNotification.PARTENAIRE_SOUMIS,
       'Partenaire',
     );
+  }
+
+  private async notifierAvecGestion(
+    payload: any,
+    typeDefaut: TypeNotification,
+    refDefaut: string,
+  ): Promise<void> {
+    try {
+      await this.notifierPresidence(payload, typeDefaut, refDefaut);
+    } catch (erreur) {
+      // La donnée est déjà soumise : un incident de notification est journalisé
+      // mais ne transforme pas une soumission réussie en erreur HTTP.
+      this.logger.error(
+        `Échec de la notification de soumission ${payload.reference_id ?? ''}`,
+        erreur instanceof Error ? erreur.stack : String(erreur),
+      );
+    }
   }
 
   private async notifierPresidence(

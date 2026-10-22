@@ -1,39 +1,54 @@
-﻿// src/features/partenariats/pages/PartenariatDetailPage.tsx
+// src/features/partenariats/pages/PartenariatDetailPage.tsx
 
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Archive } from 'lucide-react';
-import { usePartenariat } from '../api/usePartenariat';
-import { useUpdatePartenariat } from '../api/useUpdatePartenariat';
-import { useArchiverPartenariat } from '../api/useArchiverPartenariat';
-import { PartenariatForm } from '../components/PartenariatForm';
-import { PartenariatInformations } from '../components/PartenariatInformations';
-import { BoutonSoumettre } from '../components/BoutonSoumettre';
-import { StatusBadge } from '@/components/shared/StatusBadge';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
-import { DestructiveConfirmDialog } from '@/components/shared/DestructiveConfirmDialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/useAuth';
-import { LIBELLES_DOMAINE_PARTENARIAT, LIBELLES_STATUT_PARTENARIAT } from '@/lib/status-mappings';
-import type { PartenariatFormValues } from '@/lib/validators/partenariat.schema';
-import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { Archive, Check, Globe } from "lucide-react";
+import { usePartenariat } from "../api/usePartenariat";
+import { useUpdatePartenariat } from "../api/useUpdatePartenariat";
+import { useArchiverPartenariat } from "../api/useArchiverPartenariat";
+import { PartenariatForm } from "../components/PartenariatForm";
+import { PartenariatInformations } from "../components/PartenariatInformations";
+import { BoutonSoumettre } from "../components/BoutonSoumettre";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Panel, PanelHeader, PanelBody } from "@/components/shared/Panel";
+import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  LIBELLES_DOMAINE_PARTENARIAT,
+  LIBELLES_STATUT_PARTENARIAT,
+} from "@/lib/status-mappings";
+import type { PartenariatFormValues } from "@/lib/validators/partenariat.schema";
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext";
+import { useActionWorkflow } from "@/features/soumissions/api/useActionWorkflow";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { ListeDocumentsEntite } from "@/features/documents/components/ListeDocumentsEntite";
 
 export function PartenariatDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { utilisateur } = useAuth();
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
+  const [dialoguePublicationOuvert, setDialoguePublicationOuvert] =
+    useState(false);
 
-  const { data: partenariat, isLoading } = usePartenariat(id ?? '');
-  useTitreBreadcrumb(partenariat?.intitule)
-  const { mutate: mettreAJour, isPending: enCoursMiseAJour } = useUpdatePartenariat();
-  const { mutate: archiver, isPending: enCoursArchivage } = useArchiverPartenariat();
+  const { data: partenariat, isLoading } = usePartenariat(id ?? "");
+  useTitreBreadcrumb(partenariat?.intitule);
+  const { mutate: mettreAJour, isPending: enCoursMiseAJour } =
+    useUpdatePartenariat();
+  const { mutate: archiver, isPending: enCoursArchivage } =
+    useArchiverPartenariat();
+  const publication = useActionWorkflow("partenariats", id ?? "", "publier");
 
   const role = utilisateur?.role;
-  const estPresidence = role === 'PRESIDENCE';
-  const cheminBase = estPresidence ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur';
+  const estPresidence = role === "PRESIDENCE";
+  const cheminBase = estPresidence
+    ? "/presidence"
+    : role === "ETABLISSEMENT"
+      ? "/etablissement"
+      : "/decideur";
 
   function onSoumettre(valeurs: PartenariatFormValues) {
     if (!id) {
@@ -42,7 +57,7 @@ export function PartenariatDetailPage() {
     mettreAJour(
       { id, valeurs },
       {
-        onSuccess: () => toast.success('Partenariat mis à jour'),
+        onSuccess: () => toast.success("Partenariat mis à jour"),
         onError: (erreur) => toast.error(erreur.message),
       },
     );
@@ -54,7 +69,7 @@ export function PartenariatDetailPage() {
     }
     archiver(id, {
       onSuccess: () => {
-        toast.success('Partenariat archivé');
+        toast.success("Partenariat archivé");
         navigate(`${cheminBase}/partenaires-partenariats/partenariats`);
       },
       onError: (erreur) => toast.error(erreur.message),
@@ -71,14 +86,28 @@ export function PartenariatDetailPage() {
   }
 
   if (!partenariat) {
-    return <p className="text-[13.5px] text-[var(--color-text-secondary)]">Partenariat introuvable.</p>;
+    return (
+      <p className="text-[13.5px] text-[var(--color-text-secondary)]">
+        Partenariat introuvable.
+      </p>
+    );
   }
 
   const info = LIBELLES_STATUT_PARTENARIAT[partenariat.statut];
-  const estBrouillon = partenariat.statut === 'BROUILLON';
-  const peutModifier = estPresidence || (role === 'ETABLISSEMENT' && estBrouillon);
-  const peutSoumettre = (estPresidence || role === 'ETABLISSEMENT') && estBrouillon;
-  const soumisParEtablissement = role === 'ETABLISSEMENT' && !estBrouillon;
+  const estBrouillon = partenariat.statut === "BROUILLON";
+  const peutModifier =
+    estPresidence ||
+    (role === "ETABLISSEMENT" &&
+      partenariat.cree_par_role === "ETABLISSEMENT" &&
+      estBrouillon);
+  const peutSoumettre =
+    role === "ETABLISSEMENT" &&
+    partenariat.cree_par_role === "ETABLISSEMENT" &&
+    estBrouillon &&
+    !partenariat.soumis_le &&
+    !partenariat.publie_le;
+  const soumisParEtablissement =
+    role === "ETABLISSEMENT" && Boolean(partenariat.soumis_le);
 
   return (
     <div>
@@ -88,7 +117,29 @@ export function PartenariatDetailPage() {
         badge={<StatusBadge libelle={info.libelle} tonalite={info.tonalite} />}
         actions={
           <div className="flex gap-2">
-            {peutSoumettre ? <BoutonSoumettre partenariatId={partenariat.id} intitule={partenariat.intitule} /> : null}
+            {peutSoumettre ? (
+              <BoutonSoumettre
+                partenariatId={partenariat.id}
+                intitule={partenariat.intitule}
+              />
+            ) : null}
+            {estPresidence &&
+            (partenariat.soumis_le ||
+              partenariat.cree_par_role === "PRESIDENCE") &&
+            !partenariat.publie_le ? (
+              <button
+                type="button"
+                onClick={() => setDialoguePublicationOuvert(true)}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-brand)]"
+              >
+                <Globe className="h-3.5 w-3.5" /> Publier
+              </button>
+            ) : null}
+            {estPresidence && partenariat.publie_le ? (
+              <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-xs font-semibold text-[var(--color-text-secondary)]">
+                <Check className="h-3.5 w-3.5" /> Publié
+              </span>
+            ) : null}
             {estPresidence ? (
               <button
                 type="button"
@@ -102,6 +153,17 @@ export function PartenariatDetailPage() {
           </div>
         }
       />
+
+      <p className="mb-3 text-xs font-medium text-[var(--color-text-secondary)]">
+        État :{" "}
+        {partenariat.publie_le
+          ? "publié"
+          : partenariat.soumis_le
+            ? "soumis à la Présidence"
+            : partenariat.cree_par_role === "PRESIDENCE"
+              ? "donnée de la Présidence"
+              : "non soumis"}
+      </p>
 
       {soumisParEtablissement ? (
         <p className="mb-[22px] rounded-[var(--radius-sm)] bg-[var(--status-attente-bg)] px-4 py-3 text-[13px] font-medium text-[var(--status-attente-fg)]">
@@ -125,10 +187,45 @@ export function PartenariatDetailPage() {
         <Panel>
           <PanelHeader titre="Informations" sousTitre="Fiche du partenariat" />
           <PanelBody>
-            <PartenariatInformations partenariat={partenariat} cheminBase={cheminBase} />
+            <PartenariatInformations
+              partenariat={partenariat}
+              cheminBase={cheminBase}
+            />
           </PanelBody>
         </Panel>
       )}
+
+      {role !== "ETABLISSEMENT" ? (
+        <Panel className="mt-4">
+          <PanelHeader
+            titre="Documents"
+            sousTitre="Pièces rattachées à ce partenariat"
+          />
+          <PanelBody>
+            <ListeDocumentsEntite partenariatId={partenariat.id} />
+          </PanelBody>
+        </Panel>
+      ) : null}
+
+      {dialoguePublicationOuvert ? (
+        <ConfirmDialog
+          ouvert
+          onFermer={() => setDialoguePublicationOuvert(false)}
+          onConfirmer={() =>
+            publication.mutate(undefined, {
+              onSuccess: () => {
+                toast.success("Partenariat publié");
+                setDialoguePublicationOuvert(false);
+              },
+              onError: (erreur) => toast.error(erreur.message),
+            })
+          }
+          titre="Publier ce partenariat ?"
+          description="Le partenariat sera rendu visible dans l'espace public."
+          libelleAction="Publier"
+          enCours={publication.isPending}
+        />
+      ) : null}
 
       {estPresidence ? (
         <DestructiveConfirmDialog

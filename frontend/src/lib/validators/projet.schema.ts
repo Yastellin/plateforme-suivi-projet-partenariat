@@ -1,4 +1,4 @@
-﻿import { z } from "zod"
+import { z } from "zod"
 
 import { validerDates } from "./regles-dates"
 
@@ -19,7 +19,11 @@ export type PorteurFormValue =
 const porteurSchema = z.custom<PorteurFormValue | null>(() => true)
 
 const schemaProjetBase = z.object({
-  nom: z.string().min(2, "Le nom doit contenir au moins 2 caracteres"),
+  nom: z
+    .string()
+    .trim()
+    .min(1, "Le nom du projet est requis")
+    .min(2, "Le nom doit contenir au moins 2 caractères"),
   intitule_officiel: z.string().optional(),
   type: z.string().min(1, "Le type est requis"),
   domaine: z.string().optional(),

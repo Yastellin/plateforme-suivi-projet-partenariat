@@ -37,6 +37,8 @@ import { DomainePartenariat } from '../common/enums/domaine-partenariat.enum';
 import { StatutPartenariat } from '../common/enums/statut-partenariat.enum';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
 import { StatutConvention } from '../common/enums/statut-convention.enum';
+import { TypeCoordonnee } from '../common/enums/type-coordonnee.enum';
+import { Coordonnee } from '../coordonnees/entities/coordonnee.entity';
 
 /** Toutes les tables de donnees (hors table de migrations). */
 const TABLES = [
@@ -56,6 +58,7 @@ const TABLES = [
   'PartenariatPartenaire',
   'PartenariatEtablissement',
   'Partenariat',
+  'Coordonnee',
   'Contact',
   'Partenaire',
   'password_reset_tokens',
@@ -176,31 +179,60 @@ export async function executerSeed(ds: DataSource): Promise<void> {
 
   // --- Partenaire ---
   const partenaire = await creer(ds, Partenaire, {
-    nom: 'Université de Toulouse',
+    nom: 'Université de Toliara',
     type: 'Université',
-    pays: 'France',
-    adresse: 'Toulouse, France',
-    telephone: '+33 5 61 55 66 77',
-    email: 'contact@univ-toulouse.fr',
-    site_web: 'https://www.univ-toulouse.fr',
+    pays: 'Madagascar',
+    adresse: 'Maninday, Toliara',
+    telephone: '+261 34 12 345 67',
+    email: 'contact@univ-toliara.mg',
+    site_web: 'https://www.univ-toliara.mg',
     description: 'Partenaire académique historique',
     statut: StatutPartenaire.ACTIF,
     visibilite: Visibilite.PUBLIC,
     est_strategique: true,
     etablissement_id: etab1.id,
+    cree_par_role: Role.PRESIDENCE,
+    publie_le: new Date(),
   });
 
-  await creer(ds, Contact, {
-    nom: 'Prof. Dupont Marie',
-    fonction: 'Responsable des relations internationales',
-    email: 'marie.dupont@univ-toulouse.fr',
-    telephone: '+33 5 61 55 88 99',
+  const contact = await creer(ds, Contact, {
+    nom: 'Pr. Rakoto Soa',
+    fonction: 'Responsable des relations interuniversitaires',
+    email: 'soa.rakoto@univ-toliara.mg',
+    telephone: '+261 32 12 345 67',
     partenaire_id: partenaire.id,
+  });
+
+  // Le seed passe habituellement après les migrations : il alimente donc
+  // aussi le registre normalisé qui garantit l'unicité globale des coordonnées.
+  await creer(ds, Coordonnee, {
+    type: TypeCoordonnee.EMAIL,
+    valeur: partenaire.email!,
+    valeur_normalisee: partenaire.email!.trim().toLocaleLowerCase('fr'),
+    partenaire_id: partenaire.id,
+  });
+  await creer(ds, Coordonnee, {
+    type: TypeCoordonnee.TELEPHONE,
+    valeur: partenaire.telephone!,
+    valeur_normalisee: '+261341234567',
+    partenaire_id: partenaire.id,
+  });
+  await creer(ds, Coordonnee, {
+    type: TypeCoordonnee.EMAIL,
+    valeur: contact.email!,
+    valeur_normalisee: contact.email!.trim().toLocaleLowerCase('fr'),
+    contact_id: contact.id,
+  });
+  await creer(ds, Coordonnee, {
+    type: TypeCoordonnee.TELEPHONE,
+    valeur: contact.telephone!,
+    valeur_normalisee: '+261321234567',
+    contact_id: contact.id,
   });
 
   // --- Partenariat ---
   const partenariat = await creer(ds, Partenariat, {
-    intitule: 'Coopération scientifique Madagascar - France',
+    intitule: 'Coopération scientifique interuniversitaire à Madagascar',
     objet: 'Échanges de chercheurs et co-publications',
     domaine: DomainePartenariat.RECHERCHE,
     date_debut: new Date('2024-01-01'),
@@ -208,6 +240,8 @@ export async function executerSeed(ds: DataSource): Promise<void> {
     statut: StatutPartenariat.EN_COURS,
     actions_realisees: "Missions d'échange réalisées en 2024",
     actions_en_cours: "Préparation d'un projet de recherche commun",
+    cree_par_role: Role.PRESIDENCE,
+    publie_le: new Date(),
   });
 
   await creer(ds, PartenariatEtablissement, {
@@ -234,6 +268,7 @@ export async function executerSeed(ds: DataSource): Promise<void> {
     etablissement_id: etab1.id,
     porteur_id: porteur.id,
     partenariat_id: partenariat.id,
+    cree_par_role: Role.PRESIDENCE,
   });
 
   await creer(ds, ProjetBailleur, {
@@ -266,7 +301,7 @@ export async function executerSeed(ds: DataSource): Promise<void> {
 
   await creer(ds, Convention, {
     reference: 'CONV-2025-001',
-    titre: 'Convention de partenariat FDS - Université de Toulouse',
+    titre: 'Convention de partenariat FDS - Université de Toliara',
     date_debut: new Date('2025-01-01'),
     date_fin: new Date('2027-01-01'),
     statut: StatutConvention.EN_ATTENTE_SIGNATURE,

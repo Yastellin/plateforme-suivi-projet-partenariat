@@ -19,6 +19,11 @@ function chargeProjet(nom: string, etablissementId?: string) {
     budget: 12000,
     date_debut: dateIsoDans(15),
     date_fin_prevue: dateIsoDans(400),
+    porteur: {
+      type_porteur: 'PERSONNE',
+      nom: 'Rakoto Soa',
+      institution_rattachement: 'Université de Toliara',
+    },
     ...(etablissementId ? { etablissement_id: etablissementId } : {}),
   };
 }
@@ -67,12 +72,14 @@ describe('Projets (e2e)', () => {
       expect(projet.statut).toBe('BROUILLON');
     });
 
-    it('exige un etablissement pour la PRESIDENCE (400)', async () => {
-      await request(ctx.app.getHttpServer())
+    it('accepte un projet transversal de la PRESIDENCE sans établissement', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
         .post('/api/projets')
         .set(...enteteBearer(presidence))
-        .send(chargeProjet('Projet sans etablissement'))
-        .expect(400);
+        .send(chargeProjet('Projet transversal'))
+        .expect(201);
+
+      expect(donnees<any>(reponse.body).etablissement_id).toBeNull();
     });
 
     it('accepte la creation par la PRESIDENCE avec etablissement_id', async () => {
@@ -123,6 +130,24 @@ describe('Projets (e2e)', () => {
         expect(projet.etablissement_id).toBe(etablissementFdsId);
         expect(projet.statut).toBe('BROUILLON');
       }
+    });
+
+    it('compte comme projets en cours uniquement le statut EN_COURS', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .get('/api/tableau-de-bord')
+        .set(...enteteBearer(etablissementFds))
+        .expect(200);
+      const tableau = donnees<any>(reponse.body);
+      const [{ total }] = await ctx.dataSource.query(
+        `SELECT COUNT(*)::int AS total FROM "Projet"
+         WHERE archive = false AND etablissement_id = $1 AND statut = 'EN_COURS'`,
+        [etablissementFdsId],
+      );
+
+      expect(tableau.compteurs.projets_en_cours).toBe(total);
+      expect(tableau.compteurs.projets_en_cours).toBe(
+        tableau.projets_par_statut.EN_COURS,
+      );
     });
 
     it('ne montre pas a un etablissement les projets d un autre', async () => {

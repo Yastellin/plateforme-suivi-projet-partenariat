@@ -7,9 +7,10 @@ import {
 import { ContactsService } from './contacts.service';
 import { Contact } from '../entities/contact.entity';
 import { Partenaire } from '../entities/partenaire.entity';
+import { CoordonneesModule } from '../../coordonnees/coordonnees.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Contact, Partenaire])],
+  imports: [TypeOrmModule.forFeature([Contact, Partenaire]), CoordonneesModule],
   controllers: [ContactsController, ContactsDirectController],
   providers: [ContactsService],
   exports: [ContactsService],

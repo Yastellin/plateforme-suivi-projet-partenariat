@@ -13,6 +13,10 @@ export class ContactResponseDto {
   email?: string;
   @ApiProperty()
   telephone?: string;
+  @ApiProperty({ type: [String] })
+  emails?: string[];
+  @ApiProperty({ type: [String] })
+  telephones?: string[];
 }
 
 export class PartenaireResponseDto {
@@ -30,6 +34,10 @@ export class PartenaireResponseDto {
   telephone?: string;
   @ApiProperty()
   email?: string;
+  @ApiProperty({ type: [String] })
+  emails?: string[];
+  @ApiProperty({ type: [String] })
+  telephones?: string[];
   @ApiProperty()
   site_web?: string;
   @ApiProperty()
@@ -44,6 +52,12 @@ export class PartenaireResponseDto {
   logo_url?: string;
   @ApiProperty()
   archive: boolean;
+  @ApiProperty({ nullable: true })
+  soumis_le: Date | null;
+  @ApiProperty({ nullable: true })
+  publie_le: Date | null;
+  @ApiProperty({ nullable: true })
+  cree_par_role: string | null;
   @ApiProperty()
   etablissement_id: string;
   @ApiProperty({ type: [ContactResponseDto] })

@@ -1,36 +1,50 @@
 // src/features/documents/components/ListeDocumentsEntite.tsx
-import { Download, FileText } from "lucide-react"
+import { Download, FileText } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { EmptyState } from "@/components/shared/EmptyState"
-import { useDocumentsEntite } from "@/features/documents/api/useDocumentsEntite"
-import { useTelechargerDocument } from "@/features/documents/api/useTelechargerDocument"
-import { formaterDate } from "@/lib/format"
-import type { DocumentFichier, TypeDocument } from "@/types/api"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useDocumentsEntite } from "@/features/documents/api/useDocumentsEntite";
+import { useTelechargerDocument } from "@/features/documents/api/useTelechargerDocument";
+import { formaterDate } from "@/lib/format";
+import type { DocumentFichier, TypeDocument } from "@/types/api";
 
 const LIBELLES_TYPE: Record<TypeDocument, string> = {
   TDR: "Termes de référence",
   DESCRIPTION: "Description de projet",
   CONVENTION: "Convention",
   AUTRE: "Autre",
-}
+};
 
 interface Props {
-  projetId?: string
-  conventionId?: string
+  projetId?: string;
+  conventionId?: string;
+  cotutelleId?: string;
+  partenariatId?: string;
 }
 
-/** Documents d'un projet ou d'une convention, avec l'historique des versions. */
-export function ListeDocumentsEntite({ projetId, conventionId }: Props) {
-  const { data: documents, isLoading, isError, error } = useDocumentsEntite({
+/** Dernière version active des documents rattachés à une entité métier. */
+export function ListeDocumentsEntite({
+  projetId,
+  conventionId,
+  cotutelleId,
+  partenariatId,
+}: Props) {
+  const {
+    data: documents,
+    isLoading,
+    isError,
+    error,
+  } = useDocumentsEntite({
     projet_id: projetId,
     convention_id: conventionId,
-  })
-  const telechargement = useTelechargerDocument()
+    cotutelle_id: cotutelleId,
+    partenariat_id: partenariatId,
+  });
+  const telechargement = useTelechargerDocument();
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Chargement...</p>
+    return <p className="text-sm text-muted-foreground">Chargement...</p>;
   }
 
   // Les documents sont reserves a la Presidence (contrat API) : les autres
@@ -40,7 +54,7 @@ export function ListeDocumentsEntite({ projetId, conventionId }: Props) {
       <p className="text-sm text-muted-foreground">
         {error?.message ?? "Impossible de charger les documents."}
       </p>
-    )
+    );
   }
 
   if (!documents || documents.length === 0) {
@@ -50,10 +64,10 @@ export function ListeDocumentsEntite({ projetId, conventionId }: Props) {
         titre="Aucun document"
         description="Aucun document n'a encore été téléversé."
       />
-    )
+    );
   }
 
-  const types = [...new Set(documents.map((d) => d.type))]
+  const types = [...new Set(documents.map((d) => d.type))];
 
   return (
     <div className="flex flex-col gap-4">
@@ -70,22 +84,25 @@ export function ListeDocumentsEntite({ projetId, conventionId }: Props) {
                 key={document.id}
                 document={document}
                 onTelecharger={() =>
-                  telechargement.mutate({ id: document.id, nomFichier: document.nom_fichier })
+                  telechargement.mutate({
+                    id: document.id,
+                    nomFichier: document.nom_fichier,
+                  })
                 }
               />
             ))}
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 function LigneDocument({
   document,
   onTelecharger,
 }: {
-  document: DocumentFichier
-  onTelecharger: () => void
+  document: DocumentFichier;
+  onTelecharger: () => void;
 }) {
   return (
     <div className="flex items-center justify-between rounded-md border border-border p-3">
@@ -109,5 +126,5 @@ function LigneDocument({
         </Button>
       </div>
     </div>
-  )
+  );
 }

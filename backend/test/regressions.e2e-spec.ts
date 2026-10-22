@@ -57,7 +57,9 @@ describe('Correctifs signales (e2e)', () => {
       const [beneficiaire] = await ctx.dataSource.query(
         `SELECT id FROM "Beneficiaire" LIMIT 1`,
       );
-      const [site] = await ctx.dataSource.query(`SELECT id FROM "Site" LIMIT 1`);
+      const [site] = await ctx.dataSource.query(
+        `SELECT id FROM "Site" LIMIT 1`,
+      );
 
       const reponse = await request(url())
         .post('/api/projets')
@@ -68,6 +70,7 @@ describe('Correctifs signales (e2e)', () => {
           date_debut: dateIsoDans(30),
           date_fin_prevue: dateIsoDans(800),
           etablissement_id: etablissementId,
+          porteur: { type_porteur: 'PERSONNE', nom: 'Rakoto Soa' },
           bailleurs_ids: [bailleur.id],
           beneficiaires_ids: [beneficiaire.id],
           sites_ids: [site.id],
@@ -87,6 +90,7 @@ describe('Correctifs signales (e2e)', () => {
           date_debut: dateIsoDans(30),
           date_fin_prevue: dateIsoDans(800),
           etablissement_id: etablissementId,
+          porteur: { type_porteur: 'PERSONNE', nom: 'Rakoto Soa' },
           bailleur_ids: [],
         })
         .expect(400);
@@ -143,7 +147,9 @@ describe('Correctifs signales (e2e)', () => {
 
       const liste = donnees<any>(reponse.body).data;
       expect(liste.length).toBeGreaterThan(0);
-      expect(liste.every((c) => c.statut === 'EN_ATTENTE_SIGNATURE')).toBe(true);
+      expect(liste.every((c) => c.statut === 'EN_ATTENTE_SIGNATURE')).toBe(
+        true,
+      );
       expect(liste.map((c) => c.id)).toContain(conventionId);
     });
 
@@ -182,6 +188,8 @@ describe('Correctifs signales (e2e)', () => {
 
   describe('Documents : rattachement et listage', () => {
     let projetId: string;
+    let cotutelleId: string;
+    let documentProjet: any;
 
     beforeAll(async () => {
       const reponse = await request(url())
@@ -193,10 +201,27 @@ describe('Correctifs signales (e2e)', () => {
           date_debut: dateIsoDans(30),
           date_fin_prevue: dateIsoDans(800),
           etablissement_id: etablissementId,
+          porteur: { type_porteur: 'PERSONNE', nom: 'Rakoto Soa' },
         })
         .expect(201);
 
       projetId = donnees<any>(reponse.body).id;
+
+      const [partenaire] = await ctx.dataSource.query(
+        `SELECT id FROM "Partenaire" WHERE archive = false LIMIT 1`,
+      );
+      const cotutelle = await request(url())
+        .post('/api/cotutelles')
+        .set(...enteteBearer(presidence))
+        .send({
+          nom_doctorant: 'Rasoa Rakoto',
+          type: 'COTUTELLE',
+          date_debut: dateIsoDans(30),
+          etablissement_id: etablissementId,
+          partenaire_id: partenaire.id,
+        })
+        .expect(201);
+      cotutelleId = donnees<any>(cotutelle.body).id;
     });
 
     it('refuse un document sans rattachement', async () => {
@@ -220,8 +245,10 @@ describe('Correctifs signales (e2e)', () => {
         .expect(201);
 
       const document = donnees<any>(reponse.body);
+      documentProjet = document;
       expect(document.projet_id).toBe(projetId);
       expect(document.version).toBe(1);
+      expect(document.nom_fichier).toBe('tdr-rattache.pdf');
     });
 
     it('liste les documents du projet (GET /documents?projet_id)', async () => {
@@ -235,6 +262,17 @@ describe('Correctifs signales (e2e)', () => {
       expect(corps.data.length).toBeGreaterThan(0);
       expect(corps.data[0].projet_id).toBe(projetId);
       expect(corps.meta.total).toBeGreaterThan(0);
+    });
+
+    it('préserve le nom et l extension au téléchargement', async () => {
+      const reponse = await request(url())
+        .get(`/api/documents/${documentProjet.id}/telecharger`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+
+      expect(reponse.headers['content-disposition']).toContain(
+        'tdr-rattache.pdf',
+      );
     });
 
     it('liste les documents d une convention (GET /documents?convention_id)', async () => {
@@ -256,6 +294,56 @@ describe('Correctifs signales (e2e)', () => {
         .expect(200);
 
       expect(donnees<any>(reponse.body).data.length).toBeGreaterThan(0);
+    });
+
+    it('rattache et filtre les documents de cotutelle et de partenariat', async () => {
+      const cas = [
+        ['cotutelle_id', cotutelleId],
+        ['partenariat_id', partenariatId],
+      ] as const;
+
+      for (const [champ, parentId] of cas) {
+        const televersement = await request(url())
+          .post('/api/documents')
+          .set(...enteteBearer(presidence))
+          .field('type', 'AUTRE')
+          .field(champ, parentId)
+          .attach('fichier', Buffer.from(`%PDF-1.4 ${champ}`), `${champ}.pdf`)
+          .expect(201);
+        const document = donnees<any>(televersement.body);
+        expect(document[champ]).toBe(parentId);
+
+        const liste = donnees<any>(
+          (
+            await request(url())
+              .get(`/api/documents?${champ}=${parentId}&limit=10`)
+              .set(...enteteBearer(presidence))
+              .expect(200)
+          ).body,
+        );
+        expect(liste.data.map((item: any) => item.id)).toContain(document.id);
+      }
+    });
+
+    it('refuse plusieurs rattachements pour un même document, y compris en base', async () => {
+      await request(url())
+        .post('/api/documents')
+        .set(...enteteBearer(presidence))
+        .field('type', 'AUTRE')
+        .field('projet_id', projetId)
+        .field('partenariat_id', partenariatId)
+        .attach('fichier', Buffer.from('%PDF-1.4 deux parents'), 'invalide.pdf')
+        .expect(400);
+
+      const [convention] = await ctx.dataSource.query(
+        `SELECT id FROM "Convention" LIMIT 1`,
+      );
+      await expect(
+        ctx.dataSource.query(
+          `UPDATE "Document" SET convention_id = $1 WHERE id = $2`,
+          [convention.id, documentProjet.id],
+        ),
+      ).rejects.toThrow();
     });
 
     it('renvoie une version incrementee pour un meme document', async () => {
@@ -283,12 +371,73 @@ describe('Correctifs signales (e2e)', () => {
       expect(v2.version).toBe(v1.version + 1);
       expect(v2.est_archive).toBe(false);
 
+      const listeCourante = await request(url())
+        .get(`/api/documents?projet_id=${projetId}&type=AUTRE`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      expect(donnees<any>(listeCourante.body).data).toHaveLength(1);
+      expect(donnees<any>(listeCourante.body).data[0].id).toBe(v2.id);
+
+      await request(url())
+        .get(`/api/documents/${v1.id}`)
+        .set(...enteteBearer(presidence))
+        .expect(404);
+
       const ancienne = await request(url())
+        .get(`/api/archives/documents/${v1.id}`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      expect(donnees<any>(ancienne.body).est_archive).toBe(true);
+
+      const telechargementArchive = await request(url())
+        .get(`/api/archives/documents/${v1.id}/telecharger`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      expect(telechargementArchive.headers['content-disposition']).toContain(
+        'rapport-annuel.pdf',
+      );
+
+      const historiqueVersions = await request(url())
+        .get(`/api/documents/${v2.id}/versions`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      expect(
+        donnees<any[]>(historiqueVersions.body).map((item) => item.id),
+      ).toEqual([v2.id, v1.id]);
+
+      await request(url())
+        .post(`/api/archives/documents/${v1.id}/restaurer`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      await request(url())
         .get(`/api/documents/${v1.id}`)
         .set(...enteteBearer(presidence))
         .expect(200);
+      await request(url())
+        .get(`/api/documents/${v2.id}`)
+        .set(...enteteBearer(presidence))
+        .expect(404);
 
-      expect(donnees<any>(ancienne.body).est_archive).toBe(true);
+      await request(url())
+        .delete(`/api/documents/${v1.id}`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      const historiqueArchive = await request(url())
+        .get(`/api/archives/documents/${v1.id}/historique`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      expect(
+        donnees<any[]>(historiqueArchive.body).map((item) => item.action),
+      ).toEqual(expect.arrayContaining(['ARCHIVAGE', 'RESTAURATION']));
+
+      await request(url())
+        .post(`/api/archives/documents/${v2.id}/restaurer`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      await request(url())
+        .get(`/api/documents/${v2.id}`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
     });
   });
 

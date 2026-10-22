@@ -73,6 +73,7 @@ export class AuthService {
         role: utilisateur.role,
         etablissement_id: utilisateur.etablissement_id || undefined,
         etablissement_nom: utilisateur.etablissement?.nom || undefined,
+        preferences: utilisateur.preferences ?? {},
       },
     };
   }
@@ -156,7 +157,9 @@ export class AuthService {
       role: utilisateur.role,
       actif: utilisateur.actif,
       derniere_connexion: utilisateur.derniere_connexion,
+      preferences: utilisateur.preferences ?? {},
       etablissement_id: utilisateur.etablissement_id,
+      etablissement_nom: utilisateur.etablissement?.nom ?? null,
       etablissement: utilisateur.etablissement
         ? {
             id: utilisateur.etablissement.id,
