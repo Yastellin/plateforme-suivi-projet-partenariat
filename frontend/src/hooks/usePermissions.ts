@@ -32,7 +32,9 @@ export function usePermissions(): Permissions {
     peutCreer: peutEcrire,
     peutModifier: peutEcrire,
     peutArchiver: role === 'PRESIDENCE',
-    peutSoumettre: peutEcrire,
+    // Seul un etablissement soumet ses creations a la Presidence.
+    // La Presidence est le destinataire des soumissions, pas l'emetteur.
+    peutSoumettre: role === 'ETABLISSEMENT',
     peutTeleverser: peutEcrire,
     peutExporter: role === 'PRESIDENCE',
     peutGererSynthese: role === 'PRESIDENCE',
