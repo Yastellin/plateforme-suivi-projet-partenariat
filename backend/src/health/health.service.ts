@@ -24,6 +24,11 @@ export class HealthService {
       dependances: {
         base_de_donnees: baseOk ? 'ok' : 'indisponible',
       },
+      // Ce contrat permet au compose de ne pas exposer un frontend récent
+      // devant une ancienne image backend qui ne connaît pas encore ces routes.
+      contrats: {
+        parametres_logos: 'v1',
+      },
     };
 
     if (!baseOk) {

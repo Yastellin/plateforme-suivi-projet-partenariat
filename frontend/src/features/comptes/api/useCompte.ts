@@ -14,7 +14,9 @@ export function useModifierPreferences() {
   return useMutation({
     mutationFn: async (preferences: PreferencesCompte) =>
       (await apiClient.patch<Utilisateur>('/compte/preferences', preferences)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['compte'] }),
+    onSuccess: (compte) => {
+      queryClient.setQueryData(['compte'], compte);
+    },
   });
 }
 

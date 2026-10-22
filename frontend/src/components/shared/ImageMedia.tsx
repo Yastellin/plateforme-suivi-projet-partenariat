@@ -2,7 +2,7 @@ import { useState, type ImgHTMLAttributes, type ReactNode } from "react";
 import { ImageOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { resoudreUrlFichier } from "@/lib/url";
+import { resoudreUrlsFichier } from "@/lib/url";
 
 interface ImageMediaProps extends Omit<
   ImgHTMLAttributes<HTMLImageElement>,
@@ -27,9 +27,19 @@ export function ImageMedia({
   onError,
   ...props
 }: ImageMediaProps) {
-  const source = resoudre ? resoudreUrlFichier(src) : (src ?? "");
-  const [sourceEnErreur, setSourceEnErreur] = useState<string | null>(null);
-  const indisponible = !source || sourceEnErreur === source;
+  const sources = resoudre
+    ? resoudreUrlsFichier(src)
+    : src
+      ? [src]
+      : [];
+  const [derniereSourceEnErreur, setDerniereSourceEnErreur] = useState<
+    string | null
+  >(null);
+  const indexDerniereErreur = derniereSourceEnErreur
+    ? sources.indexOf(derniereSourceEnErreur)
+    : -1;
+  const source = sources[indexDerniereErreur + 1] ?? "";
+  const indisponible = !source;
 
   if (indisponible) {
     if (fallback !== undefined) return <>{fallback}</>;
@@ -56,7 +66,7 @@ export function ImageMedia({
       alt={alt}
       className={className}
       onError={(evenement) => {
-        setSourceEnErreur(source);
+        setDerniereSourceEnErreur(source);
         onError?.(evenement);
       }}
     />

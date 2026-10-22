@@ -22,7 +22,7 @@ afterEach(async () => {
 });
 
 describe("ImageMedia", () => {
-  it("résout le média via l'API et remplace une image cassée par les initiales", async () => {
+  it("essaie le chemin historique avant de remplacer une image cassée par les initiales", async () => {
     await act(async () => {
       racine.render(
         createElement(LogoMedia, {
@@ -39,6 +39,15 @@ describe("ImageMedia", () => {
 
     await act(async () => {
       image?.dispatchEvent(new Event("error"));
+    });
+
+    const imageHistorique = conteneur.querySelector("img");
+    expect(imageHistorique?.getAttribute("src")).toBe(
+      "/uploads/logos/etablissements/uf.png",
+    );
+
+    await act(async () => {
+      imageHistorique?.dispatchEvent(new Event("error"));
     });
 
     expect(conteneur.querySelector("img")).toBeNull();

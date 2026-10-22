@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { resoudreUrlFichier } from "@/lib/url"
+import { resoudreUrlFichier, resoudreUrlsFichier } from "@/lib/url"
 
 describe("résolution des médias publics", () => {
   it("conserve une URL absolue", () => {
@@ -24,6 +24,24 @@ describe("résolution des médias publics", () => {
     expect(resoudreUrlFichier("/api/uploads/logos/presidence/logo.webp")).toBe(
       "/api/uploads/logos/presidence/logo.webp",
     )
+  })
+
+  it("prévoit le chemin historique sans /api comme solution de repli", () => {
+    expect(
+      resoudreUrlsFichier("/uploads/logos/partenaires/toliara.webp"),
+    ).toEqual([
+      "/api/uploads/logos/partenaires/toliara.webp",
+      "/uploads/logos/partenaires/toliara.webp",
+    ])
+  })
+
+  it("normalise aussi une URL /api/uploads avant de construire le repli", () => {
+    expect(
+      resoudreUrlsFichier("/api/uploads/logos/presidence/logo.webp"),
+    ).toEqual([
+      "/api/uploads/logos/presidence/logo.webp",
+      "/uploads/logos/presidence/logo.webp",
+    ])
   })
 
   it("conserve les aperçus locaux blob et data", () => {
