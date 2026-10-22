@@ -63,6 +63,7 @@ const PartenariatDetailPage = lazy(() => import("@/features/partenariats/pages/P
 const DocumentDetailPage = lazy(() => import("@/features/documents/pages/DocumentDetailPage").then((m) => ({ default: m.DocumentDetailPage })))
 const DocumentUploadPage = lazy(() => import("@/features/documents/pages/DocumentUploadPage").then((m) => ({ default: m.DocumentUploadPage })))
 const ExportPage = lazy(() => import("@/features/export/pages/ExportPage").then((m) => ({ default: m.ExportPage })))
+const HistoriquePage = lazy(() => import("@/features/historique/pages/HistoriquePage").then((m) => ({ default: m.HistoriquePage })))
 
 function ChargementRoute() {
   return (
@@ -220,6 +221,7 @@ const router = createBrowserRouter([
       { path: "/presidence/etablissements/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><EtablissementDetailPage /></Charge></RouteProtegee> },
       { path: "/presidence/archives", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ArchivesPage /></Charge></RouteProtegee> },
       { path: "/presidence/archives/:type/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ArchiveDetailPage /></Charge></RouteProtegee> },
+      { path: "/presidence/historique", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><HistoriquePage /></Charge></RouteProtegee> },
       { path: "/presidence/export", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ExportPage /></Charge></RouteProtegee> },
       { path: "/presidence/recherche", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><RecherchePage /></Charge></RouteProtegee> },
       { path: "/presidence/synthese", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><SynthesePage /></Charge></RouteProtegee> },
@@ -264,6 +266,7 @@ const router = createBrowserRouter([
       { path: "/decideur/etablissements/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><EtablissementDetailPage /></Charge></RouteProtegee> },
       { path: "/decideur/archives", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ArchivesPage /></Charge></RouteProtegee> },
       { path: "/decideur/archives/:type/:id", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><ArchiveDetailPage /></Charge></RouteProtegee> },
+      { path: "/decideur/historique", element: <RouteProtegee rolesAutorises={["DECIDEUR"]}><Charge><HistoriquePage /></Charge></RouteProtegee> },
 
       { path: "/presidence/partenaires-partenariats", element: <Navigate to="/presidence/partenaires-partenariats/partenaires" replace /> },
       { path: "/etablissement/partenaires-partenariats", element: <Navigate to="/etablissement/partenaires-partenariats/partenaires" replace /> },

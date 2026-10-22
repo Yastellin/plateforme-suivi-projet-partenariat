@@ -1,11 +1,11 @@
 // src/features/espace-public/components/SectionPartenaires.tsx
 import { Link } from "react-router-dom"
-import { Handshake, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { InfiniteMarquee } from "@/components/shared/InfiniteMarquee"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { Reveal } from "@/features/espace-public/components/Reveal"
-import { resoudreUrlFichier } from "@/lib/url"
+import { LogoMedia } from "@/components/shared/ImageMedia"
 
 // Section partenaires mis en avant sur la page d'accueil publique.
 // Bandeau defilant en boucle infinie des logos partenaires (section 7.4 :
@@ -49,18 +49,15 @@ export function SectionPartenaires() {
             cleItem={(p) => p.id}
             renderItem={(partenaire) => (
               <div className="flex h-16 items-center gap-2 rounded-2xl border border-border/70 bg-background/70 px-6 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
-                {partenaire.logo_url ? (
-                  <img
-                    src={resoudreUrlFichier(partenaire.logo_url)}
-                    alt={partenaire.nom}
-                    className="h-8 w-auto object-contain"
-                  />
-                ) : (
-                  <span className="flex items-center gap-2 font-heading text-sm font-medium text-muted-foreground">
-                    <Handshake size={16} className="text-primary" />
-                    {partenaire.nom}
-                  </span>
-                )}
+                <LogoMedia
+                  src={partenaire.logo_url}
+                  nom={partenaire.nom}
+                  className="h-8 w-8 flex-shrink-0 rounded object-contain text-xs"
+                  loading="lazy"
+                />
+                <span className="max-w-48 truncate font-heading text-sm font-medium text-muted-foreground">
+                  {partenaire.nom}
+                </span>
               </div>
             )}
             itemClassName="mx-3"

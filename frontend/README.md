@@ -7,7 +7,7 @@ Fianarantsoa. Elle consomme l'API NestJS du dossier `../backend`.
 
 ```bash
 npm install
-cp .env.example .env        # VITE_API_URL doit pointer vers l'API (…/api)
+cp .env.example .env        # /api est relayé vers http://localhost:3000
 npm run dev                 # http://localhost:5173
 ```
 

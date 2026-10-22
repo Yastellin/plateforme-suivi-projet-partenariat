@@ -56,10 +56,20 @@ export function configurerApplication(app: NestExpressApplication): void {
   // Seuls les medias réellement publics sont servis sans authentification.
   // Les documents restent hors du middleware statique et passent par
   // /api/documents/:id/telecharger afin d'appliquer les droits d'accès.
-  app.useStaticAssets(join(process.cwd(), 'uploads', 'logos'), {
-    prefix: '/uploads/logos/',
-  });
-  app.useStaticAssets(join(process.cwd(), 'uploads', 'publications'), {
-    prefix: '/uploads/publications/',
-  });
+  const mediasPublics = [
+    { dossier: 'logos', chemin: 'logos' },
+    { dossier: 'publications', chemin: 'publications' },
+  ];
+  for (const media of mediasPublics) {
+    const racine = join(process.cwd(), 'uploads', media.dossier);
+    // Le second préfixe fonctionne lorsque le proxy de production ne transmet
+    // que /api au backend. Le préfixe historique reste disponible pour les
+    // liens déjà enregistrés ou les déploiements à origines séparées.
+    for (const prefixe of [
+      `/uploads/${media.chemin}/`,
+      `/api/uploads/${media.chemin}/`,
+    ]) {
+      app.useStaticAssets(racine, { prefix: prefixe });
+    }
+  }
 }

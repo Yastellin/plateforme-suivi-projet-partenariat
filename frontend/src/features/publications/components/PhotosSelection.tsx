@@ -5,6 +5,7 @@ import { ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ImageMedia } from "@/components/shared/ImageMedia";
 
 const TAILLE_MAX_OCTETS = 5 * 1024 * 1024;
 const NOMBRE_MAX_IMAGES = 20;
@@ -98,10 +99,11 @@ export function PhotosSelection({
               key={`${fichier.name}-${index}`}
               className="flex flex-col gap-1"
             >
-              <img
+              <ImageMedia
                 src={apercus[index]}
                 alt={fichier.name}
                 className="h-28 w-full rounded-md object-cover"
+                resoudre={false}
               />
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-muted-foreground">

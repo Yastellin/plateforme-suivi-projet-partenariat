@@ -1,4 +1,4 @@
-﻿import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 import { ContexteTitreBreadcrumb } from '@/contexts/TitreBreadcrumbContext';
 
@@ -17,6 +17,7 @@ const LIBELLES_SEGMENTS: Record<string, string> = {
   etablissements: 'Établissements',
   referentiels: 'Référentiels',
   archives: 'Archives',
+  historique: 'Historique',
   synthese: 'Synthèse annuelle',
   notifications: 'Notifications',
   parametres: 'Paramètres',

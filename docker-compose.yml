@@ -10,7 +10,10 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      VITE_API_URL: ${VITE_API_URL}
+      # Par défaut, le navigateur utilise /api sur l'origine du frontend ;
+      # Vite relaie ensuite la requête vers le service backend du compose.
+      VITE_API_URL: ${VITE_API_URL:-/api}
+      DEV_API_PROXY_TARGET: http://backend:3000
     depends_on:
       - backend
 
@@ -35,6 +38,7 @@ services:
   backend:
     build:
       context: ./backend
+      target: development
     container_name: uf_backend
     ports:
       - "3000:3000"
@@ -59,6 +63,9 @@ services:
       NODE_ENV: development
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
     volumes:
+      # Le backend suit désormais les changements de source comme le frontend.
+      - ./backend:/app
+      - /app/node_modules
       - ./backend/uploads:/app/uploads
 
 volumes:
