@@ -12,6 +12,7 @@ import { TableToolbar } from "@/components/shared/TableToolbar";
 import { TablePagination } from "@/components/shared/TablePagination";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LogoMedia } from "@/components/shared/ImageMedia";
 import { ActionsSoumissionMasse } from "@/components/shared/ActionsSoumissionMasse";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
@@ -197,12 +198,6 @@ export function PartenariatsListePage() {
                   {partenariats.map((partenariat) => {
                     const info =
                       LIBELLES_STATUT_PARTENARIAT[partenariat.statut];
-                    const partenaires = partenariat.partenaires
-                      .map((item) => item.nom)
-                      .join(", ");
-                    const etablissements = partenariat.etablissements
-                      .map((item) => item.sigle ?? item.nom)
-                      .join(", ");
                     const peutSelectionner =
                       partenariat.cree_par_role === "ETABLISSEMENT" &&
                       partenariat.statut === "BROUILLON" &&
@@ -232,10 +227,26 @@ export function PartenariatsListePage() {
                           >
                             {partenariat.intitule}
                           </Link>
-                          {partenaires ? (
-                            <div className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
-                              {partenaires}
-                            </div>
+                          {partenariat.partenaires.length > 0 ? (
+                            <ul
+                              className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[var(--color-text-secondary)]"
+                              aria-label="Partenaires"
+                            >
+                              {partenariat.partenaires.map((partenaire) => (
+                                <li
+                                  key={partenaire.id}
+                                  className="inline-flex items-center gap-1"
+                                >
+                                  <LogoMedia
+                                    src={partenaire.logo_url}
+                                    nom={partenaire.nom}
+                                    className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain text-[7px]"
+                                    loading="lazy"
+                                  />
+                                  {partenaire.nom}
+                                </li>
+                              ))}
+                            </ul>
                           ) : null}
                         </td>
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
@@ -248,7 +259,28 @@ export function PartenariatsListePage() {
                             : ""}
                         </td>
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
-                          {etablissements || "Aucun"}
+                          {partenariat.etablissements.length > 0 ? (
+                            <ul className="flex flex-wrap gap-x-2 gap-y-1">
+                              {partenariat.etablissements.map(
+                                (etablissement) => (
+                                  <li
+                                    key={etablissement.id}
+                                    className="inline-flex items-center gap-1"
+                                  >
+                                    <LogoMedia
+                                      src={etablissement.logo_url}
+                                      nom={etablissement.nom}
+                                      className="h-5 w-5 shrink-0 rounded bg-white object-contain text-[8px]"
+                                      loading="lazy"
+                                    />
+                                    {etablissement.sigle ?? etablissement.nom}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          ) : (
+                            "Aucun"
+                          )}
                         </td>
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-xs font-medium text-[var(--color-text-secondary)]">
                           {partenariat.publie_le

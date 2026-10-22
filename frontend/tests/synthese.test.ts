@@ -81,19 +81,37 @@ describe('normalisation des réponses API', () => {
       {
         etablissement_id: 'etab-1',
         etablissement_nom: 'FLSH',
+        etablissement_logo_url: '/uploads/logos/etablissements/flsh.png',
         annee: 2025,
         compteurs: { partenaires: 3 },
         items: [{ id: 'a', etablissement_id: 'etab-1', annee: 2025, type: 'DEFI_MAJEUR', valeur: 'Budget' }, {}],
-        partenaires_strategiques: [{ id: 'ps-1', partenaire_id: 'p-1', partenaire_nom: 'AUF' }],
+        partenaires_strategiques: [
+          {
+            id: 'ps-1',
+            partenaire_id: 'p-1',
+            partenaire_nom: 'Université de Toliara',
+            partenaire_logo_url: '/uploads/logos/partenaires/toliara.png',
+          },
+        ],
       },
       2026,
     );
 
     expect(normalisee.etablissement_nom).toBe('FLSH');
+    expect(normalisee.etablissement_logo_url).toBe(
+      '/uploads/logos/etablissements/flsh.png',
+    );
     expect(normalisee.annee).toBe(2025);
     expect(normalisee.items).toHaveLength(1);
     expect(normalisee.partenaires_strategiques).toEqual([
-      { id: 'ps-1', etablissement_id: undefined, annee: undefined, partenaire_id: 'p-1', partenaire_nom: 'AUF' },
+      {
+        id: 'ps-1',
+        etablissement_id: undefined,
+        annee: undefined,
+        partenaire_id: 'p-1',
+        partenaire_nom: 'Université de Toliara',
+        partenaire_logo_url: '/uploads/logos/partenaires/toliara.png',
+      },
     ]);
   });
 

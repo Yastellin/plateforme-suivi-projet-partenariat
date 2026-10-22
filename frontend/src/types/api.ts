@@ -219,11 +219,13 @@ export interface PartenariatEtablissementRef {
   id: string;
   nom: string;
   sigle: string | null;
+  logo_url: string | null;
 }
 
 export interface PartenariatPartenaireRef {
   id: string;
   nom: string;
+  logo_url: string | null;
 }
 export interface Projet {
   id: string;
@@ -313,6 +315,7 @@ export interface SynthesePartenaireStrategique {
   annee?: number;
   partenaire_id: string;
   partenaire_nom?: string;
+  partenaire_logo_url?: string | null;
   partenaire?: Partenaire;
 }
 
@@ -320,6 +323,7 @@ export interface SynthesePartenaireStrategique {
 export interface SyntheseEtablissement {
   etablissement_id: string;
   etablissement_nom: string;
+  etablissement_logo_url?: string | null;
   annee: number;
   compteurs: SyntheseCompteurs;
   items: SyntheseItem[];
@@ -358,6 +362,7 @@ export interface EtablissementPublicRef {
   id: string;
   nom: string;
   sigle: string | null;
+  logo_url: string | null;
 }
 
 export interface PartenairePublicRef {

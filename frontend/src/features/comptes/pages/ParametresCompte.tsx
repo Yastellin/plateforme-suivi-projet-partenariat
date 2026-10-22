@@ -304,7 +304,13 @@ export function ParametresCompte() {
                   queryKeys={[
                     ["etablissements", etablissement.id],
                     ["etablissements"],
+                    ["partenariats"],
+                    ["projets"],
+                    ["synthese"],
+                    ["public"],
                     ["public-etablissements"],
+                    ["public-publications"],
+                    ["public-publication"],
                   ]}
                 />
               ) : null}

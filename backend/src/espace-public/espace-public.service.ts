@@ -316,6 +316,7 @@ export class EspacePublicService {
       },
       relations: {
         etablissements: { etablissement: true },
+        partenaires: { partenaire: true },
       },
       order: { publie_le: 'DESC' },
     });
@@ -331,7 +332,16 @@ export class EspacePublicService {
         id: lien.etablissement.id,
         nom: lien.etablissement.nom,
         sigle: lien.etablissement.sigle,
+        logo_url: lien.etablissement.logo_url,
       })),
+      partenaires: (partenariat.partenaires ?? [])
+        .map((lien) => lien.partenaire)
+        .filter((partenaire) => this.partenaireEstVisible(partenaire))
+        .map((partenaire) => ({
+          id: partenaire.id,
+          nom: partenaire.nom,
+          logo_url: partenaire.logo_url,
+        })),
     }));
   }
 
@@ -357,6 +367,18 @@ export class EspacePublicService {
       data,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
+  }
+
+  private partenaireEstVisible(
+    partenaire: Partenaire | null | undefined,
+  ): partenaire is Partenaire {
+    return Boolean(
+      partenaire &&
+      partenaire.visibilite === Visibilite.PUBLIC &&
+      partenaire.statut === StatutPartenaire.ACTIF &&
+      !partenaire.archive &&
+      partenaire.publie_le != null,
+    );
   }
 
   private versPartenaire(p: Partenaire): PartenairePublicDto {
@@ -408,6 +430,7 @@ export class EspacePublicService {
             id: projet.etablissement.id,
             nom: projet.etablissement.nom,
             sigle: projet.etablissement.sigle,
+            logo_url: projet.etablissement.logo_url,
           }
         : null,
       etablissement_nom: projet.etablissement?.nom ?? null,
@@ -415,14 +438,7 @@ export class EspacePublicService {
       // Seuls les partenaires publics et actifs sont exposés.
       partenaires: (projet.partenaires ?? [])
         .map((pp) => pp.partenaire)
-        .filter(
-          (p): p is Partenaire =>
-            !!p &&
-            p.visibilite === Visibilite.PUBLIC &&
-            p.statut === StatutPartenaire.ACTIF &&
-            !p.archive &&
-            p.publie_le != null,
-        )
+        .filter((partenaire) => this.partenaireEstVisible(partenaire))
         .map((p) => this.versPartenaire(p)),
     };
   }

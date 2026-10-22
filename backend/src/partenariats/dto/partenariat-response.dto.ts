@@ -7,6 +7,8 @@ export class PartenaireSimpleDto {
   id: string;
   @ApiProperty()
   nom: string;
+  @ApiProperty({ nullable: true })
+  logo_url: string | null;
 }
 
 export class EtablissementSimpleDto {
@@ -14,8 +16,10 @@ export class EtablissementSimpleDto {
   id: string;
   @ApiProperty()
   nom: string;
-  @ApiProperty()
-  sigle?: string;
+  @ApiProperty({ nullable: true })
+  sigle: string | null;
+  @ApiProperty({ nullable: true })
+  logo_url: string | null;
 }
 
 export class PartenariatResponseDto {

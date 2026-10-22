@@ -10,6 +10,9 @@ export class EtablissementRefPublicDto {
 
   @ApiProperty({ nullable: true })
   sigle: string | null;
+
+  @ApiProperty({ nullable: true })
+  logo_url: string | null;
 }
 
 // Projet de l'Université visible publiquement. Le budget, les contacts et

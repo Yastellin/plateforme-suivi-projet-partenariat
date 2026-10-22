@@ -43,6 +43,9 @@ export class PartenaireStrategiqueResponseDto {
 
   @ApiProperty()
   partenaire_nom: string;
+
+  @ApiProperty({ nullable: true })
+  partenaire_logo_url: string | null;
 }
 
 export class SyntheseEtablissementDto {
@@ -51,6 +54,9 @@ export class SyntheseEtablissementDto {
 
   @ApiProperty()
   etablissement_nom: string;
+
+  @ApiProperty({ nullable: true })
+  etablissement_logo_url: string | null;
 
   @ApiProperty()
   annee: number;

@@ -533,10 +533,12 @@ export class PartenariatsService {
         id: e.etablissement.id,
         nom: e.etablissement.nom,
         sigle: e.etablissement.sigle,
+        logo_url: e.etablissement.logo_url,
       })),
       partenaires: data.partenaires.map((p: any) => ({
         id: p.partenaire.id,
         nom: p.partenaire.nom,
+        logo_url: p.partenaire.logo_url,
       })),
     };
   }

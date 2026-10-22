@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { LogoMedia } from '@/components/shared/ImageMedia';
 import { formaterDate } from '@/lib/format';
 import { LIBELLES_DOMAINE_PARTENARIAT } from '@/lib/status-mappings';
 import type { Partenariat } from '@/types/api';
@@ -59,11 +60,19 @@ export function PartenariatInformations({ partenariat, cheminBase }: Partenariat
           ) : (
             <ul className="flex flex-col gap-2 text-[13.5px]">
               {partenariat.etablissements.map((etablissement) => (
-                <li key={etablissement.id}>
-                  <span className="font-semibold">{etablissement.sigle ?? etablissement.nom}</span>
-                  {etablissement.sigle ? (
-                    <span className="text-[var(--color-text-secondary)]">{` ${etablissement.nom}`}</span>
-                  ) : null}
+                <li key={etablissement.id} className="flex items-center gap-2.5">
+                  <LogoMedia
+                    src={etablissement.logo_url}
+                    nom={etablissement.nom}
+                    className="h-8 w-8 shrink-0 rounded-md border border-[var(--color-border)] bg-white object-contain p-0.5 text-[10px]"
+                    loading="lazy"
+                  />
+                  <span>
+                    <span className="font-semibold">{etablissement.sigle ?? etablissement.nom}</span>
+                    {etablissement.sigle ? (
+                      <span className="text-[var(--color-text-secondary)]">{` ${etablissement.nom}`}</span>
+                    ) : null}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -79,8 +88,14 @@ export function PartenariatInformations({ partenariat, cheminBase }: Partenariat
                 <li key={partenaire.id}>
                   <Link
                     to={`${cheminBase}/partenaires-partenariats/partenaires/${partenaire.id}`}
-                    className="font-semibold text-[var(--color-brand)] hover:underline"
+                    className="flex items-center gap-2.5 font-semibold text-[var(--color-brand)] hover:underline"
                   >
+                    <LogoMedia
+                      src={partenaire.logo_url}
+                      nom={partenaire.nom}
+                      className="h-8 w-8 shrink-0 rounded-md border border-[var(--color-border)] bg-white object-contain p-0.5 text-[10px]"
+                      loading="lazy"
+                    />
                     {partenaire.nom}
                   </Link>
                 </li>
