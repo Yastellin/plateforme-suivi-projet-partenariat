@@ -18,33 +18,47 @@ function estUrlAutonome(url: string): boolean {
 }
 
 /**
- * Transforme une URL de stockage relative en URL publique servie par la même
- * base que l'API. Cela évite qu'un navigateur demande `/uploads` au conteneur
- * frontend alors que seul `/api` est redirigé vers le backend.
+ * Retourne les URLs publiques à essayer pour un média stocké. Le chemin sous
+ * `/api/uploads` est prioritaire, car il fonctionne derrière un proxy qui
+ * n'expose que l'API. Le chemin historique `/uploads` reste un repli utile
+ * pendant un déploiement progressif ou lorsque le backend a sa propre origine.
  */
-export function resoudreUrlFichier(url: string | null | undefined): string {
-  if (!url) return "";
+export function resoudreUrlsFichier(
+  url: string | null | undefined,
+): string[] {
+  if (!url) return [];
   const valeur = url.trim();
-  if (!valeur) return "";
-  if (estUrlAutonome(valeur)) return valeur;
+  if (!valeur) return [];
+  if (estUrlAutonome(valeur)) return [valeur];
 
-  // Une ancienne réponse peut déjà contenir le préfixe public de l'API.
+  let cheminUploads: string | null = null;
   if (valeur.startsWith("/api/uploads/")) {
-    return API_EST_ABSOLUE ? `${BACKEND_ORIGIN}${valeur}` : valeur;
+    cheminUploads = valeur.slice(4);
+  } else if (valeur.startsWith("/uploads/")) {
+    cheminUploads = valeur;
+  } else if (valeur.startsWith("uploads/")) {
+    cheminUploads = `/${valeur}`;
   }
-
-  const cheminUploads = valeur.startsWith("/uploads/")
-    ? valeur
-    : valeur.startsWith("uploads/")
-      ? `/${valeur}`
-      : null;
 
   if (cheminUploads) {
-    return `${API_BASE_URL}${cheminUploads}`;
+    return Array.from(
+      new Set([
+        `${API_BASE_URL}${cheminUploads}`,
+        `${BACKEND_ORIGIN}${cheminUploads}`,
+      ]),
+    );
   }
 
-  if (valeur.startsWith("/")) return `${BACKEND_ORIGIN}${valeur}`;
-  return `${BACKEND_ORIGIN}/${valeur}`;
+  return [
+    valeur.startsWith("/")
+      ? `${BACKEND_ORIGIN}${valeur}`
+      : `${BACKEND_ORIGIN}/${valeur}`,
+  ];
+}
+
+/** Retourne l'URL prioritaire d'un média public. */
+export function resoudreUrlFichier(url: string | null | undefined): string {
+  return resoudreUrlsFichier(url)[0] ?? "";
 }
 
 export { API_BASE_URL, BACKEND_ORIGIN };

@@ -15,7 +15,8 @@ services:
       VITE_API_URL: ${VITE_API_URL:-/api}
       DEV_API_PROXY_TARGET: http://backend:3000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   db:
     image: postgres:16-alpine
@@ -67,6 +68,18 @@ services:
       - ./backend:/app
       - /app/node_modules
       - ./backend/uploads:/app/uploads
+    healthcheck:
+      # Vérifie aussi le contrat requis par le frontend. Une ancienne image API
+      # ne peut ainsi plus démarrer silencieusement avec des routes manquantes.
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:3000/api/health | grep -q '\"parametres_logos\":\"v1\"'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
 
 volumes:
   db_data:

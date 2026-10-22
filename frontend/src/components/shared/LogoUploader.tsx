@@ -13,6 +13,10 @@ interface LogoUploaderProps {
   lectureSeule?: boolean;
 }
 
+interface ReponseTeleversementLogo {
+  logo_url?: string | null;
+}
+
 /** Uploader commun aux logos Présidence, établissement et partenaire. */
 export function LogoUploader({
   endpoint,
@@ -24,6 +28,11 @@ export function LogoUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [apercu, setApercu] = useState<string | null>(null);
+  const [logoTeleverse, setLogoTeleverse] = useState<{
+    endpoint: string;
+    url: string;
+    urlAvantTeleversement: string | null;
+  } | null>(null);
 
   useEffect(
     () => () => {
@@ -36,11 +45,24 @@ export function LogoUploader({
     mutationFn: async (fichier: File) => {
       const donnees = new FormData();
       donnees.append("fichier", fichier);
-      return (await apiClient.post(endpoint, donnees)).data;
+      return (
+        await apiClient.post<ReponseTeleversementLogo>(endpoint, donnees)
+      ).data;
     },
-    onSuccess: () => {
-      queryKeys.forEach((queryKey) =>
-        queryClient.invalidateQueries({ queryKey }),
+    onSuccess: async (reponse) => {
+      if (reponse.logo_url) {
+        // La réponse de l'upload est la source de vérité immédiate. L'aperçu
+        // local peut ainsi être retiré sans attendre un nouveau rendu parent.
+        setLogoTeleverse({
+          endpoint,
+          url: reponse.logo_url,
+          urlAvantTeleversement: logoUrl ?? null,
+        });
+      }
+      await Promise.allSettled(
+        queryKeys.map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey }),
+        ),
       );
       toast.success("Logo mis à jour");
       setApercu(null);
@@ -67,7 +89,13 @@ export function LogoUploader({
     mutation.mutate(fichier);
   }
 
-  const source = apercu ?? logoUrl;
+  const reponseUploadEnAttenteDuCache =
+    logoTeleverse?.endpoint === endpoint &&
+    (logoUrl ?? null) === logoTeleverse.urlAvantTeleversement;
+  const logoConfirme = reponseUploadEnAttenteDuCache
+    ? logoTeleverse?.url
+    : logoUrl;
+  const source = apercu ?? logoConfirme;
   return (
     <div className="flex items-center gap-4">
       <LogoMedia
@@ -96,7 +124,7 @@ export function LogoUploader({
             ) : (
               <ImagePlus className="h-4 w-4" />
             )}
-            {logoUrl ? "Remplacer le logo" : "Ajouter un logo"}
+            {logoConfirme ? "Remplacer le logo" : "Ajouter un logo"}
           </button>
           <p
             className="mt-1 text-[11px] text-[var(--color-text-secondary)]"
