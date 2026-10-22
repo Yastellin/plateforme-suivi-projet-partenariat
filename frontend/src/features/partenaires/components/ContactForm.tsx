@@ -31,7 +31,7 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(schemaContact),
     mode: "onChange",
@@ -117,7 +117,7 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
         <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>
           Annuler
         </Button>
-        <Button type="submit" disabled={enCours}>
+        <Button type="submit" disabled={enCours || !isValid}>
           {enCours && <LoaderCircle className="animate-spin" />}
           {contact ? "Enregistrer" : "Ajouter le contact"}
         </Button>

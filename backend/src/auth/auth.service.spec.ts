@@ -1,3 +1,8 @@
+jest.mock('bcrypt', () => ({
+  hash: jest.fn(async (valeur: string) => `hash:${valeur}`),
+  compare: jest.fn(async (valeur: string, empreinte: string) => empreinte === `hash:${valeur}`),
+}));
+
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -123,6 +128,7 @@ describe('AuthService', () => {
         role: Role.ETABLISSEMENT,
         etablissement_id: 'e1',
         etablissement_nom: 'Faculté des Sciences',
+        preferences: {},
       });
       expect(utilisateurRepo.update).toHaveBeenCalledWith('u1', {
         derniere_connexion: expect.any(Date),

@@ -29,6 +29,14 @@ export function creerSchemaConvention({ exigerDateDebutFuture = false }: Options
       dateFin: valeurs.date_fin,
       exigerDateDebutFuture,
     })
+    const estSelectionne = (valeur?: string) => Boolean(valeur && valeur !== "__aucun__")
+    if (!estSelectionne(valeurs.partenariat_id) && !estSelectionne(valeurs.projet_id) && !estSelectionne(valeurs.cotutelle_id)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["partenariat_id"],
+        message: "Sélectionnez un partenariat, un projet ou une cotutelle",
+      })
+    }
   })
 }
 

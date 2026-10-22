@@ -59,6 +59,7 @@ function construireNavigation(role: RoleUtilisateur, base: string): GroupeNaviga
         libelle: 'Pilotage',
         items: [
           { cle: 'tableau-de-bord', libelle: 'Tableau de bord', icone: LayoutDashboard, chemin: base },
+          { cle: 'etablissements', libelle: 'Établissements', icone: Building2, chemin: `${base}/etablissements` },
           {
             cle: 'partenaires-partenariats',
             libelle: 'Partenaires & Partenariats',

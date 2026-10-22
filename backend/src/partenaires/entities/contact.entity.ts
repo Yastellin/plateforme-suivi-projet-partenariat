@@ -9,9 +9,11 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Index,
+  OneToMany,
 } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { Partenaire } from './partenaire.entity';
+import { Coordonnee } from '../../coordonnees/entities/coordonnee.entity';
 
 @Entity('Contact')
 @Index(['partenaire_id'])
@@ -33,6 +35,9 @@ export class Contact {
 
   @Column({ type: 'uuid' })
   partenaire_id: string;
+
+  @OneToMany(() => Coordonnee, (coordonnee) => coordonnee.contact)
+  coordonnees: Coordonnee[];
 
   @ManyToOne(() => Partenaire, (partenaire) => partenaire.contacts, {
     onDelete: 'CASCADE',

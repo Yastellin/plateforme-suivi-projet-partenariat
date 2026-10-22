@@ -52,6 +52,12 @@ export class ConventionResponseDto {
   @ApiPropertyOptional({ nullable: true })
   projet: ConventionLienDto | null;
 
+  @ApiPropertyOptional({ nullable: true })
+  cotutelle_id: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  cotutelle: ConventionLienDto | null;
+
   @ApiProperty()
   created_at: Date;
 

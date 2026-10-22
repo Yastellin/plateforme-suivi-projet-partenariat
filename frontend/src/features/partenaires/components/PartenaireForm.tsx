@@ -2,11 +2,11 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Save, TriangleAlert } from 'lucide-react';
+import { Loader2, Plus, Save, TriangleAlert, X } from 'lucide-react';
 import { creerSchemaPartenaire, type PartenaireFormValues } from '@/lib/validators/partenaire.schema';
 import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput';
 import { PhoneInputSanitized } from '@/components/forms/inputs/PhoneInputSanitized';
-import { useRechercheDoublon } from '../api/useRechercheDoublon';
+import { useRechercheDoublon, useRechercheDoublonsPartenaireCoordonnees } from '../api/useRechercheDoublon';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Etablissement, Partenaire } from '@/types/api';
 
@@ -25,7 +25,8 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
     register,
     handleSubmit,
     watch,
-    formState: { errors },
+    setValue,
+    formState: { errors, isValid },
   } = useForm<PartenaireFormValues>({
     resolver: zodResolver(creerSchemaPartenaire(afficherSelectionEtablissement)),
     mode: 'onChange',
@@ -35,8 +36,10 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
       type: partenaire?.type ?? '',
       pays: partenaire?.pays ?? '',
       adresse: partenaire?.adresse ?? '',
-      telephone: partenaire?.telephone ?? '',
-      email: partenaire?.email ?? '',
+      telephone: partenaire?.telephone ?? partenaire?.telephones?.[0] ?? '',
+      telephones: (partenaire?.telephones ?? []).filter((telephone) => telephone !== partenaire?.telephone),
+      email: partenaire?.email ?? partenaire?.emails?.[0] ?? '',
+      emails: (partenaire?.emails ?? []).filter((email) => email !== partenaire?.email),
       site_web: partenaire?.site_web ?? '',
       description: partenaire?.description ?? '',
       visibilite: partenaire?.visibilite ?? 'PRIVE',
@@ -45,13 +48,49 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
     },
   });
 
+  const nom = watch('nom') ?? '';
+  const pays = watch('pays') ?? '';
+  const type = watch('type') ?? '';
   const email = watch('email') ?? '';
+  const emailsSupplementaires = watch('emails') ?? [];
+  const telephone = watch('telephone') ?? '';
+  const telephonesSupplementaires = watch('telephones') ?? [];
+  const etablissementId = watch('etablissement_id') ?? partenaire?.etablissement_id ?? '';
+  const nomDiffere = useDebounce(nom, 400);
   const emailDifferee = useDebounce(email, 400);
+  const telephoneDiffere = useDebounce(telephone, 400);
+  const emailsSupplementairesDifferes = useDebounce(emailsSupplementaires, 400);
+  const telephonesSupplementairesDifferes = useDebounce(telephonesSupplementaires, 400);
+  const nomPourRecherche = afficherSelectionEtablissement && !etablissementId ? '' : nomDiffere;
+  const { data: doublonsIdentite } = useRechercheDoublon('nom', nomPourRecherche, {
+    pays,
+    type,
+    etablissement_id: etablissementId || undefined,
+  });
   const { data: doublonsEmail } = useRechercheDoublon('email', emailDifferee);
-  const doublonEmail = doublonsEmail?.find((d) => d.id !== partenaire?.id);
+  const { data: doublonsTelephone } = useRechercheDoublon('telephone', telephoneDiffere);
+  const { data: doublonsSupplementaires } = useRechercheDoublonsPartenaireCoordonnees(
+    emailsSupplementairesDifferes,
+    telephonesSupplementairesDifferes,
+  );
+  const idProprietaire = (doublon: { id: string; proprietaire_id?: string }) => doublon.proprietaire_id ?? doublon.id;
+  const doublonIdentite = doublonsIdentite?.find((doublon) =>
+    idProprietaire(doublon) !== partenaire?.id &&
+    'raisons_doublon' in doublon &&
+    doublon.raisons_doublon?.includes('nom identique') &&
+    doublon.raisons_doublon?.includes('pays identique'),
+  );
+  const doublonEmail = doublonsEmail?.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
+  const doublonTelephone = doublonsTelephone?.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
+  const doublonSupplementaire = doublonsSupplementaires.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
 
   return (
-    <form onSubmit={handleSubmit(onSoumettre)} noValidate className="flex flex-col gap-1">
+    <form
+      onSubmit={handleSubmit((valeurs) => onSoumettre({
+        ...valeurs,
+        emails: valeurs.emails?.map((item) => item.trim()).filter(Boolean),
+        telephones: valeurs.telephones?.map((item) => item.trim()).filter(Boolean),
+      }))} noValidate className="flex flex-col gap-1">
       {afficherSelectionEtablissement ? (
         <div className="mb-4">
           <label htmlFor="etablissement_id" className="mb-1.5 block text-[12.5px] font-medium text-[var(--color-text-secondary)]">
@@ -83,8 +122,8 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
           requis
           autoFocus
           placeholder="Ex : Airtel Madagascar"
+          aide="Doublon bloquant : même nom et même pays dans un établissement."
           erreur={errors.nom?.message}
-          caracteresInterdits={/[^a-zA-ZÀ-ÿ\s]/g}
           {...register('nom')}
         />
         <FloatingLabelInput
@@ -95,6 +134,12 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
           {...register('type')}
         />
       </div>
+      {doublonIdentite ? (
+        <div className="mb-4 -mt-2 flex items-center gap-2 px-0.5 text-[11.5px] font-medium text-[var(--status-attente-fg)]">
+          <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
+          Une fiche avec le même nom et le même pays existe déjà dans cet établissement.
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <FloatingLabelInput
@@ -113,7 +158,15 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
       </div>
 
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-        <PhoneInputSanitized erreur={errors.telephone?.message} {...register('telephone')} />
+        <div>
+          <PhoneInputSanitized erreur={errors.telephone?.message} {...register('telephone')} />
+          {doublonTelephone ? (
+            <div className="mb-4 -mt-3 flex items-center gap-2 px-0.5 text-[11.5px] font-medium text-[var(--status-attente-fg)]">
+              <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
+              Ce numéro appartient déjà à une autre personne ou un autre partenaire.
+            </div>
+          ) : null}
+        </div>
         <div>
           <FloatingLabelInput
             label="Adresse e-mail"
@@ -125,11 +178,35 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
           {doublonEmail ? (
             <div className="mb-4 -mt-3 flex items-center gap-2 px-0.5 text-[11.5px] font-medium text-[var(--status-attente-fg)]">
               <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
-              Un partenaire avec cet e-mail existe déjà dans cet établissement.
+              Cet e-mail appartient déjà à une autre personne ou un autre partenaire.
             </div>
           ) : null}
         </div>
       </div>
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          {telephonesSupplementaires.map((_, index) => (
+            <div key={`telephone-${index}`} className="flex items-start gap-2">
+              <div className="flex-1"><PhoneInputSanitized erreur={errors.telephones?.[index]?.message} {...register(`telephones.${index}`)} /></div>
+              <button type="button" className="mt-2 rounded p-2 text-[var(--color-text-secondary)] hover:text-destructive" aria-label={`Retirer le numéro ${index + 2}`} onClick={() => setValue('telephones', telephonesSupplementaires.filter((__, position) => position !== index), { shouldDirty: true, shouldValidate: true })}><X className="h-4 w-4" /></button>
+            </div>
+          ))}
+          {telephonesSupplementaires.length < 9 ? <button type="button" className="inline-flex items-center gap-1 self-start text-xs font-semibold text-[var(--color-brand)]" onClick={() => setValue('telephones', [...telephonesSupplementaires, ''], { shouldDirty: true })}><Plus className="h-3.5 w-3.5" /> Ajouter un numéro</button> : null}
+        </div>
+        <div className="flex flex-col gap-2">
+          {emailsSupplementaires.map((_, index) => (
+            <div key={`email-${index}`} className="flex items-start gap-2">
+              <div className="flex-1"><FloatingLabelInput label={`Adresse e-mail ${index + 2}`} type="email" placeholder="autre.contact@exemple.mg" erreur={errors.emails?.[index]?.message} {...register(`emails.${index}`)} /></div>
+              <button type="button" className="mt-2 rounded p-2 text-[var(--color-text-secondary)] hover:text-destructive" aria-label={`Retirer l'adresse e-mail ${index + 2}`} onClick={() => setValue('emails', emailsSupplementaires.filter((__, position) => position !== index), { shouldDirty: true, shouldValidate: true })}><X className="h-4 w-4" /></button>
+            </div>
+          ))}
+          {emailsSupplementaires.length < 9 ? <button type="button" className="inline-flex items-center gap-1 self-start text-xs font-semibold text-[var(--color-brand)]" onClick={() => setValue('emails', [...emailsSupplementaires, ''], { shouldDirty: true })}><Plus className="h-3.5 w-3.5" /> Ajouter une adresse e-mail</button> : null}
+        </div>
+      </div>
+      {doublonSupplementaire ? (
+        <div className="mb-4 flex items-center gap-2 text-[11.5px] font-medium text-[var(--status-attente-fg)]"><TriangleAlert className="h-3.5 w-3.5 shrink-0" /> Une coordonnée additionnelle appartient déjà à une autre personne ou un autre partenaire.</div>
+      ) : null}
 
       <FloatingLabelInput
         label="Site web"
@@ -172,7 +249,7 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
 
       <button
         type="submit"
-        disabled={enCours || Boolean(doublonEmail)}
+        disabled={enCours || !isValid || Boolean(doublonIdentite) || Boolean(doublonEmail) || Boolean(doublonTelephone) || Boolean(doublonSupplementaire)}
         className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

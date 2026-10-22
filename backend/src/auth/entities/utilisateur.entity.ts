@@ -18,6 +18,13 @@ import { RefreshToken } from './refresh-token.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { PasswordResetToken } from './password-reset-token.entity';
 
+export interface PreferencesUtilisateur {
+  theme?: 'CLAIR' | 'SOMBRE' | 'SYSTEME';
+  densite?: 'CONFORTABLE' | 'COMPACTE';
+  animations?: boolean;
+  aide_contextuelle?: boolean;
+}
+
 @Entity('Utilisateur')
 @Index(['etablissement_id'])
 @Index(['role'])
@@ -43,6 +50,9 @@ export class Utilisateur {
 
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   derniere_connexion: Date | null;
+
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
+  preferences: PreferencesUtilisateur;
 
   @ManyToOne(() => Etablissement, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'etablissement_id' })

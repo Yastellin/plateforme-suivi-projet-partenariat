@@ -9,6 +9,7 @@ import { Bailleur } from '../referentiels/bailleurs/entities/bailleur.entity';
 import { Beneficiaire } from '../referentiels/beneficiaires/entities/beneficiaire.entity';
 import { Chronogramme } from '../activites/chronogramme/entities/chronogramme.entity';
 import { Contact } from '../partenaires/entities/contact.entity';
+import { Coordonnee } from '../coordonnees/entities/coordonnee.entity';
 import { Convention } from '../conventions/entities/convention.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 import { Document } from '../documents/entities/document.entity';
@@ -44,6 +45,7 @@ export const ENTITES = [
   Beneficiaire,
   Chronogramme,
   Contact,
+  Coordonnee,
   Convention,
   CotutelleThese,
   Document,

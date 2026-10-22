@@ -56,8 +56,9 @@ export function TableauDeBordEtablissement() {
     return projet.statut === filtre;
   });
 
+  const repartition = (compteurs?.projets_par_statut ?? {}) as Partial<Record<StatutProjet, number>>;
   const projetsEnRetard = compteurs
-    ? Object.entries(compteurs.projets_par_statut ?? {})
+    ? Object.entries(repartition)
         .filter(([statut]) => statut === 'EXPIRE')
         .reduce((somme, [, valeur]) => somme + valeur, 0)
     : 0;
@@ -261,7 +262,7 @@ export function TableauDeBordEtablissement() {
             },
             {
               icone: FolderKanban,
-              titre: `${compteurs.projets_en_cours ?? 0} projet${(compteurs.projets_en_cours ?? 0) > 1 ? 's' : ''} en attente`,
+              titre: `${repartition.EN_ATTENTE ?? 0} projet${(repartition.EN_ATTENTE ?? 0) > 1 ? 's' : ''} en attente`,
               description: 'Soumis et en cours de traitement',
               tonalite: 'info' as const,
             },

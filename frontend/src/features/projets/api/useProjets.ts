@@ -1,4 +1,4 @@
-﻿// src/features/projets/api/useProjets.ts
+// src/features/projets/api/useProjets.ts
 
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
@@ -8,6 +8,7 @@ interface ParametresProjets {
   page: number;
   limit: number;
   recherche?: string;
+  etablissement_id?: string;
 }
 
 async function recupererProjets(parametres: ParametresProjets): Promise<PageServeur<Projet>> {
@@ -16,6 +17,7 @@ async function recupererProjets(parametres: ParametresProjets): Promise<PageServ
       page: parametres.page,
       limit: parametres.limit,
       nom: parametres.recherche || undefined,
+      etablissement_id: parametres.etablissement_id,
     },
   });
   return reponse.data;

@@ -20,6 +20,7 @@ import { PartenariatPartenaire } from '../../partenariats/entities/partenariat-p
 import { CotutelleThese } from '../../cotutelles/entities/cotutelle-these.entity';
 import { ProjetPartenaire } from '../../projets/entities/projet-partenaire.entity';
 import { SynthesePartenaireStrategique } from '../../synthese/entities/synthese-partenaire-strategique.entity';
+import { Coordonnee } from '../../coordonnees/entities/coordonnee.entity';
 
 @Entity('Partenaire')
 @Index(['etablissement_id'])
@@ -82,6 +83,12 @@ export class Partenaire {
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   publie_le: Date | null;
 
+  @Column({ type: 'text', nullable: true })
+  cree_par_utilisateur_id: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  cree_par_role: string | null;
+
   @Column({ default: false })
   archive: boolean;
 
@@ -94,6 +101,9 @@ export class Partenaire {
 
   @OneToMany(() => Contact, (contact) => contact.partenaire, { cascade: true })
   contacts: Contact[];
+
+  @OneToMany(() => Coordonnee, (coordonnee) => coordonnee.partenaire)
+  coordonnees: Coordonnee[];
 
   @OneToMany(() => PartenariatPartenaire, (pp) => pp.partenaire)
   partenariats: PartenariatPartenaire[];

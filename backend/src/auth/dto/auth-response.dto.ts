@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import type { PreferencesUtilisateur } from '../entities/utilisateur.entity';
 
 export class AuthResponseDto {
   @ApiProperty()
@@ -17,5 +18,6 @@ export class AuthResponseDto {
     role: string;
     etablissement_id?: string;
     etablissement_nom?: string;
+    preferences?: PreferencesUtilisateur;
   };
 }

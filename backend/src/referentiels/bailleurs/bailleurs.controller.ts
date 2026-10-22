@@ -29,8 +29,8 @@ export class BailleursController {
   constructor(private bailleursService: BailleursService) {}
 
   @Post()
-  @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Creer un bailleur (Presidence uniquement)' })
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Creer un bailleur (Présidence ou établissement)' })
   @ApiResponse({ status: 201, type: BailleurResponseDto })
   create(@Body() dto: CreateBailleurDto): Promise<BailleurResponseDto> {
     return this.bailleursService.create(dto);
@@ -57,7 +57,7 @@ export class BailleursController {
   @Patch(':id')
   @Roles(Role.PRESIDENCE)
   @ApiOperation({
-    summary: 'Mettre a jour un bailleur (Presidence uniquement)',
+    summary: 'Mettre a jour un bailleur (Présidence ou établissement)',
   })
   @ApiResponse({ status: 200, type: BailleurResponseDto })
   update(
@@ -69,7 +69,9 @@ export class BailleursController {
 
   @Delete(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Supprimer un bailleur (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Supprimer un bailleur (Présidence ou établissement)',
+  })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.bailleursService.remove(id);
   }

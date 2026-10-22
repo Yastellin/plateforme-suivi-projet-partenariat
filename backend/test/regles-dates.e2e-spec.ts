@@ -43,7 +43,9 @@ describe('Regles de dates (e2e)', () => {
     const utilisateurs = await ctx.dataSource.query(
       `SELECT id, email, role, etablissement_id FROM "Utilisateur"`,
     );
-    presidence = utilisateurs.find((u: any) => u.email.startsWith('presidence@'));
+    presidence = utilisateurs.find((u: any) =>
+      u.email.startsWith('presidence@'),
+    );
 
     const [etablissement] = await ctx.dataSource.query(
       `SELECT id FROM "Etablissement" LIMIT 1`,
@@ -73,6 +75,7 @@ describe('Regles de dates (e2e)', () => {
         nom: `Projet dates ${Date.now()}-${Math.random()}`,
         type: 'Recherche',
         etablissement_id: etablissementId,
+        porteur: { type_porteur: 'PERSONNE', nom: 'Rakoto Soa' },
         ...dates,
       });
 
@@ -132,16 +135,20 @@ describe('Regles de dates (e2e)', () => {
       await creerPartenariat({ date_debut: HIER, date_fin: DANS_UN_AN }).expect(
         400,
       );
-      await creerPartenariat({ date_debut: AUJOURDHUI, date_fin: DANS_UN_AN })
-        .expect(201);
+      await creerPartenariat({
+        date_debut: AUJOURDHUI,
+        date_fin: DANS_UN_AN,
+      }).expect(201);
     });
 
     it('convention : date de debut passee refusee, date du jour acceptee', async () => {
       await creerConvention({ date_debut: HIER, date_fin: DANS_UN_AN }).expect(
         400,
       );
-      await creerConvention({ date_debut: AUJOURDHUI, date_fin: DANS_UN_AN })
-        .expect(201);
+      await creerConvention({
+        date_debut: AUJOURDHUI,
+        date_fin: DANS_UN_AN,
+      }).expect(201);
     });
 
     it('cotutelle : date de debut passee refusee, date du jour acceptee', async () => {
@@ -254,6 +261,33 @@ describe('Regles de dates (e2e)', () => {
         .set(...enteteBearer(presidence))
         .send({ date_fin: DANS_UN_AN })
         .expect(200);
+    });
+
+    it('convention : une echeance partielle reste comparee a la date existante', async () => {
+      const id = await creer();
+
+      await request(url())
+        .patch(`/api/conventions/${id}`)
+        .set(...enteteBearer(presidence))
+        .send({ date_fin: DEMAIN })
+        .expect(400);
+    });
+
+    it('cotutelle : une soutenance partielle reste comparee a la date existante', async () => {
+      const cotutelle = donnees<any>(
+        (
+          await creerCotutelle({
+            date_debut: DANS_UN_MOIS,
+            date_prevue_soutenance: DANS_UN_AN,
+          }).expect(201)
+        ).body,
+      );
+
+      await request(url())
+        .patch(`/api/cotutelles/${cotutelle.id}`)
+        .set(...enteteBearer(presidence))
+        .send({ date_prevue_soutenance: DEMAIN })
+        .expect(400);
     });
 
     it('projet : date de debut passee acceptee en modification', async () => {

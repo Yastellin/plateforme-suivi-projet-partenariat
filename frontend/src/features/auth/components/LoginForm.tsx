@@ -23,7 +23,7 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<ConnexionFormValues>({
     resolver: zodResolver(connexionSchema),
     mode: 'onChange',
@@ -56,7 +56,7 @@ export function LoginForm() {
     );
   }
 
-  const boutonBloque = isPending || bloque;
+  const boutonBloque = isPending || bloque || !isValid;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>

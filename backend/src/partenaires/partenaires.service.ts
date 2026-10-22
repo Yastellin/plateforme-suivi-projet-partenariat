@@ -2,9 +2,10 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, Not } from 'typeorm';
+import { DataSource, ILike, Repository } from 'typeorm';
 import { CreatePartenaireDto } from './dto/create-partenaire.dto';
 import { UpdatePartenaireDto } from './dto/update-partenaire.dto';
 import { QueryPartenaireDto } from './dto/query-partenaire.dto';
@@ -21,6 +22,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Inject } from '@nestjs/common';
 import { STORAGE_PORT } from '../storage/storage.port';
 import type { StoragePort } from '../storage/storage.port';
+import { CoordonneesService } from '../coordonnees/coordonnees.service';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class PartenairesService {
@@ -30,47 +33,57 @@ export class PartenairesService {
     private eventEmitter: EventEmitter2,
     private historique: HistoriqueService,
     @Inject(STORAGE_PORT) private storage: StoragePort,
+    private dataSource: DataSource,
+    private coordonnees: CoordonneesService,
   ) {}
 
   async create(
     etablissementId: string,
     dto: CreatePartenaireDto,
+    utilisateur?: ContexteUtilisateur | null,
   ): Promise<Partenaire> {
-    const existant = await this.partenaireRepo.findOne({
-      where: {
-        nom: dto.nom,
-        etablissement_id: etablissementId,
-        archive: false,
-      },
-    });
-    if (existant) {
-      throw new ConflictException(
-        `Un partenaire nomme "${dto.nom}" existe deja pour cet etablissement.`,
+    await this.verifierDoublonIdentite(dto.nom, dto.pays, etablissementId);
+
+    const partenaireId = await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(Partenaire);
+      const email = dto.email?.trim() || dto.emails?.[0]?.trim() || null;
+      const telephone =
+        dto.telephone?.trim() || dto.telephones?.[0]?.trim() || null;
+      const partenaire = await repo.save(
+        repo.create({
+          nom: dto.nom.trim(),
+          type: dto.type.trim(),
+          pays: dto.pays.trim(),
+          adresse: dto.adresse?.trim() || null,
+          telephone,
+          email,
+          site_web: dto.site_web?.trim() || null,
+          description: dto.description?.trim() || null,
+          statut: dto.statut || StatutPartenaire.ACTIF,
+          visibilite: dto.visibilite || Visibilite.PRIVE,
+          est_strategique: dto.est_strategique || false,
+          etablissement_id: etablissementId,
+          cree_par_utilisateur_id: utilisateur?.id ?? null,
+          cree_par_role: utilisateur?.role ?? null,
+        }),
       );
-    }
+      await this.coordonnees.synchroniserPartenaire(
+        partenaire.id,
+        dto,
+        manager,
+      );
+      return partenaire.id;
+    });
 
-    const partenaire = new Partenaire();
-    partenaire.nom = dto.nom;
-    partenaire.type = dto.type;
-    partenaire.pays = dto.pays;
-    partenaire.adresse = dto.adresse ?? null;
-    partenaire.telephone = dto.telephone ?? null;
-    partenaire.email = dto.email ?? null;
-    partenaire.site_web = dto.site_web ?? null;
-    partenaire.description = dto.description ?? null;
-    partenaire.statut = dto.statut || StatutPartenaire.ACTIF;
-    partenaire.visibilite = dto.visibilite || Visibilite.PRIVE;
-    partenaire.est_strategique = dto.est_strategique || false;
-    partenaire.etablissement_id = etablissementId;
-
-    return await this.partenaireRepo.save(partenaire);
+    return this.findOne(partenaireId, etablissementId);
   }
 
   async findAll(query: QueryPartenaireDto, etablissementId?: string) {
     const { page = 1, limit = 20, nom, type, pays, statut, visibilite } = query;
 
     const where: any = { archive: false };
-    if (etablissementId) where.etablissement_id = etablissementId;
+    const etablissementFiltre = etablissementId ?? query.etablissement_id;
+    if (etablissementFiltre) where.etablissement_id = etablissementFiltre;
     if (nom) where.nom = ILike(`%${nom}%`);
     if (type) where.type = ILike(`%${type}%`);
     if (pays) where.pays = ILike(`%${pays}%`);
@@ -100,39 +113,83 @@ export class PartenairesService {
       relations: { contacts: true },
     });
 
-    if (!partenaire) throw new NotFoundException('Partenaire non trouve');
-    return partenaire;
+    if (!partenaire) throw new NotFoundException('Partenaire non trouvé');
+    const [valeurs, contacts] = await Promise.all([
+      this.coordonnees.valeursPartenaire(partenaire.id),
+      Promise.all(
+        (partenaire.contacts ?? []).map(async (contact) =>
+          Object.assign(
+            contact,
+            await this.coordonnees.valeursContact(contact.id),
+          ),
+        ),
+      ),
+    ]);
+    partenaire.contacts = contacts;
+    return Object.assign(partenaire, valeurs);
   }
 
   async update(id: string, dto: UpdatePartenaireDto, etablissementId?: string) {
     const partenaire = await this.findOne(id, etablissementId);
-
-    const data = { ...dto };
-
-    if (data.nom) {
-      const existant = await this.partenaireRepo.findOne({
-        where: {
-          nom: data.nom,
-          etablissement_id: etablissementId,
-          id: Not(id),
-          archive: false,
-        },
-      });
-      if (existant) {
-        throw new ConflictException(
-          `Un partenaire nomme "${data.nom}" existe deja.`,
-        );
-      }
+    if (etablissementId && partenaire.cree_par_role !== Role.ETABLISSEMENT) {
+      throw new ForbiddenException(
+        'Un établissement ne peut modifier que les partenaires qu’il a créés.',
+      );
     }
+    if (etablissementId && partenaire.soumis_le) {
+      throw new ConflictException(
+        'Un partenaire déjà soumis ne peut plus être modifié par l’établissement.',
+      );
+    }
+    const nom = dto.nom?.trim() ?? partenaire.nom;
+    const pays = dto.pays?.trim() ?? partenaire.pays;
+    await this.verifierDoublonIdentite(
+      nom,
+      pays,
+      partenaire.etablissement_id,
+      id,
+    );
 
-    Object.assign(partenaire, data);
-    return this.partenaireRepo.save(partenaire);
+    const existantes = await this.coordonnees.valeursPartenaire(id);
+    const emails =
+      dto.emails ?? (dto.email !== undefined ? [] : existantes.emails);
+    const telephones =
+      dto.telephones ??
+      (dto.telephone !== undefined ? [] : existantes.telephones);
+    const email =
+      dto.email !== undefined
+        ? dto.email?.trim() || emails[0] || null
+        : (emails[0] ?? partenaire.email);
+    const telephone =
+      dto.telephone !== undefined
+        ? dto.telephone?.trim() || telephones[0] || null
+        : (telephones[0] ?? partenaire.telephone);
+
+    await this.dataSource.transaction(async (manager) => {
+      await this.coordonnees.synchroniserPartenaire(
+        id,
+        { email, emails, telephone, telephones },
+        manager,
+      );
+      const champs: Partial<Partenaire> = { nom, pays, email, telephone };
+      if (dto.type !== undefined) champs.type = dto.type;
+      if (dto.adresse !== undefined) champs.adresse = dto.adresse ?? null;
+      if (dto.site_web !== undefined) champs.site_web = dto.site_web ?? null;
+      if (dto.description !== undefined) {
+        champs.description = dto.description ?? null;
+      }
+      if (dto.statut !== undefined) champs.statut = dto.statut;
+      if (dto.visibilite !== undefined) champs.visibilite = dto.visibilite;
+      if (dto.est_strategique !== undefined) {
+        champs.est_strategique = dto.est_strategique;
+      }
+      await manager.getRepository(Partenaire).update(id, champs);
+    });
+
+    return this.findOne(id, etablissementId);
   }
 
-  async archiver(
-    id: string,
-    utilisateur?: ContexteUtilisateur | null,
-  ) {
+  async archiver(id: string, utilisateur?: ContexteUtilisateur | null) {
     const partenaire = await this.partenaireRepo.findOne({
       where: { id, archive: false },
     });
@@ -165,19 +222,24 @@ export class PartenairesService {
       throw new BadRequestException('Aucun fichier fourni');
     }
 
-    const MIME_AUTORISES = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'image/svg+xml',
-    ];
+    const MIME_AUTORISES = ['image/jpeg', 'image/png', 'image/webp'];
     if (!MIME_AUTORISES.includes(fichier.mimetype)) {
       throw new BadRequestException(
-        'Format de logo non autorise (JPEG, PNG, WebP, SVG)',
+        'Format de logo non autorise (JPEG, PNG ou WebP)',
       );
     }
 
     const partenaire = await this.findOne(id, etablissementId);
+    if (etablissementId && partenaire.cree_par_role !== Role.ETABLISSEMENT) {
+      throw new ForbiddenException(
+        'Un établissement ne peut modifier que les partenaires qu’il a créés.',
+      );
+    }
+    if (etablissementId && partenaire.soumis_le) {
+      throw new ConflictException(
+        "Le logo d'un partenaire déjà soumis ne peut plus être modifié par l'établissement.",
+      );
+    }
     const ancienLogo = partenaire.logo_url;
 
     const urlFichier = await this.storage.enregistrer(
@@ -211,6 +273,14 @@ export class PartenairesService {
   ) {
     const partenaire = await this.findOne(id, etablissementId);
 
+    if (partenaire.cree_par_role !== Role.ETABLISSEMENT) {
+      throw new ConflictException(
+        'Seuls les partenaires créés par un établissement peuvent être soumis',
+      );
+    }
+    if (partenaire.publie_le) {
+      throw new ConflictException('Ce partenaire est déjà publié');
+    }
     if (partenaire.soumis_le) {
       throw new ConflictException(
         'Ce partenaire est deja soumis a la presidence',
@@ -219,7 +289,7 @@ export class PartenairesService {
 
     await this.partenaireRepo.update(id, { soumis_le: new Date() });
 
-    this.eventEmitter.emit('partenaire.soumis', {
+    await this.eventEmitter.emitAsync('partenaire.soumis', {
       type: TypeNotification.PARTENAIRE_SOUMIS,
       priorite: PrioriteNotification.HAUTE,
       titre: `Partenaire soumis : ${partenaire.nom}`,
@@ -244,7 +314,11 @@ export class PartenairesService {
     ids: string[],
     etablissementId?: string,
     utilisateur?: ContexteUtilisateur | null,
-  ): Promise<{ total: number; reussis: string[]; echecs: { id: string; erreur: string }[] }> {
+  ): Promise<{
+    total: number;
+    reussis: string[];
+    echecs: { id: string; erreur: string }[];
+  }> {
     if (ids.length === 0) {
       throw new BadRequestException('Aucun partenaire selectionne');
     }
@@ -276,16 +350,17 @@ export class PartenairesService {
   }
 
   /** La presidence valide et publie un partenaire soumis. */
-  async publier(
-    id: string,
-    utilisateur?: ContexteUtilisateur | null,
-  ) {
+  async publier(id: string, utilisateur?: ContexteUtilisateur | null) {
     const partenaire = await this.findOne(id);
 
-    if (!partenaire.soumis_le) {
+    const estDonneePresidence = partenaire.cree_par_role === Role.PRESIDENCE;
+    if (!partenaire.soumis_le && !estDonneePresidence) {
       throw new ConflictException(
-        'Seul un partenaire soumis a la presidence peut etre publie',
+        'Seul un partenaire soumis ou créé par la Présidence peut être publié',
       );
+    }
+    if (partenaire.publie_le) {
+      throw new ConflictException('Ce partenaire est déjà publié');
     }
 
     await this.partenaireRepo.update(id, {
@@ -314,13 +389,79 @@ export class PartenairesService {
     return this.findOne(id);
   }
 
-  async rechercherDoublon(nom: string, etablissementId?: string) {
-    const where: any = { nom: ILike(nom), archive: false };
-    if (etablissementId) where.etablissement_id = etablissementId;
+  async rechercherDoublon(
+    criteres: {
+      nom?: string;
+      pays?: string;
+      type?: string;
+      email?: string;
+      telephone?: string;
+    },
+    etablissementId?: string,
+  ) {
+    const doublonsCoordonnees =
+      criteres.email || criteres.telephone
+        ? await this.coordonnees.rechercher(criteres.email, criteres.telephone)
+        : [];
+    if (!criteres.nom?.trim()) return doublonsCoordonnees;
 
-    return this.partenaireRepo.findOne({
-      where,
-      relations: { contacts: true },
+    const nomCanonique = this.canoniser(criteres.nom);
+    const requete = this.partenaireRepo
+      .createQueryBuilder('partenaire')
+      .where('partenaire.archive = false')
+      .andWhere('partenaire.nom ILIKE :nom', {
+        nom: `%${criteres.nom.trim()}%`,
+      });
+    if (etablissementId) {
+      requete.andWhere('partenaire.etablissement_id = :etablissementId', {
+        etablissementId,
+      });
+    }
+    const candidats = await requete.take(10).getMany();
+
+    const doublonsIdentite = candidats.map((partenaire) => {
+      const raisons: string[] = [];
+      if (this.canoniser(partenaire.nom) === nomCanonique)
+        raisons.push('nom identique');
+      if (
+        criteres.pays &&
+        this.canoniser(partenaire.pays) === this.canoniser(criteres.pays)
+      )
+        raisons.push('pays identique');
+      if (
+        criteres.type &&
+        this.canoniser(partenaire.type) === this.canoniser(criteres.type)
+      )
+        raisons.push('type identique');
+      return { ...partenaire, raisons_doublon: raisons };
     });
+    return [...doublonsIdentite, ...doublonsCoordonnees];
+  }
+
+  private async verifierDoublonIdentite(
+    nom: string,
+    pays: string,
+    etablissementId: string,
+    idExclu?: string,
+  ): Promise<void> {
+    const requete = this.partenaireRepo
+      .createQueryBuilder('partenaire')
+      .where('partenaire.archive = false')
+      .andWhere('partenaire.etablissement_id = :etablissementId', {
+        etablissementId,
+      })
+      .andWhere('lower(trim(partenaire.nom)) = lower(trim(:nom))', { nom })
+      .andWhere('lower(trim(partenaire.pays)) = lower(trim(:pays))', { pays });
+    if (idExclu) requete.andWhere('partenaire.id != :idExclu', { idExclu });
+    if (await requete.getExists()) {
+      throw new ConflictException(
+        `Un partenaire nommé « ${nom.trim()} » existe déjà dans ce pays pour cet établissement.`,
+      );
+    }
+  }
+
+  /** Même normalisation que l'index SQL uq_partenaire_identite_active. */
+  private canoniser(valeur: string): string {
+    return valeur.trim().toLocaleLowerCase('fr');
   }
 }

@@ -7,6 +7,7 @@ import { PartenairePublicDto } from './dto/partenaire-public.dto';
 import { PartenariatPublicDto } from './dto/partenariat-public.dto';
 import { ProjetPublicDto } from './dto/projet-public.dto';
 import { PublicationPubliqueDto } from './dto/publication-publique.dto';
+import { ConfigurationPubliqueDto } from './dto/configuration-publique.dto';
 import {
   PublicEtablissementQueryDto,
   PublicPartenaireQueryDto,
@@ -21,6 +22,14 @@ import { EspacePublicService } from './espace-public.service';
 @Controller('public')
 export class EspacePublicController {
   constructor(private readonly espacePublicService: EspacePublicService) {}
+
+  @Get('configuration')
+  @Public()
+  @ApiOperation({ summary: "Configuration visuelle de l'espace public" })
+  @ApiResponse({ status: 200, type: ConfigurationPubliqueDto })
+  getConfigurationPublique(): Promise<ConfigurationPubliqueDto> {
+    return this.espacePublicService.getConfigurationPublique();
+  }
 
   @Get('accueil')
   @Public()

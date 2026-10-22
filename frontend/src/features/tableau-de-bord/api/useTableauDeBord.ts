@@ -37,13 +37,13 @@ async function recupererTableauDeBord(): Promise<CompteursEtendus> {
   const signees = (repartition.SIGNEE ?? 0) + (repartition.ACTIVE ?? 0);
 
   return {
-    partenaires_actifs: compteurs?.partenaires ?? 0,
+    partenaires_actifs: compteurs?.partenaires_actifs ?? compteurs?.partenaires ?? 0,
     partenaires: compteurs?.partenaires ?? 0,
-    projets_en_cours: compteurs?.projets ?? 0,
+    projets_en_cours: compteurs?.projets_en_cours ?? 0,
     projets: compteurs?.projets ?? 0,
-    conventions_actives: conventions_par_statut?.actives ?? repartition.ACTIVE ?? 0,
-    conventions_a_echeance: conventions_par_statut?.bientot_expirees ?? 0,
-    conventions_signees: signees,
+    conventions_actives: compteurs?.conventions_actives ?? conventions_par_statut?.actives ?? repartition.ACTIVE ?? 0,
+    conventions_a_echeance: compteurs?.conventions_a_echeance ?? conventions_par_statut?.bientot_expirees ?? 0,
+    conventions_signees: compteurs?.conventions_signees ?? signees,
     repartition_conventions: repartition,
     projets_par_statut: projetsParStatut,
     partenariats: compteurs?.partenariats ?? 0,

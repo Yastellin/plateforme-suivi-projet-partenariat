@@ -12,7 +12,7 @@ export enum TypeRecherche {
 }
 
 export class QueryRechercheDto extends PaginationQueryDto {
-  @ApiProperty({ example: 'Toulouse' })
+  @ApiProperty({ example: 'Toliara' })
   @IsString()
   @MinLength(2)
   q: string;

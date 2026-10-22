@@ -3,10 +3,11 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { CreatePartenariatDto } from './dto/create-partenariat.dto';
 import { UpdatePartenariatDto } from './dto/update-partenariat.dto';
 import { QueryPartenariatDto } from './dto/query-partenariat.dto';
@@ -23,7 +24,6 @@ import { Role } from '../common/enums/role.enum';
 import { HistoriqueService } from '../historique/historique.service';
 import type { ContexteUtilisateur } from '../historique/historique.service';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
-import { BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class PartenariatsService {
@@ -45,6 +45,7 @@ export class PartenariatsService {
   async create(
     etablissementId: string,
     dto: CreatePartenariatDto,
+    utilisateur?: ContexteUtilisateur | null,
   ): Promise<PartenariatResponseDto> {
     return this.partenariatRepo.manager.transaction(async (manager) => {
       const etablissementRepo = manager.getRepository(Etablissement);
@@ -61,7 +62,7 @@ export class PartenariatsService {
       }
 
       const etablissements = new Map<string, Etablissement>();
-      for (const etabId of dto.etablissements_ids) {
+      for (const etabId of [...new Set(dto.etablissements_ids)]) {
         const etab = await etablissementRepo.findOneBy({ id: etabId });
         if (!etab) {
           throw new NotFoundException(`Établissement ${etabId} non trouvé`);
@@ -70,8 +71,11 @@ export class PartenariatsService {
       }
 
       const partenaires = new Map<string, Partenaire>();
-      for (const partId of dto.partenaires_ids) {
-        const part = await partenaireRepo.findOneBy({ id: partId });
+      for (const partId of [...new Set(dto.partenaires_ids)]) {
+        const part = await partenaireRepo.findOneBy({
+          id: partId,
+          archive: false,
+        });
         if (!part) {
           throw new NotFoundException(`Partenaire ${partId} non trouvé`);
         }
@@ -84,7 +88,10 @@ export class PartenariatsService {
         domaine: dto.domaine,
         date_debut: new Date(dto.date_debut),
         date_fin: dto.date_fin ? new Date(dto.date_fin) : null,
-        statut: dto.statut || StatutPartenariat.BROUILLON,
+        statut:
+          utilisateur?.role === Role.ETABLISSEMENT
+            ? StatutPartenariat.BROUILLON
+            : dto.statut || StatutPartenariat.BROUILLON,
         actions_realisees: dto.actions_realisees ?? null,
         actions_en_cours: dto.actions_en_cours ?? null,
         actions_prevues: dto.actions_prevues ?? null,
@@ -92,11 +99,13 @@ export class PartenariatsService {
         difficultes_contraintes: dto.difficultes_contraintes ?? null,
         perspectives_recommandations: dto.perspectives_recommandations ?? null,
         archive: false,
+        cree_par_utilisateur_id: utilisateur?.id ?? null,
+        cree_par_role: utilisateur?.role ?? null,
       });
       await partenariatRepo.save(partenariat);
 
       partenariat.etablissements = await peRepo.save(
-        dto.etablissements_ids.map((id) =>
+        [...new Set(dto.etablissements_ids)].map((id) =>
           peRepo.create({
             partenariat_id: partenariat.id,
             etablissement_id: id,
@@ -105,7 +114,7 @@ export class PartenariatsService {
         ),
       );
       partenariat.partenaires = await ppRepo.save(
-        dto.partenaires_ids.map((id) =>
+        [...new Set(dto.partenaires_ids)].map((id) =>
           ppRepo.create({
             partenariat_id: partenariat.id,
             partenaire_id: id,
@@ -122,8 +131,9 @@ export class PartenariatsService {
     const { page = 1, limit = 20, intitule, domaine, statut, archive } = query;
     const where: any = { archive: archive ?? false };
 
-    if (etablissementId) {
-      where.etablissements = { etablissement_id: etablissementId };
+    const etablissementFiltre = etablissementId ?? query.etablissement_id;
+    if (etablissementFiltre) {
+      where.etablissements = { etablissement_id: etablissementFiltre };
     }
     if (intitule) where.intitule = ILike(`%${intitule}%`);
     if (domaine) where.domaine = domaine;
@@ -184,44 +194,148 @@ export class PartenariatsService {
     const existing = await this.findOne(id, etablissementId);
 
     if (
-      userRole !== Role.PRESIDENCE &&
-      existing.statut !== StatutPartenariat.BROUILLON
+      userRole === Role.ETABLISSEMENT &&
+      existing.cree_par_role !== Role.ETABLISSEMENT
     ) {
       throw new ForbiddenException(
-        "Ce partenariat n'est plus modifiable (statut différent de BROUILLON)",
+        'Un établissement ne peut modifier que les partenariats qu’il a créés.',
       );
     }
 
-    const updateData: any = {};
-    if (dto.intitule) updateData.intitule = dto.intitule;
-    if (dto.objet !== undefined) updateData.objet = dto.objet;
-    if (dto.domaine) updateData.domaine = dto.domaine;
-    if (dto.date_debut) updateData.date_debut = new Date(dto.date_debut);
-    if (dto.date_fin !== undefined) {
-      updateData.date_fin = dto.date_fin ? new Date(dto.date_fin) : null;
-    }
-    if (dto.statut) updateData.statut = dto.statut;
-    if (dto.actions_realisees !== undefined) {
-      updateData.actions_realisees = dto.actions_realisees;
-    }
-    if (dto.actions_en_cours !== undefined) {
-      updateData.actions_en_cours = dto.actions_en_cours;
-    }
-    if (dto.actions_prevues !== undefined) {
-      updateData.actions_prevues = dto.actions_prevues;
-    }
-    if (dto.resultats_obtenus !== undefined) {
-      updateData.resultats_obtenus = dto.resultats_obtenus;
-    }
-    if (dto.difficultes_contraintes !== undefined) {
-      updateData.difficultes_contraintes = dto.difficultes_contraintes;
-    }
-    if (dto.perspectives_recommandations !== undefined) {
-      updateData.perspectives_recommandations =
-        dto.perspectives_recommandations;
+    if (
+      userRole !== Role.PRESIDENCE &&
+      (existing.statut !== StatutPartenariat.BROUILLON ||
+        Boolean(existing.soumis_le))
+    ) {
+      throw new ForbiddenException(
+        "Ce partenariat n'est plus modifiable après sa soumission.",
+      );
     }
 
-    await this.partenariatRepo.update(id, updateData);
+    const etablissementsIds =
+      dto.etablissements_ids === undefined
+        ? undefined
+        : [...new Set(dto.etablissements_ids)];
+    const partenairesIds =
+      dto.partenaires_ids === undefined
+        ? undefined
+        : [...new Set(dto.partenaires_ids)];
+
+    if (etablissementsIds?.length === 0) {
+      throw new BadRequestException('Au moins un établissement est requis.');
+    }
+    if (partenairesIds?.length === 0) {
+      throw new BadRequestException('Au moins un partenaire est requis.');
+    }
+    if (
+      userRole === Role.ETABLISSEMENT &&
+      etablissementsIds !== undefined &&
+      (etablissementsIds.length !== 1 ||
+        etablissementsIds[0] !== etablissementId)
+    ) {
+      throw new ForbiddenException(
+        'Un établissement ne peut pas modifier le rattachement institutionnel du partenariat.',
+      );
+    }
+
+    const dateDebut = dto.date_debut
+      ? new Date(dto.date_debut)
+      : new Date(String(existing.date_debut));
+    const dateFin =
+      dto.date_fin !== undefined
+        ? dto.date_fin
+          ? new Date(dto.date_fin)
+          : null
+        : existing.date_fin
+          ? new Date(String(existing.date_fin))
+          : null;
+    if (dateFin && dateFin <= dateDebut) {
+      throw new BadRequestException(
+        'La date de fin doit être postérieure à la date de début.',
+      );
+    }
+
+    await this.partenariatRepo.manager.transaction(async (manager) => {
+      const partenariatRepo = manager.getRepository(Partenariat);
+      const etablissementRepo = manager.getRepository(Etablissement);
+      const partenaireRepo = manager.getRepository(Partenaire);
+      const peRepo = manager.getRepository(PartenariatEtablissement);
+      const ppRepo = manager.getRepository(PartenariatPartenaire);
+
+      if (etablissementsIds !== undefined) {
+        const etablissements = await etablissementRepo.findBy({
+          id: In(etablissementsIds),
+        });
+        if (etablissements.length !== etablissementsIds.length) {
+          throw new NotFoundException(
+            'Un établissement sélectionné est introuvable.',
+          );
+        }
+      }
+      if (partenairesIds !== undefined) {
+        const partenaires = await partenaireRepo.findBy({
+          id: In(partenairesIds),
+          archive: false,
+        });
+        if (partenaires.length !== partenairesIds.length) {
+          throw new NotFoundException(
+            'Un partenaire sélectionné est introuvable.',
+          );
+        }
+      }
+
+      const updateData: Partial<Partenariat> = {};
+      if (dto.intitule) updateData.intitule = dto.intitule;
+      if (dto.objet !== undefined) updateData.objet = dto.objet ?? null;
+      if (dto.domaine) updateData.domaine = dto.domaine;
+      if (dto.date_debut) updateData.date_debut = dateDebut;
+      if (dto.date_fin !== undefined) updateData.date_fin = dateFin;
+      if (dto.statut && userRole === Role.PRESIDENCE) {
+        updateData.statut = dto.statut;
+      }
+      if (dto.actions_realisees !== undefined) {
+        updateData.actions_realisees = dto.actions_realisees ?? null;
+      }
+      if (dto.actions_en_cours !== undefined) {
+        updateData.actions_en_cours = dto.actions_en_cours ?? null;
+      }
+      if (dto.actions_prevues !== undefined) {
+        updateData.actions_prevues = dto.actions_prevues ?? null;
+      }
+      if (dto.resultats_obtenus !== undefined) {
+        updateData.resultats_obtenus = dto.resultats_obtenus ?? null;
+      }
+      if (dto.difficultes_contraintes !== undefined) {
+        updateData.difficultes_contraintes =
+          dto.difficultes_contraintes ?? null;
+      }
+      if (dto.perspectives_recommandations !== undefined) {
+        updateData.perspectives_recommandations =
+          dto.perspectives_recommandations ?? null;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await partenariatRepo.update(id, updateData);
+      }
+
+      if (etablissementsIds !== undefined) {
+        await peRepo.delete({ partenariat_id: id });
+        await peRepo.save(
+          etablissementsIds.map((etablissement_id) =>
+            peRepo.create({ partenariat_id: id, etablissement_id }),
+          ),
+        );
+      }
+      if (partenairesIds !== undefined) {
+        await ppRepo.delete({ partenariat_id: id });
+        await ppRepo.save(
+          partenairesIds.map((partenaire_id) =>
+            ppRepo.create({ partenariat_id: id, partenaire_id }),
+          ),
+        );
+      }
+    });
+
     return this.findOne(id, etablissementId);
   }
 
@@ -232,6 +346,11 @@ export class PartenariatsService {
   ) {
     const partenariat = await this.findOne(id, etablissementId);
 
+    if (partenariat.cree_par_role !== Role.ETABLISSEMENT) {
+      throw new ConflictException(
+        'Seuls les partenariats créés par un établissement peuvent être soumis',
+      );
+    }
     if (partenariat.statut !== StatutPartenariat.BROUILLON) {
       throw new ConflictException(
         'Seul un partenariat en BROUILLON peut être soumis',
@@ -243,7 +362,7 @@ export class PartenariatsService {
       soumis_le: new Date(),
     });
 
-    this.eventEmitter.emit('partenariat.soumis', {
+    await this.eventEmitter.emitAsync('partenariat.soumis', {
       type: TypeNotification.PARTENARIAT_SOUMIS,
       priorite: PrioriteNotification.HAUTE,
       titre: `Partenariat soumis : ${partenariat.intitule}`,
@@ -269,7 +388,11 @@ export class PartenariatsService {
     ids: string[],
     etablissementId?: string,
     utilisateur?: ContexteUtilisateur | null,
-  ): Promise<{ total: number; reussis: string[]; echecs: { id: string; erreur: string }[] }> {
+  ): Promise<{
+    total: number;
+    reussis: string[];
+    echecs: { id: string; erreur: string }[];
+  }> {
     if (ids.length === 0) {
       throw new BadRequestException('Aucun partenariat selectionne');
     }
@@ -301,19 +424,27 @@ export class PartenariatsService {
   }
 
   /** La presidence valide et publie un partenariat soumis. */
-  async publier(
-    id: string,
-    utilisateur?: ContexteUtilisateur | null,
-  ) {
+  async publier(id: string, utilisateur?: ContexteUtilisateur | null) {
     const partenariat = await this.findOne(id);
 
-    if (!partenariat.soumis_le) {
+    const estDonneePresidence = partenariat.cree_par_role === Role.PRESIDENCE;
+    if (!partenariat.soumis_le && !estDonneePresidence) {
       throw new ConflictException(
-        'Seul un partenariat soumis a la presidence peut etre publie',
+        'Seul un partenariat soumis ou créé par la Présidence peut être publié',
       );
     }
+    if (partenariat.publie_le) {
+      throw new ConflictException('Ce partenariat est déjà publié');
+    }
 
-    await this.partenariatRepo.update(id, { publie_le: new Date() });
+    await this.partenariatRepo.update(id, {
+      publie_le: new Date(),
+      statut:
+        partenariat.statut === StatutPartenariat.BROUILLON ||
+        partenariat.statut === StatutPartenariat.EN_ATTENTE
+          ? StatutPartenariat.EN_COURS
+          : partenariat.statut,
+    });
 
     this.eventEmitter.emit('partenariat.publie', {
       type: TypeNotification.PARTENARIAT_PUBLIE,
@@ -339,10 +470,7 @@ export class PartenariatsService {
     return this.findOne(id);
   }
 
-  async archiver(
-    id: string,
-    utilisateur?: ContexteUtilisateur | null,
-  ) {
+  async archiver(id: string, utilisateur?: ContexteUtilisateur | null) {
     const partenariat = await this.partenariatRepo.findOne({
       where: { id, archive: false },
       relations: {
@@ -398,6 +526,7 @@ export class PartenariatsService {
       archive: data.archive,
       soumis_le: data.soumis_le,
       publie_le: data.publie_le,
+      cree_par_role: data.cree_par_role,
       created_at: data.created_at,
       updated_at: data.updated_at,
       etablissements: data.etablissements.map((e: any) => ({

@@ -31,7 +31,7 @@ export function MotDePasseOubliePage() {
     register,
     handleSubmit,
     getValues,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<MotDePasseOublieFormValues>({
     resolver: zodResolver(motDePasseOublieSchema),
     mode: "onChange",
@@ -64,7 +64,7 @@ export function MotDePasseOubliePage() {
     })
   }
 
-  const boutonBloque = demande.isPending || bloque
+  const boutonBloque = demande.isPending || bloque || !isValid
 
   return (
     <LayoutAuthentification
