@@ -15,6 +15,7 @@ import {
   teinteDe,
 } from "@/features/espace-public/lib/publique"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
+import { resoudreUrlFichier } from "@/lib/url"
 
 function classeBadgeStatut(statut: StatutProjet): string {
   switch (statut) {
@@ -37,7 +38,7 @@ export function CartePartenaire({ partenaire, className }: { partenaire: Partena
     <article className={`vt-pt ${className ?? ""}`}>
       {partenaire.logo_url ? (
         <span className="vt-pt-ini">
-          <img src={partenaire.logo_url} alt="" loading="lazy" />
+          <img src={resoudreUrlFichier(partenaire.logo_url)} alt="" loading="lazy" />
         </span>
       ) : (
         <span className="vt-pt-ini" style={{ background: teinteDe(partenaire.nom) }} aria-hidden="true">
@@ -139,7 +140,7 @@ export function CartePublication({ publication, className }: { publication: Publ
       <Link to={`/projets-partenariats/publication/${publication.id}`} style={LIEN_PLEINE_CARTE}>
         <div className="vt-pub-cover">
           {publication.photo_url ? (
-            <img src={publication.photo_url} alt="" className="vt-art-img" loading="lazy" />
+            <img src={resoudreUrlFichier(publication.photo_url)} alt="" className="vt-art-img" loading="lazy" />
           ) : (
             <Illustration type="montagne" />
           )}

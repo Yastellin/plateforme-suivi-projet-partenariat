@@ -79,6 +79,12 @@ export class Partenariat {
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   publie_le: Date | null;
 
+  @Column({ type: 'text', nullable: true })
+  cree_par_utilisateur_id: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  cree_par_role: string | null;
+
   @OneToMany(() => PartenariatEtablissement, (pe) => pe.partenariat)
   etablissements: PartenariatEtablissement[];
 

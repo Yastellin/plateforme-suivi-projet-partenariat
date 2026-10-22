@@ -1,8 +1,14 @@
-﻿// src/partenaires/contacts/dto/contact-response.dto.ts
-//
-// TODO : fichier actuellement vide (0 octet). ContactsService renvoie
-// l'entite Contact brute (save/find) sans mapper vers un DTO de reponse,
-// ce qui expose les colonnes internes (partenaire_id, created_at,
-// updated_at) et ne garantit pas le contrat API unifie { status, message,
-// data, errors, signature }. A remplir (id, nom, fonction, email,
-// telephone) et a utiliser dans contacts.service.ts + contacts.controller.ts.
+import { ApiProperty } from '@nestjs/swagger';
+
+export class ContactResponseDto {
+  @ApiProperty() id: string;
+  @ApiProperty() nom: string;
+  @ApiProperty({ nullable: true }) fonction: string | null;
+  @ApiProperty({ nullable: true }) email: string | null;
+  @ApiProperty({ nullable: true }) telephone: string | null;
+  @ApiProperty({ type: [String] }) emails: string[];
+  @ApiProperty({ type: [String] }) telephones: string[];
+  @ApiProperty() partenaire_id: string;
+  @ApiProperty() created_at: Date;
+  @ApiProperty() updated_at: Date;
+}

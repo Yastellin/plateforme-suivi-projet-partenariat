@@ -1,11 +1,14 @@
-﻿// src/features/documents/api/useTelechargerDocument.ts
+// src/features/documents/api/useTelechargerDocument.ts
 import { useMutation } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
 
 export function useTelechargerDocument() {
   return useMutation({
-    mutationFn: async ({ id, nomFichier }: { id: string; nomFichier: string }) => {
-      const reponse = await apiClient.get(`/documents/${id}/telecharger`, {
+    mutationFn: async ({ id, nomFichier, archive = false }: { id: string; nomFichier: string; archive?: boolean }) => {
+      const endpoint = archive
+        ? `/archives/documents/${id}/telecharger`
+        : `/documents/${id}/telecharger`
+      const reponse = await apiClient.get(endpoint, {
         responseType: "blob",
       })
       const url = window.URL.createObjectURL(new Blob([reponse.data as BlobPart]))

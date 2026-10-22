@@ -1,4 +1,9 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BeforeApplicationShutdown,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -26,8 +31,9 @@ const echapper = (valeur: string) =>
 //  - message general : les utilisateurs actifs de la Presidence.
 // Le DECIDEUR n'est jamais destinataire des messages de contact.
 @Injectable()
-export class MessageContactRecuListener {
+export class MessageContactRecuListener implements BeforeApplicationShutdown {
   private readonly logger = new Logger(MessageContactRecuListener.name);
+  private readonly travauxEnCours = new Set<Promise<void>>();
 
   constructor(
     private readonly notificationsService: NotificationsService,
@@ -36,8 +42,22 @@ export class MessageContactRecuListener {
     @Inject(MAIL_PORT) private readonly mail: MailPort,
   ) {}
 
-  @OnEvent(MESSAGE_CONTACT_RECU, { async: true })
-  async gerer(event: MessageContactRecuEvent): Promise<void> {
+  @OnEvent(MESSAGE_CONTACT_RECU)
+  gerer(event: MessageContactRecuEvent): void {
+    // Le traitement reste non bloquant pour la requête HTTP, mais chaque
+    // promesse est suivie afin que Nest puisse la drainer avant de fermer la
+    // connexion à la base de données.
+    const travail = this.traiter(event).finally(() => {
+      this.travauxEnCours.delete(travail);
+    });
+    this.travauxEnCours.add(travail);
+  }
+
+  async beforeApplicationShutdown(): Promise<void> {
+    await Promise.allSettled([...this.travauxEnCours]);
+  }
+
+  private async traiter(event: MessageContactRecuEvent): Promise<void> {
     try {
       const destinataires = await this.trouverDestinataires(event);
       for (const destinataire of destinataires) {
@@ -45,9 +65,9 @@ export class MessageContactRecuListener {
         await this.envoyerEmail(destinataire, event);
       }
     } catch (erreur) {
-      // Un echec de notification ne doit jamais impacter l'envoi du message.
+      // Un échec de notification ne doit jamais impacter l'envoi du message.
       this.logger.error(
-        `Echec de la notification du message ${event.messageId}`,
+        `Échec de la notification du message ${event.messageId}`,
         erreur instanceof Error ? erreur.stack : String(erreur),
       );
     }

@@ -22,6 +22,7 @@ import { QueryConventionDto } from './dto/query-convention.dto';
 import { ConventionResponseDto } from './dto/convention-response.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Conventions')
 @ApiBearerAuth()
@@ -74,8 +75,13 @@ export class ConventionsController {
   @ApiOperation({ summary: 'Archiver une convention (Presidence uniquement)' })
   @ApiResponse({ status: 200, type: ConventionResponseDto })
   archiver(
+    @CurrentUser() user: any,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ConventionResponseDto> {
-    return this.conventionsService.archiver(id);
+    return this.conventionsService.archiver(id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 }

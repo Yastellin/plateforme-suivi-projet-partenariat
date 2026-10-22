@@ -3,6 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Document } from '../documents/entities/document.entity';
 import { PhotoPublication } from '../publications/enitities/photo-publication.entity';
+import { Partenaire } from '../partenaires/entities/partenaire.entity';
+import { Etablissement } from '../etablissements/entities/etablissement.entity';
+import { Configuration } from '../configuration/entities/configuration.entity';
 import { STORAGE_PORT } from '../storage/storage.port';
 import type { StoragePort } from '../storage/storage.port';
 
@@ -27,6 +30,12 @@ export class CleanupService {
     @InjectRepository(Document) private documentRepo: Repository<Document>,
     @InjectRepository(PhotoPublication)
     private photoRepo: Repository<PhotoPublication>,
+    @InjectRepository(Partenaire)
+    private partenaireRepo: Repository<Partenaire>,
+    @InjectRepository(Etablissement)
+    private etablissementRepo: Repository<Etablissement>,
+    @InjectRepository(Configuration)
+    private configurationRepo: Repository<Configuration>,
     @Inject(STORAGE_PORT) private storage: StoragePort,
   ) {}
 
@@ -37,14 +46,27 @@ export class CleanupService {
     const fichiers = await this.storage.listerFichiers();
 
     // Recuperer toutes les URLs referencees en base
-    const [documents, photos] = await Promise.all([
-      this.documentRepo.find({ select: ['url_fichier'] }),
-      this.photoRepo.find({ select: ['url_fichier'] }),
-    ]);
+    const [documents, photos, partenaires, etablissements, configurations] =
+      await Promise.all([
+        this.documentRepo.find({ select: ['url_fichier'] }),
+        this.photoRepo.find({ select: ['url_fichier'] }),
+        this.partenaireRepo.find({ select: ['logo_url'] }),
+        this.etablissementRepo.find({ select: ['logo_url'] }),
+        this.configurationRepo.find({ select: ['logo_url'] }),
+      ]);
 
     const urlsReferencees = new Set<string>([
-      ...documents.map((d) => d.url_fichier),
-      ...photos.map((p) => p.url_fichier),
+      ...documents.map((document) => document.url_fichier),
+      ...photos.map((photo) => photo.url_fichier),
+      ...partenaires.flatMap((partenaire) =>
+        partenaire.logo_url ? [partenaire.logo_url] : [],
+      ),
+      ...etablissements.flatMap((etablissement) =>
+        etablissement.logo_url ? [etablissement.logo_url] : [],
+      ),
+      ...configurations.flatMap((configuration) =>
+        configuration.logo_url ? [configuration.logo_url] : [],
+      ),
     ]);
 
     let supprimes = 0;

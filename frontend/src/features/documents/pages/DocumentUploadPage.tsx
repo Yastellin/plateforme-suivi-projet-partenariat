@@ -17,32 +17,65 @@ import {
 } from "@/components/ui/select"
 import { useProjets } from "@/features/projets/api/useProjets"
 import { useConventions } from "@/features/conventions/api/useConventions"
+import { useCotutelles } from "@/features/cotutelles/api/useCotutelles"
+import { usePartenariats } from "@/features/partenariats/api/usePartenariats"
 
-type Cible = "projet" | "convention"
+type Cible = "projet" | "convention" | "cotutelle" | "partenariat"
+
+const CONFIGURATION_CIBLES: Record<Cible, { onglet: string; libelle: string; vide: string }> = {
+  projet: { onglet: "Projet", libelle: "Projet concerné", vide: "Aucun projet disponible" },
+  convention: { onglet: "Convention", libelle: "Convention concernée", vide: "Aucune convention disponible" },
+  cotutelle: { onglet: "Cotutelle", libelle: "Cotutelle concernée", vide: "Aucune cotutelle disponible" },
+  partenariat: { onglet: "Partenariat", libelle: "Partenariat concerné", vide: "Aucun partenariat disponible" },
+}
 
 export function DocumentUploadPage() {
   const navigate = useNavigate()
   const [cible, setCible] = useState<Cible>("projet")
-  const [idSelectionne, setIdSelectionne] = useState<string>("")
+  const [idSelectionne, setIdSelectionne] = useState("")
 
-  const { data: projets, isLoading: projetsEnChargement } = useProjets({ page: 1, limit: 100 })
-  const { data: conventions, isLoading: conventionsEnChargement } = useConventions({
-    page: 1,
-    limit: 100,
-  })
+  const projets = useProjets({ page: 1, limit: 100 })
+  const conventions = useConventions({ page: 1, limit: 100 })
+  const cotutelles = useCotutelles({ page: 1, limit: 100 })
+  const partenariats = usePartenariats({ page: 1, limit: 100 })
 
-  const options =
-    cible === "projet"
-      ? (projets?.data ?? []).map((p) => ({ id: p.id, libelle: p.nom }))
-      : (conventions?.data ?? []).map((c) => ({ id: c.id, libelle: `${c.reference} — ${c.titre}` }))
+  const sources = {
+    projet: {
+      options: (projets.data?.data ?? []).map((item) => ({ id: item.id, libelle: item.nom })),
+      chargement: projets.isLoading,
+    },
+    convention: {
+      options: (conventions.data?.data ?? []).map((item) => ({ id: item.id, libelle: `${item.reference} — ${item.titre}` })),
+      chargement: conventions.isLoading,
+    },
+    cotutelle: {
+      options: (cotutelles.data?.data ?? []).map((item) => ({ id: item.id, libelle: `Thèse de ${item.nom_doctorant}` })),
+      chargement: cotutelles.isLoading,
+    },
+    partenariat: {
+      options: (partenariats.data?.data ?? []).map((item) => ({ id: item.id, libelle: item.intitule })),
+      chargement: partenariats.isLoading,
+    },
+  } satisfies Record<Cible, { options: { id: string; libelle: string }[]; chargement: boolean }>
 
-  const enChargement = cible === "projet" ? projetsEnChargement : conventionsEnChargement
+  const configuration = CONFIGURATION_CIBLES[cible]
+  const source = sources[cible]
+
+  const cibleDocument = idSelectionne
+    ? cible === "projet"
+      ? { projetId: idSelectionne }
+      : cible === "convention"
+        ? { conventionId: idSelectionne }
+        : cible === "cotutelle"
+          ? { cotutelleId: idSelectionne }
+          : { partenariatId: idSelectionne }
+    : null
 
   return (
     <div>
       <PageHeader
         titre="Téléverser un document"
-        description="Ajoutez un document PDF ou Word associé à un projet ou une convention."
+        description="Ajoutez un document PDF ou Word et rattachez-le à l'entité concernée."
         actions={
           <button
             type="button"
@@ -54,7 +87,7 @@ export function DocumentUploadPage() {
         }
       />
 
-      <Panel className="max-w-xl">
+      <Panel className="max-w-2xl">
         <PanelBody className="flex flex-col gap-5">
           <Tabs
             value={cible}
@@ -63,44 +96,31 @@ export function DocumentUploadPage() {
               setIdSelectionne("")
             }}
           >
-            <TabsList>
-              <TabsTrigger value="projet">Projet</TabsTrigger>
-              <TabsTrigger value="convention">Convention</TabsTrigger>
+            <TabsList className="flex h-auto flex-wrap">
+              {(Object.keys(CONFIGURATION_CIBLES) as Cible[]).map((cle) => (
+                <TabsTrigger key={cle} value={cle}>{CONFIGURATION_CIBLES[cle].onglet}</TabsTrigger>
+              ))}
             </TabsList>
 
-            <TabsContent value="projet" className="mt-4">
-              <SelectCible
-                libelle="Projet concerné"
-                id={idSelectionne}
-                onChange={setIdSelectionne}
-                options={options}
-                chargement={enChargement}
-                messageVide="Aucun projet disponible"
-              />
-            </TabsContent>
-
-            <TabsContent value="convention" className="mt-4">
-              <SelectCible
-                libelle="Convention concernée"
-                id={idSelectionne}
-                onChange={setIdSelectionne}
-                options={options}
-                chargement={enChargement}
-                messageVide="Aucune convention disponible"
-              />
-            </TabsContent>
+            {(Object.keys(CONFIGURATION_CIBLES) as Cible[]).map((cle) => (
+              <TabsContent key={cle} value={cle} className="mt-4">
+                <SelectCible
+                  libelle={configuration.libelle}
+                  id={idSelectionne}
+                  onChange={setIdSelectionne}
+                  options={source.options}
+                  chargement={source.chargement}
+                  messageVide={configuration.vide}
+                />
+              </TabsContent>
+            ))}
           </Tabs>
 
-          {idSelectionne ? (
-            <DocumentDropzone
-              {...(cible === "projet"
-                ? { projetId: idSelectionne }
-                : { conventionId: idSelectionne })}
-            />
+          {cibleDocument ? (
+            <DocumentDropzone {...cibleDocument} />
           ) : (
             <p className="text-sm text-muted-foreground">
-              Sélectionnez d'abord un projet ou une convention : tout document doit être rattaché à
-              l'un des deux.
+              Sélectionnez l'entité à laquelle le document doit être rattaché.
             </p>
           )}
         </PanelBody>
@@ -109,14 +129,7 @@ export function DocumentUploadPage() {
   )
 }
 
-function SelectCible({
-  libelle,
-  id,
-  onChange,
-  options,
-  chargement,
-  messageVide,
-}: {
+function SelectCible({ libelle, id, onChange, options, chargement, messageVide }: {
   libelle: string
   id: string
   onChange: (id: string) => void
@@ -129,18 +142,14 @@ function SelectCible({
       <Label htmlFor="cible" requis>{libelle}</Label>
       <Select value={id} onValueChange={onChange} disabled={chargement}>
         <SelectTrigger id="cible">
-          <SelectValue placeholder={chargement ? "Chargement..." : "Choisir..."} />
+          <SelectValue placeholder={chargement ? "Chargement…" : "Choisir…"} />
         </SelectTrigger>
         <SelectContent>
           {options.length === 0 && !chargement ? (
             <p className="px-3 py-2 text-sm text-muted-foreground">{messageVide}</p>
-          ) : (
-            options.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.libelle}
-              </SelectItem>
-            ))
-          )}
+          ) : options.map((option) => (
+            <SelectItem key={option.id} value={option.id}>{option.libelle}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

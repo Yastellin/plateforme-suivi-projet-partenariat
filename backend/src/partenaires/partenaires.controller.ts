@@ -32,6 +32,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { OwnEtablissementGuard } from '../common/guards/own-etablissement.guard';
 import { Role } from '../common/enums/role.enum';
+import { SoumissionMasseDto } from '../common/dto/soumission-masse.dto';
+import { RechercheDoublonPartenaireDto } from './dto/recherche-doublon-partenaire.dto';
 
 @ApiTags('Partenaires')
 @ApiBearerAuth()
@@ -65,7 +67,11 @@ export class PartenairesController {
       throw new ForbiddenException('Rôle non autorisé pour cette action.');
     }
 
-    return this.partenairesService.create(etablissementId, dto);
+    return this.partenairesService.create(etablissementId, dto, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   @Get()
@@ -80,28 +86,28 @@ export class PartenairesController {
 
   @Get('recherche-doublon')
   @ApiOperation({
-    summary: 'Rechercher un partenaire par nom (vérification doublon)',
+    summary: 'Détecter un doublon par identité, e-mail ou téléphone',
+    description:
+      'Identité bloquante : même nom normalisé + même pays + même établissement. E-mails et téléphones sont uniques globalement.',
   })
   @ApiResponse({ status: 200 })
-  rechercherDoublon(@CurrentUser() user: any, @Query('nom') nom: string) {
-    if (!nom) {
-      throw new BadRequestException('Le paramètre nom est requis');
-    }
-
-    if (user.role === Role.ETABLISSEMENT) {
-      if (!user.etablissement_id) {
-        throw new BadRequestException(
-          'Aucun établissement associé à ce compte.',
-        );
-      }
-      return this.partenairesService.rechercherDoublon(
-        nom,
-        user.etablissement_id,
+  rechercherDoublon(
+    @CurrentUser() user: any,
+    @Query() criteres: RechercheDoublonPartenaireDto,
+  ) {
+    if (!criteres.nom && !criteres.email && !criteres.telephone) {
+      throw new BadRequestException(
+        'Indiquez au moins un nom, un e-mail ou un numéro de téléphone.',
       );
     }
-
-    // PRESIDENCE / DECIDEUR : recherche sur l'ensemble des établissements
-    return this.partenairesService.rechercherDoublon(nom, undefined);
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT
+        ? user.etablissement_id
+        : criteres.etablissement_id;
+    return this.partenairesService.rechercherDoublon(
+      criteres,
+      etablissementId,
+    );
   }
 
   @Get(':id')
@@ -142,8 +148,8 @@ export class PartenairesController {
 
   @Post(':id/soumettre')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un partenaire à la Présidence' })
+  @Roles(Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un partenaire à la Présidence (établissement)' })
   @ApiResponse({ status: 200, type: PartenaireResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =
@@ -157,12 +163,12 @@ export class PartenairesController {
 
   @Post('soumettre')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @Roles(Role.ETABLISSEMENT)
   @ApiOperation({
-    summary: 'Soumettre plusieurs partenaires a la Presidence en une fois',
+    summary: 'Soumettre plusieurs partenaires à la Présidence en une fois (établissement)',
   })
   @ApiResponse({ status: 200 })
-  soumettreEnMasse(@CurrentUser() user: any, @Body() dto: { ids: string[] }) {
+  soumettreEnMasse(@CurrentUser() user: any, @Body() dto: SoumissionMasseDto) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
     return this.partenairesService.soumettreEnMasse(

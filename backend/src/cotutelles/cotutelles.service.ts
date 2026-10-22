@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { CreateCotutelleDto } from './dto/create-cotutelle.dto';
@@ -42,7 +46,7 @@ export class CotutellesService {
 
     if (dto.convention_id) {
       const conventions = await this.cotutelleRepo.manager.query(
-        'SELECT id FROM "Convention" WHERE id = $1',
+        'SELECT id FROM "Convention" WHERE id = $1 AND archive = false',
         [dto.convention_id],
       );
       if (conventions.length === 0) {
@@ -106,9 +110,16 @@ export class CotutellesService {
     };
   }
 
-  async findOne(id: string): Promise<CotutelleResponseDto> {
+  async findOne(
+    id: string,
+    etablissementId?: string,
+  ): Promise<CotutelleResponseDto> {
     const cotutelle = await this.cotutelleRepo.findOne({
-      where: { id, archive: false },
+      where: {
+        id,
+        archive: false,
+        ...(etablissementId ? { etablissement_id: etablissementId } : {}),
+      },
     });
     if (!cotutelle) throw new NotFoundException('Cotutelle non trouvee');
     return this.mapToResponse(cotutelle);
@@ -118,7 +129,46 @@ export class CotutellesService {
     id: string,
     dto: UpdateCotutelleDto,
   ): Promise<CotutelleResponseDto> {
-    await this.findOne(id);
+    const actuelle = await this.findOne(id);
+    const dateDebut = dto.date_debut
+      ? new Date(dto.date_debut)
+      : actuelle.date_debut;
+    const dateSoutenance =
+      dto.date_prevue_soutenance !== undefined
+        ? dto.date_prevue_soutenance
+          ? new Date(dto.date_prevue_soutenance)
+          : null
+        : actuelle.date_prevue_soutenance;
+    if (dateSoutenance && dateSoutenance <= dateDebut) {
+      throw new BadRequestException(
+        'La date prévue de soutenance doit être postérieure à la date de début.',
+      );
+    }
+
+    if (
+      dto.etablissement_id &&
+      !(await this.etablissementRepo.existsBy({ id: dto.etablissement_id }))
+    ) {
+      throw new NotFoundException('Etablissement non trouve');
+    }
+    if (
+      dto.partenaire_id &&
+      !(await this.partenaireRepo.existsBy({
+        id: dto.partenaire_id,
+        archive: false,
+      }))
+    ) {
+      throw new NotFoundException('Partenaire non trouve');
+    }
+    if (dto.convention_id) {
+      const conventions = await this.cotutelleRepo.manager.query(
+        'SELECT id FROM "Convention" WHERE id = $1 AND archive = false',
+        [dto.convention_id],
+      );
+      if (conventions.length === 0) {
+        throw new NotFoundException('Convention non trouvee');
+      }
+    }
 
     const data: Partial<CotutelleThese> = {};
     if (dto.nom_doctorant) data.nom_doctorant = dto.nom_doctorant;

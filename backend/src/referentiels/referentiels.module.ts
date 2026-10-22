@@ -12,9 +12,10 @@ import { Porteur } from './porteurs/entities/porteur.entity';
 import { Bailleur } from './bailleurs/entities/bailleur.entity';
 import { Beneficiaire } from './beneficiaires/entities/beneficiaire.entity';
 import { Site } from './sites/entities/site.entity';
+import { Etablissement } from '../etablissements/entities/etablissement.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Porteur, Bailleur, Beneficiaire, Site])],
+  imports: [TypeOrmModule.forFeature([Porteur, Bailleur, Beneficiaire, Site, Etablissement])],
   controllers: [
     PorteursController,
     BailleursController,

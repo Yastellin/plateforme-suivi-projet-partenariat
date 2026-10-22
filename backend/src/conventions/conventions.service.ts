@@ -152,7 +152,7 @@ export class ConventionsService {
 
     const [data, total] = await this.conventionRepo.findAndCount({
       where,
-      relations: { partenariat: true, projet: true },
+      relations: { partenariat: true, projet: true, cotutelles: true },
       skip: (page - 1) * limit,
       take: limit,
       order: { created_at: 'DESC' },
@@ -167,7 +167,7 @@ export class ConventionsService {
   async findOne(id: string): Promise<ConventionResponseDto> {
     const convention = await this.conventionRepo.findOne({
       where: { id, archive: false },
-      relations: { partenariat: true, projet: true },
+      relations: { partenariat: true, projet: true, cotutelles: true },
     });
     if (!convention) throw new NotFoundException('Convention non trouvee');
     return this.mapToResponse(convention);
@@ -177,7 +177,45 @@ export class ConventionsService {
     id: string,
     dto: UpdateConventionDto,
   ): Promise<ConventionResponseDto> {
-    await this.findOne(id);
+    const conventionActuelle = await this.findOne(id);
+    const partenariatId =
+      dto.partenariat_id !== undefined
+        ? dto.partenariat_id || null
+        : conventionActuelle.partenariat_id;
+    const projetId =
+      dto.projet_id !== undefined
+        ? dto.projet_id || null
+        : conventionActuelle.projet_id;
+    const cotutelleId =
+      dto.cotutelle_id !== undefined
+        ? dto.cotutelle_id || null
+        : conventionActuelle.cotutelle_id;
+    if (!partenariatId && !projetId && !cotutelleId) {
+      throw new BadRequestException(
+        'Une convention doit etre associee a un partenariat, un projet ou une cotutelle',
+      );
+    }
+
+    // Une validation de DTO ne voit pas la valeur conservée lors d'un PATCH
+    // partiel. Combiner l'état courant et la commande empêche donc de placer
+    // uniquement la date de fin avant une date de début déjà enregistrée.
+    const dateDebut =
+      dto.date_debut !== undefined
+        ? dto.date_debut
+          ? new Date(dto.date_debut)
+          : null
+        : conventionActuelle.date_debut;
+    const dateFin =
+      dto.date_fin !== undefined
+        ? dto.date_fin
+          ? new Date(dto.date_fin)
+          : null
+        : conventionActuelle.date_fin;
+    if (dateDebut && dateFin && dateFin <= dateDebut) {
+      throw new BadRequestException(
+        'La date de fin doit être postérieure à la date de début.',
+      );
+    }
 
     await this.dataSource.transaction(async (manager) => {
       const conventionRepo = manager.getRepository(Convention);
@@ -306,6 +344,14 @@ export class ConventionsService {
             id: data.projet.id,
             libelle: data.projet.nom,
             complement: data.projet.intitule_officiel,
+          }
+        : null,
+      cotutelle_id: data.cotutelles?.[0]?.id ?? null,
+      cotutelle: data.cotutelles?.[0]
+        ? {
+            id: data.cotutelles[0].id,
+            libelle: data.cotutelles[0].nom_doctorant,
+            complement: data.cotutelles[0].specialite,
           }
         : null,
       created_at: data.created_at,

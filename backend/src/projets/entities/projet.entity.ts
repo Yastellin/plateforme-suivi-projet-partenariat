@@ -74,6 +74,12 @@ export class Projet {
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   publie_le: Date | null;
 
+  @Column({ type: 'text', nullable: true })
+  cree_par_utilisateur_id: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  cree_par_role: string | null;
+
   // Facultatif : un projet peut etre transversal ou gere directement par la
   // Presidence, sans etablissement rattaché.
   @Column({ type: 'text', nullable: true })

@@ -17,6 +17,7 @@ describe('Partenaires (e2e)', () => {
   let etablissementFlsh: any;
   let etablissementFdsId: string;
   let etablissementFlshId: string;
+  let partenaireToliaraId: string;
 
   beforeAll(async () => {
     ctx = await creerApplicationTest();
@@ -36,6 +37,10 @@ describe('Partenaires (e2e)', () => {
     );
     etablissementFdsId = etablissementFds.etablissement_id;
     etablissementFlshId = etablissementFlsh.etablissement_id;
+    const [partenaireToliara] = await ctx.dataSource.query(
+      `SELECT id FROM "Partenaire" WHERE nom = 'Université de Toliara'`,
+    );
+    partenaireToliaraId = partenaireToliara.id;
   }, 120000);
 
   afterAll(async () => {
@@ -48,15 +53,15 @@ describe('Partenaires (e2e)', () => {
         .post('/api/partenaires')
         .set(...enteteBearer(presidence))
         .send({
-          nom: 'Université de Montréal',
+          nom: "Université d'Antananarivo",
           type: 'Université',
-          pays: 'Canada',
+          pays: 'Madagascar',
           etablissement_id: etablissementFdsId,
         })
         .expect(201);
 
       const partenaire = donnees<any>(reponse.body);
-      expect(partenaire.nom).toBe('Université de Montréal');
+      expect(partenaire.nom).toBe("Université d'Antananarivo");
       expect(partenaire.etablissement_id).toBe(etablissementFdsId);
       expect(partenaire.statut).toBe('ACTIF');
     });
@@ -66,15 +71,15 @@ describe('Partenaires (e2e)', () => {
         .post('/api/partenaires')
         .set(...enteteBearer(presidence))
         .send({
-          nom: 'Université de Montréal',
+          nom: "Université d'Antananarivo",
           type: 'Université',
-          pays: 'Canada',
+          pays: 'Madagascar',
           etablissement_id: etablissementFdsId,
         })
         .expect(409);
 
       expect(reponse.body.status).toBe('error');
-      expect(reponse.body.message).toContain('existe deja');
+      expect(reponse.body.message).toContain('existe déjà');
     });
 
     it('exige un etablissement pour la PRESIDENCE (400)', async () => {
@@ -82,9 +87,9 @@ describe('Partenaires (e2e)', () => {
         .post('/api/partenaires')
         .set(...enteteBearer(presidence))
         .send({
-          nom: 'Partenaire sans etablissement',
+          nom: 'Partenaire sans établissement',
           type: 'ONG',
-          pays: 'France',
+          pays: 'Madagascar',
         })
         .expect(400);
     });
@@ -108,8 +113,38 @@ describe('Partenaires (e2e)', () => {
       await request(ctx.app.getHttpServer())
         .post('/api/partenaires')
         .set(...enteteBearer(etablissementFds))
-        .send({ nom: 'X', type: 'Université', pays: 'France' })
+        .send({ nom: 'X', type: 'Université', pays: 'Madagascar' })
         .expect(400);
+    });
+
+    it("refuse l'e-mail déjà attribué à un autre partenaire (409)", async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .post('/api/partenaires')
+        .set(...enteteBearer(presidence))
+        .send({
+          nom: 'Institut supérieur de Fianarantsoa',
+          type: 'Institut',
+          pays: 'Madagascar',
+          email: 'contact@univ-toliara.mg',
+          etablissement_id: etablissementFlshId,
+        })
+        .expect(409);
+
+      expect(reponse.body.message).toContain('appartient déjà');
+    });
+
+    it("refuse pour un contact un téléphone déjà attribué à un partenaire (409)", async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .post(`/api/partenaires/${partenaireToliaraId}/contacts`)
+        .set(...enteteBearer(presidence))
+        .send({
+          nom: 'Rasoa Fara',
+          fonction: 'Chargée de coopération',
+          telephone: '034 12 345 67',
+        })
+        .expect(409);
+
+      expect(reponse.body.message).toContain('appartient déjà');
     });
   });
 
@@ -181,16 +216,20 @@ describe('Partenaires (e2e)', () => {
   });
 
   describe('GET /api/partenaires/recherche-doublon', () => {
-    it('trouve un partenaire existant pour un etablissement', async () => {
+    it('trouve un partenaire existant pour un établissement', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .get(
           '/api/partenaires/recherche-doublon?nom=' +
-            encodeURIComponent('Université de Toulouse'),
+            encodeURIComponent('Université de Toliara'),
         )
         .set(...enteteBearer(etablissementFds))
         .expect(200);
 
-      expect(donnees<any>(reponse.body)?.nom).toBe('Université de Toulouse');
+      expect(
+        donnees<any[]>(reponse.body).some(
+          (partenaire) => partenaire.nom === 'Université de Toliara',
+        ),
+      ).toBe(true);
     });
 
     it('ne renvoie rien pour un nom inexistant', async () => {
@@ -201,16 +240,20 @@ describe('Partenaires (e2e)', () => {
         .set(...enteteBearer(etablissementFds))
         .expect(200);
 
-      expect(donnees(reponse.body)).toBeNull();
+      expect(donnees(reponse.body)).toEqual([]);
     });
 
-    it('permet a la PRESIDENCE de rechercher (400 si nom absent)', async () => {
+    it('permet à la PRESIDENCE de rechercher (400 si nom absent)', async () => {
       const reponse = await request(ctx.app.getHttpServer())
-        .get('/api/partenaires/recherche-doublon?nom=université de toulouse')
+        .get('/api/partenaires/recherche-doublon?nom=université de toliara')
         .set(...enteteBearer(presidence))
         .expect(200);
 
-      expect(donnees<any>(reponse.body)?.nom).toBe('Université de Toulouse');
+      expect(
+        donnees<any[]>(reponse.body).some(
+          (partenaire) => partenaire.nom === 'Université de Toliara',
+        ),
+      ).toBe(true);
 
       await request(ctx.app.getHttpServer())
         .get('/api/partenaires/recherche-doublon')

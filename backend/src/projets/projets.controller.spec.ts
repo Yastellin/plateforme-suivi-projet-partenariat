@@ -42,13 +42,21 @@ describe('ProjetsController', () => {
         dto,
       );
 
-      expect(service.create).toHaveBeenCalledWith('etab-1', dto);
+      expect(service.create).toHaveBeenCalledWith(
+        'etab-1',
+        dto,
+        expect.objectContaining({ role: Role.ETABLISSEMENT }),
+      );
     });
 
     it('accepte la PRESIDENCE sans etablissement (projet transversal)', async () => {
       await controller.create({ role: Role.PRESIDENCE }, dto);
 
-      expect(service.create).toHaveBeenCalledWith(null, dto);
+      expect(service.create).toHaveBeenCalledWith(
+        null,
+        dto,
+        expect.objectContaining({ role: Role.PRESIDENCE }),
+      );
     });
 
     it('accepte la PRESIDENCE lorsqu un etablissement est fourni', async () => {
@@ -57,7 +65,11 @@ describe('ProjetsController', () => {
         { ...dto, etablissement_id: 'etab-2' },
       );
 
-      expect(service.create).toHaveBeenCalledWith('etab-2', expect.anything());
+      expect(service.create).toHaveBeenCalledWith(
+        'etab-2',
+        expect.anything(),
+        expect.objectContaining({ role: Role.PRESIDENCE }),
+      );
     });
 
     it('rejette un compte ETABLISSEMENT sans etablissement rattache', async () => {
@@ -106,9 +118,15 @@ describe('ProjetsController', () => {
 
   describe('archiver', () => {
     it('delegue l archivage au service', async () => {
-      await controller.archiver('p1');
+      await controller.archiver(
+        { id: 'presidence-1', email: 'presidence@example.mg', role: Role.PRESIDENCE },
+        'p1',
+      );
 
-      expect(service.archiver).toHaveBeenCalledWith('p1');
+      expect(service.archiver).toHaveBeenCalledWith(
+        'p1',
+        expect.objectContaining({ id: 'presidence-1', role: Role.PRESIDENCE }),
+      );
     });
   });
 });

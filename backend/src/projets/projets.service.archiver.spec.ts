@@ -6,6 +6,7 @@ describe('ProjetsService.archiver', () => {
   let service: ProjetsService;
   let projetRepo: { findOneBy: jest.Mock; update: jest.Mock };
   let activiteRepo: { count: jest.Mock };
+  let historique: { enregistrer: jest.Mock };
 
   const creerProjet = (statut: StatutProjet) => ({
     id: 'p1',
@@ -19,6 +20,7 @@ describe('ProjetsService.archiver', () => {
     projetRepo = { findOneBy: jest.fn(), update: jest.fn().mockResolvedValue({}) };
     // Par défaut : 2 activités non terminées sur le projet
     activiteRepo = { count: jest.fn().mockImplementation(({ where }) => Promise.resolve(where.terminee === false ? 2 : 3)) };
+    historique = { enregistrer: jest.fn().mockResolvedValue(undefined) };
 
     service = new ProjetsService(
       projetRepo as any,
@@ -31,6 +33,7 @@ describe('ProjetsService.archiver', () => {
       {} as any,
       {} as any,
       {} as any,
+      historique as any,
     );
   });
 

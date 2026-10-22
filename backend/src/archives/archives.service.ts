@@ -1,10 +1,11 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, IsNull, Repository } from 'typeorm';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
 import { Projet } from '../projets/entities/projet.entity';
@@ -13,7 +14,6 @@ import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 import { Document } from '../documents/entities/document.entity';
 import { QueryArchiveDto } from './dto/query-archive.dto';
 import { HistoriqueService } from '../historique/historique.service';
-import type { ContexteUtilisateur } from '../historique/historique.service';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
 
 export const TYPES_ARCHIVE = [
@@ -108,14 +108,8 @@ export class ArchivesService {
 
   async listerConventions(query: QueryArchiveDto, etablissementId?: string) {
     const { page = 1, limit = 20 } = query;
-    const where: FindOptionsWhere<Convention> = {
-      archive: true,
-      ...(etablissementId
-        ? { projet: { etablissement_id: etablissementId } }
-        : {}),
-    };
     const [data, total] = await this.conventionRepo.findAndCount({
-      where,
+      where: this.conditionsConvention(true, etablissementId),
       skip: (page - 1) * limit,
       take: limit,
       order: { updated_at: 'DESC' },
@@ -143,12 +137,10 @@ export class ArchivesService {
     };
   }
 
-  // La table Document n'a pas d'etablissement_id : tous les utilisateurs
-  // autorises voient l'ensemble des documents archives.
-  async listerDocuments(query: QueryArchiveDto) {
+  async listerDocuments(query: QueryArchiveDto, etablissementId?: string) {
     const { page = 1, limit = 20 } = query;
     const [data, total] = await this.documentRepo.findAndCount({
-      where: { est_archive: true },
+      where: this.conditionsDocument(true, etablissementId),
       skip: (page - 1) * limit,
       take: limit,
       order: { updated_at: 'DESC' },
@@ -168,7 +160,8 @@ export class ArchivesService {
           where,
           relations: { contacts: true, etablissement: true },
         });
-        if (!entite) throw new NotFoundException('Partenaire archive non trouve');
+        if (!entite)
+          throw new NotFoundException('Partenaire archive non trouve');
         return entite;
       }
       case 'partenariats': {
@@ -185,7 +178,8 @@ export class ArchivesService {
             conventions: true,
           },
         });
-        if (!entite) throw new NotFoundException('Partenariat archive non trouve');
+        if (!entite)
+          throw new NotFoundException('Partenariat archive non trouve');
         return entite;
       }
       case 'projets': {
@@ -209,15 +203,17 @@ export class ArchivesService {
         return entite;
       }
       case 'conventions': {
-        const where: FindOptionsWhere<Convention> = { id, archive: true };
-        if (etablissementId) {
-          where.projet = { etablissement_id: etablissementId };
-        }
         const entite = await this.conventionRepo.findOne({
-          where,
-          relations: { projet: true, partenariat: true, documents: true },
+          where: this.conditionsConvention(true, etablissementId, id),
+          relations: {
+            projet: true,
+            partenariat: true,
+            cotutelles: true,
+            documents: true,
+          },
         });
-        if (!entite) throw new NotFoundException('Convention archivee non trouvee');
+        if (!entite)
+          throw new NotFoundException('Convention archivee non trouvee');
         return entite;
       }
       case 'cotutelles': {
@@ -225,14 +221,19 @@ export class ArchivesService {
         if (etablissementId) where.etablissement_id = etablissementId;
         const entite = await this.cotutelleRepo.findOne({
           where,
-          relations: { etablissement: true, partenaire: true, convention: true },
+          relations: {
+            etablissement: true,
+            partenaire: true,
+            convention: true,
+          },
         });
-        if (!entite) throw new NotFoundException('Cotutelle archivee non trouvee');
+        if (!entite)
+          throw new NotFoundException('Cotutelle archivee non trouvee');
         return entite;
       }
       case 'documents': {
         const entite = await this.documentRepo.findOne({
-          where: { id, est_archive: true },
+          where: this.conditionsDocument(true, etablissementId, id),
         });
         if (!entite) throw new NotFoundException('Document archive non trouve');
         return entite;
@@ -242,19 +243,44 @@ export class ArchivesService {
     }
   }
 
-  async restaurer(type: TypeArchive, id: string, etablissementId?: string) {
+  async restaurer(
+    type: TypeArchive,
+    id: string,
+    etablissementId?: string,
+    utilisateur?: { id: string; email: string; role: string },
+  ) {
     switch (type) {
       case 'partenaires': {
         const where: FindOptionsWhere<Partenaire> = { id, archive: true };
         if (etablissementId) where.etablissement_id = etablissementId;
         const entite = await this.partenaireRepo.findOne({ where });
-        if (!entite) throw new NotFoundException('Partenaire archive non trouve');
+        if (!entite)
+          throw new NotFoundException('Partenaire archive non trouve');
+        const doublonActif = await this.partenaireRepo
+          .createQueryBuilder('partenaire')
+          .where('partenaire.id <> :id', { id })
+          .andWhere('partenaire.archive = false')
+          .andWhere('partenaire.etablissement_id = :etablissementId', {
+            etablissementId: entite.etablissement_id,
+          })
+          .andWhere('LOWER(TRIM(partenaire.nom)) = LOWER(TRIM(:nom))', {
+            nom: entite.nom,
+          })
+          .andWhere('LOWER(TRIM(partenaire.pays)) = LOWER(TRIM(:pays))', {
+            pays: entite.pays,
+          })
+          .getExists();
+        if (doublonActif) {
+          throw new ConflictException(
+            'Un partenaire actif de même nom, pays et établissement existe déjà.',
+          );
+        }
         await this.partenaireRepo.update(id, { archive: false });
         await this.historique.enregistrer({
           action: ActionHistorique.RESTAURATION,
           entite_type: 'Partenaire',
           entite_id: id,
-          utilisateur: null,
+          utilisateur,
         });
         return { message: 'Partenaire restaure' };
       }
@@ -264,13 +290,14 @@ export class ArchivesService {
           where.etablissements = { etablissement_id: etablissementId };
         }
         const entite = await this.partenariatRepo.findOne({ where });
-        if (!entite) throw new NotFoundException('Partenariat archive non trouve');
+        if (!entite)
+          throw new NotFoundException('Partenariat archive non trouve');
         await this.partenariatRepo.update(id, { archive: false });
         await this.historique.enregistrer({
           action: ActionHistorique.RESTAURATION,
           entite_type: 'Partenariat',
           entite_id: id,
-          utilisateur: null,
+          utilisateur,
         });
         return { message: 'Partenariat restaure' };
       }
@@ -284,23 +311,22 @@ export class ArchivesService {
           action: ActionHistorique.RESTAURATION,
           entite_type: 'Projet',
           entite_id: id,
-          utilisateur: null,
+          utilisateur,
         });
         return { message: 'Projet restaure' };
       }
       case 'conventions': {
-        const where: FindOptionsWhere<Convention> = { id, archive: true };
-        if (etablissementId) {
-          where.projet = { etablissement_id: etablissementId };
-        }
-        const entite = await this.conventionRepo.findOne({ where });
-        if (!entite) throw new NotFoundException('Convention archivee non trouvee');
+        const entite = await this.conventionRepo.findOne({
+          where: this.conditionsConvention(true, etablissementId, id),
+        });
+        if (!entite)
+          throw new NotFoundException('Convention archivee non trouvee');
         await this.conventionRepo.update(id, { archive: false });
         await this.historique.enregistrer({
           action: ActionHistorique.RESTAURATION,
           entite_type: 'Convention',
           entite_id: id,
-          utilisateur: null,
+          utilisateur,
         });
         return { message: 'Convention restauree' };
       }
@@ -308,32 +334,121 @@ export class ArchivesService {
         const where: FindOptionsWhere<CotutelleThese> = { id, archive: true };
         if (etablissementId) where.etablissement_id = etablissementId;
         const entite = await this.cotutelleRepo.findOne({ where });
-        if (!entite) throw new NotFoundException('Cotutelle archivee non trouvee');
+        if (!entite)
+          throw new NotFoundException('Cotutelle archivee non trouvee');
         await this.cotutelleRepo.update(id, { archive: false });
         await this.historique.enregistrer({
           action: ActionHistorique.RESTAURATION,
           entite_type: 'CotutelleThese',
           entite_id: id,
-          utilisateur: null,
+          utilisateur,
         });
         return { message: 'Cotutelle restauree' };
       }
       case 'documents': {
         const entite = await this.documentRepo.findOne({
-          where: { id, est_archive: true },
+          where: this.conditionsDocument(true, etablissementId, id),
         });
         if (!entite) throw new NotFoundException('Document archive non trouve');
+
+        // Une seule version reste active pour un même type et un même parent.
+        const versionActive = await this.documentRepo.findOne({
+          where: {
+            type: entite.type,
+            est_archive: false,
+            projet_id: entite.projet_id ?? IsNull(),
+            convention_id: entite.convention_id ?? IsNull(),
+            cotutelle_id: entite.cotutelle_id ?? IsNull(),
+            partenariat_id: entite.partenariat_id ?? IsNull(),
+          },
+        });
+        if (versionActive && versionActive.id !== entite.id) {
+          await this.documentRepo.update(versionActive.id, {
+            est_archive: true,
+          });
+          await this.historique.enregistrer({
+            action: ActionHistorique.ARCHIVAGE,
+            entite_type: 'Document',
+            entite_id: versionActive.id,
+            entite_nom: versionActive.nom_fichier,
+            utilisateur,
+            details: `Remplacé par la restauration de la version ${entite.version}`,
+          });
+        }
+
         await this.documentRepo.update(id, { est_archive: false });
         await this.historique.enregistrer({
           action: ActionHistorique.RESTAURATION,
           entite_type: 'Document',
           entite_id: id,
-          utilisateur: null,
+          entite_nom: entite.nom_fichier,
+          utilisateur,
+          details: `Version ${entite.version}`,
         });
         return { message: 'Document restaure' };
       }
       default:
         throw new BadRequestException('Type d archive invalide');
     }
+  }
+
+  private conditionsConvention(
+    archive: boolean,
+    etablissementId?: string,
+    id?: string,
+  ): FindOptionsWhere<Convention> | FindOptionsWhere<Convention>[] {
+    const commun = { ...(id ? { id } : {}), archive };
+    if (!etablissementId) return commun;
+    return [
+      { ...commun, projet: { etablissement_id: etablissementId } },
+      {
+        ...commun,
+        partenariat: {
+          etablissements: { etablissement_id: etablissementId },
+        },
+      },
+      { ...commun, cotutelles: { etablissement_id: etablissementId } },
+    ];
+  }
+
+  /**
+   * Un document appartient à l'établissement de son unique parent. Une
+   * convention peut elle-même être rattachée à un projet, un partenariat ou
+   * une cotutelle : ces trois chemins sont donc pris en compte.
+   */
+  private conditionsDocument(
+    estArchive: boolean,
+    etablissementId?: string,
+    id?: string,
+  ): FindOptionsWhere<Document> | FindOptionsWhere<Document>[] {
+    const commun = { ...(id ? { id } : {}), est_archive: estArchive };
+    if (!etablissementId) return commun;
+
+    return [
+      { ...commun, projet: { etablissement_id: etablissementId } },
+      { ...commun, cotutelle: { etablissement_id: etablissementId } },
+      {
+        ...commun,
+        partenariat: {
+          etablissements: { etablissement_id: etablissementId },
+        },
+      },
+      {
+        ...commun,
+        convention: { projet: { etablissement_id: etablissementId } },
+      },
+      {
+        ...commun,
+        convention: {
+          partenariat: {
+            etablissements: { etablissement_id: etablissementId },
+          },
+        },
+      },
+      {
+        ...commun,
+        convention: { cotutelles: { etablissement_id: etablissementId } },
+      },
+    ];
   }
 }

@@ -62,6 +62,9 @@ describe('Conventions (e2e)', () => {
       expect(convention.reference).toBe('CONV-2026-100');
       expect(convention.statut).toBe('BROUILLON');
       expect(convention.archive).toBe(false);
+      expect(convention.partenariat).toMatchObject({ id: partenariatId });
+      expect(convention.partenariat.libelle).toEqual(expect.any(String));
+      expect(convention.partenariat.libelle).not.toBe(partenariatId);
     });
 
     it('refuse une reference en doublon (409)', async () => {

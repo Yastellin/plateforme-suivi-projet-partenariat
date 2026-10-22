@@ -25,6 +25,7 @@ export const TextInputSanitized = forwardRef<HTMLInputElement, TextInputSanitize
       <Input
         ref={ref}
         type="text"
+        {...props}
         maxLength={maxLength}
         onChange={(evenement) => {
           const entree = evenement.target
@@ -34,7 +35,6 @@ export const TextInputSanitized = forwardRef<HTMLInputElement, TextInputSanitize
           }
           onChange?.(evenement)
         }}
-        {...props}
       />
     )
   }

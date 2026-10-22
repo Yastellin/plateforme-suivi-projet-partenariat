@@ -27,6 +27,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { OwnEtablissementGuard } from '../common/guards/own-etablissement.guard';
+import { SoumissionMasseDto } from '../common/dto/soumission-masse.dto';
 
 @ApiTags('Projets')
 @ApiBearerAuth()
@@ -55,7 +56,11 @@ export class ProjetsController {
     } else {
       throw new ForbiddenException('Rôle non autorisé pour cette action.');
     }
-    return this.projetsService.create(etablissementId, dto);
+    return this.projetsService.create(etablissementId, dto, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   @Get()
@@ -97,8 +102,8 @@ export class ProjetsController {
 
   @Post(':id/soumettre')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un projet à la Présidence' })
+  @Roles(Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un projet à la Présidence (établissement)' })
   @ApiResponse({ status: 200, type: ProjetResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =
@@ -112,14 +117,14 @@ export class ProjetsController {
 
   @Post('soumettre')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @Roles(Role.ETABLISSEMENT)
   @ApiOperation({
-    summary: 'Soumettre plusieurs projets a la Presidence en une fois',
+    summary: 'Soumettre plusieurs projets à la Présidence en une fois (établissement)',
   })
   @ApiResponse({ status: 200 })
   soumettreEnMasse(
     @CurrentUser() user: any,
-    @Body() dto: { ids: string[] },
+    @Body() dto: SoumissionMasseDto,
   ) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;

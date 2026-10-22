@@ -1,4 +1,5 @@
-﻿// src/features/conventions/components/ConventionForm.tsx
+// src/features/conventions/components/ConventionForm.tsx
+import { useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
@@ -13,6 +14,7 @@ import { useCreateConvention } from "@/features/conventions/api/useCreateConvent
 import { useUpdateConvention } from "@/features/conventions/api/useUpdateConvention"
 import { usePartenariats } from "@/features/partenariats/api/usePartenariats"
 import { useProjets } from "@/features/projets/api/useProjets"
+import { useCotutelles } from "@/features/cotutelles/api/useCotutelles"
 import type { Convention } from "@/types/api"
 
 interface ConventionFormProps {
@@ -40,18 +42,33 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
   const enCours = creation.isPending || modification.isPending
 
   // Note : un select simple convient jusqu'a ~50 elements. Si le nombre de
-  // partenariats ou de projets depasse ce seuil, migrer vers un combobox avec
+  // partenariats, projets ou cotutelles dépasse ce seuil, migrer vers un combobox avec
   // recherche (Radix Popover + Command).
   const { data: pagePartenariats, isLoading: partenariatsEnChargement } = usePartenariats({ page: 1, limit: 100 })
   const { data: pageProjets, isLoading: projetsEnChargement } = useProjets({ page: 1, limit: 100 })
-  const partenariats = pagePartenariats?.data ?? []
-  const projets = pageProjets?.data ?? []
+  const { data: pageCotutelles, isLoading: cotutellesEnChargement } = useCotutelles({ page: 1, limit: 100 })
+  const partenariatsCharges = pagePartenariats?.data ?? []
+  const projetsCharges = pageProjets?.data ?? []
+  const cotutellesChargees = pageCotutelles?.data ?? []
+  // Le lien courant peut ne plus appartenir à la première page. On l'ajoute
+  // explicitement avec son libellé afin que Radix n'affiche jamais son UUID.
+  const partenariats = convention?.partenariat && !partenariatsCharges.some((item) => item.id === convention.partenariat?.id)
+    ? [{ id: convention.partenariat.id, intitule: convention.partenariat.libelle, objet: convention.partenariat.complement }, ...partenariatsCharges]
+    : partenariatsCharges
+  const projets = convention?.projet && !projetsCharges.some((item) => item.id === convention.projet?.id)
+    ? [{ id: convention.projet.id, nom: convention.projet.libelle, intitule_officiel: convention.projet.complement }, ...projetsCharges]
+    : projetsCharges
+  const cotutelles = convention?.cotutelle && !cotutellesChargees.some((item) => item.id === convention.cotutelle?.id)
+    ? [{ id: convention.cotutelle.id, nom_doctorant: convention.cotutelle.libelle, specialite: convention.cotutelle.complement }, ...cotutellesChargees]
+    : cotutellesChargees
 
   const {
     register,
     control,
     handleSubmit,
-    formState: { errors },
+    watch,
+    trigger,
+    formState: { errors, isValid },
   } = useForm<ConventionFormValues>({
     resolver: zodResolver(creerSchemaConvention({ exigerDateDebutFuture: !convention })),
     mode: "onChange",
@@ -66,11 +83,24 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
       description: convention?.description ?? "",
       partenariat_id: convention?.partenariat_id ?? "",
       projet_id: convention?.projet_id ?? "",
+      cotutelle_id: convention?.cotutelle_id ?? "",
     },
   })
 
-  // TODO : desactiver la soumission en creation si partenariat_id et
-  // projet_id valent tous les deux "Aucun" (regle metier : au moins un lien).
+  const dateDebut = watch("date_debut")
+  const dateFin = watch("date_fin")
+  const partenariatId = watch("partenariat_id")
+  const projetId = watch("projet_id")
+  const cotutelleId = watch("cotutelle_id")
+
+  useEffect(() => {
+    if (dateDebut && dateFin) void trigger(["date_debut", "date_fin"])
+  }, [dateDebut, dateFin, trigger])
+
+  useEffect(() => {
+    void trigger(["partenariat_id", "projet_id", "cotutelle_id"])
+  }, [partenariatId, projetId, cotutelleId, trigger])
+
   const onSubmit = (valeurs: ConventionFormValues) => {
     // Conversion explicite de la sentinelle "Aucun" en "" (puis null via
     // normaliserPayload) : le backend attend un UUID ou une valeur absente.
@@ -78,6 +108,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
       ...valeurs,
       partenariat_id: valeurs.partenariat_id === VALEUR_AUCUN ? "" : valeurs.partenariat_id,
       projet_id: valeurs.projet_id === VALEUR_AUCUN ? "" : valeurs.projet_id,
+      cotutelle_id: valeurs.cotutelle_id === VALEUR_AUCUN ? "" : valeurs.cotutelle_id,
     }
     if (convention) {
       modification.mutate(valeursEnvoyees, { onSuccess: onSucces })
@@ -118,7 +149,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_fin">Date de fin</Label>
-          <Input id="date_fin" type="date" aria-invalid={!!errors.date_fin} {...register("date_fin")} />
+          <Input id="date_fin" type="date" min={dateDebut || undefined} aria-invalid={!!errors.date_fin} {...register("date_fin")} />
           {errors.date_fin && <p className="text-sm text-destructive">{errors.date_fin.message}</p>}
         </div>
       </div>
@@ -159,13 +190,14 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
                   <SelectItem value={VALEUR_AUCUN}>Aucun</SelectItem>
                   {partenariats.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.intitule || p.objet || `Partenariat ${p.id.slice(0, 8)}`}
+                      {p.intitule || p.objet || "Partenariat sans intitulé"}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
           />
+          {errors.partenariat_id && <p className="text-sm text-destructive">{errors.partenariat_id.message}</p>}
         </div>
       </div>
 
@@ -187,7 +219,35 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
                 <SelectItem value={VALEUR_AUCUN}>Aucun</SelectItem>
                 {projets.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.nom || p.intitule_officiel || `Projet ${p.id.slice(0, 8)}`}
+                    {p.nom || p.intitule_officiel || "Projet sans intitulé"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="cotutelle_id">Cotutelle liée (optionnel)</Label>
+        <Controller
+          control={control}
+          name="cotutelle_id"
+          render={({ field }) => (
+            <Select
+              value={field.value || VALEUR_AUCUN}
+              onValueChange={field.onChange}
+              disabled={cotutellesEnChargement}
+            >
+              <SelectTrigger id="cotutelle_id" aria-invalid={!!errors.cotutelle_id}>
+                <SelectValue placeholder="Sélectionner une cotutelle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={VALEUR_AUCUN}>Aucune</SelectItem>
+                {cotutelles.map((cotutelle) => (
+                  <SelectItem key={cotutelle.id} value={cotutelle.id}>
+                    {cotutelle.nom_doctorant}
+                    {cotutelle.specialite ? ` — ${cotutelle.specialite}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -198,7 +258,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>Annuler</Button>
-        <Button type="submit" disabled={enCours}>
+        <Button type="submit" disabled={enCours || !isValid}>
           {enCours && <LoaderCircle className="animate-spin" />}
           {convention ? "Enregistrer les modifications" : "Creer la convention"}
         </Button>

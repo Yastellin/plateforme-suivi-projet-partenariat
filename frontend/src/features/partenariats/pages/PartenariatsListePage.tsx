@@ -1,20 +1,26 @@
-﻿// src/features/partenariats/pages/PartenariatsListePage.tsx
+// src/features/partenariats/pages/PartenariatsListePage.tsx
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Handshake, Plus } from 'lucide-react';
-import { usePartenariats } from '../api/usePartenariats';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { Panel, PanelBody } from '@/components/shared/Panel';
-import { TableToolbar } from '@/components/shared/TableToolbar';
-import { TablePagination } from '@/components/shared/TablePagination';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { StatusBadge } from '@/components/shared/StatusBadge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/useAuth';
-import { usePermissions } from '@/hooks/usePermissions';
-import { formaterDate } from '@/lib/format';
-import { LIBELLES_DOMAINE_PARTENARIAT, LIBELLES_STATUT_PARTENARIAT } from '@/lib/status-mappings';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Handshake, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { usePartenariats } from "../api/usePartenariats";
+import { useSoumettreEnMassePartenariats } from "../api/useSoumettreEnMassePartenariats";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Panel, PanelBody } from "@/components/shared/Panel";
+import { TableToolbar } from "@/components/shared/TableToolbar";
+import { TablePagination } from "@/components/shared/TablePagination";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { ActionsSoumissionMasse } from "@/components/shared/ActionsSoumissionMasse";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { formaterDate } from "@/lib/format";
+import {
+  LIBELLES_DOMAINE_PARTENARIAT,
+  LIBELLES_STATUT_PARTENARIAT,
+} from "@/lib/status-mappings";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -22,13 +28,73 @@ export function PartenariatsListePage() {
   const { utilisateur } = useAuth();
   const permissions = usePermissions();
   const [page, setPage] = useState(1);
-  const [recherche, setRecherche] = useState('');
-
-  const { data, isLoading } = usePartenariats({ page, limit: LIMITE_PAR_PAGE, recherche });
+  const [recherche, setRecherche] = useState("");
+  const [modeSelection, setModeSelection] = useState(false);
+  const [selection, setSelection] = useState<Set<string>>(new Set());
+  const soumission = useSoumettreEnMassePartenariats();
+  const { data, isLoading } = usePartenariats({
+    page,
+    limit: LIMITE_PAR_PAGE,
+    recherche,
+  });
 
   const role = utilisateur?.role;
-  const cheminBase = role === 'PRESIDENCE' ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur';
+  const cheminBase =
+    role === "PRESIDENCE"
+      ? "/presidence"
+      : role === "ETABLISSEMENT"
+        ? "/etablissement"
+        : "/decideur";
   const cheminCreation = `${cheminBase}/partenaires-partenariats/partenariats/nouveau`;
+  const partenariats = data?.data ?? [];
+  const soumissibles = partenariats.filter(
+    (item) =>
+      item.cree_par_role === "ETABLISSEMENT" &&
+      item.statut === "BROUILLON" &&
+      !item.soumis_le &&
+      !item.publie_le,
+  );
+  const tousSoumissiblesSelectionnes =
+    soumissibles.length > 0 &&
+    soumissibles.every((partenariat) => selection.has(partenariat.id));
+
+  function basculer(id: string) {
+    setSelection((courante) => {
+      const suivante = new Set(courante);
+      if (suivante.has(id)) suivante.delete(id);
+      else suivante.add(id);
+      return suivante;
+    });
+  }
+
+  function basculerTout() {
+    setSelection((courante) => {
+      const suivante = new Set(courante);
+      if (soumissibles.every((partenariat) => suivante.has(partenariat.id))) {
+        soumissibles.forEach((partenariat) => suivante.delete(partenariat.id));
+      } else {
+        soumissibles.forEach((partenariat) => suivante.add(partenariat.id));
+      }
+      return suivante;
+    });
+  }
+
+  async function soumettreSelection() {
+    try {
+      const resultat = await soumission.mutateAsync([...selection]);
+      setSelection(new Set());
+      setModeSelection(false);
+      toast.success(
+        `${resultat.reussis.length} partenariat${resultat.reussis.length > 1 ? "s" : ""} soumis`,
+      );
+      if (resultat.echecs.length)
+        toast.warning(`${resultat.echecs.length} partenariat(s) non soumis`);
+    } catch (erreur) {
+      toast.error(
+        erreur instanceof Error ? erreur.message : "La soumission a échoué.",
+      );
+    }
+  }
 
   return (
     <div>
@@ -36,15 +102,30 @@ export function PartenariatsListePage() {
         titre="Partenariats"
         description="Tous les partenariats de la plateforme."
         actions={
-          permissions.peutCreer ? (
-            <Link
-              to={cheminCreation}
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Nouveau partenariat
-            </Link>
-          ) : null
+          <>
+            {permissions.peutCreer ? (
+              <Link
+                to={cheminCreation}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
+              >
+                <Plus className="h-3.5 w-3.5" /> Nouveau partenariat
+              </Link>
+            ) : null}
+            {permissions.peutSoumettre &&
+            (soumissibles.length > 0 || selection.size > 0) ? (
+              <ActionsSoumissionMasse
+                actif={modeSelection}
+                nombreSelectionne={selection.size}
+                enCours={soumission.isPending}
+                onActiver={() => setModeSelection(true)}
+                onAnnuler={() => {
+                  setModeSelection(false);
+                  setSelection(new Set());
+                }}
+                onSoumettre={() => void soumettreSelection()}
+              />
+            ) : null}
+          </>
         }
       />
 
@@ -64,23 +145,18 @@ export function PartenariatsListePage() {
               <Skeleton key={cle} className="h-12 w-full" />
             ))}
           </div>
-        ) : !data || data.data.length === 0 ? (
+        ) : partenariats.length === 0 ? (
           <EmptyState
             icone={Handshake}
-            titre={recherche ? 'Aucun résultat pour cette recherche' : 'Aucun partenariat enregistré'}
-            description={
-              recherche ? 'Essayez avec un autre terme de recherche.' : 'Les partenariats ajoutés apparaîtront ici.'
+            titre={
+              recherche
+                ? "Aucun résultat pour cette recherche"
+                : "Aucun partenariat enregistré"
             }
-            action={
-              permissions.peutCreer && !recherche ? (
-                <Link
-                  to={cheminCreation}
-                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Nouveau partenariat
-                </Link>
-              ) : undefined
+            description={
+              recherche
+                ? "Essayez avec un autre terme de recherche."
+                : "Les partenariats ajoutés apparaîtront ici."
             }
           />
         ) : (
@@ -89,7 +165,24 @@ export function PartenariatsListePage() {
               <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr>
-                    {['Intitulé', 'Domaine', 'Période', 'Établissements', 'Statut'].map((entete) => (
+                    {modeSelection ? (
+                      <th className="border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px]">
+                        <input
+                          type="checkbox"
+                          checked={tousSoumissiblesSelectionnes}
+                          onChange={basculerTout}
+                          aria-label="Sélectionner tous les partenariats non soumis"
+                        />
+                      </th>
+                    ) : null}
+                    {[
+                      "Intitulé",
+                      "Domaine",
+                      "Période",
+                      "Établissements",
+                      "Transmission",
+                      "Statut",
+                    ].map((entete) => (
                       <th
                         key={entete}
                         scope="col"
@@ -101,13 +194,37 @@ export function PartenariatsListePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.data.map((partenariat) => {
-                    const info = LIBELLES_STATUT_PARTENARIAT[partenariat.statut];
-                    const partenaires = partenariat.partenaires.map((p) => p.nom).join(', ');
-                    const etablissements = partenariat.etablissements.map((e) => e.sigle ?? e.nom).join(', ');
-
+                  {partenariats.map((partenariat) => {
+                    const info =
+                      LIBELLES_STATUT_PARTENARIAT[partenariat.statut];
+                    const partenaires = partenariat.partenaires
+                      .map((item) => item.nom)
+                      .join(", ");
+                    const etablissements = partenariat.etablissements
+                      .map((item) => item.sigle ?? item.nom)
+                      .join(", ");
+                    const peutSelectionner =
+                      partenariat.cree_par_role === "ETABLISSEMENT" &&
+                      partenariat.statut === "BROUILLON" &&
+                      !partenariat.soumis_le &&
+                      !partenariat.publie_le;
                     return (
-                      <tr key={partenariat.id} className="hover:bg-[var(--color-page-bg)]">
+                      <tr
+                        key={partenariat.id}
+                        className="hover:bg-[var(--color-page-bg)]"
+                      >
+                        {modeSelection ? (
+                          <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                            {peutSelectionner ? (
+                              <input
+                                type="checkbox"
+                                checked={selection.has(partenariat.id)}
+                                onChange={() => basculer(partenariat.id)}
+                                aria-label={`Sélectionner ${partenariat.intitule}`}
+                              />
+                            ) : null}
+                          </td>
+                        ) : null}
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
                           <Link
                             to={`${cheminBase}/partenaires-partenariats/partenariats/${partenariat.id}`}
@@ -116,7 +233,9 @@ export function PartenariatsListePage() {
                             {partenariat.intitule}
                           </Link>
                           {partenaires ? (
-                            <div className="mt-0.5 text-xs text-[var(--color-text-secondary)]">{partenaires}</div>
+                            <div className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+                              {partenaires}
+                            </div>
                           ) : null}
                         </td>
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
@@ -124,13 +243,27 @@ export function PartenariatsListePage() {
                         </td>
                         <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
                           {formaterDate(partenariat.date_debut)}
-                          {partenariat.date_fin ? ` au ${formaterDate(partenariat.date_fin)}` : ''}
+                          {partenariat.date_fin
+                            ? ` au ${formaterDate(partenariat.date_fin)}`
+                            : ""}
                         </td>
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
-                          {etablissements || 'Aucun'}
+                          {etablissements || "Aucun"}
+                        </td>
+                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-xs font-medium text-[var(--color-text-secondary)]">
+                          {partenariat.publie_le
+                            ? "Publié"
+                            : partenariat.soumis_le
+                              ? "Soumis à la Présidence"
+                              : partenariat.cree_par_role === "PRESIDENCE"
+                                ? "Donnée Présidence"
+                                : "Non soumis"}
                         </td>
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
-                          <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
+                          <StatusBadge
+                            libelle={info.libelle}
+                            tonalite={info.tonalite}
+                          />
                         </td>
                       </tr>
                     );
@@ -138,7 +271,9 @@ export function PartenariatsListePage() {
                 </tbody>
               </table>
             </div>
-            {data.meta && <TablePagination meta={data.meta} onChangerPage={setPage} />}
+            {data?.meta ? (
+              <TablePagination meta={data.meta} onChangerPage={setPage} />
+            ) : null}
           </PanelBody>
         )}
       </Panel>

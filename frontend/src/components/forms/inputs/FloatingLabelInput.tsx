@@ -55,6 +55,7 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
             )}
             aria-invalid={Boolean(erreur)}
             aria-describedby={aide || erreur ? `${inputId}-aide` : undefined}
+            {...props}
             onChange={(evenement) => {
               const entree = evenement.target;
               const propre = nettoyer(entree.value, caracteresInterdits, props.maxLength as number | undefined);
@@ -63,7 +64,6 @@ export const FloatingLabelInput = forwardRef<HTMLInputElement, FloatingLabelInpu
               }
               props.onChange?.(evenement);
             }}
-            {...props}
           />
 
           <label

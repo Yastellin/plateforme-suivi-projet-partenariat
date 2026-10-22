@@ -1,7 +1,13 @@
 // backend/src/historique/historique.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import {
+  Between,
+  ILike,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { HistoriqueAction } from './entities/historique-action.entity';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
 import { QueryHistoriqueDto } from './dto/historique-query.dto';
@@ -29,7 +35,7 @@ export class HistoriqueService {
     private historiqueRepo: Repository<HistoriqueAction>,
   ) {}
 
-  /** Enregistre une action ; ne bloque jamais l'operation principale. */
+  /** Enregistre une action d'audit avant de confirmer l'opération à l'appelant. */
   async enregistrer(entree: EntreeHistorique): Promise<void> {
     await this.historiqueRepo.save(
       this.historiqueRepo.create({
@@ -64,16 +70,16 @@ export class HistoriqueService {
     if (recherche) {
       where.entite_nom = ILike(`%${recherche}%`);
     }
-    if (date_debut || date_fin) {
-      where.date_creation = {};
-      if (date_debut) {
-        (where.date_creation as Record<string, unknown>).$gte =
-          new Date(date_debut);
-      }
-      if (date_fin) {
-        (where.date_creation as Record<string, unknown>).$lte =
-          new Date(date_fin);
-      }
+    if (date_debut && date_fin) {
+      const fin = new Date(date_fin);
+      fin.setHours(23, 59, 59, 999);
+      where.date_creation = Between(new Date(date_debut), fin);
+    } else if (date_debut) {
+      where.date_creation = MoreThanOrEqual(new Date(date_debut));
+    } else if (date_fin) {
+      const fin = new Date(date_fin);
+      fin.setHours(23, 59, 59, 999);
+      where.date_creation = LessThanOrEqual(fin);
     }
 
     const [data, total] = await this.historiqueRepo.findAndCount({
@@ -89,9 +95,15 @@ export class HistoriqueService {
     };
   }
 
-  private mapToResponse(
-    data: HistoriqueAction,
-  ): HistoriqueActionResponseDto {
+  async listerEntite(entiteType: string, entiteId: string) {
+    const actions = await this.historiqueRepo.find({
+      where: { entite_type: entiteType, entite_id: entiteId },
+      order: { date_creation: 'DESC' },
+    });
+    return actions.map((action) => this.mapToResponse(action));
+  }
+
+  private mapToResponse(data: HistoriqueAction): HistoriqueActionResponseDto {
     return {
       id: data.id,
       utilisateur_id: data.utilisateur_id,

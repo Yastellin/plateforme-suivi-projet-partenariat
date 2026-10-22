@@ -17,8 +17,31 @@ import { useQuery } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
 import { formaterDate } from "@/lib/format"
 import type { DocumentFichier } from "@/types/api"
+import { useTelechargerDocument } from "@/features/documents/api/useTelechargerDocument"
 
-const COLONNES: Colonne<DocumentFichier>[] = [
+function ActionsDocument({ document, cheminBase }: { document: DocumentFichier; cheminBase: string }) {
+  const telechargement = useTelechargerDocument()
+
+  return (
+    <div className="flex items-center gap-1">
+      <Link to={`${cheminBase}/documents/${document.id}`} className="rounded p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]" aria-label="Ouvrir le document">
+        <ExternalLink size={14} />
+      </Link>
+      <button
+        type="button"
+        onClick={() => telechargement.mutate({ id: document.id, nomFichier: document.nom_fichier })}
+        disabled={telechargement.isPending}
+        className="rounded p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)] disabled:opacity-50"
+        aria-label={`Télécharger ${document.nom_fichier}`}
+      >
+        <Download size={14} />
+      </button>
+    </div>
+  )
+}
+
+function construireColonnes(cheminBase: string): Colonne<DocumentFichier>[] {
+  return [
   { id: "nom", header: "Nom", cell: (d) => <span className="font-medium text-[var(--color-text-primary)]">{d.nom_fichier}</span>, primaire: true },
   { id: "type", header: "Type", cell: (d) => <Badge variant="outline">{d.type}</Badge> },
   { id: "version", header: "Version", cell: (d) => <span className="font-mono text-[12.5px] text-[var(--color-text-secondary)]">v{d.version}</span> },
@@ -26,20 +49,10 @@ const COLONNES: Colonne<DocumentFichier>[] = [
   {
     id: "action",
     header: "Actions",
-    cell: (d) => {
-      return (
-        <div className="flex items-center gap-1">
-          <Link to={`/presidence/documents/${d.id}`} className="rounded p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]" aria-label="Ouvrir le document">
-            <ExternalLink size={14} />
-          </Link>
-          <a href={`/api/documents/${d.id}/telecharger`} className="rounded p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-active-zone)] hover:text-[var(--color-brand-deep)]" download aria-label="Télécharger">
-            <Download size={14} />
-          </a>
-        </div>
-      )
-    },
+    cell: (document) => <ActionsDocument document={document} cheminBase={cheminBase} />,
   },
-]
+  ]
+}
 
 export function DocumentsListePage() {
   const { utilisateur } = useAuth()
@@ -118,7 +131,7 @@ export function DocumentsListePage() {
           />
         ) : (
           <PanelBody>
-            <DataTable colonnes={COLONNES} donnees={data.data} meta={data.meta} onPageChange={setPage} />
+            <DataTable colonnes={construireColonnes(cheminBase)} donnees={data.data} meta={data.meta} onPageChange={setPage} />
           </PanelBody>
         )}
       </Panel>

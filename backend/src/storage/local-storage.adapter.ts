@@ -21,7 +21,18 @@ export class LocalStorageAdapter implements StoragePort {
       fs.mkdirSync(dossierComplet, { recursive: true });
     }
 
-    const extension = path.extname(fichier.originalname);
+    // Ne jamais reprendre aveuglément l'extension fournie par le navigateur :
+    // un fichier déclaré image pourrait sinon être servi comme HTML. Le nom
+    // d'origine reste conservé en base pour les téléchargements de documents.
+    const extensionsParMime: Record<string, string> = {
+      'application/pdf': '.pdf',
+      'application/msword': '.doc',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+    };
+    const extension = extensionsParMime[fichier.mimetype] ?? '';
     const nomUnique = `${uuidv4()}${extension}`;
     const cheminComplet = path.join(dossierComplet, nomUnique);
 

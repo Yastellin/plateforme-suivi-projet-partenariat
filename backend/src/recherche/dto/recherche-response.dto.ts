@@ -7,7 +7,7 @@ export class ResultatRechercheDto {
   @ApiProperty({ example: 'partenaire' })
   type: string;
 
-  @ApiProperty({ example: 'Universite de Toulouse' })
+  @ApiProperty({ example: 'Université de Toliara' })
   titre: string;
 
   @ApiProperty({ nullable: true })

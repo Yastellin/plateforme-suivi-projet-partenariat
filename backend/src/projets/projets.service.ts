@@ -10,7 +10,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { HistoriqueService } from '../historique/historique.service';
 import type { ContexteUtilisateur } from '../historique/historique.service';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
-import { DataSource, ILike, Repository } from 'typeorm';
+import { DataSource, EntityManager, ILike, In, Repository } from 'typeorm';
 import { CreateProjetDto } from './dto/create-projet.dto';
 import { UpdateProjetDto } from './dto/update-projet.dto';
 import { QueryProjetDto } from './dto/query-projet.dto';
@@ -26,6 +26,13 @@ import { ProjetSite } from './entities/projet-site.entity';
 import { Activite } from './entities/activite.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
+import { Porteur } from '../referentiels/porteurs/entities/porteur.entity';
+import { Partenaire } from '../partenaires/entities/partenaire.entity';
+import { Beneficiaire } from '../referentiels/beneficiaires/entities/beneficiaire.entity';
+import { Bailleur } from '../referentiels/bailleurs/entities/bailleur.entity';
+import { Site } from '../referentiels/sites/entities/site.entity';
+import { TypePorteur } from '../common/enums/type-porteur.enum';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class ProjetsService {
@@ -54,6 +61,7 @@ export class ProjetsService {
   async create(
     etablissementId: string | null,
     dto: CreateProjetDto,
+    utilisateur?: ContexteUtilisateur | null,
   ): Promise<ProjetResponseDto> {
     const projetId = await this.dataSource.transaction(async (manager) => {
       const etablissementRepo = manager.getRepository(Etablissement);
@@ -81,6 +89,12 @@ export class ProjetsService {
         }
       }
 
+      const porteurId = await this.resoudrePorteur(manager, dto);
+      if (!porteurId) {
+        throw new BadRequestException('Le porteur du projet est obligatoire.');
+      }
+      await this.verifierReferentiels(manager, dto);
+
       const projet = projetRepo.create({
         nom: dto.nom,
         intitule_officiel: dto.intitule_officiel ?? null,
@@ -89,11 +103,16 @@ export class ProjetsService {
         budget: dto.budget ?? null,
         date_debut: new Date(dto.date_debut),
         date_fin_prevue: new Date(dto.date_fin_prevue),
-        statut: dto.statut || StatutProjet.BROUILLON,
+        statut:
+          utilisateur?.role === Role.ETABLISSEMENT
+            ? StatutProjet.BROUILLON
+            : dto.statut || StatutProjet.BROUILLON,
         archive: false,
         etablissement_id: etablissementId,
         partenariat_id: dto.partenariat_id ?? null,
-        porteur_id: dto.porteur_id ?? null,
+        porteur_id: porteurId,
+        cree_par_utilisateur_id: utilisateur?.id ?? null,
+        cree_par_role: utilisateur?.role ?? null,
       });
 
       const savedProjet = await projetRepo.save(projet);
@@ -104,7 +123,7 @@ export class ProjetsService {
 
       if (dto.partenaires_ids) {
         await projetPartenaireRepo.save(
-          dto.partenaires_ids.map((partenaire_id) =>
+          [...new Set(dto.partenaires_ids)].map((partenaire_id) =>
             projetPartenaireRepo.create({
               projet_id: savedProjet.id,
               partenaire_id,
@@ -114,7 +133,7 @@ export class ProjetsService {
       }
       if (dto.beneficiaires_ids) {
         await projetBeneficiaireRepo.save(
-          dto.beneficiaires_ids.map((beneficiaire_id) =>
+          [...new Set(dto.beneficiaires_ids)].map((beneficiaire_id) =>
             projetBeneficiaireRepo.create({
               projet_id: savedProjet.id,
               beneficiaire_id,
@@ -124,7 +143,7 @@ export class ProjetsService {
       }
       if (dto.bailleurs_ids) {
         await projetBailleurRepo.save(
-          dto.bailleurs_ids.map((bailleur_id) =>
+          [...new Set(dto.bailleurs_ids)].map((bailleur_id) =>
             projetBailleurRepo.create({
               projet_id: savedProjet.id,
               bailleur_id,
@@ -134,7 +153,7 @@ export class ProjetsService {
       }
       if (dto.sites_ids) {
         await projetSiteRepo.save(
-          dto.sites_ids.map((site_id) =>
+          [...new Set(dto.sites_ids)].map((site_id) =>
             projetSiteRepo.create({
               projet_id: savedProjet.id,
               site_id,
@@ -162,7 +181,8 @@ export class ProjetsService {
     } = query;
 
     const where: any = { archive: archive !== undefined ? archive : false };
-    if (etablissementId) where.etablissement_id = etablissementId;
+    const etablissementFiltre = etablissementId ?? query.etablissement_id;
+    if (etablissementFiltre) where.etablissement_id = etablissementFiltre;
     if (nom) where.nom = ILike(`%${nom}%`);
     if (type) where.type = ILike(`%${type}%`);
     if (statut) where.statut = statut;
@@ -176,7 +196,11 @@ export class ProjetsService {
       relations: {
         etablissement: true,
         partenariat: true,
-        porteur: true,
+        porteur: { etablissement: true },
+        partenaires: { partenaire: true },
+        beneficiaires: { beneficiaire: true },
+        bailleurs: { bailleur: true },
+        sites: { site: true },
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -205,7 +229,11 @@ export class ProjetsService {
       relations: {
         etablissement: true,
         partenariat: true,
-        porteur: true,
+        porteur: { etablissement: true },
+        partenaires: { partenaire: true },
+        beneficiaires: { beneficiaire: true },
+        bailleurs: { bailleur: true },
+        sites: { site: true },
       },
     });
     if (!projet) {
@@ -218,33 +246,82 @@ export class ProjetsService {
   async update(id: string, dto: UpdateProjetDto, etablissementId?: string) {
     const projet = await this.findOne(id, etablissementId);
 
+    if (etablissementId && projet.cree_par_role !== Role.ETABLISSEMENT) {
+      throw new ForbiddenException(
+        'Un établissement ne peut modifier que les projets qu’il a créés.',
+      );
+    }
+
     if (projet.statut !== StatutProjet.BROUILLON) {
       throw new ForbiddenException(
         "Ce projet n'est plus modifiable (statut différent de BROUILLON)",
       );
     }
 
-    const updateData: Partial<Projet> = {};
-    if (dto.nom !== undefined) updateData.nom = dto.nom;
-    if (dto.intitule_officiel !== undefined) {
-      updateData.intitule_officiel = dto.intitule_officiel ?? null;
-    }
-    if (dto.type !== undefined) updateData.type = dto.type;
-    if (dto.domaine !== undefined) updateData.domaine = dto.domaine ?? null;
-    if (dto.budget !== undefined) updateData.budget = dto.budget ?? null;
-    if (dto.date_debut) updateData.date_debut = new Date(dto.date_debut);
-    if (dto.date_fin_prevue) {
-      updateData.date_fin_prevue = new Date(dto.date_fin_prevue);
-    }
-    if (dto.statut !== undefined) updateData.statut = dto.statut;
-    if (dto.partenariat_id !== undefined) {
-      updateData.partenariat_id = dto.partenariat_id ?? null;
-    }
-    if (dto.porteur_id !== undefined) {
-      updateData.porteur_id = dto.porteur_id ?? null;
+    const dateDebut = dto.date_debut
+      ? new Date(dto.date_debut)
+      : projet.date_debut;
+    const dateFin = dto.date_fin_prevue
+      ? new Date(dto.date_fin_prevue)
+      : projet.date_fin_prevue;
+    if (dateFin <= dateDebut) {
+      throw new BadRequestException(
+        'La date de fin prévue doit être postérieure à la date de début.',
+      );
     }
 
-    await this.projetRepo.update(id, updateData);
+    await this.dataSource.transaction(async (manager) => {
+      const updateData: Partial<Projet> = {};
+      if (dto.nom !== undefined) updateData.nom = dto.nom;
+      if (dto.intitule_officiel !== undefined)
+        updateData.intitule_officiel = dto.intitule_officiel ?? null;
+      if (dto.type !== undefined) updateData.type = dto.type;
+      if (dto.domaine !== undefined) updateData.domaine = dto.domaine ?? null;
+      if (dto.budget !== undefined) updateData.budget = dto.budget ?? null;
+      if (dto.date_debut) updateData.date_debut = dateDebut;
+      if (dto.date_fin_prevue) updateData.date_fin_prevue = dateFin;
+      if (dto.statut !== undefined && etablissementId === undefined) {
+        updateData.statut = dto.statut;
+      }
+
+      if (dto.partenariat_id !== undefined) {
+        if (dto.partenariat_id) {
+          const existe = await manager.getRepository(Partenariat).existsBy({
+            id: dto.partenariat_id,
+            archive: false,
+          });
+          if (!existe) throw new NotFoundException('Partenariat non trouvé');
+        }
+        updateData.partenariat_id = dto.partenariat_id ?? null;
+      }
+
+      if (dto.porteur !== undefined || dto.porteur_id !== undefined) {
+        const porteurId = await this.resoudrePorteur(manager, dto);
+        if (!porteurId) {
+          throw new BadRequestException(
+            'Le porteur du projet est obligatoire.',
+          );
+        }
+        updateData.porteur_id = porteurId;
+      }
+
+      // Seule la Présidence peut déplacer un projet vers un autre
+      // établissement. La valeur null représente un projet transversal.
+      if (etablissementId === undefined && dto.etablissement_id !== undefined) {
+        if (dto.etablissement_id) {
+          const existe = await manager
+            .getRepository(Etablissement)
+            .existsBy({ id: dto.etablissement_id });
+          if (!existe) throw new NotFoundException('Établissement non trouvé');
+        }
+        updateData.etablissement_id = dto.etablissement_id ?? null;
+      }
+
+      await this.verifierReferentiels(manager, dto);
+      await manager.getRepository(Projet).update(id, updateData);
+      await this.remplacerReferentiels(manager, id, dto);
+    });
+
     return this.findOne(id, etablissementId);
   }
 
@@ -255,6 +332,11 @@ export class ProjetsService {
   ): Promise<ProjetResponseDto> {
     const projet = await this.findOne(id, etablissementId);
 
+    if (projet.cree_par_role !== Role.ETABLISSEMENT) {
+      throw new ConflictException(
+        'Seuls les projets créés par un établissement peuvent être soumis',
+      );
+    }
     if (projet.statut !== StatutProjet.BROUILLON) {
       throw new ConflictException(
         'Seul un projet en BROUILLON peut être soumis',
@@ -266,7 +348,7 @@ export class ProjetsService {
       soumis_le: new Date(),
     });
 
-    this.eventEmitter.emit('projet.soumis', {
+    await this.eventEmitter.emitAsync('projet.soumis', {
       type: TypeNotification.PROJET_SOUMIS,
       priorite: PrioriteNotification.HAUTE,
       titre: `Projet soumis : ${projet.nom}`,
@@ -291,7 +373,11 @@ export class ProjetsService {
     ids: string[],
     etablissementId?: string,
     utilisateur?: ContexteUtilisateur | null,
-  ): Promise<{ total: number; reussis: string[]; echecs: { id: string; erreur: string }[] }> {
+  ): Promise<{
+    total: number;
+    reussis: string[];
+    echecs: { id: string; erreur: string }[];
+  }> {
     if (ids.length === 0) {
       throw new BadRequestException('Aucun projet selectionne');
     }
@@ -329,13 +415,24 @@ export class ProjetsService {
   ): Promise<ProjetResponseDto> {
     const projet = await this.findOne(id);
 
-    if (!projet.soumis_le) {
+    const estDonneePresidence = projet.cree_par_role === Role.PRESIDENCE;
+    if (!projet.soumis_le && !estDonneePresidence) {
       throw new ConflictException(
-        'Seul un projet soumis a la presidence peut etre publie',
+        'Seul un projet soumis ou créé par la Présidence peut être publié',
       );
     }
+    if (projet.publie_le) {
+      throw new ConflictException('Ce projet est déjà publié');
+    }
 
-    await this.projetRepo.update(id, { publie_le: new Date() });
+    await this.projetRepo.update(id, {
+      publie_le: new Date(),
+      statut:
+        projet.statut === StatutProjet.BROUILLON ||
+        projet.statut === StatutProjet.EN_ATTENTE
+          ? StatutProjet.EN_COURS
+          : projet.statut,
+    });
 
     this.eventEmitter.emit('projet.publie', {
       type: TypeNotification.PROJET_PUBLIE,
@@ -412,6 +509,139 @@ export class ProjetsService {
     };
   }
 
+  private async resoudrePorteur(
+    manager: EntityManager,
+    dto: Pick<CreateProjetDto, 'porteur_id' | 'porteur'>,
+  ): Promise<string | null> {
+    if (dto.porteur_id && dto.porteur) {
+      throw new BadRequestException(
+        'Indiquez soit un porteur existant, soit un nouveau porteur, pas les deux.',
+      );
+    }
+
+    const repo = manager.getRepository(Porteur);
+    if (dto.porteur_id) {
+      const existe = await repo.existsBy({ id: dto.porteur_id });
+      if (!existe) throw new NotFoundException('Porteur non trouvé');
+      return dto.porteur_id;
+    }
+    if (!dto.porteur) return null;
+
+    const commande = dto.porteur;
+    if (commande.type_porteur === TypePorteur.ETABLISSEMENT) {
+      if (!commande.etablissement_id) {
+        throw new BadRequestException('Sélectionnez un établissement porteur');
+      }
+      const etablissementExiste = await manager
+        .getRepository(Etablissement)
+        .existsBy({ id: commande.etablissement_id });
+      if (!etablissementExiste) {
+        throw new NotFoundException('Établissement porteur non trouvé');
+      }
+      const existant = await repo.findOneBy({
+        type_porteur: TypePorteur.ETABLISSEMENT,
+        etablissement_id: commande.etablissement_id,
+      });
+      if (existant) return existant.id;
+    } else {
+      const nom = commande.nom?.trim();
+      if (!nom) throw new BadRequestException('Le nom du porteur est requis');
+      const existant = await repo.findOne({
+        where: { type_porteur: commande.type_porteur, nom: ILike(nom) },
+      });
+      if (existant) return existant.id;
+    }
+
+    const porteur = repo.create({
+      type_porteur: commande.type_porteur,
+      nom:
+        commande.type_porteur === TypePorteur.ETABLISSEMENT
+          ? null
+          : commande.nom!.trim(),
+      institution_rattachement:
+        commande.institution_rattachement?.trim() || null,
+      etablissement_id:
+        commande.type_porteur === TypePorteur.ETABLISSEMENT
+          ? (commande.etablissement_id ?? null)
+          : null,
+    });
+    return (await repo.save(porteur)).id;
+  }
+
+  private async verifierReferentiels(
+    manager: EntityManager,
+    dto: Pick<
+      CreateProjetDto,
+      'partenaires_ids' | 'beneficiaires_ids' | 'bailleurs_ids' | 'sites_ids'
+    >,
+  ): Promise<void> {
+    const validations: Array<Promise<void>> = [];
+    const verifier = <T extends { id: string }>(
+      entite: new () => T,
+      ids: string[] | undefined,
+      libelle: string,
+      conditions: Record<string, unknown> = {},
+    ) => {
+      if (ids === undefined) return;
+      const uniques = [...new Set(ids)];
+      validations.push(
+        manager
+          .getRepository(entite)
+          .countBy({ id: In(uniques), ...conditions } as never)
+          .then((total) => {
+            if (total !== uniques.length) {
+              throw new BadRequestException(
+                `Un ou plusieurs ${libelle} sélectionnés sont introuvables.`,
+              );
+            }
+          }),
+      );
+    };
+
+    verifier(Partenaire, dto.partenaires_ids, 'partenaires', {
+      archive: false,
+    });
+    verifier(Beneficiaire, dto.beneficiaires_ids, 'bénéficiaires');
+    verifier(Bailleur, dto.bailleurs_ids, 'bailleurs');
+    verifier(Site, dto.sites_ids, 'sites');
+    await Promise.all(validations);
+  }
+
+  private async remplacerReferentiels(
+    manager: EntityManager,
+    projetId: string,
+    dto: Pick<
+      UpdateProjetDto,
+      'partenaires_ids' | 'beneficiaires_ids' | 'bailleurs_ids' | 'sites_ids'
+    >,
+  ): Promise<void> {
+    const remplacer = async <T extends { projet_id: string }>(
+      entite: new () => T,
+      ids: string[] | undefined,
+      cle: keyof T,
+    ) => {
+      if (ids === undefined) return;
+      const repo = manager.getRepository(entite);
+      await repo.delete({ projet_id: projetId } as never);
+      const uniques = [...new Set(ids)];
+      if (uniques.length > 0) {
+        const liens = uniques.map((id) =>
+          Object.assign(new entite(), { projet_id: projetId, [cle]: id }),
+        );
+        await repo.save(liens);
+      }
+    };
+
+    await remplacer(ProjetPartenaire, dto.partenaires_ids, 'partenaire_id');
+    await remplacer(
+      ProjetBeneficiaire,
+      dto.beneficiaires_ids,
+      'beneficiaire_id',
+    );
+    await remplacer(ProjetBailleur, dto.bailleurs_ids, 'bailleur_id');
+    await remplacer(ProjetSite, dto.sites_ids, 'site_id');
+  }
+
   private async enrichir(projet: Projet): Promise<ProjetResponseDto> {
     const [total, terminees] = await Promise.all([
       this.activiteRepo.count({ where: { projet_id: projet.id } }),
@@ -443,9 +673,17 @@ export class ProjetsService {
       archive: projet.archive,
       soumis_le: projet.soumis_le,
       publie_le: projet.publie_le,
+      cree_par_role: projet.cree_par_role,
       etablissement_id: projet.etablissement_id,
       partenariat_id: projet.partenariat_id,
       porteur_id: projet.porteur_id,
+      etablissement: projet.etablissement ?? null,
+      partenariat: projet.partenariat ?? null,
+      porteur: projet.porteur ?? null,
+      partenaires: projet.partenaires ?? [],
+      bailleurs: projet.bailleurs ?? [],
+      beneficiaires: projet.beneficiaires ?? [],
+      sites: projet.sites ?? [],
       avancement,
       en_retard: enRetard,
       created_at: projet.created_at,

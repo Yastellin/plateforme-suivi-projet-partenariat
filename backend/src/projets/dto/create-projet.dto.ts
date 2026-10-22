@@ -7,9 +7,12 @@ import {
   IsUUID,
   IsNumber,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StatutProjet } from '../../common/enums/statut-projet.enum';
+import { CreatePorteurDto } from '../../referentiels/porteurs/dto/create-porteur.dto';
 import {
   EstDateNonPassee,
   EstPosterieurA,
@@ -64,10 +67,21 @@ export class CreateProjetDto {
   @IsUUID()
   partenariat_id?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Identifiant d’un porteur déjà enregistré. Exclusif avec porteur.',
+  })
   @IsOptional()
   @IsUUID()
   porteur_id?: string;
+
+  @ApiPropertyOptional({
+    type: CreatePorteurDto,
+    description: 'Nouveau porteur à créer avec le projet.',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreatePorteurDto)
+  porteur?: CreatePorteurDto;
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
