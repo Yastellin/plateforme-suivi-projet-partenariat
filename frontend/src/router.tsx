@@ -15,6 +15,7 @@ import { TopbarInterne } from "@/components/layout/TopbarInterne"
 import { NotificationsDrawer } from "@/components/layout/NotificationsDrawer"
 import { CommandPalette } from "@/components/layout/CommandPalette"
 import { ForbiddenPage } from "@/components/shared/ForbiddenPage"
+import { RouteErrorBoundary } from "@/components/shared/ErrorBoundary"
 import { NotFoundPage } from "@/components/shared/NotFoundPage"
 import { PageTransition } from "@/components/shared/PageTransition"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -197,6 +198,7 @@ function LayoutInterne() {
 const router = createBrowserRouter([
   {
     element: <LayoutPublic />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { path: "/", element: <Charge><RedirectionAccueil /></Charge> },
       { path: "/a-propos", element: <Charge><AProposPage /></Charge> },
@@ -207,11 +209,12 @@ const router = createBrowserRouter([
       { path: "/contact", element: <Charge><ContactPage /></Charge> },
     ],
   },
-  { path: "/connexion", element: <Charge><LoginPage /></Charge> },
-  { path: "/mot-de-passe-oublie", element: <Charge><MotDePasseOubliePage /></Charge> },
-  { path: "/reset-password", element: <Charge><ResetPasswordPage /></Charge> },
+  { path: "/connexion", element: <Charge><LoginPage /></Charge>, errorElement: <RouteErrorBoundary /> },
+  { path: "/mot-de-passe-oublie", element: <Charge><MotDePasseOubliePage /></Charge>, errorElement: <RouteErrorBoundary /> },
+  { path: "/reset-password", element: <Charge><ResetPasswordPage /></Charge>, errorElement: <RouteErrorBoundary /> },
   {
     element: <LayoutInterne />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { path: "/presidence", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><TableauDeBordPresidence /></Charge></RouteProtegee> },
       { path: "/presidence/conventions", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ConventionsListePage /></Charge></RouteProtegee> },
