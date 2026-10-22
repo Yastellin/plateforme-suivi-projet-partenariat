@@ -15,7 +15,7 @@ import {
   teinteDe,
 } from "@/features/espace-public/lib/publique"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
-import { resoudreUrlFichier } from "@/lib/url"
+import { ImageMedia } from "@/components/shared/ImageMedia"
 
 function classeBadgeStatut(statut: StatutProjet): string {
   switch (statut) {
@@ -36,15 +36,18 @@ const LIEN_PLEINE_CARTE = { display: "contents", color: "inherit", textDecoratio
 export function CartePartenaire({ partenaire, className }: { partenaire: PartenairePublic; className?: string }) {
   return (
     <article className={`vt-pt ${className ?? ""}`}>
-      {partenaire.logo_url ? (
-        <span className="vt-pt-ini">
-          <img src={resoudreUrlFichier(partenaire.logo_url)} alt="" loading="lazy" />
-        </span>
-      ) : (
-        <span className="vt-pt-ini" style={{ background: teinteDe(partenaire.nom) }} aria-hidden="true">
-          {initiales(partenaire.nom)}
-        </span>
-      )}
+      <span
+        className="vt-pt-ini"
+        style={{ background: teinteDe(partenaire.nom) }}
+        aria-hidden="true"
+      >
+        <ImageMedia
+          src={partenaire.logo_url}
+          alt=""
+          loading="lazy"
+          fallback={initiales(partenaire.nom)}
+        />
+      </span>
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <b>{partenaire.nom}</b>
@@ -139,11 +142,13 @@ export function CartePublication({ publication, className }: { publication: Publ
     <article className={`vt-pub ${className ?? ""}`}>
       <Link to={`/projets-partenariats/publication/${publication.id}`} style={LIEN_PLEINE_CARTE}>
         <div className="vt-pub-cover">
-          {publication.photo_url ? (
-            <img src={resoudreUrlFichier(publication.photo_url)} alt="" className="vt-art-img" loading="lazy" />
-          ) : (
-            <Illustration type="montagne" />
-          )}
+          <ImageMedia
+            src={publication.photo_url}
+            alt=""
+            className="vt-art-img"
+            loading="lazy"
+            fallback={<Illustration type="montagne" />}
+          />
         </div>
         <div className="vt-pub-body">
           <span className="vt-badge vt-badge-info">{etablissement ? (etablissement.sigle ?? etablissement.nom) : "Présidence"}</span>

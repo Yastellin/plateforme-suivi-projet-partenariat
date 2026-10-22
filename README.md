@@ -16,6 +16,17 @@ docker compose up --build
 | Documentation Swagger | http://localhost:3000/api/docs |
 
 Les migrations TypeORM sont appliquées automatiquement au démarrage du conteneur `backend`.
+En développement, les sources frontend **et backend** sont montées dans leurs
+conteneurs et rechargées à chaud. Après une mise à jour du Dockerfile ou des
+dépendances, reconstruisez une fois les images :
+
+```bash
+docker compose up -d --build backend frontend
+```
+
+Une réponse `Cannot PATCH /api/...` ou `Cannot POST /api/...` après une mise à
+jour indique généralement qu'un ancien conteneur backend est encore actif ; la
+commande ci-dessus le remplace par l'API correspondant au frontend courant.
 
 ### Données de démonstration
 
@@ -25,7 +36,7 @@ Le seed crée les établissements, un jeu de données de démonstration et quatr
 `president@univ-fianarantsoa.mg`.
 
 ```bash
-docker compose exec backend node dist/database/seed.js
+docker compose exec backend npm run seed
 ```
 
 ## Mot de passe oublié (test manuel de bout en bout)
@@ -78,6 +89,6 @@ Variables disponibles : `VITE_API_URL` (défaut `http://localhost:3000/api`),
 
 Le test modifie le mot de passe du compte de test et le laisse sur
 `Reinitialise2026x`, l'API refusant les mots de passe sans majuscule comme celui du
-seed : relancez `docker compose exec backend node dist/database/seed.js` pour revenir
+seed : relancez `docker compose exec backend npm run seed` pour revenir
 à l'état initial. La limitation de débit (3 demandes puis 5 réinitialisations par
 minute) est respectée : le test patiente si vous le relancez immédiatement.

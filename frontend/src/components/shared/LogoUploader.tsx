@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import apiClient from "@/lib/api-client";
-import { resoudreUrlFichier } from "@/lib/url";
+import { LogoMedia } from "@/components/shared/ImageMedia";
 
 interface LogoUploaderProps {
   endpoint: string;
@@ -67,20 +67,15 @@ export function LogoUploader({
     mutation.mutate(fichier);
   }
 
-  const source = apercu ?? resoudreUrlFichier(logoUrl);
+  const source = apercu ?? logoUrl;
   return (
     <div className="flex items-center gap-4">
-      {source ? (
-        <img
-          src={source}
-          alt={`Logo de ${nom}`}
-          className="h-20 w-20 rounded-lg border border-[var(--color-border)] bg-white object-contain p-1"
-        />
-      ) : (
-        <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-page-bg)] text-lg font-bold text-[var(--color-brand)]">
-          {nom.slice(0, 2).toUpperCase()}
-        </div>
-      )}
+      <LogoMedia
+        key={source ?? "sans-logo"}
+        src={source}
+        nom={nom}
+        className="h-20 w-20 flex-shrink-0 rounded-lg border border-[var(--color-border)] bg-white object-contain p-1 text-lg"
+      />
       {!lectureSeule ? (
         <div>
           <input

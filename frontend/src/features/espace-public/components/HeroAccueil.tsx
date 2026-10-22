@@ -8,7 +8,7 @@ import { AnimatedCounter } from "@/components/shared/AnimatedCounter"
 import { InfiniteMarquee } from "@/components/shared/InfiniteMarquee"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { resoudreUrlFichier } from "@/lib/url"
+import { LogoMedia } from "@/components/shared/ImageMedia"
 
 const elementHero: Variants = {
   cache: { opacity: 0, y: 16 },
@@ -232,17 +232,15 @@ export function HeroAccueil() {
             cleItem={(p) => p.id}
             renderItem={(partenaire) => (
               <div className="flex h-16 items-center rounded-lg border border-border bg-card px-6">
-                {partenaire.logo_url ? (
-                  <img
-                    src={resoudreUrlFichier(partenaire.logo_url)}
-                    alt={partenaire.nom}
-                    className="h-8 w-auto object-contain"
-                  />
-                ) : (
-                  <span className="font-heading text-sm font-medium text-muted-foreground">
-                    {partenaire.nom}
-                  </span>
-                )}
+                <LogoMedia
+                  src={partenaire.logo_url}
+                  nom={partenaire.nom}
+                  className="h-8 w-8 flex-shrink-0 rounded object-contain text-xs"
+                  loading="lazy"
+                />
+                <span className="ml-2 max-w-48 truncate font-heading text-sm font-medium text-muted-foreground">
+                  {partenaire.nom}
+                </span>
               </div>
             )}
             itemClassName="mx-5"

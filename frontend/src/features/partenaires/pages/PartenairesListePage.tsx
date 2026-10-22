@@ -16,7 +16,7 @@ import { ActionsSoumissionMasse } from "@/components/shared/ActionsSoumissionMas
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
-import { resoudreUrlFichier } from "@/lib/url";
+import { LogoMedia } from "@/components/shared/ImageMedia";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -211,17 +211,12 @@ export function PartenairesListePage() {
                           to={`${cheminBase}/partenaires-partenariats/partenaires/${partenaire.id}`}
                           className="flex items-center gap-3 font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand)]"
                         >
-                          {partenaire.logo_url ? (
-                            <img
-                              src={resoudreUrlFichier(partenaire.logo_url)}
-                              alt=""
-                              className="h-9 w-9 rounded-md border border-[var(--color-border)] object-contain"
-                            />
-                          ) : (
-                            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[var(--color-active-zone)] text-xs font-bold text-[var(--color-brand)]">
-                              {partenaire.nom.slice(0, 2).toUpperCase()}
-                            </span>
-                          )}
+                          <LogoMedia
+                            src={partenaire.logo_url}
+                            nom={partenaire.nom}
+                            className="h-9 w-9 flex-shrink-0 rounded-md border border-[var(--color-border)] object-contain text-xs"
+                            loading="lazy"
+                          />
                           {partenaire.nom}
                         </Link>
                       </td>

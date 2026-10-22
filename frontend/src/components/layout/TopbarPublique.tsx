@@ -6,7 +6,7 @@ import { Menu, X, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
 import { useConfigurationPublique } from "@/features/espace-public/api/useConfigurationPublique"
-import { resoudreUrlFichier } from "@/lib/url"
+import { LogoMedia } from "@/components/shared/ImageMedia"
 import { cn } from "@/lib/utils"
 
 interface LienNav {
@@ -33,10 +33,8 @@ export function TopbarPublique() {
   const [defile, setDefile] = useState(
     () => typeof window !== "undefined" && window.scrollY > 8,
   )
-  const [logoUrlEnErreur, setLogoUrlEnErreur] = useState<string | null>(null)
   const { data: configuration } = useConfigurationPublique()
   const logoUrl = configuration?.logo_url ?? null
-  const afficherLogo = Boolean(logoUrl && logoUrlEnErreur !== logoUrl)
 
   useEffect(() => {
     const surveiller = () => setDefile(window.scrollY > 8)
@@ -58,17 +56,16 @@ export function TopbarPublique() {
           <span
             className={cn(
               "flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl text-sm font-bold shadow-md transition-transform duration-300 group-hover:scale-105",
-              afficherLogo
+              logoUrl
                 ? "border border-border bg-background shadow-black/10"
                 : "bg-gradient-to-br from-primary to-[var(--color-brand-deep)] text-primary-foreground shadow-primary/30",
             )}
           >
-            {afficherLogo && logoUrl ? (
-              <img
-                src={resoudreUrlFichier(logoUrl)}
-                alt="Logo de la Présidence"
-                className="h-full w-full object-contain p-0.5"
-                onError={() => setLogoUrlEnErreur(logoUrl)}
+            {logoUrl ? (
+              <LogoMedia
+                src={logoUrl}
+                nom="Suivi Partenariats"
+                className="h-full w-full rounded-xl object-contain p-0.5 text-sm"
               />
             ) : (
               "SP"

@@ -3,6 +3,7 @@ import { useCallback, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { CloudUpload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ImageMedia } from "@/components/shared/ImageMedia"
 import { cn } from "@/lib/utils"
 
 interface DropzoneProps {
@@ -61,7 +62,11 @@ export function Dropzone({
     <div className="flex flex-col gap-2">
       {apercu ? (
         <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
-          <img src={apercu} alt="Apercu du fichier" className="size-16 rounded-lg object-cover" />
+          <ImageMedia
+            src={apercu}
+            alt="Aperçu du fichier"
+            className="size-16 rounded-lg object-cover"
+          />
           <Button
             type="button"
             variant="ghost"

@@ -12,8 +12,13 @@ import {
 import { donnees, enteteBearer } from './harness/jetons';
 import { dateIsoDans } from './harness/dates';
 import { Role } from '../src/common/enums/role.enum';
+import { STORAGE_PORT, type StoragePort } from '../src/storage/storage.port';
 
 const MOT_DE_PASSE = 'password123';
+const PNG_PIXEL_TRANSPARENT = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'base64',
+);
 
 describe('Authentification (e2e)', () => {
   let ctx: ApplicationTest;
@@ -228,6 +233,93 @@ describe('Authentification (e2e)', () => {
       );
       expect(profil.preferences.theme).toBe('SOMBRE');
       expect(profil.etablissement_nom).toEqual(expect.any(String));
+    });
+
+    it('ajoute puis remplace le logo Présidence et sert le média via le préfixe API', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .post('/api/configuration/logo')
+        .set(...enteteBearer(utilisateurPresidence))
+        .attach('fichier', PNG_PIXEL_TRANSPARENT, {
+          filename: 'logo-presidence.png',
+          contentType: 'image/png',
+        })
+        .expect(200);
+
+      const configuration = donnees<any>(reponse.body);
+      expect(configuration.logo_url).toMatch(
+        /^\/uploads\/logos\/presidence\/.+\.png$/,
+      );
+
+      await request(ctx.app.getHttpServer())
+        .get(configuration.logo_url.replace('/uploads/', '/api/uploads/'))
+        .expect('Content-Type', /image\/png/)
+        .expect('Content-Length', String(PNG_PIXEL_TRANSPARENT.length))
+        .expect(200);
+
+      const remplacement = donnees<any>(
+        (
+          await request(ctx.app.getHttpServer())
+            .post('/api/configuration/logo')
+            .set(...enteteBearer(utilisateurPresidence))
+            .attach('fichier', PNG_PIXEL_TRANSPARENT, {
+              filename: 'logo-presidence-remplace.png',
+              contentType: 'image/png',
+            })
+            .expect(200)
+        ).body,
+      );
+      expect(remplacement.logo_url).not.toBe(configuration.logo_url);
+
+      await request(ctx.app.getHttpServer())
+        .get(configuration.logo_url.replace('/uploads/', '/api/uploads/'))
+        .expect(404);
+      await request(ctx.app.getHttpServer())
+        .get(remplacement.logo_url.replace('/uploads/', '/api/uploads/'))
+        .expect('Content-Type', /image\/png/)
+        .expect(200);
+
+      await request(ctx.app.getHttpServer())
+        .post('/api/configuration/logo')
+        .set(...enteteBearer(utilisateurEtablissement))
+        .attach('fichier', PNG_PIXEL_TRANSPARENT, {
+          filename: 'logo-interdit.png',
+          contentType: 'image/png',
+        })
+        .expect(403);
+
+      await ctx.app
+        .get<StoragePort>(STORAGE_PORT)
+        .supprimer(remplacement.logo_url);
+    });
+
+    it("permet à la Présidence et au Décideur de consulter l'historique global", async () => {
+      const historique = donnees<any>(
+        (
+          await request(ctx.app.getHttpServer())
+            .get(
+              '/api/historique?action=MODIFICATION&entite_type=Configuration',
+            )
+            .set(...enteteBearer(utilisateurPresidence))
+            .expect(200)
+        ).body,
+      );
+      expect(historique.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            action: 'MODIFICATION',
+            entite_type: 'Configuration',
+          }),
+        ]),
+      );
+
+      await request(ctx.app.getHttpServer())
+        .get('/api/historique')
+        .set(...enteteBearer(utilisateurDecideur))
+        .expect(200);
+      await request(ctx.app.getHttpServer())
+        .get('/api/historique')
+        .set(...enteteBearer(utilisateurEtablissement))
+        .expect(403);
     });
 
     it('réserve la gestion des utilisateurs à la Présidence', async () => {

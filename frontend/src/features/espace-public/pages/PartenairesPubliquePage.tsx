@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/shared/EmptyState"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 import { StatusBadge } from "@/components/shared/StatusBadge"
-import { resoudreUrlFichier } from "@/lib/url"
+import { LogoMedia } from "@/components/shared/ImageMedia"
 import { obtenirInfoStatut } from "@/lib/status-mappings"
 
 // Page Partenaires de la vitrine publique (section 6.2).
@@ -102,15 +102,12 @@ export function PartenairesPubliquePage() {
                 <CardContent className="flex flex-col gap-3 p-5">
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-background text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
-                      {partenaire.logo_url ? (
-                        <img
-                          src={resoudreUrlFichier(partenaire.logo_url)}
-                          alt={partenaire.nom}
-                          className="h-8 w-8 rounded object-contain"
-                        />
-                      ) : (
-                        <Handshake size={24} />
-                      )}
+                      <LogoMedia
+                        src={partenaire.logo_url}
+                        nom={partenaire.nom}
+                        className="h-8 w-8 rounded object-contain text-xs"
+                        loading="lazy"
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-heading text-sm font-medium text-foreground">
