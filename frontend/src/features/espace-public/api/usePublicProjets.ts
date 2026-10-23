@@ -4,7 +4,7 @@ import apiClient from "@/lib/api-client"
 import type { Projet } from "@/types/api"
 
 async function recupererProjetsPublies(): Promise<Projet[]> {
-  const reponse = await apiClient.get<Projet[]>("/public/projets")
+  const reponse = await apiClient.get<Projet[]>("/public/projets/publies")
   return reponse.data
 }
 
