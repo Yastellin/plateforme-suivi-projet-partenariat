@@ -9,9 +9,7 @@ import { useDebounce } from "@/hooks/useDebounce"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
-import { StatusBadge } from "@/components/shared/StatusBadge"
 import { LogoMedia } from "@/components/shared/ImageMedia"
-import { obtenirInfoStatut } from "@/lib/status-mappings"
 
 // Page Partenaires de la vitrine publique (section 6.2).
 // Liste publique des partenaires avec visibilite = PUBLIC (RG cf.
@@ -117,7 +115,6 @@ export function PartenairesPubliquePage() {
                         {partenaire.type}
                       </p>
                     </div>
-                    <StatusBadge libelle={obtenirInfoStatut(partenaire.statut).libelle} tonalite={obtenirInfoStatut(partenaire.statut).tonalite} />
                   </div>
                   {partenaire.description && (
                     <p className="line-clamp-2 text-xs text-muted-foreground">
