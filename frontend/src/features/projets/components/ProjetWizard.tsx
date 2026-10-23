@@ -78,7 +78,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
     watch,
     trigger,
     reset,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<ProjetFormValues>({
     resolver: zodResolver(
       creerSchemaProjet({ exigerDateDebutFuture: true }),
@@ -113,29 +113,6 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const dateDebut = watch("date_debut");
   const dateFin = watch("date_fin_prevue");
   const derniereEtape = etapeActive === ETAPES.length - 1;
-  const porteurRenseigne = (() => {
-    const porteur = valeurs.porteur;
-    if (!porteur) return false;
-    if (porteur.mode === "existant") return Boolean(porteur.porteur_id);
-    if (porteur.type_porteur === "ETABLISSEMENT")
-      return Boolean(porteur.etablissement_id);
-    return Boolean(porteur.nom?.trim().length >= 2);
-  })();
-  const etapeCouranteValide =
-    etapeActive === 0
-      ? Boolean(valeurs.nom?.trim().length >= 2 && valeurs.type?.trim())
-      : etapeActive === 1
-        ? Boolean(
-            dateDebut &&
-            dateFin &&
-            dateDebut >= aujourdHui &&
-            dateFin > dateDebut,
-          )
-        : etapeActive === 2
-          ? porteurRenseigne
-          : etapeActive === ETAPES.length - 1
-            ? isValid
-            : true;
 
   // Les erreurs de dates croisees (fin <= debut) sont rattachees au champ
   // date_fin_prevue, or React Hook Form ne revalide que le champ modifie.
@@ -554,7 +531,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
           <Button
             type="button"
             onClick={suivant}
-            disabled={creation.isPending || !etapeCouranteValide}
+            disabled={creation.isPending}
           >
             {creation.isPending && <LoaderCircle className="animate-spin" />}
             {derniereEtape ? "Créer le projet" : "Suivant"}

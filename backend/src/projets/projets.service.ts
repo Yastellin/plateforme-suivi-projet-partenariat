@@ -243,19 +243,52 @@ export class ProjetsService {
     return this.enrichir(projet);
   }
 
-  async update(id: string, dto: UpdateProjetDto, etablissementId?: string) {
-    const projet = await this.findOne(id, etablissementId);
-
-    if (etablissementId && projet.cree_par_role !== Role.ETABLISSEMENT) {
+  async update(
+    id: string,
+    dto: UpdateProjetDto,
+    role: Role,
+    etablissementId?: string,
+  ) {
+    if (role === Role.ETABLISSEMENT && !etablissementId) {
       throw new ForbiddenException(
-        'Un établissement ne peut modifier que les projets qu’il a créés.',
+        'Le compte établissement doit être rattaché à un établissement.',
       );
     }
 
-    if (projet.statut !== StatutProjet.BROUILLON) {
+    const projet = await this.findOne(
+      id,
+      role === Role.ETABLISSEMENT ? etablissementId : undefined,
+    );
+
+    if (projet.archive) {
       throw new ForbiddenException(
-        "Ce projet n'est plus modifiable (statut différent de BROUILLON)",
+        'Un projet archivé ne peut pas être modifié.',
       );
+    }
+
+    if (role === Role.PRESIDENCE) {
+      if (projet.cree_par_role !== Role.PRESIDENCE) {
+        throw new ForbiddenException(
+          'La Présidence ne peut modifier que les projets qu’elle a créés.',
+        );
+      }
+    } else if (role === Role.ETABLISSEMENT) {
+      if (projet.cree_par_role !== Role.ETABLISSEMENT) {
+        throw new ForbiddenException(
+          'Un établissement ne peut modifier que les projets qu’il a créés.',
+        );
+      }
+      if (
+        projet.statut !== StatutProjet.BROUILLON ||
+        projet.soumis_le ||
+        projet.publie_le
+      ) {
+        throw new ForbiddenException(
+          "Un projet d'établissement n'est plus modifiable après sa soumission.",
+        );
+      }
+    } else {
+      throw new ForbiddenException('Ce rôle ne peut pas modifier un projet.');
     }
 
     const dateDebut = dto.date_debut
@@ -280,7 +313,7 @@ export class ProjetsService {
       if (dto.budget !== undefined) updateData.budget = dto.budget ?? null;
       if (dto.date_debut) updateData.date_debut = dateDebut;
       if (dto.date_fin_prevue) updateData.date_fin_prevue = dateFin;
-      if (dto.statut !== undefined && etablissementId === undefined) {
+      if (dto.statut !== undefined && role === Role.PRESIDENCE) {
         updateData.statut = dto.statut;
       }
 
@@ -307,7 +340,7 @@ export class ProjetsService {
 
       // Seule la Présidence peut déplacer un projet vers un autre
       // établissement. La valeur null représente un projet transversal.
-      if (etablissementId === undefined && dto.etablissement_id !== undefined) {
+      if (role === Role.PRESIDENCE && dto.etablissement_id !== undefined) {
         if (dto.etablissement_id) {
           const existe = await manager
             .getRepository(Etablissement)
@@ -322,7 +355,10 @@ export class ProjetsService {
       await this.remplacerReferentiels(manager, id, dto);
     });
 
-    return this.findOne(id, etablissementId);
+    return this.findOne(
+      id,
+      role === Role.ETABLISSEMENT ? etablissementId : undefined,
+    );
   }
 
   async soumettre(

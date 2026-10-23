@@ -17,6 +17,8 @@ import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Beneficiaire } from '../referentiels/beneficiaires/entities/beneficiaire.entity';
 import { Bailleur } from '../referentiels/bailleurs/entities/bailleur.entity';
 import { Site } from '../referentiels/sites/entities/site.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { DemandesModificationProjetService } from './demandes-modification-projet.service';
 
 @Module({
   imports: [
@@ -36,9 +38,14 @@ import { Site } from '../referentiels/sites/entities/site.entity';
       Site,
     ]),
     HistoriqueModule,
+    NotificationsModule,
   ],
   controllers: [ProjetsController],
-  providers: [ProjetsService, AvancementService],
+  providers: [
+    ProjetsService,
+    AvancementService,
+    DemandesModificationProjetService,
+  ],
   exports: [ProjetsService, AvancementService],
 })
 export class ProjetsModule {}

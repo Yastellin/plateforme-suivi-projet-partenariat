@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FolderKanban, Plus, Check } from "lucide-react";
+import { Check, FolderKanban, Pencil, Plus } from "lucide-react";
 import { useProjets } from "../api/useProjets";
 import { useSoumettreEnMasseProjets } from "../api/useSoumettreEnMasseProjets";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -20,6 +20,9 @@ import { LIBELLES_STATUT_PROJET } from "@/lib/status-mappings";
 import type { StatutProjet } from "@/types/api";
 import { toast } from "sonner";
 import { ActionsSoumissionMasse } from "@/components/shared/ActionsSoumissionMasse";
+import { peutModifierProjet } from "@/features/projets/lib/permissions-projet";
+import { peutDemanderModificationProjet } from "@/features/projets/lib/demande-modification-projet";
+import { BoutonDemanderModificationProjet } from "@/features/projets/components/BoutonDemanderModificationProjet";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -66,6 +69,7 @@ export function ProjetsListePage() {
       : role === "ETABLISSEMENT"
         ? "/etablissement"
         : "/decideur";
+  const afficherActionsModification = permissions.peutModifier;
 
   const projets = (data?.data ?? []).filter((projet) => {
     if (filtre === "tous") return true;
@@ -238,6 +242,12 @@ export function ProjetsListePage() {
                       scope="col"
                       className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
                     >
+                      Date de début
+                    </th>
+                    <th
+                      scope="col"
+                      className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
+                    >
                       Échéance
                     </th>
                     <th
@@ -252,6 +262,14 @@ export function ProjetsListePage() {
                     >
                       Statut
                     </th>
+                    {afficherActionsModification ? (
+                      <th
+                        scope="col"
+                        className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
+                      >
+                        Actions
+                      </th>
+                    ) : null}
                     {modeSelection ? (
                       <th
                         scope="col"
@@ -311,6 +329,9 @@ export function ProjetsListePage() {
                           {projet.type}
                         </td>
                         <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
+                          {formaterDate(projet.date_debut)}
+                        </td>
+                        <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
                           {formaterDate(projet.date_fin_prevue)}
                           {projet.en_retard ? (
                             <span className="ml-1.5 text-[var(--status-expire-fg)]">
@@ -337,6 +358,33 @@ export function ProjetsListePage() {
                             tonalite={info.tonalite}
                           />
                         </td>
+                        {afficherActionsModification ? (
+                          <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                            {peutModifierProjet(projet, role) ? (
+                              <Link
+                                to={`${cheminBase}/projets/${projet.id}/modifier`}
+                                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+                                aria-label={`Modifier ${projet.nom}`}
+                              >
+                                <Pencil className="h-3 w-3" aria-hidden="true" />
+                                Modifier
+                              </Link>
+                            ) : peutDemanderModificationProjet(projet, role) ? (
+                              <BoutonDemanderModificationProjet
+                                projetId={projet.id}
+                                projetNom={projet.nom}
+                                compact
+                              />
+                            ) : (
+                              <span
+                                className="text-[var(--color-text-secondary)]"
+                                aria-label="Modification non autorisée"
+                              >
+                                —
+                              </span>
+                            )}
+                          </td>
+                        ) : null}
                         {modeSelection ? (
                           <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
                             {projet.cree_par_role === "ETABLISSEMENT" &&

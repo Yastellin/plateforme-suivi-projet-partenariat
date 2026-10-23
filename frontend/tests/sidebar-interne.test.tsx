@@ -26,6 +26,13 @@ vi.mock('@/router', () => ({
   cheminTableauDeBord: () => '/presidence',
 }));
 
+vi.mock('@/contexts/identite-visuelle-context', () => ({
+  NOM_INSTITUTION: 'Université de Fianarantsoa',
+  useIdentiteVisuelle: () => ({
+    logoUrl: '/uploads/logos/presidence/logo-universite.png',
+  }),
+}));
+
 ;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 let conteneur: HTMLDivElement;
@@ -62,6 +69,9 @@ describe('barre latérale interne', () => {
       'button[aria-haspopup="menu"]',
     );
     expect(boutonCompte).not.toBeNull();
+    expect(
+      boutonCompte?.querySelector('img')?.getAttribute('src'),
+    ).toBe('/api/uploads/logos/presidence/logo-universite.png');
 
     await act(async () => {
       boutonCompte?.dispatchEvent(new MouseEvent('click', { bubbles: true }));

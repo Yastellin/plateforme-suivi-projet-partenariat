@@ -237,6 +237,11 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       .send({ nom: 'Modification interdite' })
       .expect(403);
     await request(serveur())
+      .patch(`/api/projets/${projetIndividuel.id}`)
+      .set(...enteteBearer(presidence))
+      .send({ nom: 'Modification Présidence interdite' })
+      .expect(403);
+    await request(serveur())
       .patch(`/api/partenaires/${partenaireIndividuel.id}`)
       .set(...enteteBearer(etablissement))
       .send({ description: 'Modification interdite' })
@@ -250,6 +255,153 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       .patch(`/api/partenariats/${partenariatIndividuel.id}`)
       .set(...enteteBearer(etablissement))
       .send({ objet: 'Modification interdite' })
+      .expect(403);
+  });
+
+  it('permet à la Présidence de traiter une demande contrôlée de modification', async () => {
+    const projet = await creerProjet(
+      `Projet à rectifier après soumission ${suffixe()}`,
+    );
+    await request(serveur())
+      .post(`/api/projets/${projet.id}/soumettre`)
+      .set(...enteteBearer(etablissement))
+      .expect(200);
+
+    await request(serveur())
+      .patch(`/api/projets/${projet.id}`)
+      .set(...enteteBearer(etablissement))
+      .send({ nom: 'Modification directe interdite' })
+      .expect(403);
+
+    await request(serveur())
+      .post(`/api/projets/${projet.id}/demander-modification`)
+      .set(...enteteBearer(etablissement))
+      .send({ motif: 'Bref' })
+      .expect(400);
+
+    const motif =
+      'Le devis actualisé du fournisseur de Toliara modifie le budget prévisionnel.';
+    await request(serveur())
+      .post(`/api/projets/${projet.id}/demander-modification`)
+      .set(...enteteBearer(etablissement))
+      .send({ motif })
+      .expect(200);
+    await request(serveur())
+      .post(`/api/projets/${projet.id}/demander-modification`)
+      .set(...enteteBearer(etablissement))
+      .send({ motif })
+      .expect(409);
+
+    const demandes = await ctx.dataSource.query(
+      `SELECT n.type, n.priorite, n.message, n.reference_type, u.role, u.actif
+       FROM "Notification" n
+       JOIN "Utilisateur" u ON u.id = n.utilisateur_id
+       WHERE n.reference_id = $1
+         AND n.reference_type = 'DEMANDE_MODIFICATION_PROJET'`,
+      [projet.id],
+    );
+    const [{ total: totalPresidence }] = await ctx.dataSource.query(
+      `SELECT COUNT(*)::int AS total
+       FROM "Utilisateur"
+       WHERE role = 'PRESIDENCE' AND actif = true`,
+    );
+    expect(demandes).toHaveLength(totalPresidence);
+    expect(
+      demandes.every(
+        (demande: any) =>
+          demande.type === 'CHANGEMENT_STATUT' &&
+          demande.priorite === 'HAUTE' &&
+          demande.role === 'PRESIDENCE' &&
+          demande.actif === true &&
+          demande.message.includes(motif),
+      ),
+    ).toBe(true);
+
+    await request(serveur())
+      .post(`/api/projets/${projet.id}/demande-modification/approuver`)
+      .set(...enteteBearer(etablissement))
+      .expect(403);
+
+    await request(serveur())
+      .post(`/api/projets/${projet.id}/demande-modification/rejeter`)
+      .set(...enteteBearer(presidence))
+      .expect(200);
+    await request(serveur())
+      .patch(`/api/projets/${projet.id}`)
+      .set(...enteteBearer(etablissement))
+      .send({ nom: 'Toujours verrouillé après le rejet' })
+      .expect(403);
+
+    const demandesRejetees = await ctx.dataSource.query(
+      `SELECT n.est_lue, u.role
+       FROM "Notification" n
+       JOIN "Utilisateur" u ON u.id = n.utilisateur_id
+       WHERE n.reference_id = $1
+         AND n.reference_type = 'DEMANDE_MODIFICATION_PROJET_REJETEE'`,
+      [projet.id],
+    );
+    const copiesPresidence = demandesRejetees.filter(
+      (item: any) => item.role === 'PRESIDENCE',
+    );
+    expect(copiesPresidence).toHaveLength(demandes.length);
+    expect(copiesPresidence.every((item: any) => item.est_lue)).toBe(true);
+    expect(
+      demandesRejetees.some(
+        (item: any) => item.role === 'ETABLISSEMENT' && !item.est_lue,
+      ),
+    ).toBe(true);
+
+    const projetPublie = donnees<any>(
+      (
+        await request(serveur())
+          .post(`/api/projets/${projet.id}/publier`)
+          .set(...enteteBearer(presidence))
+          .expect(200)
+      ).body,
+    );
+    expect(projetPublie.statut).toBe('EN_COURS');
+    expect(projetPublie.publie_le).toBeTruthy();
+
+    await request(serveur())
+      .post(`/api/projets/${projet.id}/demander-modification`)
+      .set(...enteteBearer(etablissement))
+      .send({
+        motif:
+          'La date de démarrage doit également être reportée après la saison des pluies.',
+      })
+      .expect(200);
+
+    const resultat = donnees<any>(
+      (
+        await request(serveur())
+          .post(`/api/projets/${projet.id}/demande-modification/approuver`)
+          .set(...enteteBearer(presidence))
+          .expect(200)
+      ).body,
+    );
+    expect(resultat).toMatchObject({
+      projet_id: projet.id,
+      decision: 'APPROUVEE',
+      statut: 'BROUILLON',
+    });
+
+    const projetModifie = donnees<any>(
+      (
+        await request(serveur())
+          .patch(`/api/projets/${projet.id}`)
+          .set(...enteteBearer(etablissement))
+          .send({ nom: `Projet rectifié par Rakoto ${suffixe()}` })
+          .expect(200)
+      ).body,
+    );
+    expect(projetModifie.statut).toBe('BROUILLON');
+    expect(projetModifie.soumis_le).toBeNull();
+    expect(projetModifie.publie_le).toBeNull();
+
+    await request(serveur())
+      .patch(`/api/projets/${projet.id}`)
+      .set(...enteteBearer(presidence))
+      .send({ nom: 'La Présidence ne devient pas propriétaire' })
       .expect(403);
   });
 
@@ -364,6 +516,24 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       .set(...enteteBearer(etablissement))
       .send({ nom: 'Modification interdite' })
       .expect(403);
+
+    await request(serveur())
+      .patch(`/api/projets/${projetPresidence.id}`)
+      .set(...enteteBearer(presidence))
+      .send({ statut: 'EN_COURS' })
+      .expect(200);
+    const projetPresidenceModifie = donnees<any>(
+      (
+        await request(serveur())
+          .patch(`/api/projets/${projetPresidence.id}`)
+          .set(...enteteBearer(presidence))
+          .send({ nom: `Projet Présidence modifié ${suffixe()}` })
+          .expect(200)
+      ).body,
+    );
+    expect(projetPresidenceModifie.statut).toBe('EN_COURS');
+    expect(projetPresidenceModifie.nom).toContain('Projet Présidence modifié');
+
     await request(serveur())
       .patch(`/api/partenaires/${partenairePresidence.id}`)
       .set(...enteteBearer(etablissement))
