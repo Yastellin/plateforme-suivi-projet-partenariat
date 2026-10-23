@@ -106,13 +106,35 @@ describe('ProjetsController', () => {
         {},
       );
 
-      expect(service.findAll).toHaveBeenCalledWith({}, 'etab-1');
+      expect(service.findAll).toHaveBeenCalledWith({}, {
+        etablissementId: 'etab-1',
+      });
     });
 
-    it('ne filtre pas pour les autres roles', async () => {
+    it('restreint la liste générale aux données de la Présidence', async () => {
+      await controller.findAll({ role: Role.PRESIDENCE }, {});
+
+      expect(service.findAll).toHaveBeenCalledWith({}, {
+        origine: Role.PRESIDENCE,
+      });
+    });
+
+    it("expose les données soumises dans la section d'un établissement", async () => {
+      const query = { etablissement_id: 'etab-1' };
+
+      await controller.findAll({ role: Role.PRESIDENCE }, query);
+
+      expect(service.findAll).toHaveBeenCalledWith(query, {
+        etablissementId: 'etab-1',
+        origine: Role.ETABLISSEMENT,
+        soumisesUniquement: true,
+      });
+    });
+
+    it('ne force pas de périmètre pour le décideur', async () => {
       await controller.findAll({ role: Role.DECIDEUR }, {});
 
-      expect(service.findAll).toHaveBeenCalledWith({}, undefined);
+      expect(service.findAll).toHaveBeenCalledWith({}, {});
     });
   });
 

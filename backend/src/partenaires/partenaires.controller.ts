@@ -34,6 +34,7 @@ import { OwnEtablissementGuard } from '../common/guards/own-etablissement.guard'
 import { Role } from '../common/enums/role.enum';
 import { SoumissionMasseDto } from '../common/dto/soumission-masse.dto';
 import { RechercheDoublonPartenaireDto } from './dto/recherche-doublon-partenaire.dto';
+import { determinerPerimetreListe } from '../common/utils/perimetre-liste';
 
 @ApiTags('Partenaires')
 @ApiBearerAuth()
@@ -78,10 +79,8 @@ export class PartenairesController {
   @ApiOperation({ summary: 'Lister tous les partenaires' })
   @ApiResponse({ status: 200 })
   findAll(@CurrentUser() user: any, @Query() query: QueryPartenaireDto) {
-    // Si l'utilisateur est un établissement, on filtre par son ID
-    const etablissementId =
-      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-    return this.partenairesService.findAll(query, etablissementId);
+    const perimetre = determinerPerimetreListe(user, query.etablissement_id);
+    return this.partenairesService.findAll(query, perimetre);
   }
 
   @Get('recherche-doublon')

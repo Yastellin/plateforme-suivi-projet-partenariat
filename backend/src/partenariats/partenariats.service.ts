@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ILike, In, Repository } from 'typeorm';
+import { ILike, In, IsNull, Not, Repository } from 'typeorm';
 import { CreatePartenariatDto } from './dto/create-partenariat.dto';
 import { UpdatePartenariatDto } from './dto/update-partenariat.dto';
 import { QueryPartenariatDto } from './dto/query-partenariat.dto';
@@ -24,6 +24,7 @@ import { Role } from '../common/enums/role.enum';
 import { HistoriqueService } from '../historique/historique.service';
 import type { ContexteUtilisateur } from '../historique/historique.service';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
+import type { PerimetreListeDonnees } from '../common/utils/perimetre-liste';
 
 @Injectable()
 export class PartenariatsService {
@@ -127,14 +128,20 @@ export class PartenariatsService {
     });
   }
 
-  async findAll(query: QueryPartenariatDto, etablissementId?: string) {
+  async findAll(
+    query: QueryPartenariatDto,
+    perimetre: PerimetreListeDonnees = {},
+  ) {
     const { page = 1, limit = 20, intitule, domaine, statut, archive } = query;
     const where: any = { archive: archive ?? false };
 
-    const etablissementFiltre = etablissementId ?? query.etablissement_id;
+    const etablissementFiltre =
+      perimetre.etablissementId ?? query.etablissement_id;
     if (etablissementFiltre) {
       where.etablissements = { etablissement_id: etablissementFiltre };
     }
+    if (perimetre.origine) where.cree_par_role = perimetre.origine;
+    if (perimetre.soumisesUniquement) where.soumis_le = Not(IsNull());
     if (intitule) where.intitule = ILike(`%${intitule}%`);
     if (domaine) where.domaine = domaine;
     if (statut) where.statut = statut;
