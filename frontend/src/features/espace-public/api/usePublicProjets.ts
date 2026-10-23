@@ -1,16 +1,26 @@
 // src/features/espace-public/api/usePublicProjets.ts
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { Projet } from "@/types/api"
+import type { PageServeur, ProjetPublic } from "@/types/api"
 
-async function recupererProjetsPublies(): Promise<Projet[]> {
-  const reponse = await apiClient.get<Projet[]>("/public/projets/publies")
-  return reponse.data
+export interface FiltresPublicProjets {
+  page?: number
+  limit?: number
+  recherche?: string
+  etablissement_id?: string
 }
 
-export function usePublicProjets() {
+// Projets de l'Universite (hors brouillons et projets expires), avec leurs
+// partenaires publics. Le budget et les contacts ne sont jamais exposes.
+export function usePublicProjets(filtres: FiltresPublicProjets = {}) {
   return useQuery({
-    queryKey: ["public", "projets"],
-    queryFn: recupererProjetsPublies,
+    queryKey: ["public-projets", filtres],
+    queryFn: async () => {
+      const reponse = await apiClient.get<PageServeur<ProjetPublic>>("/public/projets", {
+        params: filtres,
+      })
+      return reponse.data
+    },
+    placeholderData: keepPreviousData,
   })
 }

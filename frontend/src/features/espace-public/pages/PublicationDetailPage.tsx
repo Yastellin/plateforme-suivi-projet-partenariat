@@ -11,12 +11,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { StatusBadge } from "@/components/shared/StatusBadge"
-import { obtenirInfoStatut } from "@/lib/status-mappings"
 import apiClient from "@/lib/api-client"
-import type { Publication } from "@/types/api"
+import type { PublicationPublique } from "@/types/api"
 import { useState } from "react"
-import { ImageMedia } from "@/components/shared/ImageMedia"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 // Page detail d'une publication publique (section 7.4 : "detail d'une
@@ -27,7 +24,7 @@ export function PublicationDetailPage() {
   const { data: publication, isLoading, error } = useQuery({
     queryKey: ["public-publication", id],
     queryFn: async () => {
-      const reponse = await apiClient.get<Publication>(
+      const reponse = await apiClient.get<PublicationPublique>(
         `/public/publications/${id}`
       )
       return reponse.data
@@ -90,7 +87,9 @@ export function PublicationDetailPage() {
             {publication.titre}
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <StatusBadge libelle={obtenirInfoStatut(publication.statut).libelle} tonalite={obtenirInfoStatut(publication.statut).tonalite} />
+            {publication.projet.etablissement && (
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{publication.projet.etablissement.nom}</span>
+            )}
             {publication.date_publication && (
               <span className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Calendar size={14} />
@@ -112,8 +111,7 @@ export function PublicationDetailPage() {
       {photos.length > 0 && (
         <div className="mt-8">
           <div className="relative overflow-hidden rounded-xl bg-muted">
-            <ImageMedia
-              key={photos[photoActive].id}
+            <img
               src={photos[photoActive].url_fichier}
               alt={photos[photoActive].legende ?? publication.titre}
               className="h-64 w-full object-cover sm:h-96"

@@ -9,7 +9,6 @@ import { useDebounce } from "@/hooks/useDebounce"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
-import { LogoMedia } from "@/components/shared/ImageMedia"
 
 // Page Etablissements de la vitrine publique (section 6.2).
 // Liste publique des etablissements membres avec recherche instantanee.
@@ -66,12 +65,15 @@ export function EtablissementsPage() {
               <Card className="group h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
                 <CardContent className="flex items-center gap-4 p-5">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-background text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
-                    <LogoMedia
-                      src={etab.logo_url}
-                      nom={etab.nom}
-                      className="h-10 w-10 rounded object-contain text-sm"
-                      loading="lazy"
-                    />
+                    {etab.logo_url ? (
+                      <img
+                        src={etab.logo_url}
+                        alt={etab.nom}
+                        className="h-10 w-10 rounded object-contain"
+                      />
+                    ) : (
+                      <Building2 size={28} />
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-heading text-sm font-medium text-foreground">
@@ -80,11 +82,6 @@ export function EtablissementsPage() {
                     {etab.sigle && (
                       <p className="text-xs text-muted-foreground">
                         {etab.sigle}
-                      </p>
-                    )}
-                    {etab.description && (
-                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                        {etab.description}
                       </p>
                     )}
                   </div>

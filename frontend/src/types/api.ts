@@ -77,13 +77,16 @@ export interface CompteursAccueilPublic {
   nombre_partenaires: number;
   nombre_pays_partenaires: number;
   nombre_projets_actifs: number;
+  nombre_publications: number;
+  nombre_conventions_actives?: number;
 }
 
 export interface AccueilPublic {
   statistiques?: StatistiquesPubliques;
-  dernieres_publications?: PublicationAccueil[];
+  dernieres_publications?: PublicationPublique[];
+  projets_a_la_une?: ProjetPublic[];
   etablissements_a_la_une?: EtablissementAccueil[];
-  partenaires_a_la_une?: PartenaireAccueil[];
+  partenaires_a_la_une?: PartenairePublic[];
   compteurs?: CompteursAccueilPublic;
 }
 
