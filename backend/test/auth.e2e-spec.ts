@@ -74,6 +74,32 @@ describe('Authentification (e2e)', () => {
       expect(reponse.body.message).toBe('Identifiants invalides');
     });
 
+    it('explique le refus lorsqu’un compte établissement est désactivé', async () => {
+      await ctx.dataSource.query(
+        `UPDATE "Utilisateur" SET actif = false WHERE id = $1`,
+        [utilisateurEtablissement.id],
+      );
+
+      try {
+        const reponse = await request(ctx.app.getHttpServer())
+          .post('/api/auth/login')
+          .send({
+            email: utilisateurEtablissement.email,
+            mot_de_passe: MOT_DE_PASSE,
+          })
+          .expect(401);
+
+        expect(reponse.body.message).toBe(
+          'Votre compte a été désactivé. Veuillez contacter la Présidence.',
+        );
+      } finally {
+        await ctx.dataSource.query(
+          `UPDATE "Utilisateur" SET actif = true WHERE id = $1`,
+          [utilisateurEtablissement.id],
+        );
+      }
+    });
+
     it('renvoie les jetons et le profil pour des identifiants valides', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .post('/api/auth/login')

@@ -45,7 +45,10 @@ apiClient.interceptors.request.use((config) => {
 // Un seul rafraîchissement à la fois, même si plusieurs requêtes échouent en parallèle
 let refreshPromise: Promise<string> | null = null
 
-async function rafraichirToken(refreshToken: string): Promise<string> {
+async function rafraichirToken(
+  refreshToken: string,
+  sessionPersistante: boolean,
+): Promise<string> {
   const reponse = await axios.post<ReponseApi<RafraichissementReponse | null>>(
     `${API_BASE_URL}/auth/refresh`,
     { refresh_token: refreshToken },
@@ -56,7 +59,7 @@ async function rafraichirToken(refreshToken: string): Promise<string> {
     throw new Error("Réponse de rafraîchissement invalide.")
   }
 
-  tokenStorage.setRefreshToken(contenu.refresh_token)
+  tokenStorage.setRefreshToken(contenu.refresh_token, sessionPersistante)
   return contenu.access_token
 }
 
@@ -87,7 +90,10 @@ apiClient.interceptors.response.use(
         requeteOriginale._retry = true
 
         if (!refreshPromise) {
-          refreshPromise = rafraichirToken(refreshToken)
+          refreshPromise = rafraichirToken(
+            refreshToken,
+            tokenStorage.estPersistant(),
+          )
             .then((nouveauToken) => {
               definirAccessToken(nouveauToken)
               return nouveauToken

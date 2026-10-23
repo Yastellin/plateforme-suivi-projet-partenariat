@@ -36,7 +36,12 @@ export function LoginForm() {
       { email: valeurs.email, motDePasse: valeurs.motDePasse },
       {
         onSuccess: (reponse) => {
-          connecter(reponse.utilisateur, reponse.access_token, reponse.refresh_token);
+          connecter(
+            reponse.utilisateur,
+            reponse.access_token,
+            reponse.refresh_token,
+            valeurs.seSouvenir,
+          );
           const destination = searchParams.get('redirect') ?? cheminTableauDeBord(reponse.utilisateur.role);
           navigate(destination, { replace: true });
         },
@@ -45,6 +50,12 @@ export function LoginForm() {
             bloquer();
             toast.error('Trop de tentatives', {
               description: 'Veuillez patienter avant de réessayer.',
+            });
+            return;
+          }
+          if (erreur.message.toLocaleLowerCase('fr').includes('désactivé')) {
+            toast.error('Compte désactivé', {
+              description: erreur.message,
             });
             return;
           }

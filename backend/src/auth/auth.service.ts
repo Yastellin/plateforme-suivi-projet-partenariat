@@ -48,7 +48,11 @@ export class AuthService {
     });
 
     if (!utilisateur) throw new UnauthorizedException('Identifiants invalides');
-    if (!utilisateur.actif) throw new UnauthorizedException('Compte désactivé');
+    if (!utilisateur.actif) {
+      throw new UnauthorizedException(
+        'Votre compte a été désactivé. Veuillez contacter la Présidence.',
+      );
+    }
 
     const valid = await bcrypt.compare(mot_de_passe, utilisateur.password_hash);
     if (!valid) throw new UnauthorizedException('Identifiants invalides');
