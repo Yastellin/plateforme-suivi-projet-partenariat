@@ -18,6 +18,7 @@ import { cheminTableauDeBord } from '@/router';
 import { cn } from '@/lib/utils';
 import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
 import type { RoleUtilisateur } from '@/types/api';
+import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
 
 const CLE_REPLI = 'uf_sidebar_reduit';
 
@@ -209,7 +210,14 @@ export function SidebarInterne() {
                     <span className="absolute -left-3 bottom-1.5 top-1.5 w-[3px] rounded-r bg-[var(--color-brand)]" />
                   ) : null}
                   <Icone className={cn('h-4 w-4 flex-shrink-0 opacity-85', actif && 'opacity-100')} />
-                  {!reduit ? <span className="truncate">{item.libelle}</span> : null}
+                  {!reduit ? (
+                    <>
+                      <span className="flex-1 truncate">{item.libelle}</span>
+                      {item.cle === 'notifications' ? <NotificationBadge /> : null}
+                    </>
+                  ) : item.cle === 'notifications' ? (
+                    <NotificationBadge className="absolute -right-1 -top-1" />
+                  ) : null}
                 </Link>
               );
             })}

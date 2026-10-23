@@ -1,19 +1,26 @@
-﻿// src/features/notifications/components/NotificationBadge.tsx
-import { Bell } from "lucide-react"
-import { useNotificationsPolling } from "@/features/notifications/api/useNotificationsPolling"
+import { useNombreNotificationsNonLues } from "@/features/notifications/api/useNombreNotificationsNonLues"
+import { cn } from "@/lib/utils"
 
-export function NotificationBadge() {
-  const { data: notifications } = useNotificationsPolling()
-  const nonLues = notifications?.length ?? 0
+interface NotificationBadgeProps {
+  className?: string
+}
+
+export function NotificationBadge({ className }: NotificationBadgeProps) {
+  const { data: nombre = 0 } = useNombreNotificationsNonLues()
+
+  if (nombre <= 0) {
+    return null
+  }
 
   return (
-    <div className="relative">
-      <Bell size={18} />
-      {nonLues > 0 && (
-        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-white">
-          {nonLues > 9 ? "9+" : nonLues}
-        </span>
+    <span
+      aria-label={`${nombre} notification${nombre > 1 ? "s" : ""} non lue${nombre > 1 ? "s" : ""}`}
+      className={cn(
+        "inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-none text-white",
+        className,
       )}
-    </div>
+    >
+      {nombre}
+    </span>
   )
 }
