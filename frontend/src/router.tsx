@@ -251,6 +251,7 @@ const router = createBrowserRouter([
       { path: "/etablissement/projets/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ProjetDetailPage /></Charge></RouteProtegee> },
       { path: "/etablissement/archives", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ArchivesPage /></Charge></RouteProtegee> },
       { path: "/etablissement/archives/:type/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><ArchiveDetailPage /></Charge></RouteProtegee> },
+      { path: "/etablissement/historique", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><HistoriquePage /></Charge></RouteProtegee> },
       { path: "/presidence/parametres", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ParametresCompte /></Charge></RouteProtegee> },
       { path: "/presidence/cotutelles", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><CotutellesListePage /></Charge></RouteProtegee> },
       { path: "/presidence/cotutelles/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><CotutelleDetailPage /></Charge></RouteProtegee> },

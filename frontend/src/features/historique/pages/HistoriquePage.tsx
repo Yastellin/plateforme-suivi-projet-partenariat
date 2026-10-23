@@ -14,6 +14,7 @@ import {
   type ActionHistorique,
 } from "@/features/historique/api/useHistorique";
 import type { ToneStatut } from "@/lib/status-mappings";
+import { useAuth } from "@/hooks/useAuth";
 
 const ACTIONS: Array<{
   valeur: ActionHistorique;
@@ -63,6 +64,8 @@ function formaterDate(date: string): string {
 }
 
 export function HistoriquePage() {
+  const { utilisateur } = useAuth();
+  const estEtablissement = utilisateur?.role === "ETABLISSEMENT";
   const [page, setPage] = useState(1);
   const [recherche, setRecherche] = useState("");
   const [action, setAction] = useState<ActionHistorique | "">("");
@@ -84,8 +87,12 @@ export function HistoriquePage() {
   return (
     <div>
       <PageHeader
-        titre="Historique"
-        description="Consultez les créations, modifications, soumissions, publications, archivages et restaurations."
+        titre={estEtablissement ? "Historique de l’établissement" : "Historique"}
+        description={
+          estEtablissement
+            ? "Consultez les activités réalisées par les comptes de votre établissement."
+            : "Consultez les créations, modifications, soumissions, publications, archivages et restaurations."
+        }
       />
 
       <Panel>

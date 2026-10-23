@@ -3,7 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
+  FindOptionsWhere,
   ILike,
+  In,
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
@@ -12,11 +14,19 @@ import { HistoriqueAction } from './entities/historique-action.entity';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
 import { QueryHistoriqueDto } from './dto/historique-query.dto';
 import { HistoriqueActionResponseDto } from './dto/historique-response.dto';
+import { Utilisateur } from '../auth/entities/utilisateur.entity';
+import { Role } from '../common/enums/role.enum';
 
 export interface ContexteUtilisateur {
   id: string;
   email: string;
   role: string;
+}
+
+export interface ConsultationHistorique {
+  id: string;
+  role: Role;
+  etablissement_id?: string | null;
 }
 
 export interface EntreeHistorique {
@@ -33,6 +43,8 @@ export class HistoriqueService {
   constructor(
     @InjectRepository(HistoriqueAction)
     private historiqueRepo: Repository<HistoriqueAction>,
+    @InjectRepository(Utilisateur)
+    private utilisateurRepo: Repository<Utilisateur>,
   ) {}
 
   /** Enregistre une action d'audit avant de confirmer l'opération à l'appelant. */
@@ -51,7 +63,10 @@ export class HistoriqueService {
     );
   }
 
-  async lister(query: QueryHistoriqueDto) {
+  async lister(
+    query: QueryHistoriqueDto,
+    consultation?: ConsultationHistorique,
+  ) {
     const {
       page = 1,
       limit = 20,
@@ -63,7 +78,20 @@ export class HistoriqueService {
       date_fin,
     } = query;
 
-    const where: Record<string, unknown> = {};
+    const where: FindOptionsWhere<HistoriqueAction> = {};
+    if (consultation?.role === Role.ETABLISSEMENT) {
+      let utilisateursIds = [consultation.id];
+      if (consultation.etablissement_id) {
+        const comptes = await this.utilisateurRepo.find({
+          select: { id: true },
+          where: { etablissement_id: consultation.etablissement_id },
+        });
+        if (comptes.length > 0) {
+          utilisateursIds = comptes.map((compte) => compte.id);
+        }
+      }
+      where.utilisateur_id = In(utilisateursIds);
+    }
     if (action) where.action = action;
     if (entite_type) where.entite_type = entite_type;
     if (entite_id) where.entite_id = entite_id;

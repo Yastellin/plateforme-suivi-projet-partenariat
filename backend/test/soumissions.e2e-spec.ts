@@ -378,6 +378,44 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
     });
   });
 
+  it("limite l'historique d'un établissement aux activités de ses comptes", async () => {
+    const partenairePresidence = await creerPartenaire(
+      `Partenaire à archiver Présidence ${suffixe()}`,
+      presidence,
+    );
+    await request(serveur())
+      .post(`/api/partenaires/${partenairePresidence.id}/archiver`)
+      .set(...enteteBearer(presidence))
+      .expect(200);
+
+    const historique = donnees<any>(
+      (
+        await request(serveur())
+          .get('/api/historique?limit=100')
+          .set(...enteteBearer(etablissement))
+          .expect(200)
+      ).body,
+    );
+    const comptesEtablissement = await ctx.dataSource.query(
+      `SELECT id FROM "Utilisateur" WHERE etablissement_id = $1`,
+      [etablissementId],
+    );
+    const comptesIds = comptesEtablissement.map((compte: any) => compte.id);
+
+    expect(historique.data.length).toBeGreaterThan(0);
+    expect(
+      historique.data.every((entree: any) =>
+        comptesIds.includes(entree.utilisateur_id),
+      ),
+    ).toBe(true);
+    expect(historique.data.map((entree: any) => entree.action)).toContain(
+      'SOUMISSION',
+    );
+    expect(
+      historique.data.map((entree: any) => entree.entite_id),
+    ).not.toContain(partenairePresidence.id);
+  });
+
   it('verrouille les données établissement après soumission', async () => {
     await request(serveur())
       .patch(`/api/projets/${projetIndividuel.id}`)
