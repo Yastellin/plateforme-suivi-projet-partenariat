@@ -8,6 +8,7 @@ import { SectionEtablissements } from "@/features/espace-public/components/Secti
 import { SectionPartenaires } from "@/features/espace-public/components/SectionPartenaires"
 import { SectionPublicationsAlaUne } from "@/features/espace-public/components/SectionPublicationsAlaUne"
 import { FormulaireContact } from "@/features/espace-public/components/FormulaireContact"
+import { Reveal } from "@/features/espace-public/components/Reveal"
 
 export function AccueilPage() {
   return (
@@ -15,7 +16,7 @@ export function AccueilPage() {
       <HeroAccueil />
 
       <section className="vt-section vt-section-alt" id="apropos">
-        <div className="vt-wrap vt-about">
+        <Reveal className="vt-wrap vt-about">
           <div className="vt-about-txt">
             <h2 style={{ fontSize: "clamp(26px, 3.2vw, 34px)", fontWeight: 800, letterSpacing: "-0.015em" }}>
               Une université ouverte sur ses partenaires
@@ -53,7 +54,7 @@ export function AccueilPage() {
               </div>
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       <SectionEtablissements />
@@ -62,7 +63,7 @@ export function AccueilPage() {
 
       <section className="vt-section" style={{ paddingTop: 0 }}>
         <div className="vt-wrap">
-          <div className="vt-band">
+          <Reveal className="vt-band">
             <div>
               <h2>Vous représentez une entreprise ou une institution ?</h2>
               <p>Parlez-nous de votre projet. Votre message est transmis à la Présidence ou à l'établissement concerné.</p>
@@ -71,12 +72,12 @@ export function AccueilPage() {
               <Mail size={16} aria-hidden="true" />
               Nous écrire
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       <section className="vt-section vt-section-alt" id="contact">
-        <div className="vt-wrap vt-contact">
+        <Reveal className="vt-wrap vt-contact">
           <div>
             <h2 style={{ fontSize: "clamp(26px, 3.2vw, 34px)", fontWeight: 800, letterSpacing: "-0.015em" }}>Contact</h2>
             <p style={{ color: "var(--muted)", marginTop: 12, maxWidth: "46ch" }}>
@@ -108,7 +109,7 @@ export function AccueilPage() {
             </div>
           </div>
           <FormulaireContact />
-        </div>
+        </Reveal>
       </section>
     </div>
   )

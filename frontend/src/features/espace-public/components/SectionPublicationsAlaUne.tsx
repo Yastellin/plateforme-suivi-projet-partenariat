@@ -7,6 +7,7 @@ import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
 import { CartePublication } from "@/features/espace-public/components/CartesPubliques"
+import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 import type { PublicationPublique } from "@/types/api"
 
 const TOUS = "tous"
@@ -33,7 +34,7 @@ export function SectionPublicationsAlaUne() {
   return (
     <section className="vt-section" id="projets">
       <div className="vt-wrap">
-        <div className="vt-head">
+        <Reveal className="vt-head">
           <div>
             <h2>Projets et partenariats</h2>
             <p>Les réalisations publiées par la Présidence de l'université et ses établissements.</p>
@@ -41,7 +42,7 @@ export function SectionPublicationsAlaUne() {
           <Link to="/projets-partenariats" className="vt-btn vt-btn-ghost">
             Tous les projets
           </Link>
-        </div>
+        </Reveal>
 
         {etablissements.length > 1 && (
           <div className="vt-filters" role="group" aria-label="Filtrer par établissement">
@@ -70,11 +71,13 @@ export function SectionPublicationsAlaUne() {
           </div>
         ) : (
           <>
-            <div className="vt-grid-p">
+            <RevealGroup className="vt-grid-p">
               {affichees.map((publication) => (
-                <CartePublication key={publication.id} publication={publication} />
+                <RevealItem key={publication.id} className="h-full">
+                  <CartePublication publication={publication} />
+                </RevealItem>
               ))}
-            </div>
+            </RevealGroup>
             {affichees.length === 0 && (
               <div className="vt-empty vt-show">
                 <h3>Aucune publication pour cet établissement</h3>
