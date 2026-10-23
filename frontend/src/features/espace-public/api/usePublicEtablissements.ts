@@ -1,7 +1,7 @@
-﻿// src/features/espace-public/api/usePublicEtablissements.ts
+// src/features/espace-public/api/usePublicEtablissements.ts
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
-import type { Etablissement, PageServeur } from "@/types/api"
+import type { EtablissementPublicRef, PageServeur } from "@/types/api"
 
 export interface FiltresPublicEtablissements {
   page?: number
@@ -9,13 +9,12 @@ export interface FiltresPublicEtablissements {
   recherche?: string
 }
 
-// Liste publique des etablissements membres (page /etablissements).
-// Le backend ne renvoie que les fiches marquees visibles publiquement.
+// Etablissements membres de l'Universite.
 export function usePublicEtablissements(filtres: FiltresPublicEtablissements = {}) {
   return useQuery({
     queryKey: ["public-etablissements", filtres],
     queryFn: async () => {
-      const reponse = await apiClient.get<PageServeur<Etablissement>>("/public/etablissements", {
+      const reponse = await apiClient.get<PageServeur<EtablissementPublicRef>>("/public/etablissements", {
         params: filtres,
       })
       return reponse.data

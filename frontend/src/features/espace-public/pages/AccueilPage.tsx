@@ -1,49 +1,114 @@
 // src/features/espace-public/pages/AccueilPage.tsx
+// Page d'accueil de la vitrine publique (maquette). Les donnees viennent de l'API
+// (publications de la Presidence, etablissements, partenaires, compteurs).
 import { Link } from "react-router-dom"
-import { ArrowRight, Mail } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Briefcase, Building2, FlaskConical, Landmark, Mail, MessageSquare } from "lucide-react"
 import { HeroAccueil } from "@/features/espace-public/components/HeroAccueil"
 import { SectionEtablissements } from "@/features/espace-public/components/SectionEtablissements"
 import { SectionPartenaires } from "@/features/espace-public/components/SectionPartenaires"
-import { Reveal } from "@/features/espace-public/components/Reveal"
+import { SectionPublicationsAlaUne } from "@/features/espace-public/components/SectionPublicationsAlaUne"
+import { FormulaireContact } from "@/features/espace-public/components/FormulaireContact"
 
-// Page d'accueil de la vitrine publique (section 7.4) :
-// carrousel hybride, compteurs animes, fade-in au scroll,
-// marquee infini de logos partenaires.
 export function AccueilPage() {
   return (
-    <div className="flex flex-col gap-20 pb-4">
-      {/* Hero : carrousel + compteurs + etablissements + marquee */}
+    <div>
       <HeroAccueil />
 
-      {/* Section etablissements mis en avant */}
-      <SectionEtablissements />
-
-      {/* Section partenaires (marquee) */}
-      <SectionPartenaires />
-
-      {/* Call to action contact */}
-      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Reveal>
-          <div className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[var(--color-brand-deep)] px-6 py-14 text-center text-primary-foreground shadow-xl shadow-primary/20 sm:px-12">
-            <div aria-hidden className="pointer-events-none absolute -top-20 -right-16 -z-10 h-64 w-64 rounded-full bg-[var(--color-brand-moment)]/30 blur-3xl" />
-            <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-16 -z-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-            <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-              Une question ? Contactez-nous
+      <section className="vt-section vt-section-alt" id="apropos">
+        <div className="vt-wrap vt-about">
+          <div className="vt-about-txt">
+            <h2 style={{ fontSize: "clamp(26px, 3.2vw, 34px)", fontWeight: 800, letterSpacing: "-0.015em" }}>
+              Une université ouverte sur ses partenaires
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-primary-foreground/85">
-              Notre équipe est à votre disposition pour toute information
-              concernant les projets et partenariats de l'Université.
+            <p>
+              L'Université de Fianarantsoa entretient des relations avec des entreprises, des institutions publiques, des
+              organismes de recherche et des universités. Chaque établissement a ses propres partenaires, et certains sont
+              partagés par toute l'université.
             </p>
-            <Button asChild className="mt-7 rounded-full bg-background px-6 text-foreground hover:bg-background/90" size="lg">
-              <Link to="/contact">
-                <Mail size={16} />
-                Nous contacter
-                <ArrowRight size={16} />
-              </Link>
-            </Button>
+            <p>
+              Cette plateforme rend publics les partenariats et les projets que l'université choisit de montrer, pour que
+              les étudiants, les familles et les futurs partenaires voient ce qui se fait concrètement.
+            </p>
           </div>
-        </Reveal>
+          <div className="vt-axes">
+            <div className="vt-axe">
+              <span className="vt-ic"><Briefcase size={20} aria-hidden="true" /></span>
+              <div>
+                <h3>Insertion professionnelle</h3>
+                <p>Stages, alternance et ateliers avec des partenaires du monde professionnel.</p>
+              </div>
+            </div>
+            <div className="vt-axe">
+              <span className="vt-ic"><FlaskConical size={20} aria-hidden="true" /></span>
+              <div>
+                <h3>Recherche et innovation</h3>
+                <p>Laboratoires communs, cotutelles de thèse et travaux partagés.</p>
+              </div>
+            </div>
+            <div className="vt-axe">
+              <span className="vt-ic"><Landmark size={20} aria-hidden="true" /></span>
+              <div>
+                <h3>Développement local</h3>
+                <p>Projets menés avec les collectivités, les associations et les acteurs de la région.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <SectionEtablissements />
+      <SectionPartenaires />
+      <SectionPublicationsAlaUne />
+
+      <section className="vt-section" style={{ paddingTop: 0 }}>
+        <div className="vt-wrap">
+          <div className="vt-band">
+            <div>
+              <h2>Vous représentez une entreprise ou une institution ?</h2>
+              <p>Parlez-nous de votre projet. Votre message est transmis à la Présidence ou à l'établissement concerné.</p>
+            </div>
+            <Link to="/contact" className="vt-btn vt-btn-light">
+              <Mail size={16} aria-hidden="true" />
+              Nous écrire
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="vt-section vt-section-alt" id="contact">
+        <div className="vt-wrap vt-contact">
+          <div>
+            <h2 style={{ fontSize: "clamp(26px, 3.2vw, 34px)", fontWeight: 800, letterSpacing: "-0.015em" }}>Contact</h2>
+            <p style={{ color: "var(--muted)", marginTop: 12, maxWidth: "46ch" }}>
+              Une question sur un partenariat, une proposition de collaboration ou une demande d'information ? Choisissez
+              le destinataire de votre message.
+            </p>
+            <div className="vt-info">
+              <div>
+                <span className="vt-ic"><Landmark size={20} aria-hidden="true" /></span>
+                <p>
+                  <b>Présidence de l'université</b>
+                  <span>Par défaut, pour les partenariats et les demandes générales.</span>
+                </p>
+              </div>
+              <div>
+                <span className="vt-ic"><Building2 size={20} aria-hidden="true" /></span>
+                <p>
+                  <b>Un établissement</b>
+                  <span>Sélectionnez-le dans le formulaire : il reçoit directement votre message.</span>
+                </p>
+              </div>
+              <div>
+                <span className="vt-ic"><MessageSquare size={20} aria-hidden="true" /></span>
+                <p>
+                  <b>Suivi par référence</b>
+                  <span>Une référence unique vous est donnée à l'envoi.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <FormulaireContact />
+        </div>
       </section>
     </div>
   )
