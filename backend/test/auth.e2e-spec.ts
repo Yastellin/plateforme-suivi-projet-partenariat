@@ -13,6 +13,7 @@ import { donnees, enteteBearer } from './harness/jetons';
 import { dateIsoDans } from './harness/dates';
 import { Role } from '../src/common/enums/role.enum';
 import { STORAGE_PORT, type StoragePort } from '../src/storage/storage.port';
+import { getStorageToken, ThrottlerStorageService } from '@nestjs/throttler';
 
 const MOT_DE_PASSE = 'password123';
 const PNG_PIXEL_TRANSPARENT = Buffer.from(
@@ -97,6 +98,7 @@ describe('Authentification (e2e)', () => {
           `UPDATE "Utilisateur" SET actif = true WHERE id = $1`,
           [utilisateurEtablissement.id],
         );
+        ctx.app.get<ThrottlerStorageService>(getStorageToken()).storage.clear();
       }
     });
 
@@ -318,7 +320,7 @@ describe('Authentification (e2e)', () => {
         .supprimer(remplacement.logo_url);
     });
 
-    it("permet à la Présidence et au Décideur de consulter l'historique global", async () => {
+    it("permet l'historique global aux rôles centraux et un historique cloisonné à l'établissement", async () => {
       const historique = donnees<any>(
         (
           await request(ctx.app.getHttpServer())
@@ -342,10 +344,25 @@ describe('Authentification (e2e)', () => {
         .get('/api/historique')
         .set(...enteteBearer(utilisateurDecideur))
         .expect(200);
-      await request(ctx.app.getHttpServer())
-        .get('/api/historique')
-        .set(...enteteBearer(utilisateurEtablissement))
-        .expect(403);
+      const historiqueEtablissement = donnees<any>(
+        (
+          await request(ctx.app.getHttpServer())
+            .get('/api/historique?limit=100')
+            .set(...enteteBearer(utilisateurEtablissement))
+            .expect(200)
+        ).body,
+      );
+      expect(
+        historiqueEtablissement.data.every(
+          (entree: any) =>
+            entree.utilisateur_id === utilisateurEtablissement.id,
+        ),
+      ).toBe(true);
+      expect(
+        historiqueEtablissement.data.some(
+          (entree: any) => entree.entite_type === 'Configuration',
+        ),
+      ).toBe(false);
     });
 
     it('réserve la gestion des utilisateurs à la Présidence', async () => {
