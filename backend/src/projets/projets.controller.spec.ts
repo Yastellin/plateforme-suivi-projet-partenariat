@@ -1,6 +1,8 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { ProjetsController } from './projets.controller';
 import { ProjetsService } from './projets.service';
+import { DemandesModificationProjetService } from './demandes-modification-projet.service';
+import { DecisionDemandeModificationProjet } from './demandes-modification-projet.constants';
 import { Role } from '../common/enums/role.enum';
 
 describe('ProjetsController', () => {
@@ -13,6 +15,10 @@ describe('ProjetsController', () => {
     update: jest.Mock;
     soumettre: jest.Mock;
     archiver: jest.Mock;
+  };
+  let demandesModification: {
+    demander: jest.Mock;
+    traiter: jest.Mock;
   };
 
   const dto = {
@@ -32,7 +38,14 @@ describe('ProjetsController', () => {
       soumettre: jest.fn().mockResolvedValue({ id: 'p1' }),
       archiver: jest.fn().mockResolvedValue({ id: 'p1' }),
     };
-    controller = new ProjetsController(service as unknown as ProjetsService);
+    demandesModification = {
+      demander: jest.fn().mockResolvedValue({ projet_id: 'p1' }),
+      traiter: jest.fn().mockResolvedValue({ projet_id: 'p1' }),
+    };
+    controller = new ProjetsController(
+      service as unknown as ProjetsService,
+      demandesModification as unknown as DemandesModificationProjetService,
+    );
   });
 
   describe('create', () => {
@@ -144,6 +157,57 @@ describe('ProjetsController', () => {
         modification,
         Role.ETABLISSEMENT,
         'etab-1',
+      );
+    });
+  });
+
+  describe('demandes de modification', () => {
+    const utilisateurEtablissement = {
+      id: 'utilisateur-etablissement',
+      email: 'rakoto@univ-toliara.mg',
+      role: Role.ETABLISSEMENT,
+      etablissement_id: 'etab-1',
+    };
+    const utilisateurPresidence = {
+      id: 'utilisateur-presidence',
+      email: 'presidence@example.mg',
+      role: Role.PRESIDENCE,
+    };
+
+    it("transmet le motif et l'établissement lors d'une demande", async () => {
+      await controller.demanderModification(utilisateurEtablissement, 'p1', {
+        motif: 'Le budget doit être actualisé.',
+      });
+
+      expect(demandesModification.demander).toHaveBeenCalledWith(
+        'p1',
+        'Le budget doit être actualisé.',
+        'etab-1',
+        expect.objectContaining({
+          id: 'utilisateur-etablissement',
+          role: Role.ETABLISSEMENT,
+        }),
+      );
+    });
+
+    it('transmet les décisions de la Présidence', async () => {
+      await controller.approuverDemandeModification(
+        utilisateurPresidence,
+        'p1',
+      );
+      await controller.rejeterDemandeModification(utilisateurPresidence, 'p1');
+
+      expect(demandesModification.traiter).toHaveBeenNthCalledWith(
+        1,
+        'p1',
+        DecisionDemandeModificationProjet.APPROUVEE,
+        expect.objectContaining({ role: Role.PRESIDENCE }),
+      );
+      expect(demandesModification.traiter).toHaveBeenNthCalledWith(
+        2,
+        'p1',
+        DecisionDemandeModificationProjet.REJETEE,
+        expect.objectContaining({ role: Role.PRESIDENCE }),
       );
     });
   });

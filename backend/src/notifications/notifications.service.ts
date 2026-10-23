@@ -104,6 +104,37 @@ export class NotificationsService {
     return { count: resultat.affected ?? 0 };
   }
 
+  async existePourReference(
+    referenceType: string,
+    referenceId: string,
+  ): Promise<boolean> {
+    return this.notificationRepo.exists({
+      where: {
+        reference_type: referenceType,
+        reference_id: referenceId,
+      },
+    });
+  }
+
+  async resoudreReference(
+    referenceType: string,
+    referenceId: string,
+    resolution: { reference_type: string; titre: string },
+  ): Promise<{ count: number }> {
+    const resultat = await this.notificationRepo.update(
+      {
+        reference_type: referenceType,
+        reference_id: referenceId,
+      },
+      {
+        reference_type: resolution.reference_type,
+        titre: resolution.titre,
+        est_lue: true,
+      },
+    );
+    return { count: resultat.affected ?? 0 };
+  }
+
   async trouverUtilisateursPresidence(): Promise<string[]> {
     const users = await this.utilisateurRepo.find({
       where: { role: Role.PRESIDENCE, actif: true },

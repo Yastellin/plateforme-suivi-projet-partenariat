@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { permissionsPourRole } from "@/hooks/usePermissions"
 import { peutModifierProjet } from "@/features/projets/lib/permissions-projet"
+import { peutDemanderModificationProjet } from "@/features/projets/lib/demande-modification-projet"
 import type { Projet } from "@/types/api"
 
 describe("matrice des permissions", () => {
@@ -77,6 +78,41 @@ describe("modification d'un projet", () => {
       peutModifierProjet(
         projet({ soumis_le: "2026-10-23T08:00:00.000Z" }),
         "ETABLISSEMENT",
+      ),
+    ).toBe(false)
+  })
+})
+
+describe("demande contrôlée de modification", () => {
+  it("est proposée à l'établissement pour un projet soumis ou publié", () => {
+    expect(
+      peutDemanderModificationProjet(
+        projet({ statut: "EN_ATTENTE" }),
+        "ETABLISSEMENT",
+      ),
+    ).toBe(true)
+    expect(
+      peutDemanderModificationProjet(
+        projet({ statut: "EN_COURS" }),
+        "ETABLISSEMENT",
+      ),
+    ).toBe(true)
+    expect(
+      peutDemanderModificationProjet(
+        projet({ publie_le: "2026-10-23T08:00:00.000Z" }),
+        "ETABLISSEMENT",
+      ),
+    ).toBe(true)
+  })
+
+  it("reste absente sur un brouillon et pour la Présidence", () => {
+    expect(peutDemanderModificationProjet(projet(), "ETABLISSEMENT")).toBe(
+      false,
+    )
+    expect(
+      peutDemanderModificationProjet(
+        projet({ statut: "EN_ATTENTE" }),
+        "PRESIDENCE",
       ),
     ).toBe(false)
   })

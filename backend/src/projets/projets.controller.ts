@@ -28,13 +28,19 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { OwnEtablissementGuard } from '../common/guards/own-etablissement.guard';
 import { SoumissionMasseDto } from '../common/dto/soumission-masse.dto';
+import { DemanderModificationProjetDto } from './dto/demander-modification-projet.dto';
+import { DemandesModificationProjetService } from './demandes-modification-projet.service';
+import { DecisionDemandeModificationProjet } from './demandes-modification-projet.constants';
 
 @ApiTags('Projets')
 @ApiBearerAuth()
 @Controller('projets')
 @UseGuards(OwnEtablissementGuard)
 export class ProjetsController {
-  constructor(private projetsService: ProjetsService) {}
+  constructor(
+    private projetsService: ProjetsService,
+    private demandesModification: DemandesModificationProjetService,
+  ) {}
 
   @Post()
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
@@ -98,6 +104,59 @@ export class ProjetsController {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
     return this.projetsService.update(id, dto, user.role, etablissementId);
+  }
+
+  @Post(':id/demander-modification')
+  @HttpCode(200)
+  @Roles(Role.ETABLISSEMENT)
+  @ApiOperation({
+    summary: "Demander à la Présidence la réouverture d'un projet",
+  })
+  demanderModification(
+    @CurrentUser() user: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: DemanderModificationProjetDto,
+  ) {
+    return this.demandesModification.demander(
+      id,
+      dto.motif,
+      user.etablissement_id,
+      { id: user.id, email: user.email, role: user.role },
+    );
+  }
+
+  @Post(':id/demande-modification/approuver')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({
+    summary: 'Approuver la réouverture demandée par un établissement',
+  })
+  approuverDemandeModification(
+    @CurrentUser() user: any,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.demandesModification.traiter(
+      id,
+      DecisionDemandeModificationProjet.APPROUVEE,
+      { id: user.id, email: user.email, role: user.role },
+    );
+  }
+
+  @Post(':id/demande-modification/rejeter')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({
+    summary: 'Rejeter la réouverture demandée par un établissement',
+  })
+  rejeterDemandeModification(
+    @CurrentUser() user: any,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.demandesModification.traiter(
+      id,
+      DecisionDemandeModificationProjet.REJETEE,
+      { id: user.id, email: user.email, role: user.role },
+    );
   }
 
   @Post(':id/soumettre')

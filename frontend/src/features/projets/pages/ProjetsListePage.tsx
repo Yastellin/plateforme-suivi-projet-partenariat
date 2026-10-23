@@ -21,6 +21,8 @@ import type { StatutProjet } from "@/types/api";
 import { toast } from "sonner";
 import { ActionsSoumissionMasse } from "@/components/shared/ActionsSoumissionMasse";
 import { peutModifierProjet } from "@/features/projets/lib/permissions-projet";
+import { peutDemanderModificationProjet } from "@/features/projets/lib/demande-modification-projet";
+import { BoutonDemanderModificationProjet } from "@/features/projets/components/BoutonDemanderModificationProjet";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -367,6 +369,12 @@ export function ProjetsListePage() {
                                 <Pencil className="h-3 w-3" aria-hidden="true" />
                                 Modifier
                               </Link>
+                            ) : peutDemanderModificationProjet(projet, role) ? (
+                              <BoutonDemanderModificationProjet
+                                projetId={projet.id}
+                                projetNom={projet.nom}
+                                compact
+                              />
                             ) : (
                               <span
                                 className="text-[var(--color-text-secondary)]"
