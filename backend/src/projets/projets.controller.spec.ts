@@ -116,6 +116,38 @@ describe('ProjetsController', () => {
     });
   });
 
+  describe('update', () => {
+    it('transmet le role Présidence sans restriction établissement', async () => {
+      const modification = { nom: 'Projet Présidence actualisé' };
+
+      await controller.update({ role: Role.PRESIDENCE }, 'p1', modification);
+
+      expect(service.update).toHaveBeenCalledWith(
+        'p1',
+        modification,
+        Role.PRESIDENCE,
+        undefined,
+      );
+    });
+
+    it("transmet l'établissement propriétaire et son rôle", async () => {
+      const modification = { nom: 'Projet établissement actualisé' };
+
+      await controller.update(
+        { role: Role.ETABLISSEMENT, etablissement_id: 'etab-1' },
+        'p1',
+        modification,
+      );
+
+      expect(service.update).toHaveBeenCalledWith(
+        'p1',
+        modification,
+        Role.ETABLISSEMENT,
+        'etab-1',
+      );
+    });
+  });
+
   describe('archiver', () => {
     it('delegue l archivage au service', async () => {
       await controller.archiver(

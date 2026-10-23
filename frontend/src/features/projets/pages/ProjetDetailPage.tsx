@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
 import { LIBELLES_STATUT_PROJET } from "@/lib/status-mappings"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
+import { peutModifierProjet } from "@/features/projets/lib/permissions-projet"
 
 export function ProjetDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -96,9 +97,7 @@ export function ProjetDetailPage() {
 
   const info =
     LIBELLES_STATUT_PROJET[projet.statut] ?? LIBELLES_STATUT_PROJET.BROUILLON
-  const peutModifierProjet =
-    permissions.estPresidence ||
-    (permissions.estEtablissement && projet.cree_par_role === "ETABLISSEMENT")
+  const modificationAutorisee = peutModifierProjet(projet, utilisateur?.role)
 
   return (
     <div>
@@ -108,7 +107,7 @@ export function ProjetDetailPage() {
         badge={<StatusBadge libelle={info.libelle} tonalite={info.tonalite} />}
         actions={
           <div className="flex gap-2">
-            {peutModifierProjet && projet.statut === "BROUILLON" ? (
+            {modificationAutorisee ? (
               <Link
                 to={`${cheminBase}/projets/${projet.id}/modifier`}
                 className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"

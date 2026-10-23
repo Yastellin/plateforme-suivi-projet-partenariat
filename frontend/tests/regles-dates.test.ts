@@ -46,6 +46,32 @@ describe('projet : regles de dates', () => {
     },
   })
 
+  it('affiche le message requis lorsque le nom est vide', () => {
+    const resultat = creation.safeParse({
+      ...valeurs(AUJOURDHUI, DANS_UN_AN),
+      nom: '',
+    });
+
+    expect(resultat.success).toBe(false);
+    expect(
+      resultat.error?.issues
+        .filter((issue) => issue.path[0] === 'nom')
+        .map((issue) => issue.message),
+    ).toEqual(['Le nom du projet est requis']);
+  });
+
+  it('distingue un nom trop court d’un nom absent', () => {
+    const resultat = creation.safeParse({
+      ...valeurs(AUJOURDHUI, DANS_UN_AN),
+      nom: 'P',
+    });
+
+    expect(resultat.success).toBe(false);
+    expect(
+      resultat.error?.issues.find((issue) => issue.path[0] === 'nom')?.message,
+    ).toBe('Le nom doit contenir au moins 2 caractères');
+  });
+
   it('refuse une date de debut anterieure a aujourd hui a la creation', () => {
     const resultat = creation.safeParse(valeurs(HIER, DANS_UN_AN));
 

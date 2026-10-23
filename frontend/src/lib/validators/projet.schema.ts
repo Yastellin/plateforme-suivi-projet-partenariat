@@ -22,8 +22,12 @@ const schemaProjetBase = z.object({
   nom: z
     .string()
     .trim()
-    .min(1, "Le nom du projet est requis")
-    .min(2, "Le nom doit contenir au moins 2 caractères"),
+    .refine((valeur) => valeur.length > 0, {
+      message: "Le nom du projet est requis",
+    })
+    .refine((valeur) => valeur.length === 0 || valeur.length >= 2, {
+      message: "Le nom doit contenir au moins 2 caractères",
+    }),
   intitule_officiel: z.string().optional(),
   type: z.string().min(1, "Le type est requis"),
   domaine: z.string().optional(),

@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Panel, PanelBody } from '@/components/shared/Panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
+import { peutModifierProjet } from '@/features/projets/lib/permissions-projet';
 import type { Projet } from '@/types/api';
 
 export function ProjetEditPage() {
@@ -33,6 +34,26 @@ export function ProjetEditPage() {
 
   if (!projet) {
     return <p className="text-[13.5px] text-[var(--color-text-secondary)]">Projet introuvable.</p>;
+  }
+
+  if (!peutModifierProjet(projet, utilisateur?.role)) {
+    return (
+      <div>
+        <PageHeader
+          titre={projet.nom}
+          description="Modification non autorisée"
+        />
+        <Panel>
+          <PanelBody>
+            <p className="text-[13.5px] text-[var(--color-text-secondary)]">
+              {utilisateur?.role === 'PRESIDENCE'
+                ? "La Présidence ne peut modifier que les projets qu'elle a créés. Les données transmises par un établissement restent protégées."
+                : "Un projet d'établissement n'est plus modifiable après sa soumission."}
+            </p>
+          </PanelBody>
+        </Panel>
+      </div>
+    );
   }
 
   return (

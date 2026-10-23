@@ -97,7 +97,7 @@ export class ProjetsController {
   ) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-    return this.projetsService.update(id, dto, etablissementId);
+    return this.projetsService.update(id, dto, user.role, etablissementId);
   }
 
   @Post(':id/soumettre')

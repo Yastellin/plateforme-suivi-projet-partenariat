@@ -237,6 +237,11 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       .send({ nom: 'Modification interdite' })
       .expect(403);
     await request(serveur())
+      .patch(`/api/projets/${projetIndividuel.id}`)
+      .set(...enteteBearer(presidence))
+      .send({ nom: 'Modification Présidence interdite' })
+      .expect(403);
+    await request(serveur())
       .patch(`/api/partenaires/${partenaireIndividuel.id}`)
       .set(...enteteBearer(etablissement))
       .send({ description: 'Modification interdite' })
@@ -364,6 +369,24 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       .set(...enteteBearer(etablissement))
       .send({ nom: 'Modification interdite' })
       .expect(403);
+
+    await request(serveur())
+      .patch(`/api/projets/${projetPresidence.id}`)
+      .set(...enteteBearer(presidence))
+      .send({ statut: 'EN_COURS' })
+      .expect(200);
+    const projetPresidenceModifie = donnees<any>(
+      (
+        await request(serveur())
+          .patch(`/api/projets/${projetPresidence.id}`)
+          .set(...enteteBearer(presidence))
+          .send({ nom: `Projet Présidence modifié ${suffixe()}` })
+          .expect(200)
+      ).body,
+    );
+    expect(projetPresidenceModifie.statut).toBe('EN_COURS');
+    expect(projetPresidenceModifie.nom).toContain('Projet Présidence modifié');
+
     await request(serveur())
       .patch(`/api/partenaires/${partenairePresidence.id}`)
       .set(...enteteBearer(etablissement))

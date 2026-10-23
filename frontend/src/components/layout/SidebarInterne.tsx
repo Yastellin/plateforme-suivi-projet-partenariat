@@ -11,11 +11,12 @@ import {
   Settings,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { AvatarCompte } from '@/components/shared/AvatarCompte';
 import { LogoInstitutionnel } from '@/components/shared/LogoInstitutionnel';
 import { construireNavigation } from '@/components/layout/navigation-interne';
 import { cheminTableauDeBord } from '@/router';
 import { cn } from '@/lib/utils';
-import { nomAffichageUtilisateur, initialesUtilisateur } from '@/lib/utilisateur-utils';
+import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
 import type { RoleUtilisateur } from '@/types/api';
 
 const CLE_REPLI = 'uf_sidebar_reduit';
@@ -25,10 +26,6 @@ const LIBELLES_ROLE: Record<RoleUtilisateur, string> = {
   ETABLISSEMENT: 'Établissement',
   DECIDEUR: 'Décideur',
 };
-
-function initiales(email: string): string {
-  return initialesUtilisateur(email);
-}
 
 function sousLibellePied(role: RoleUtilisateur, etablissementNom: string | null): string {
   if (role === 'ETABLISSEMENT' && etablissementNom) {
@@ -236,9 +233,11 @@ export function SidebarInterne() {
             reduit && 'justify-center',
           )}
         >
-          <div className="grid h-[34px] w-[34px] flex-shrink-0 place-items-center rounded-full bg-[var(--color-brand)] text-[12px] font-bold text-white">
-            {initiales(utilisateur.email)}
-          </div>
+          <AvatarCompte
+            role={utilisateur.role}
+            email={utilisateur.email}
+            className="h-[34px] w-[34px] text-[12px]"
+          />
           {!reduit ? (
             <>
               <div className="min-w-0 flex-1 leading-tight">

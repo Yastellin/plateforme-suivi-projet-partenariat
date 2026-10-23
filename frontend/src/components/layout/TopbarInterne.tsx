@@ -3,7 +3,8 @@
 import { Search, Bell, Plus, Menu } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
-import { nomAffichageUtilisateur, initialesUtilisateur } from '@/lib/utilisateur-utils';
+import { AvatarCompte } from '@/components/shared/AvatarCompte';
+import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
 import { Breadcrumbs } from './Breadcrumbs';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -83,9 +84,10 @@ export function TopbarInterne({ onOuvrirRecherche, onOuvrirNotifications, onOuvr
 
         {utilisateur ? (
           <div className="ml-1 flex h-[58px] cursor-pointer items-center gap-2.5 border-l border-[var(--color-chrome-border)] pl-3.5 hover:bg-[var(--color-chrome-hover)]">
-            <div className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-[var(--color-brand)] text-[11.5px] font-bold text-white">
-              {initialesUtilisateur(utilisateur.email)}
-            </div>
+            <AvatarCompte
+              role={utilisateur.role}
+              email={utilisateur.email}
+            />
             <div className="hidden leading-tight sm:block">
               <strong className="block text-[13px] font-semibold">{nomAffichageUtilisateur(utilisateur.email)}</strong>
               <span className="block text-[11.5px] text-[var(--color-text-secondary)]">
