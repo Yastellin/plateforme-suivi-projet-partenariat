@@ -37,7 +37,7 @@ export function CartePartenaire({ partenaire, className }: { partenaire: Partena
     <article className={`vt-pt ${className ?? ""}`}>
       {partenaire.logo_url ? (
         <span className="vt-pt-ini">
-          <img src={partenaire.logo_url} alt="" loading="lazy" />
+          <img src={partenaire.logo_url} alt="" loading="lazy" decoding="async" />
         </span>
       ) : (
         <span className="vt-pt-ini" style={{ background: teinteDe(partenaire.nom) }} aria-hidden="true">
@@ -139,7 +139,7 @@ export function CartePublication({ publication, className }: { publication: Publ
       <Link to={`/projets-partenariats/publication/${publication.id}`} style={LIEN_PLEINE_CARTE}>
         <div className="vt-pub-cover">
           {publication.photo_url ? (
-            <img src={publication.photo_url} alt="" className="vt-art-img" loading="lazy" />
+            <img src={publication.photo_url} alt="" className="vt-art-img" loading="lazy" decoding="async" />
           ) : (
             <Illustration type="montagne" />
           )}

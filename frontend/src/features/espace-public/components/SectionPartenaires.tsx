@@ -6,6 +6,7 @@ import { Link } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { CartePartenaire } from "@/features/espace-public/components/CartesPubliques"
+import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
 const SEUIL_DEFILEMENT = 4
 
@@ -18,7 +19,7 @@ export function SectionPartenaires() {
   return (
     <section className="vt-section vt-section-alt" id="partenaires" aria-labelledby="titre-partenaires">
       <div className="vt-wrap">
-        <div className="vt-head">
+        <Reveal className="vt-head">
           <div>
             <h2 id="titre-partenaires">Ils travaillent avec nous</h2>
             <p>Entreprises, institutions et universités partenaires. Passez la souris sur la bande pour la mettre en pause.</p>
@@ -26,7 +27,7 @@ export function SectionPartenaires() {
           <Link to="/projets-partenariats?onglet=partenaires" className="vt-btn vt-btn-ghost">
             Voir tous les partenaires
           </Link>
-        </div>
+        </Reveal>
       </div>
 
       {isLoading ? (
@@ -36,11 +37,13 @@ export function SectionPartenaires() {
           ))}
         </div>
       ) : partenaires.length < SEUIL_DEFILEMENT ? (
-        <div className="vt-wrap vt-pt-grid">
+        <RevealGroup className="vt-wrap vt-pt-grid">
           {partenaires.map((p) => (
-            <CartePartenaire key={p.id} partenaire={p} />
+            <RevealItem key={p.id} className="h-full">
+              <CartePartenaire partenaire={p} />
+            </RevealItem>
           ))}
-        </div>
+        </RevealGroup>
       ) : (
         <div className="vt-marq" role="region" aria-roledescription="carrousel" aria-label="Partenaires de l'université">
           <div className="vt-track">

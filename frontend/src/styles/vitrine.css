@@ -1104,3 +1104,78 @@ select.vt-fld-input {
     transition: none;
   }
 }
+
+/* ===== Qualite visuelle et animations (espace public) =====
+   Rendu plus net des images et du texte, survols doux, retour tactile sur les
+   boutons, focus visibles. Tout est desactive si l'utilisateur demande de
+   reduire les animations (voir la regle prefers-reduced-motion en bas). */
+.vitrine {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+.vitrine img {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  image-rendering: auto;
+}
+.vitrine .vt-art,
+.vitrine .vt-pub-cover,
+.vitrine .vt-mono,
+.vitrine .vt-pt-ini {
+  overflow: hidden;
+}
+.vitrine .vt-art-img,
+.vitrine .vt-pub-cover .vt-art-img {
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vitrine .vt-pub:hover .vt-art-img,
+.vitrine .vt-card:hover .vt-art-img {
+  transform: scale(1.04);
+}
+.vitrine .vt-card,
+.vitrine .vt-pub,
+.vitrine .vt-pt {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+.vitrine .vt-card:hover,
+.vitrine .vt-pub:hover {
+  transform: translateY(-4px);
+}
+.vitrine .vt-btn {
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.vitrine .vt-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -10px rgba(27, 77, 52, 0.55);
+}
+.vitrine .vt-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+.vitrine .vt-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+.vitrine .vt-btn svg {
+  transition: transform 0.2s ease;
+}
+.vitrine .vt-btn:hover svg {
+  transform: translateX(3px);
+}
+.vitrine :focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vitrine .vt-art-img,
+  .vitrine .vt-card,
+  .vitrine .vt-pub,
+  .vitrine .vt-pt,
+  .vitrine .vt-btn,
+  .vitrine .vt-btn svg {
+    transition: none !important;
+    transform: none !important;
+  }
+}

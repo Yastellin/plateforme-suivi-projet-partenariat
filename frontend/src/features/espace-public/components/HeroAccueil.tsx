@@ -211,7 +211,7 @@ export function HeroAccueil() {
                   </div>
                   <div className="vt-art">
                     {d.photo ? (
-                      <img src={d.photo} alt="" className="vt-art-img" loading={i === 0 ? "eager" : "lazy"} />
+                      <img src={d.photo} alt="" className="vt-art-img" loading={i === 0 ? "eager" : "lazy"} decoding="async" />
                     ) : (
                       <Illustration type={d.illustration} />
                     )}
