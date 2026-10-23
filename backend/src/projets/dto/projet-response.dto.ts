@@ -72,9 +72,6 @@ export class ProjetResponseDto {
   sites: unknown[];
 
   @ApiProperty()
-  avancement: number;
-
-  @ApiProperty()
   en_retard: boolean;
 
   @ApiProperty()

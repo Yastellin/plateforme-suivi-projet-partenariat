@@ -191,16 +191,6 @@ export function ProjetDetailPage() {
         <div className="flex flex-col gap-4">
           <Panel>
             <PanelHeader
-              titre="Avancement"
-              sousTitre="Progression globale du projet"
-            />
-            <PanelBody>
-              <ProjetInformationsAvancement pourcentage={projet.avancement} />
-            </PanelBody>
-          </Panel>
-
-          <Panel>
-            <PanelHeader
               titre="Documents"
               sousTitre="Fichiers liés au projet"
             />
@@ -267,29 +257,6 @@ export function ProjetDetailPage() {
           enCours={publier.isPending}
         />
       ) : null}
-    </div>
-  )
-}
-
-function ProjetInformationsAvancement({
-  pourcentage,
-}: {
-  pourcentage: number
-}) {
-  return (
-    <div>
-      <div className="mb-1.5 flex items-center justify-between text-[12.5px]">
-        <span className="font-semibold text-[var(--color-text-secondary)]">
-          Avancement
-        </span>
-        <span className="font-mono font-bold">{pourcentage}%</span>
-      </div>
-      <div className="h-[9px] overflow-hidden rounded-[var(--radius-sm)] bg-[var(--color-page-bg)]">
-        <div
-          className="h-full rounded-[var(--radius-sm)] bg-[var(--color-brand)]"
-          style={{ width: `${pourcentage}%` }}
-        />
-      </div>
     </div>
   )
 }

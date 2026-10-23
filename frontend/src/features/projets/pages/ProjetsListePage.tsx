@@ -254,12 +254,6 @@ export function ProjetsListePage() {
                       scope="col"
                       className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
                     >
-                      Avancement
-                    </th>
-                    <th
-                      scope="col"
-                      className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
-                    >
                       Statut
                     </th>
                     {afficherActionsModification ? (
@@ -338,19 +332,6 @@ export function ProjetsListePage() {
                               retard
                             </span>
                           ) : null}
-                        </td>
-                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
-                          <div className="flex items-center gap-2">
-                            <div className="h-[6px] w-20 overflow-hidden rounded-full bg-[var(--color-page-bg)]">
-                              <div
-                                className="h-full rounded-full bg-[var(--color-brand)]"
-                                style={{ width: `${projet.avancement}%` }}
-                              />
-                            </div>
-                            <span className="font-mono text-xs text-[var(--color-text-secondary)]">
-                              {projet.avancement}%
-                            </span>
-                          </div>
                         </td>
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
                           <StatusBadge

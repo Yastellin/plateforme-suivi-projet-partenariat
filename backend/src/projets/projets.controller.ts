@@ -86,12 +86,6 @@ export class ProjetsController {
     return this.projetsService.findOne(id, etablissementId);
   }
 
-  @Get(':id/avancement')
-  @ApiOperation({ summary: "Calculer l'avancement d'un projet" })
-  getAvancement(@Param('id', ParseUUIDPipe) id: string) {
-    return this.projetsService.getAvancement(id);
-  }
-
   @Patch(':id')
   @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
   @ApiOperation({ summary: 'Mettre à jour un projet' })

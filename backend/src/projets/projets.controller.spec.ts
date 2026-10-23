@@ -11,7 +11,6 @@ describe('ProjetsController', () => {
     create: jest.Mock;
     findAll: jest.Mock;
     findOne: jest.Mock;
-    getAvancement: jest.Mock;
     update: jest.Mock;
     soumettre: jest.Mock;
     archiver: jest.Mock;
@@ -33,7 +32,6 @@ describe('ProjetsController', () => {
       create: jest.fn().mockResolvedValue({ id: 'p1' }),
       findAll: jest.fn().mockResolvedValue({ data: [], meta: {} }),
       findOne: jest.fn().mockResolvedValue({ id: 'p1' }),
-      getAvancement: jest.fn().mockResolvedValue({ avancement: 0 }),
       update: jest.fn().mockResolvedValue({ id: 'p1' }),
       soumettre: jest.fn().mockResolvedValue({ id: 'p1' }),
       archiver: jest.fn().mockResolvedValue({ id: 'p1' }),

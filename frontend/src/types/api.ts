@@ -249,7 +249,6 @@ export interface Projet {
   soumis_le: string | null;
   publie_le: string | null;
   cree_par_role: RoleUtilisateur | null;
-  avancement: number;
   en_retard: boolean;
   created_at: string;
   updated_at: string;

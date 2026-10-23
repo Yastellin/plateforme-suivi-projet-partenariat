@@ -1,5 +1,5 @@
 /**
- * Projets : creation, filtrage par etablissement, soumission, avancement, archivage.
+ * Projets : creation, filtrage par etablissement, soumission et archivage.
  *
  * Reprend les verifications de test-projets.ps1 et test-tableau-de-bord.ps1.
  */
@@ -70,6 +70,7 @@ describe('Projets (e2e)', () => {
       expect(projet.nom).toBe('Projet Observation des lémuriens');
       expect(projet.etablissement_id).toBe(etablissementFdsId);
       expect(projet.statut).toBe('BROUILLON');
+      expect(projet).not.toHaveProperty('avancement');
     });
 
     it('accepte un projet transversal de la PRESIDENCE sans établissement', async () => {
@@ -193,29 +194,6 @@ describe('Projets (e2e)', () => {
         .post('/api/projets/00000000-0000-4000-8000-000000000000/soumettre')
         .set(...enteteBearer(etablissementFds))
         .expect(404);
-    });
-  });
-
-  describe('GET /api/projets/:id/avancement', () => {
-    it('calcule l avancement a partir des activites', async () => {
-      const creation = await request(ctx.app.getHttpServer())
-        .post('/api/projets')
-        .set(...enteteBearer(etablissementFds))
-        .send(chargeProjet('Projet avancement'))
-        .expect(201);
-
-      const projetId = donnees<any>(creation.body).id;
-
-      const reponse = await request(ctx.app.getHttpServer())
-        .get(`/api/projets/${projetId}/avancement`)
-        .set(...enteteBearer(etablissementFds))
-        .expect(200);
-
-      const avancement = donnees<any>(reponse.body);
-      expect(avancement.activites_total).toBe(0);
-      expect(avancement.activites_terminees).toBe(0);
-      expect(avancement.avancement).toBe(0);
-      expect(avancement.projet_id).toBe(projetId);
     });
   });
 

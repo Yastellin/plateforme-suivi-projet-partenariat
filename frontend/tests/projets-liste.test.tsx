@@ -44,7 +44,6 @@ vi.mock('@/features/projets/api/useProjets', () => ({
           type: 'Recherche',
           date_debut: '2026-11-10T00:00:00.000Z',
           date_fin_prevue: '2027-06-30T00:00:00.000Z',
-          avancement: 25,
           en_retard: false,
           statut: 'EN_COURS',
           archive: false,
@@ -58,7 +57,6 @@ vi.mock('@/features/projets/api/useProjets', () => ({
           type: 'Développement',
           date_debut: '2026-12-01T00:00:00.000Z',
           date_fin_prevue: '2027-08-15T00:00:00.000Z',
-          avancement: 10,
           en_retard: false,
           statut: 'EN_ATTENTE',
           archive: false,
@@ -101,6 +99,7 @@ describe('liste des projets', () => {
     });
 
     expect(conteneur.textContent).toContain('Date de début');
+    expect(conteneur.textContent).not.toContain('Avancement');
     expect(conteneur.textContent).toContain(
       formaterDate('2026-11-10T00:00:00.000Z'),
     );

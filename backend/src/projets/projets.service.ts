@@ -207,9 +207,7 @@ export class ProjetsService {
       order: { created_at: 'DESC' },
     });
 
-    const enriched = await Promise.all(
-      data.map((projet) => this.enrichir(projet)),
-    );
+    const enriched = data.map((projet) => this.enrichir(projet));
 
     return {
       data: enriched,
@@ -526,25 +524,6 @@ export class ProjetsService {
     return this.enrichir(projet);
   }
 
-  async getAvancement(id: string) {
-    const projet = await this.projetRepo.findOneBy({ id, archive: false });
-    if (!projet) throw new NotFoundException('Projet non trouvé');
-
-    const [total, terminees] = await Promise.all([
-      this.activiteRepo.count({ where: { projet_id: id } }),
-      this.activiteRepo.count({ where: { projet_id: id, terminee: true } }),
-    ]);
-
-    const avancement = total === 0 ? 0 : Math.round((terminees / total) * 100);
-
-    return {
-      projet_id: id,
-      avancement,
-      activites_total: total,
-      activites_terminees: terminees,
-    };
-  }
-
   private async resoudrePorteur(
     manager: EntityManager,
     dto: Pick<CreateProjetDto, 'porteur_id' | 'porteur'>,
@@ -678,15 +657,7 @@ export class ProjetsService {
     await remplacer(ProjetSite, dto.sites_ids, 'site_id');
   }
 
-  private async enrichir(projet: Projet): Promise<ProjetResponseDto> {
-    const [total, terminees] = await Promise.all([
-      this.activiteRepo.count({ where: { projet_id: projet.id } }),
-      this.activiteRepo.count({
-        where: { projet_id: projet.id, terminee: true },
-      }),
-    ]);
-    const avancement = total === 0 ? 0 : Math.round((terminees / total) * 100);
-
+  private enrichir(projet: Projet): ProjetResponseDto {
     const statutsExclusDuRetard = [
       StatutProjet.BROUILLON,
       StatutProjet.TERMINE,
@@ -720,7 +691,6 @@ export class ProjetsService {
       bailleurs: projet.bailleurs ?? [],
       beneficiaires: projet.beneficiaires ?? [],
       sites: projet.sites ?? [],
-      avancement,
       en_retard: enRetard,
       created_at: projet.created_at,
       updated_at: projet.updated_at,
