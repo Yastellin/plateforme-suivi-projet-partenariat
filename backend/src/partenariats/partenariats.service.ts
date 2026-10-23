@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ILike, In, IsNull, Not, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, IsNull, Not, Repository } from 'typeorm';
 import { CreatePartenariatDto } from './dto/create-partenariat.dto';
 import { UpdatePartenariatDto } from './dto/update-partenariat.dto';
 import { QueryPartenariatDto } from './dto/query-partenariat.dto';
@@ -133,7 +133,9 @@ export class PartenariatsService {
     perimetre: PerimetreListeDonnees = {},
   ) {
     const { page = 1, limit = 20, intitule, domaine, statut, archive } = query;
-    const where: any = { archive: archive ?? false };
+    const where: FindOptionsWhere<Partenariat> = {
+      archive: archive ?? false,
+    };
 
     const etablissementFiltre =
       perimetre.etablissementId ?? query.etablissement_id;
@@ -169,7 +171,7 @@ export class PartenariatsService {
   }
 
   async findOne(id: string, etablissementId?: string, includeArchived = false) {
-    const where: any = { id };
+    const where: FindOptionsWhere<Partenariat> = { id };
     if (!includeArchived) {
       where.archive = false;
     }

@@ -5,7 +5,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, ILike, IsNull, Not, Repository } from 'typeorm';
+import {
+  DataSource,
+  FindOptionsWhere,
+  ILike,
+  IsNull,
+  Not,
+  Repository,
+} from 'typeorm';
 import { CreatePartenaireDto } from './dto/create-partenaire.dto';
 import { UpdatePartenaireDto } from './dto/update-partenaire.dto';
 import { QueryPartenaireDto } from './dto/query-partenaire.dto';
@@ -85,7 +92,7 @@ export class PartenairesService {
   ) {
     const { page = 1, limit = 20, nom, type, pays, statut, visibilite } = query;
 
-    const where: any = { archive: false };
+    const where: FindOptionsWhere<Partenaire> = { archive: false };
     const etablissementFiltre =
       perimetre.etablissementId ?? query.etablissement_id;
     if (etablissementFiltre) where.etablissement_id = etablissementFiltre;
@@ -112,7 +119,7 @@ export class PartenairesService {
   }
 
   async findOne(id: string, etablissementId?: string) {
-    const where: any = { id, archive: false };
+    const where: FindOptionsWhere<Partenaire> = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
     const partenaire = await this.partenaireRepo.findOne({

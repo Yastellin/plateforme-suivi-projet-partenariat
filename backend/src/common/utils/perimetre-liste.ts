@@ -6,27 +6,34 @@ export interface PerimetreListeDonnees {
   soumisesUniquement?: boolean;
 }
 
-interface UtilisateurAvecPerimetre {
-  role: Role;
-  etablissement_id?: string | null;
-}
-
 /**
  * Sépare les données propres à la Présidence de celles produites par les
  * établissements. Un établissement conserve son périmètre historique, tandis
  * que sa section côté Présidence n'expose que ses données déjà soumises.
  */
 export function determinerPerimetreListe(
-  utilisateur: UtilisateurAvecPerimetre,
+  utilisateur: unknown,
   etablissementDemande?: string,
 ): PerimetreListeDonnees {
-  if (utilisateur.role === Role.ETABLISSEMENT) {
+  if (!utilisateur || typeof utilisateur !== 'object') {
+    return {};
+  }
+
+  const donnees = utilisateur as {
+    role?: unknown;
+    etablissement_id?: unknown;
+  };
+
+  if (donnees.role === Role.ETABLISSEMENT) {
     return {
-      etablissementId: utilisateur.etablissement_id ?? undefined,
+      etablissementId:
+        typeof donnees.etablissement_id === 'string'
+          ? donnees.etablissement_id
+          : undefined,
     };
   }
 
-  if (utilisateur.role === Role.PRESIDENCE) {
+  if (donnees.role === Role.PRESIDENCE) {
     if (etablissementDemande) {
       return {
         etablissementId: etablissementDemande,

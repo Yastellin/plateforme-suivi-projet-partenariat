@@ -13,6 +13,7 @@ import { ActionHistorique } from '../common/enums/action-historique.enum';
 import {
   DataSource,
   EntityManager,
+  FindOptionsWhere,
   ILike,
   In,
   IsNull,
@@ -189,7 +190,9 @@ export class ProjetsService {
       archive,
     } = query;
 
-    const where: any = { archive: archive !== undefined ? archive : false };
+    const where: FindOptionsWhere<Projet> = {
+      archive: archive !== undefined ? archive : false,
+    };
     const etablissementFiltre =
       perimetre.etablissementId ?? query.etablissement_id;
     if (etablissementFiltre) where.etablissement_id = etablissementFiltre;
@@ -231,7 +234,7 @@ export class ProjetsService {
     id: string,
     etablissementId?: string | null,
   ): Promise<ProjetResponseDto> {
-    const where: any = { id, archive: false };
+    const where: FindOptionsWhere<Projet> = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
     const projet = await this.projetRepo.findOne({
