@@ -69,7 +69,10 @@ export class PartenairesService {
           site_web: dto.site_web?.trim() || null,
           description: dto.description?.trim() || null,
           statut: dto.statut || StatutPartenaire.ACTIF,
-          visibilite: dto.visibilite || Visibilite.PRIVE,
+          visibilite:
+            utilisateur?.role === Role.ETABLISSEMENT
+              ? Visibilite.PRIVE
+              : dto.visibilite || Visibilite.PRIVE,
           est_strategique: dto.est_strategique || false,
           etablissement_id: etablissementId,
           cree_par_utilisateur_id: utilisateur?.id ?? null,
@@ -84,7 +87,15 @@ export class PartenairesService {
       return partenaire.id;
     });
 
-    return this.findOne(partenaireId, etablissementId);
+    const partenaireCree = await this.findOne(partenaireId, etablissementId);
+    await this.historique.enregistrer({
+      action: ActionHistorique.CREATION,
+      entite_type: 'Partenaire',
+      entite_id: partenaireId,
+      entite_nom: partenaireCree.nom,
+      utilisateur: utilisateur ?? null,
+    });
+    return partenaireCree;
   }
 
   async findAll(
@@ -148,7 +159,12 @@ export class PartenairesService {
     return Object.assign(partenaire, valeurs);
   }
 
-  async update(id: string, dto: UpdatePartenaireDto, etablissementId?: string) {
+  async update(
+    id: string,
+    dto: UpdatePartenaireDto,
+    etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ) {
     const partenaire = await this.findOne(id, etablissementId);
     if (etablissementId && partenaire.cree_par_role !== Role.ETABLISSEMENT) {
       throw new ForbiddenException(
@@ -198,14 +214,26 @@ export class PartenairesService {
         champs.description = dto.description ?? null;
       }
       if (dto.statut !== undefined) champs.statut = dto.statut;
-      if (dto.visibilite !== undefined) champs.visibilite = dto.visibilite;
+      // La présence sur la vitrine est décidée par la Présidence. Un compte
+      // établissement ne peut pas rendre son brouillon public avant examen.
+      if (dto.visibilite !== undefined && !etablissementId) {
+        champs.visibilite = dto.visibilite;
+      }
       if (dto.est_strategique !== undefined) {
         champs.est_strategique = dto.est_strategique;
       }
       await manager.getRepository(Partenaire).update(id, champs);
     });
 
-    return this.findOne(id, etablissementId);
+    const partenaireMisAJour = await this.findOne(id, etablissementId);
+    await this.historique.enregistrer({
+      action: ActionHistorique.MODIFICATION,
+      entite_type: 'Partenaire',
+      entite_id: id,
+      entite_nom: partenaireMisAJour.nom,
+      utilisateur: utilisateur ?? null,
+    });
+    return partenaireMisAJour;
   }
 
   async archiver(id: string, utilisateur?: ContexteUtilisateur | null) {
@@ -297,8 +325,10 @@ export class PartenairesService {
         'Seuls les partenaires créés par un établissement peuvent être soumis',
       );
     }
-    if (partenaire.publie_le) {
-      throw new ConflictException('Ce partenaire est déjà publié');
+    if (partenaire.visibilite === Visibilite.PUBLIC) {
+      throw new ConflictException(
+        'Ce partenaire est déjà visible sur la vitrine',
+      );
     }
     if (partenaire.soumis_le) {
       throw new ConflictException(
@@ -368,18 +398,20 @@ export class PartenairesService {
     return { total: ids.length, reussis, echecs };
   }
 
-  /** La presidence valide et publie un partenaire soumis. */
+  /** La Présidence rend visible un partenaire soumis sur la vitrine. */
   async publier(id: string, utilisateur?: ContexteUtilisateur | null) {
     const partenaire = await this.findOne(id);
 
     const estDonneePresidence = partenaire.cree_par_role === Role.PRESIDENCE;
     if (!partenaire.soumis_le && !estDonneePresidence) {
       throw new ConflictException(
-        'Seul un partenaire soumis ou créé par la Présidence peut être publié',
+        'Seul un partenaire soumis ou créé par la Présidence peut être rendu visible',
       );
     }
-    if (partenaire.publie_le) {
-      throw new ConflictException('Ce partenaire est déjà publié');
+    if (partenaire.visibilite === Visibilite.PUBLIC) {
+      throw new ConflictException(
+        'Ce partenaire est déjà visible sur la vitrine',
+      );
     }
 
     await this.partenaireRepo.update(id, {
@@ -390,8 +422,8 @@ export class PartenairesService {
     this.eventEmitter.emit('partenaire.publie', {
       type: TypeNotification.PARTENAIRE_PUBLIE,
       priorite: PrioriteNotification.MOYENNE,
-      titre: `Partenaire publie : ${partenaire.nom}`,
-      message: `Le partenaire "${partenaire.nom}" a ete publie par la presidence.`,
+      titre: `Partenaire visible sur la vitrine : ${partenaire.nom}`,
+      message: `Le partenaire « ${partenaire.nom} » a été rendu visible sur la vitrine par la Présidence.`,
       reference_type: 'Partenaire',
       reference_id: id,
       etablissement_id: partenaire.etablissement_id,

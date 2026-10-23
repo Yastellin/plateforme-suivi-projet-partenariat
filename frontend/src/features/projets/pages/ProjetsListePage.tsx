@@ -23,6 +23,7 @@ import { ActionsSoumissionMasse } from "@/components/shared/ActionsSoumissionMas
 import { peutModifierProjet } from "@/features/projets/lib/permissions-projet";
 import { peutDemanderModificationProjet } from "@/features/projets/lib/demande-modification-projet";
 import { BoutonDemanderModificationProjet } from "@/features/projets/components/BoutonDemanderModificationProjet";
+import { filtrerListeGenerale } from "@/lib/perimetre-liste";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -71,10 +72,12 @@ export function ProjetsListePage() {
         : "/decideur";
   const afficherActionsModification = permissions.peutModifier;
 
-  const projets = (data?.data ?? []).filter((projet) => {
-    if (filtre === "tous") return true;
-    return projet.statut === filtre;
-  });
+  const projets = filtrerListeGenerale(data?.data ?? [], role).filter(
+    (projet) => {
+      if (filtre === "tous") return true;
+      return projet.statut === filtre;
+    },
+  );
 
   const projetsSoumissibles = projets.filter(
     (projet) =>
@@ -142,7 +145,11 @@ export function ProjetsListePage() {
     <div>
       <PageHeader
         titre="Projets"
-        description="Tous les projets de la plateforme."
+        description={
+          role === "PRESIDENCE"
+            ? "Projets créés et gérés par la Présidence. Les projets des établissements restent dans leurs fiches dédiées."
+            : "Projets accessibles dans votre périmètre."
+        }
         actions={
           <>
             {permissions.peutCreer ? (

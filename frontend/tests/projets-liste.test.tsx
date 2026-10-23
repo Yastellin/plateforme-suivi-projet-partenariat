@@ -87,7 +87,7 @@ afterEach(async () => {
 });
 
 describe('liste des projets', () => {
-  it('affiche la date de début et ne propose à la Présidence que ses propres projets en modification', async () => {
+  it("affiche uniquement les projets propres à la Présidence dans sa liste générale", async () => {
     await act(async () => {
       racine.render(
         createElement(
@@ -108,6 +108,9 @@ describe('liste des projets', () => {
         'a[aria-label="Modifier Cartographie numérique de l’Itasy"]',
       ),
     ).not.toBeNull();
+    expect(conteneur.textContent).not.toContain(
+      'Valorisation agricole à Toliara',
+    );
     expect(
       conteneur.querySelector(
         'a[aria-label="Modifier Valorisation agricole à Toliara"]',

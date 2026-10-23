@@ -187,7 +187,15 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
           <TeleversementPhotos publicationId={publication.id} />
           {publication.photos && publication.photos.length > 0 && (
             <div className="mt-3">
-              <GaleriePhotosReordonnable photos={publication.photos} />
+              <GaleriePhotosReordonnable
+                key={publication.photos
+                  .map(
+                    (photo) =>
+                      `${photo.id}:${photo.ordre}:${photo.legende ?? ""}`,
+                  )
+                  .join("|")}
+                photos={publication.photos}
+              />
             </div>
           )}
         </div>

@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
+import { UpdatePhotoDto } from './dto/update-photo.dto';
 import { PhotoResponseDto } from './dto/photo-response.dto';
 import { STORAGE_PORT } from '../../storage/storage.port';
 import type { StoragePort } from '../../storage/storage.port';
@@ -48,11 +49,12 @@ export class PhotosService {
       `publications/${publicationId}`,
     );
 
+    const ordre = dto.ordre ?? (await this.prochainOrdre(publicationId));
     const photo = await this.photoRepo.save(
       this.photoRepo.create({
         url_fichier: urlFichier,
-        legende: dto.legende ?? null,
-        ordre: dto.ordre ?? 0,
+        legende: dto.legende?.trim() || null,
+        ordre,
         publication_id: publicationId,
       }),
     );
@@ -75,6 +77,23 @@ export class PhotosService {
     return photos.map((photo) => this.mapToResponse(photo));
   }
 
+  async update(id: string, dto: UpdatePhotoDto): Promise<PhotoResponseDto> {
+    const photo = await this.photoRepo.findOne({ where: { id } });
+    if (!photo) throw new NotFoundException('Photo non trouvée');
+
+    const changements: Partial<PhotoPublication> = {};
+    if (dto.legende !== undefined) {
+      changements.legende = dto.legende?.trim() || null;
+    }
+    if (dto.ordre !== undefined) changements.ordre = dto.ordre;
+
+    if (Object.keys(changements).length > 0) {
+      await this.photoRepo.update(id, changements);
+    }
+    const miseAJour = await this.photoRepo.findOneByOrFail({ id });
+    return this.mapToResponse(miseAJour);
+  }
+
   async remove(id: string): Promise<{ message: string }> {
     const photo = await this.photoRepo.findOne({ where: { id } });
     if (!photo) throw new NotFoundException('Photo non trouvee');
@@ -83,6 +102,15 @@ export class PhotosService {
     await this.photoRepo.delete(id);
 
     return { message: 'Photo supprimee' };
+  }
+
+  private async prochainOrdre(publicationId: string): Promise<number> {
+    const resultat = await this.photoRepo
+      .createQueryBuilder('photo')
+      .select('COALESCE(MAX(photo.ordre), -1)', 'maximum')
+      .where('photo.publication_id = :publicationId', { publicationId })
+      .getRawOne<{ maximum: string | number }>();
+    return Number(resultat?.maximum ?? -1) + 1;
   }
 
   private mapToResponse(photo: PhotoPublication): PhotoResponseDto {

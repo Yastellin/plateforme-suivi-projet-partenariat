@@ -102,6 +102,7 @@ export function PartenaireCreatePage() {
             <PartenaireForm
               nomInitial={nomRecherche}
               etablissements={estPresidence ? etablissements : undefined}
+              peutGererVisibilite={estPresidence}
               onSoumettre={onSoumettre}
               enCours={isPending}
             />

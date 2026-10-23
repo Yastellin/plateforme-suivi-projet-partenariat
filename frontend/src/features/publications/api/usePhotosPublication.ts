@@ -29,6 +29,25 @@ export function useAjouterPhoto(publicationId: string) {
   })
 }
 
+export interface MiseAJourPhoto {
+  legende?: string | null
+  ordre?: number
+}
+
+export function useModifierPhoto() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ photoId, valeurs }: { photoId: string; valeurs: MiseAJourPhoto }) =>
+      (await apiClient.patch<PhotoPublication>(`/photos/${photoId}`, valeurs)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["publications"] })
+      queryClient.invalidateQueries({ queryKey: ["public-publication"] })
+      queryClient.invalidateQueries({ queryKey: ["public-publications"] })
+    },
+  })
+}
+
 export function useSupprimerPhoto() {
   const queryClient = useQueryClient()
 
@@ -38,6 +57,8 @@ export function useSupprimerPhoto() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["publications"] })
+      queryClient.invalidateQueries({ queryKey: ["public-publication"] })
+      queryClient.invalidateQueries({ queryKey: ["public-publications"] })
     },
   })
 }

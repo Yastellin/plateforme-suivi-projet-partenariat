@@ -176,7 +176,15 @@ export class ProjetsService {
       return savedProjet.id;
     });
 
-    return this.findOne(projetId, etablissementId);
+    const projetCree = await this.findOne(projetId, etablissementId);
+    await this.historique.enregistrer({
+      action: ActionHistorique.CREATION,
+      entite_type: 'Projet',
+      entite_id: projetId,
+      entite_nom: projetCree.nom,
+      utilisateur: utilisateur ?? null,
+    });
+    return projetCree;
   }
 
   async findAll(query: QueryProjetDto, perimetre: PerimetreListeDonnees = {}) {
@@ -266,6 +274,7 @@ export class ProjetsService {
     dto: UpdateProjetDto,
     role: Role,
     etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
   ) {
     if (role === Role.ETABLISSEMENT && !etablissementId) {
       throw new ForbiddenException(
@@ -373,10 +382,18 @@ export class ProjetsService {
       await this.remplacerReferentiels(manager, id, dto);
     });
 
-    return this.findOne(
+    const projetMisAJour = await this.findOne(
       id,
       role === Role.ETABLISSEMENT ? etablissementId : undefined,
     );
+    await this.historique.enregistrer({
+      action: ActionHistorique.MODIFICATION,
+      entite_type: 'Projet',
+      entite_id: id,
+      entite_nom: projetMisAJour.nom,
+      utilisateur: utilisateur ?? null,
+    });
+    return projetMisAJour;
   }
 
   async soumettre(

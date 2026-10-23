@@ -8,6 +8,7 @@ import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
 import { Breadcrumbs } from './Breadcrumbs';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
+import { useEtablissement } from '@/features/etablissements/api/useEtablissement';
 
 interface TopbarInterneProps {
   onOuvrirRecherche: () => void;
@@ -24,6 +25,11 @@ const LIBELLES_ROLE: Record<string, string> = {
 export function TopbarInterne({ onOuvrirRecherche, onOuvrirNotifications, onOuvrirMenu }: TopbarInterneProps) {
   const { utilisateur } = useAuth();
   const permissions = usePermissions();
+  const { data: etablissementCompte } = useEtablissement(
+    utilisateur?.role === 'ETABLISSEMENT'
+      ? utilisateur.etablissement_id ?? undefined
+      : undefined,
+  );
 
   const peutAfficherCloche = permissions.estPresidence || permissions.estEtablissement;
   // La route /presidence/projets/nouveau n'existe pas encore : bouton masqué.
@@ -89,6 +95,10 @@ export function TopbarInterne({ onOuvrirRecherche, onOuvrirNotifications, onOuvr
             <AvatarCompte
               role={utilisateur.role}
               email={utilisateur.email}
+              logoEtablissement={etablissementCompte?.logo_url}
+              nomEtablissement={
+                etablissementCompte?.nom ?? utilisateur.etablissement_nom
+              }
             />
             <div className="hidden leading-tight sm:block">
               <strong className="block text-[13px] font-semibold">{nomAffichageUtilisateur(utilisateur.email)}</strong>

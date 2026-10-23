@@ -97,7 +97,11 @@ export class ProjetsController {
   ) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-    return this.projetsService.update(id, dto, user.role, etablissementId);
+    return this.projetsService.update(id, dto, user.role, etablissementId, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   @Post(':id/demander-modification')
@@ -156,7 +160,9 @@ export class ProjetsController {
   @Post(':id/soumettre')
   @HttpCode(200)
   @Roles(Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un projet à la Présidence (établissement)' })
+  @ApiOperation({
+    summary: 'Soumettre un projet à la Présidence (établissement)',
+  })
   @ApiResponse({ status: 200, type: ProjetResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =
@@ -172,13 +178,11 @@ export class ProjetsController {
   @HttpCode(200)
   @Roles(Role.ETABLISSEMENT)
   @ApiOperation({
-    summary: 'Soumettre plusieurs projets à la Présidence en une fois (établissement)',
+    summary:
+      'Soumettre plusieurs projets à la Présidence en une fois (établissement)',
   })
   @ApiResponse({ status: 200 })
-  soumettreEnMasse(
-    @CurrentUser() user: any,
-    @Body() dto: SoumissionMasseDto,
-  ) {
+  soumettreEnMasse(@CurrentUser() user: any, @Body() dto: SoumissionMasseDto) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
     return this.projetsService.soumettreEnMasse(

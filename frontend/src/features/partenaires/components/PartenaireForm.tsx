@@ -14,11 +14,19 @@ interface PartenaireFormProps {
   partenaire?: Partenaire;
   nomInitial?: string;
   etablissements?: Etablissement[];
+  peutGererVisibilite?: boolean;
   onSoumettre: (valeurs: PartenaireFormValues) => void;
   enCours: boolean;
 }
 
-export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoumettre, enCours }: PartenaireFormProps) {
+export function PartenaireForm({
+  partenaire,
+  nomInitial,
+  etablissements,
+  peutGererVisibilite = false,
+  onSoumettre,
+  enCours,
+}: PartenaireFormProps) {
   const afficherSelectionEtablissement = etablissements !== undefined;
 
   const {
@@ -232,19 +240,25 @@ export function PartenaireForm({ partenaire, nomInitial, etablissements, onSoume
         />
       </div>
 
-      <div className="mb-5 flex items-center justify-between rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 py-3">
-        <div>
-          <span className="block text-[12.5px] font-semibold">Visibilité publique</span>
-          <span className="block text-xs text-[var(--color-text-secondary)]">Le partenaire apparaît sur l'espace public</span>
+      {peutGererVisibilite ? (
+        <div className="mb-5 flex items-center justify-between rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 py-3">
+          <div>
+            <span className="block text-[12.5px] font-semibold">
+              Présence sur la vitrine
+            </span>
+            <span className="block text-xs text-[var(--color-text-secondary)]">
+              Un partenaire public et actif apparaît sur la vitrine
+            </span>
+          </div>
+          <select
+            className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-[12.5px]"
+            {...register('visibilite')}
+          >
+            <option value="PRIVE">Privée</option>
+            <option value="PUBLIC">Visible</option>
+          </select>
         </div>
-        <select
-          className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-[12.5px]"
-          {...register('visibilite')}
-        >
-          <option value="PRIVE">Privée</option>
-          <option value="PUBLIC">Publique</option>
-        </select>
-      </div>
+      ) : null}
 
       <label className="mb-6 flex items-center gap-2.5 text-[12.5px] font-medium">
         <input type="checkbox" className="h-[15px] w-[15px] accent-[var(--color-brand)]" {...register('est_strategique')} />

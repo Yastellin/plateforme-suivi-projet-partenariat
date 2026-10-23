@@ -31,7 +31,7 @@ export function PartenaireDetailPage() {
   const permissions = usePermissions();
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
   const [actionWorkflow, setActionWorkflow] = useState<
-    "soumettre" | "publier" | null
+    "soumettre" | "rendre-visible" | null
   >(null);
 
   const { data: partenaire, isLoading } = usePartenaire(id ?? "");
@@ -41,7 +41,11 @@ export function PartenaireDetailPage() {
   const { mutate: archiver, isPending: enCoursArchivage } =
     useArchiverPartenaire();
   const soumission = useActionWorkflow("partenaires", id ?? "", "soumettre");
-  const publication = useActionWorkflow("partenaires", id ?? "", "publier");
+  const miseEnVitrine = useActionWorkflow(
+    "partenaires",
+    id ?? "",
+    "publier",
+  );
 
   const role = utilisateur?.role;
   const cheminBase =
@@ -65,11 +69,12 @@ export function PartenaireDetailPage() {
   }
 
   function confirmerWorkflow() {
-    const commande = actionWorkflow === "soumettre" ? soumission : publication;
+    const commande =
+      actionWorkflow === "soumettre" ? soumission : miseEnVitrine;
     const libelle =
       actionWorkflow === "soumettre"
         ? "Partenaire soumis à la Présidence"
-        : "Partenaire publié";
+        : "Partenaire visible sur la vitrine";
     commande.mutate(undefined, {
       onSuccess: () => {
         toast.success(libelle);
@@ -114,6 +119,8 @@ export function PartenaireDetailPage() {
     (permissions.estEtablissement &&
       partenaire.cree_par_role === "ETABLISSEMENT" &&
       !partenaire.soumis_le);
+  const presenceVitrine = partenaire.visibilite === "PUBLIC";
+  const visibleSurVitrine = presenceVitrine && partenaire.statut === "ACTIF";
 
   return (
     <div>
@@ -131,7 +138,7 @@ export function PartenaireDetailPage() {
             {permissions.peutSoumettre &&
             partenaire.cree_par_role === "ETABLISSEMENT" &&
             !partenaire.soumis_le &&
-            !partenaire.publie_le ? (
+            !presenceVitrine ? (
               <button
                 type="button"
                 onClick={() => setActionWorkflow("soumettre")}
@@ -143,18 +150,21 @@ export function PartenaireDetailPage() {
             {permissions.estPresidence &&
             (partenaire.soumis_le ||
               partenaire.cree_par_role === "PRESIDENCE") &&
-            !partenaire.publie_le ? (
+            !presenceVitrine ? (
               <button
                 type="button"
-                onClick={() => setActionWorkflow("publier")}
+                onClick={() => setActionWorkflow("rendre-visible")}
                 className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-brand)]"
               >
-                <Globe className="h-3.5 w-3.5" /> Publier
+                <Globe className="h-3.5 w-3.5" /> Rendre visible
               </button>
             ) : null}
-            {permissions.estPresidence && partenaire.publie_le ? (
+            {permissions.estPresidence && presenceVitrine ? (
               <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-xs font-semibold text-[var(--color-text-secondary)]">
-                <Check className="h-3.5 w-3.5" /> Publié
+                <Check className="h-3.5 w-3.5" />
+                {visibleSurVitrine
+                  ? "Visible sur la vitrine"
+                  : "Visibilité suspendue"}
               </span>
             ) : null}
             {permissions.peutArchiver ? (
@@ -171,14 +181,19 @@ export function PartenaireDetailPage() {
       />
 
       <p className="mb-4 text-xs font-medium text-[var(--color-text-secondary)]">
-        État :{" "}
-        {partenaire.publie_le
-          ? "publié"
-          : partenaire.soumis_le
-            ? "soumis à la Présidence"
-            : partenaire.cree_par_role === "PRESIDENCE"
-              ? "donnée de la Présidence"
-              : "non soumis"}
+        Transmission :{" "}
+        {partenaire.soumis_le
+          ? "soumis à la Présidence"
+          : partenaire.cree_par_role === "PRESIDENCE"
+            ? "donnée de la Présidence"
+            : "non soumis"}
+        {" · "}
+        Présence sur la vitrine :{" "}
+        {visibleSurVitrine
+          ? "visible"
+          : presenceVitrine
+            ? "suspendue car le partenaire n’est pas actif"
+            : "privée"}
       </p>
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -188,6 +203,7 @@ export function PartenaireDetailPage() {
             {peutModifierPartenaire ? (
               <PartenaireForm
                 partenaire={partenaire}
+                peutGererVisibilite={permissions.estPresidence}
                 onSoumettre={onSoumettre}
                 enCours={enCoursMiseAJour}
               />
@@ -235,20 +251,20 @@ export function PartenaireDetailPage() {
           titre={
             actionWorkflow === "soumettre"
               ? "Soumettre ce partenaire ?"
-              : "Publier ce partenaire ?"
+              : "Rendre ce partenaire visible ?"
           }
           description={
             actionWorkflow === "soumettre"
               ? "Le partenaire sera transmis à la Présidence et ne sera plus proposé à la soumission."
-              : "Le partenaire sera rendu visible dans l'espace public."
+              : "Le partenaire actif apparaîtra sur la vitrine publique. Aucun contenu éditorial ne lui sera associé."
           }
           libelleAction={
-            actionWorkflow === "soumettre" ? "Soumettre" : "Publier"
+            actionWorkflow === "soumettre" ? "Soumettre" : "Rendre visible"
           }
           enCours={
             actionWorkflow === "soumettre"
               ? soumission.isPending
-              : publication.isPending
+              : miseEnVitrine.isPending
           }
         />
       ) : null}

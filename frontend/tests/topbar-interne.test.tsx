@@ -5,22 +5,32 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TopbarInterne } from '@/components/layout/TopbarInterne';
 
+const etat = vi.hoisted(() => ({
+  utilisateur: {
+    id: 'rakoto',
+    email: 'rakoto@presidence.mg',
+    role: 'PRESIDENCE',
+    etablissement_id: null as string | null,
+    etablissement_nom: null as string | null,
+  },
+  etablissement: undefined as
+    | { id: string; nom: string; logo_url: string | null }
+    | undefined,
+}));
+
 vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({
-    utilisateur: {
-      id: 'rakoto',
-      email: 'rakoto@presidence.mg',
-      role: 'PRESIDENCE',
-      etablissement_nom: null,
-    },
-  }),
+  useAuth: () => ({ utilisateur: etat.utilisateur }),
 }));
 
 vi.mock('@/hooks/usePermissions', () => ({
   usePermissions: () => ({
-    estPresidence: true,
-    estEtablissement: false,
+    estPresidence: etat.utilisateur.role === 'PRESIDENCE',
+    estEtablissement: etat.utilisateur.role === 'ETABLISSEMENT',
   }),
+}));
+
+vi.mock('@/features/etablissements/api/useEtablissement', () => ({
+  useEtablissement: () => ({ data: etat.etablissement }),
 }));
 
 vi.mock('@/features/notifications/api/useNombreNotificationsNonLues', () => ({
@@ -48,6 +58,14 @@ let conteneur: HTMLDivElement;
 let racine: Root;
 
 beforeEach(() => {
+  Object.assign(etat.utilisateur, {
+    id: 'rakoto',
+    email: 'rakoto@presidence.mg',
+    role: 'PRESIDENCE',
+    etablissement_id: null,
+    etablissement_nom: null,
+  });
+  etat.etablissement = undefined;
   conteneur = document.createElement('div');
   document.body.appendChild(conteneur);
   racine = createRoot(conteneur);
@@ -81,5 +99,34 @@ describe('barre supérieure interne', () => {
     expect(
       boutonNotifications?.querySelector('[aria-label="27 notifications non lues"]'),
     ).not.toBeNull();
+  });
+
+  it("affiche le logo propre de l'établissement connecté", async () => {
+    Object.assign(etat.utilisateur, {
+      id: 'compte-ens',
+      email: 'direction@ens-fianarantsoa.mg',
+      role: 'ETABLISSEMENT',
+      etablissement_id: 'ens',
+      etablissement_nom: 'École Normale Supérieure',
+    });
+    etat.etablissement = {
+      id: 'ens',
+      nom: 'École Normale Supérieure',
+      logo_url: '/uploads/logos/etablissements/ens/logo-ens.webp',
+    };
+
+    await act(async () => {
+      racine.render(
+        createElement(TopbarInterne, {
+          onOuvrirRecherche: vi.fn(),
+          onOuvrirNotifications: vi.fn(),
+        }),
+      );
+    });
+
+    expect(conteneur.querySelector('img')?.getAttribute('src')).toBe(
+      '/api/uploads/logos/etablissements/ens/logo-ens.webp',
+    );
+    expect(conteneur.textContent).toContain('direction');
   });
 });

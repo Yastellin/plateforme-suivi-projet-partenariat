@@ -39,6 +39,7 @@ describe('Espace public (e2e)', () => {
   let publicationId: string;
   let brouillonPublicationId: string;
   let partenairePublic: any;
+  let partenaireVisibleSansDate: any;
   let partenairePrive: any;
   let partenaireSuspendu: any;
 
@@ -167,6 +168,22 @@ describe('Espace public (e2e)', () => {
     partenairePublic = await creerPartenaire('Partenaire Public Actif');
     partenairePrive = await creerPartenaire('Partenaire Privé');
     partenaireSuspendu = await creerPartenaire('Partenaire Suspendu');
+    partenaireVisibleSansDate = donnees<any>(
+      (
+        await request(url())
+          .post('/api/partenaires')
+          .set(...enteteBearer(presidence))
+          .send({
+            nom: 'Fondation Akany Madagascar',
+            type: 'Fondation',
+            pays: 'Madagascar',
+            etablissement_id: etablissementFdsId,
+            visibilite: 'PUBLIC',
+            statut: 'ACTIF',
+          })
+          .expect(201)
+      ).body,
+    );
 
     for (const partenaire of [partenairePublic, partenaireSuspendu]) {
       await request(url())
@@ -244,7 +261,7 @@ describe('Espace public (e2e)', () => {
     // Les compteurs doivent egaler les decomptes SQL : le jeu de demonstration
     // contient aussi des partenaires et des etablissements.
     const [{ n: partenaires }] = await ctx.dataSource.query(
-      `SELECT COUNT(*)::int AS n FROM "Partenaire" WHERE visibilite = 'PUBLIC' AND statut = 'ACTIF' AND archive = false AND publie_le IS NOT NULL`,
+      `SELECT COUNT(*)::int AS n FROM "Partenaire" WHERE visibilite = 'PUBLIC' AND statut = 'ACTIF' AND archive = false`,
     );
     const [{ n: etablissements }] = await ctx.dataSource.query(
       `SELECT COUNT(*)::int AS n FROM "Etablissement"`,
@@ -266,6 +283,7 @@ describe('Espace public (e2e)', () => {
     );
     const aLaUne = accueil.partenaires_a_la_une.map((p: any) => p.id);
     expect(aLaUne).toContain(partenairePublic.id);
+    expect(aLaUne).toContain(partenaireVisibleSansDate.id);
     expect(aLaUne).not.toContain(partenairePrive.id);
     expect(aLaUne).not.toContain(partenaireSuspendu.id);
   });
@@ -327,13 +345,14 @@ describe('Espace public (e2e)', () => {
     const liste = donnees<any>(reponse.body);
     const ids = liste.data.map((p: any) => p.id);
     expect(ids).toContain(partenairePublic.id);
+    expect(ids).toContain(partenaireVisibleSansDate.id);
     expect(ids).not.toContain(partenairePrive.id);
     expect(ids).not.toContain(partenaireSuspendu.id);
     expect(
       liste.data.find((p: any) => p.id === partenairePublic.id).description,
     ).toBe('Partenaire historique de recherche.');
     const [{ n }] = await ctx.dataSource.query(
-      `SELECT COUNT(*)::int AS n FROM "Partenaire" WHERE visibilite = 'PUBLIC' AND statut = 'ACTIF' AND archive = false AND publie_le IS NOT NULL`,
+      `SELECT COUNT(*)::int AS n FROM "Partenaire" WHERE visibilite = 'PUBLIC' AND statut = 'ACTIF' AND archive = false`,
     );
     expect(liste.meta.total).toBe(n);
   });

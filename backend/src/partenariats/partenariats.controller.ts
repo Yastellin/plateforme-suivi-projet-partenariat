@@ -102,13 +102,21 @@ export class PartenariatsController {
   ) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-    return this.partenariatsService.update(id, dto, etablissementId, user.role);
+    return this.partenariatsService.update(
+      id,
+      dto,
+      etablissementId,
+      user.role,
+      { id: user.id, email: user.email, role: user.role },
+    );
   }
 
   @Post(':id/soumettre')
   @HttpCode(200)
   @Roles(Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence (établissement)' })
+  @ApiOperation({
+    summary: 'Soumettre un partenariat à la Présidence (établissement)',
+  })
   @ApiResponse({ status: 200, type: PartenariatResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =
@@ -124,13 +132,11 @@ export class PartenariatsController {
   @HttpCode(200)
   @Roles(Role.ETABLISSEMENT)
   @ApiOperation({
-    summary: 'Soumettre plusieurs partenariats à la Présidence en une fois (établissement)',
+    summary:
+      'Soumettre plusieurs partenariats à la Présidence en une fois (établissement)',
   })
   @ApiResponse({ status: 200 })
-  soumettreEnMasse(
-    @CurrentUser() user: any,
-    @Body() dto: SoumissionMasseDto,
-  ) {
+  soumettreEnMasse(@CurrentUser() user: any, @Body() dto: SoumissionMasseDto) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
     return this.partenariatsService.soumettreEnMasse(
@@ -144,7 +150,7 @@ export class PartenariatsController {
   @HttpCode(200)
   @Roles(Role.PRESIDENCE)
   @ApiOperation({
-    summary: 'Publier un partenariat soumis (Presidence uniquement)',
+    summary: 'Ajouter un partenariat à la vitrine (Présidence uniquement)',
   })
   @ApiResponse({ status: 200, type: PartenariatResponseDto })
   publier(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {

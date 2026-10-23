@@ -31,8 +31,7 @@ export function PartenariatDetailPage() {
   const navigate = useNavigate();
   const { utilisateur } = useAuth();
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
-  const [dialoguePublicationOuvert, setDialoguePublicationOuvert] =
-    useState(false);
+  const [dialogueVitrineOuvert, setDialogueVitrineOuvert] = useState(false);
 
   const { data: partenariat, isLoading } = usePartenariat(id ?? "");
   useTitreBreadcrumb(partenariat?.intitule);
@@ -40,7 +39,11 @@ export function PartenariatDetailPage() {
     useUpdatePartenariat();
   const { mutate: archiver, isPending: enCoursArchivage } =
     useArchiverPartenariat();
-  const publication = useActionWorkflow("partenariats", id ?? "", "publier");
+  const miseEnVitrine = useActionWorkflow(
+    "partenariats",
+    id ?? "",
+    "publier",
+  );
 
   const role = utilisateur?.role;
   const estPresidence = role === "PRESIDENCE";
@@ -129,15 +132,15 @@ export function PartenariatDetailPage() {
             !partenariat.publie_le ? (
               <button
                 type="button"
-                onClick={() => setDialoguePublicationOuvert(true)}
+                onClick={() => setDialogueVitrineOuvert(true)}
                 className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-brand)]"
               >
-                <Globe className="h-3.5 w-3.5" /> Publier
+                <Globe className="h-3.5 w-3.5" /> Ajouter à la vitrine
               </button>
             ) : null}
             {estPresidence && partenariat.publie_le ? (
               <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-xs font-semibold text-[var(--color-text-secondary)]">
-                <Check className="h-3.5 w-3.5" /> Publié
+                <Check className="h-3.5 w-3.5" /> Présent sur la vitrine
               </span>
             ) : null}
             {estPresidence ? (
@@ -155,14 +158,15 @@ export function PartenariatDetailPage() {
       />
 
       <p className="mb-3 text-xs font-medium text-[var(--color-text-secondary)]">
-        État :{" "}
-        {partenariat.publie_le
-          ? "publié"
-          : partenariat.soumis_le
-            ? "soumis à la Présidence"
-            : partenariat.cree_par_role === "PRESIDENCE"
-              ? "donnée de la Présidence"
-              : "non soumis"}
+        Transmission :{" "}
+        {partenariat.soumis_le
+          ? "soumis à la Présidence"
+          : partenariat.cree_par_role === "PRESIDENCE"
+            ? "donnée de la Présidence"
+            : "non soumis"}
+        {" · "}
+        Présence sur la vitrine :{" "}
+        {partenariat.publie_le ? "visible" : "non visible"}
       </p>
 
       {soumisParEtablissement ? (
@@ -207,23 +211,23 @@ export function PartenariatDetailPage() {
         </Panel>
       ) : null}
 
-      {dialoguePublicationOuvert ? (
+      {dialogueVitrineOuvert ? (
         <ConfirmDialog
           ouvert
-          onFermer={() => setDialoguePublicationOuvert(false)}
+          onFermer={() => setDialogueVitrineOuvert(false)}
           onConfirmer={() =>
-            publication.mutate(undefined, {
+            miseEnVitrine.mutate(undefined, {
               onSuccess: () => {
-                toast.success("Partenariat publié");
-                setDialoguePublicationOuvert(false);
+                toast.success("Partenariat ajouté à la vitrine");
+                setDialogueVitrineOuvert(false);
               },
               onError: (erreur) => toast.error(erreur.message),
             })
           }
-          titre="Publier ce partenariat ?"
-          description="Le partenariat sera rendu visible dans l'espace public."
-          libelleAction="Publier"
-          enCours={publication.isPending}
+          titre="Ajouter ce partenariat à la vitrine ?"
+          description="Sa fiche synthétique sera visible sur la vitrine publique, sans contenu éditorial associé."
+          libelleAction="Ajouter à la vitrine"
+          enCours={miseEnVitrine.isPending}
         />
       ) : null}
 
