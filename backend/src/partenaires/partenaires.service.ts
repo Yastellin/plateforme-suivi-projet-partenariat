@@ -32,6 +32,7 @@ import type { StoragePort } from '../storage/storage.port';
 import { CoordonneesService } from '../coordonnees/coordonnees.service';
 import { Role } from '../common/enums/role.enum';
 import type { PerimetreListeDonnees } from '../common/utils/perimetre-liste';
+import { nommerEtablissementSoumission } from '../common/utils/notification-soumission';
 
 @Injectable()
 export class PartenairesService {
@@ -97,7 +98,11 @@ export class PartenairesService {
       perimetre.etablissementId ?? query.etablissement_id;
     if (etablissementFiltre) where.etablissement_id = etablissementFiltre;
     if (perimetre.origine) where.cree_par_role = perimetre.origine;
-    if (perimetre.soumisesUniquement) where.soumis_le = Not(IsNull());
+    if (perimetre.etatSoumission === 'SOUMISES') {
+      where.soumis_le = Not(IsNull());
+    } else if (perimetre.etatSoumission === 'NON_SOUMISES') {
+      where.soumis_le = IsNull();
+    }
     if (nom) where.nom = ILike(`%${nom}%`);
     if (type) where.type = ILike(`%${type}%`);
     if (pays) where.pays = ILike(`%${pays}%`);
@@ -124,7 +129,7 @@ export class PartenairesService {
 
     const partenaire = await this.partenaireRepo.findOne({
       where,
-      relations: { contacts: true },
+      relations: { contacts: true, etablissement: true },
     });
 
     if (!partenaire) throw new NotFoundException('Partenaire non trouvé');
@@ -307,7 +312,7 @@ export class PartenairesService {
       type: TypeNotification.PARTENAIRE_SOUMIS,
       priorite: PrioriteNotification.HAUTE,
       titre: `Partenaire soumis : ${partenaire.nom}`,
-      message: `Le partenaire "${partenaire.nom}" a ete soumis par l'etablissement.`,
+      message: `Le partenaire « ${partenaire.nom} » a été soumis par ${nommerEtablissementSoumission(partenaire.etablissement?.nom)}.`,
       reference_type: 'Partenaire',
       reference_id: id,
     });

@@ -9,7 +9,12 @@ import { useTheme } from '@/hooks/useTheme';
 export interface AuthContextValue {
   utilisateur: Utilisateur | null;
   estCharge: boolean;
-  connecter: (utilisateur: Utilisateur, accessToken: string, refreshToken: string) => void;
+  connecter: (
+    utilisateur: Utilisateur,
+    accessToken: string,
+    refreshToken: string,
+    seSouvenir?: boolean,
+  ) => void;
   deconnecter: () => void;
 }
 
@@ -48,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function restaurerSession() {
       const refreshToken = tokenStorage.getRefreshToken();
+      const sessionPersistante = tokenStorage.estPersistant();
       if (!refreshToken) {
         setEstCharge(false);
         return;
@@ -58,7 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           refresh_token: refreshToken,
         });
         definirAccessToken(reponseRefresh.data.access_token);
-        tokenStorage.setRefreshToken(reponseRefresh.data.refresh_token);
+        tokenStorage.setRefreshToken(
+          reponseRefresh.data.refresh_token,
+          sessionPersistante,
+        );
 
         const reponseMe = await apiClient.get<Utilisateur>('/auth/me');
         if (!annule) {
@@ -81,9 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  function connecter(utilisateurConnecte: Utilisateur, accessToken: string, refreshToken: string) {
+  function connecter(
+    utilisateurConnecte: Utilisateur,
+    accessToken: string,
+    refreshToken: string,
+    seSouvenir = false,
+  ) {
     definirAccessToken(accessToken);
-    tokenStorage.setRefreshToken(refreshToken);
+    tokenStorage.setRefreshToken(refreshToken, seSouvenir);
     setUtilisateur(utilisateurConnecte);
   }
 

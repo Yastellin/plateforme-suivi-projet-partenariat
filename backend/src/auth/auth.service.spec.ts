@@ -1,6 +1,8 @@
 jest.mock('bcrypt', () => ({
   hash: jest.fn(async (valeur: string) => `hash:${valeur}`),
-  compare: jest.fn(async (valeur: string, empreinte: string) => empreinte === `hash:${valeur}`),
+  compare: jest.fn(
+    async (valeur: string, empreinte: string) => empreinte === `hash:${valeur}`,
+  ),
 }));
 
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
@@ -83,7 +85,11 @@ describe('AuthService', () => {
 
       await expect(
         service.login({ email: 'desactive@univ.mg', mot_de_passe: motDePasse }),
-      ).rejects.toThrow(new UnauthorizedException('Compte désactivé'));
+      ).rejects.toThrow(
+        new UnauthorizedException(
+          'Votre compte a été désactivé. Veuillez contacter la Présidence.',
+        ),
+      );
     });
 
     it('rejette un mot de passe incorrect', async () => {

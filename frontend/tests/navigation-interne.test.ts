@@ -25,9 +25,9 @@ describe("navigation interne", () => {
     },
   );
 
-  it("rend les archives accessibles à l'établissement sans exposer l'historique global", () => {
+  it("rend les archives et son historique accessibles à l'établissement", () => {
     const chemins = cheminsPour("ETABLISSEMENT", "/etablissement");
     expect(chemins).toContain("/etablissement/archives");
-    expect(chemins).not.toContain("/etablissement/historique");
+    expect(chemins).toContain("/etablissement/historique");
   });
 });

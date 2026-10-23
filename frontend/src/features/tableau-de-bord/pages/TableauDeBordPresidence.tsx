@@ -1,4 +1,4 @@
-﻿// src/features/tableau-de-bord/pages/TableauDeBordPresidence.tsx
+// src/features/tableau-de-bord/pages/TableauDeBordPresidence.tsx
 
 import { Link } from 'react-router-dom';
 import { Download } from 'lucide-react';
@@ -6,7 +6,7 @@ import { useTableauDeBord } from '../api/useTableauDeBord';
 import { CompteursGlobaux } from '../components/CompteursGlobaux';
 import { GraphiqueStatuts } from '../components/GraphiqueStatuts';
 import { ActiviteMensuelle } from '../components/ActiviteMensuelle';
-import { EcheancierListe } from '../components/EcheancierListe';
+import { ConventionsPrioritaires } from '../components/ConventionsPrioritaires';
 import { BandeauEtat } from '../components/BandeauEtat';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
@@ -38,7 +38,7 @@ export function TableauDeBordPresidence() {
         <Panel>
           <PanelHeader
             titre="Conventions à traiter"
-            sousTitre="Renouvellements, avenants et circuits en attente"
+            sousTitre="Les 5 priorités, classées par urgence"
             action={
               <Link
                 to="/presidence/conventions"
@@ -48,7 +48,7 @@ export function TableauDeBordPresidence() {
               </Link>
             }
           />
-          <EcheancierListe />
+          <ConventionsPrioritaires />
         </Panel>
 
         <div className="flex flex-col gap-4">

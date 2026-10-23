@@ -5,6 +5,7 @@ describe('determinerPerimetreListe', () => {
   it('limite la liste générale de la Présidence à ses propres données', () => {
     expect(determinerPerimetreListe({ role: Role.PRESIDENCE })).toEqual({
       origine: Role.PRESIDENCE,
+      etatSoumission: 'NON_SOUMISES',
     });
   });
 
@@ -16,8 +17,7 @@ describe('determinerPerimetreListe', () => {
       ),
     ).toEqual({
       etablissementId: 'etablissement-fianarantsoa',
-      origine: Role.ETABLISSEMENT,
-      soumisesUniquement: true,
+      etatSoumission: 'SOUMISES',
     });
   });
 

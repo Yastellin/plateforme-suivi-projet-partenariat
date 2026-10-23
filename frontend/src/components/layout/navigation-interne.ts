@@ -98,6 +98,7 @@ export function construireNavigation(role: RoleUtilisateur, base: string): Group
           { cle: 'projets', libelle: 'Mes projets', icone: FolderKanban, chemin: `${base}/projets` },
           { cle: 'cotutelles', libelle: 'Cotutelles', icone: GraduationCap, chemin: `${base}/cotutelles` },
           { cle: 'archives', libelle: 'Archives', icone: Archive, chemin: `${base}/archives` },
+          { cle: 'historique', libelle: 'Historique', icone: History, chemin: `${base}/historique` },
         ],
       },
       {

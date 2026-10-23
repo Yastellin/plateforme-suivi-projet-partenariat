@@ -1,15 +1,21 @@
 import { Role } from '../enums/role.enum';
 
+export type EtatSoumissionListe = 'SOUMISES' | 'NON_SOUMISES';
+
 export interface PerimetreListeDonnees {
   etablissementId?: string;
   origine?: Role.PRESIDENCE | Role.ETABLISSEMENT;
-  soumisesUniquement?: boolean;
+  etatSoumission?: EtatSoumissionListe;
 }
 
 /**
  * Sépare les données propres à la Présidence de celles produites par les
  * établissements. Un établissement conserve son périmètre historique, tandis
  * que sa section côté Présidence n'expose que ses données déjà soumises.
+ *
+ * L'état de soumission complète la provenance afin de prendre en charge les
+ * données historiques dont l'origine avait été attribuée à la Présidence lors
+ * de l'introduction du suivi de provenance.
  */
 export function determinerPerimetreListe(
   utilisateur: unknown,
@@ -37,12 +43,14 @@ export function determinerPerimetreListe(
     if (etablissementDemande) {
       return {
         etablissementId: etablissementDemande,
-        origine: Role.ETABLISSEMENT,
-        soumisesUniquement: true,
+        etatSoumission: 'SOUMISES',
       };
     }
 
-    return { origine: Role.PRESIDENCE };
+    return {
+      origine: Role.PRESIDENCE,
+      etatSoumission: 'NON_SOUMISES',
+    };
   }
 
   return {};

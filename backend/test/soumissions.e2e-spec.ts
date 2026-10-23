@@ -14,6 +14,7 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
   let presidence: any;
   let etablissement: any;
   let etablissementId: string;
+  let etablissementNom: string;
   let autreEtablissementId: string;
   let partenaireIndividuel: any;
   let partenaireMasse: any;
@@ -98,7 +99,7 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
        WHERE role = 'PRESIDENCE' AND actif = true`,
     );
     const notifications = await ctx.dataSource.query(
-      `SELECT n.type, n.reference_id, u.role, u.actif
+      `SELECT n.type, n.reference_id, n.message, u.role, u.actif
        FROM "Notification" n
        JOIN "Utilisateur" u ON u.id = n.utilisateur_id
        WHERE n.reference_id = $1`,
@@ -107,6 +108,11 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
 
     expect(notifications).toHaveLength(total);
     expect(notifications.every((item: any) => item.type === type)).toBe(true);
+    expect(
+      notifications.every((item: any) =>
+        item.message.includes(`l’établissement « ${etablissementNom} »`),
+      ),
+    ).toBe(true);
     expect(
       notifications.every(
         (item: any) => item.role === 'PRESIDENCE' && item.actif === true,
@@ -127,6 +133,11 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       item.email.startsWith('fds@'),
     );
     etablissementId = etablissement.etablissement_id;
+    const [etablissementCourant] = await ctx.dataSource.query(
+      `SELECT nom FROM "Etablissement" WHERE id = $1`,
+      [etablissementId],
+    );
+    etablissementNom = etablissementCourant.nom;
     const [autreEtablissement] = await ctx.dataSource.query(
       `SELECT id FROM "Etablissement" WHERE id <> $1 ORDER BY nom LIMIT 1`,
       [etablissementId],
@@ -231,6 +242,35 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
   });
 
   it('sépare les listes de la Présidence des sections établissements', async () => {
+    // Reproduit les données créées avant l'introduction du suivi de provenance :
+    // elles ont été marquées Présidence par le backfill, mais leur soumission
+    // prouve qu'elles proviennent d'un établissement.
+    const partenaireHistorique = await creerPartenaire(
+      `Partenaire historique Fianarantsoa ${suffixe()}`,
+    );
+    const projetHistorique = await creerProjet(
+      `Projet historique Haute Matsiatra ${suffixe()}`,
+    );
+    const partenariatHistorique = await creerPartenariat(
+      `Partenariat historique Madagascar ${suffixe()}`,
+      partenaireHistorique.id,
+    );
+    const donneesHistoriques = [
+      ['partenaires', 'Partenaire', partenaireHistorique.id],
+      ['projets', 'Projet', projetHistorique.id],
+      ['partenariats', 'Partenariat', partenariatHistorique.id],
+    ] as const;
+    for (const [ressource, table, id] of donneesHistoriques) {
+      await request(serveur())
+        .post(`/api/${ressource}/${id}/soumettre`)
+        .set(...enteteBearer(etablissement))
+        .expect(200);
+      await ctx.dataSource.query(
+        `UPDATE "${table}" SET cree_par_role = 'PRESIDENCE' WHERE id = $1`,
+        [id],
+      );
+    }
+
     const partenairePresidence = await creerPartenaire(
       `Partenaire Présidence Antananarivo ${suffixe()}`,
       presidence,
@@ -249,17 +289,29 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       {
         ressource: 'partenaires',
         propreId: partenairePresidence.id,
-        etablissementsIds: [partenaireIndividuel.id, partenaireMasse.id],
+        etablissementsIds: [
+          partenaireIndividuel.id,
+          partenaireMasse.id,
+          partenaireHistorique.id,
+        ],
       },
       {
         ressource: 'projets',
         propreId: projetPresidence.id,
-        etablissementsIds: [projetIndividuel.id, projetMasse.id],
+        etablissementsIds: [
+          projetIndividuel.id,
+          projetMasse.id,
+          projetHistorique.id,
+        ],
       },
       {
         ressource: 'partenariats',
         propreId: partenariatPresidence.id,
-        etablissementsIds: [partenariatIndividuel.id, partenariatMasse.id],
+        etablissementsIds: [
+          partenariatIndividuel.id,
+          partenariatMasse.id,
+          partenariatHistorique.id,
+        ],
       },
     ];
     const totauxSections: Record<string, number> = {};
@@ -280,7 +332,7 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       }
       expect(
         listePresidence.data.every(
-          (item: any) => item.cree_par_role === 'PRESIDENCE',
+          (item: any) => item.cree_par_role === 'PRESIDENCE' && !item.soumis_le,
         ),
       ).toBe(true);
 
@@ -303,10 +355,7 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       );
       expect(idsEtablissement).not.toContain(propreId);
       expect(
-        sectionEtablissement.data.every(
-          (item: any) =>
-            item.cree_par_role === 'ETABLISSEMENT' && item.soumis_le,
-        ),
+        sectionEtablissement.data.every((item: any) => item.soumis_le),
       ).toBe(true);
     }
 
@@ -327,6 +376,44 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       partenariats: totauxSections.partenariats,
       projets: totauxSections.projets,
     });
+  });
+
+  it("limite l'historique d'un établissement aux activités de ses comptes", async () => {
+    const partenairePresidence = await creerPartenaire(
+      `Partenaire à archiver Présidence ${suffixe()}`,
+      presidence,
+    );
+    await request(serveur())
+      .post(`/api/partenaires/${partenairePresidence.id}/archiver`)
+      .set(...enteteBearer(presidence))
+      .expect(200);
+
+    const historique = donnees<any>(
+      (
+        await request(serveur())
+          .get('/api/historique?limit=100')
+          .set(...enteteBearer(etablissement))
+          .expect(200)
+      ).body,
+    );
+    const comptesEtablissement = await ctx.dataSource.query(
+      `SELECT id FROM "Utilisateur" WHERE etablissement_id = $1`,
+      [etablissementId],
+    );
+    const comptesIds = comptesEtablissement.map((compte: any) => compte.id);
+
+    expect(historique.data.length).toBeGreaterThan(0);
+    expect(
+      historique.data.every((entree: any) =>
+        comptesIds.includes(entree.utilisateur_id),
+      ),
+    ).toBe(true);
+    expect(historique.data.map((entree: any) => entree.action)).toContain(
+      'SOUMISSION',
+    );
+    expect(
+      historique.data.map((entree: any) => entree.entite_id),
+    ).not.toContain(partenairePresidence.id);
   });
 
   it('verrouille les données établissement après soumission', async () => {

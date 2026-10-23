@@ -11,6 +11,8 @@ import { QueryHistoriqueDto } from './dto/historique-query.dto';
 import { HistoriqueActionResponseDto } from './dto/historique-response.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { ConsultationHistorique } from './historique.service';
 
 @ApiTags('Historique')
 @ApiBearerAuth()
@@ -20,12 +22,16 @@ export class HistoriqueController {
   constructor(private historiqueService: HistoriqueService) {}
 
   @Get()
-  @Roles(Role.PRESIDENCE, Role.DECIDEUR)
+  @Roles(Role.PRESIDENCE, Role.DECIDEUR, Role.ETABLISSEMENT)
   @ApiOperation({
-    summary: "Consulter l'historique des actions (archivage, restauration, soumission, publication)",
+    summary:
+      "Consulter l'historique des actions (archivage, restauration, soumission, publication)",
   })
   @ApiResponse({ status: 200, type: [HistoriqueActionResponseDto] })
-  lister(@Query() query: QueryHistoriqueDto) {
-    return this.historiqueService.lister(query);
+  lister(
+    @CurrentUser() utilisateur: ConsultationHistorique,
+    @Query() query: QueryHistoriqueDto,
+  ) {
+    return this.historiqueService.lister(query, utilisateur);
   }
 }
