@@ -46,10 +46,12 @@ export interface PageServeurPublique<T> {
 
 // Règles de visibilité publique, appliquées à toutes les requêtes de l'espace public.
 const PARTENAIRE_VISIBLE: FindOptionsWhere<Partenaire> = {
+  // La présence d'un partenaire sur la vitrine repose uniquement sur sa
+  // visibilité métier et son état. Une Publication reste exclusivement liée
+  // à un Projet, et publie_le n'est pas un critère de visibilité partenaire.
   visibilite: Visibilite.PUBLIC,
   statut: StatutPartenaire.ACTIF,
   archive: false,
-  publie_le: Not(IsNull()),
 };
 
 const PUBLICATION_VISIBLE: FindOptionsWhere<Publication> = {
@@ -376,8 +378,7 @@ export class EspacePublicService {
       partenaire &&
       partenaire.visibilite === Visibilite.PUBLIC &&
       partenaire.statut === StatutPartenaire.ACTIF &&
-      !partenaire.archive &&
-      partenaire.publie_le != null,
+      !partenaire.archive,
     );
   }
 

@@ -49,84 +49,96 @@ export class PartenariatsService {
     dto: CreatePartenariatDto,
     utilisateur?: ContexteUtilisateur | null,
   ): Promise<PartenariatResponseDto> {
-    return this.partenariatRepo.manager.transaction(async (manager) => {
-      const etablissementRepo = manager.getRepository(Etablissement);
-      const partenaireRepo = manager.getRepository(Partenaire);
-      const partenariatRepo = manager.getRepository(Partenariat);
-      const peRepo = manager.getRepository(PartenariatEtablissement);
-      const ppRepo = manager.getRepository(PartenariatPartenaire);
+    const partenariatCree = await this.partenariatRepo.manager.transaction(
+      async (manager) => {
+        const etablissementRepo = manager.getRepository(Etablissement);
+        const partenaireRepo = manager.getRepository(Partenaire);
+        const partenariatRepo = manager.getRepository(Partenariat);
+        const peRepo = manager.getRepository(PartenariatEtablissement);
+        const ppRepo = manager.getRepository(PartenariatPartenaire);
 
-      const etablissement = await etablissementRepo.findOneBy({
-        id: etablissementId,
-      });
-      if (!etablissement) {
-        throw new NotFoundException('Établissement non trouvé');
-      }
-
-      const etablissements = new Map<string, Etablissement>();
-      for (const etabId of [...new Set(dto.etablissements_ids)]) {
-        const etab = await etablissementRepo.findOneBy({ id: etabId });
-        if (!etab) {
-          throw new NotFoundException(`Établissement ${etabId} non trouvé`);
-        }
-        etablissements.set(etabId, etab);
-      }
-
-      const partenaires = new Map<string, Partenaire>();
-      for (const partId of [...new Set(dto.partenaires_ids)]) {
-        const part = await partenaireRepo.findOneBy({
-          id: partId,
-          archive: false,
+        const etablissement = await etablissementRepo.findOneBy({
+          id: etablissementId,
         });
-        if (!part) {
-          throw new NotFoundException(`Partenaire ${partId} non trouvé`);
+        if (!etablissement) {
+          throw new NotFoundException('Établissement non trouvé');
         }
-        partenaires.set(partId, part);
-      }
 
-      const partenariat = partenariatRepo.create({
-        intitule: dto.intitule,
-        objet: dto.objet ?? null,
-        domaine: dto.domaine,
-        date_debut: new Date(dto.date_debut),
-        date_fin: dto.date_fin ? new Date(dto.date_fin) : null,
-        statut:
-          utilisateur?.role === Role.ETABLISSEMENT
-            ? StatutPartenariat.BROUILLON
-            : dto.statut || StatutPartenariat.BROUILLON,
-        actions_realisees: dto.actions_realisees ?? null,
-        actions_en_cours: dto.actions_en_cours ?? null,
-        actions_prevues: dto.actions_prevues ?? null,
-        resultats_obtenus: dto.resultats_obtenus ?? null,
-        difficultes_contraintes: dto.difficultes_contraintes ?? null,
-        perspectives_recommandations: dto.perspectives_recommandations ?? null,
-        archive: false,
-        cree_par_utilisateur_id: utilisateur?.id ?? null,
-        cree_par_role: utilisateur?.role ?? null,
-      });
-      await partenariatRepo.save(partenariat);
+        const etablissements = new Map<string, Etablissement>();
+        for (const etabId of [...new Set(dto.etablissements_ids)]) {
+          const etab = await etablissementRepo.findOneBy({ id: etabId });
+          if (!etab) {
+            throw new NotFoundException(`Établissement ${etabId} non trouvé`);
+          }
+          etablissements.set(etabId, etab);
+        }
 
-      partenariat.etablissements = await peRepo.save(
-        [...new Set(dto.etablissements_ids)].map((id) =>
-          peRepo.create({
-            partenariat_id: partenariat.id,
-            etablissement_id: id,
-            etablissement: etablissements.get(id)!,
-          }),
-        ),
-      );
-      partenariat.partenaires = await ppRepo.save(
-        [...new Set(dto.partenaires_ids)].map((id) =>
-          ppRepo.create({
-            partenariat_id: partenariat.id,
-            partenaire_id: id,
-            partenaire: partenaires.get(id)!,
-          }),
-        ),
-      );
+        const partenaires = new Map<string, Partenaire>();
+        for (const partId of [...new Set(dto.partenaires_ids)]) {
+          const part = await partenaireRepo.findOneBy({
+            id: partId,
+            archive: false,
+          });
+          if (!part) {
+            throw new NotFoundException(`Partenaire ${partId} non trouvé`);
+          }
+          partenaires.set(partId, part);
+        }
 
-      return this.mapToResponse(partenariat);
+        const partenariat = partenariatRepo.create({
+          intitule: dto.intitule,
+          objet: dto.objet ?? null,
+          domaine: dto.domaine,
+          date_debut: new Date(dto.date_debut),
+          date_fin: dto.date_fin ? new Date(dto.date_fin) : null,
+          statut:
+            utilisateur?.role === Role.ETABLISSEMENT
+              ? StatutPartenariat.BROUILLON
+              : dto.statut || StatutPartenariat.BROUILLON,
+          actions_realisees: dto.actions_realisees ?? null,
+          actions_en_cours: dto.actions_en_cours ?? null,
+          actions_prevues: dto.actions_prevues ?? null,
+          resultats_obtenus: dto.resultats_obtenus ?? null,
+          difficultes_contraintes: dto.difficultes_contraintes ?? null,
+          perspectives_recommandations:
+            dto.perspectives_recommandations ?? null,
+          archive: false,
+          cree_par_utilisateur_id: utilisateur?.id ?? null,
+          cree_par_role: utilisateur?.role ?? null,
+        });
+        await partenariatRepo.save(partenariat);
+
+        partenariat.etablissements = await peRepo.save(
+          [...new Set(dto.etablissements_ids)].map((id) =>
+            peRepo.create({
+              partenariat_id: partenariat.id,
+              etablissement_id: id,
+              etablissement: etablissements.get(id)!,
+            }),
+          ),
+        );
+        partenariat.partenaires = await ppRepo.save(
+          [...new Set(dto.partenaires_ids)].map((id) =>
+            ppRepo.create({
+              partenariat_id: partenariat.id,
+              partenaire_id: id,
+              partenaire: partenaires.get(id)!,
+            }),
+          ),
+        );
+
+        return this.mapToResponse(partenariat);
+      },
+    );
+
+    await this.historique.enregistrer({
+      action: ActionHistorique.CREATION,
+      entite_type: 'Partenariat',
+      entite_id: partenariatCree.id,
+      entite_nom: partenariatCree.intitule,
+      utilisateur: utilisateur ?? null,
     });
+    return partenariatCree;
   }
 
   async findAll(
@@ -204,6 +216,7 @@ export class PartenariatsService {
     dto: UpdatePartenariatDto,
     etablissementId?: string,
     userRole?: Role,
+    utilisateur?: ContexteUtilisateur | null,
   ) {
     const existing = await this.findOne(id, etablissementId);
 
@@ -350,7 +363,15 @@ export class PartenariatsService {
       }
     });
 
-    return this.findOne(id, etablissementId);
+    const partenariatMisAJour = await this.findOne(id, etablissementId);
+    await this.historique.enregistrer({
+      action: ActionHistorique.MODIFICATION,
+      entite_type: 'Partenariat',
+      entite_id: id,
+      entite_nom: partenariatMisAJour.intitule,
+      utilisateur: utilisateur ?? null,
+    });
+    return partenariatMisAJour;
   }
 
   async soumettre(
@@ -441,18 +462,20 @@ export class PartenariatsService {
     return { total: ids.length, reussis, echecs };
   }
 
-  /** La presidence valide et publie un partenariat soumis. */
+  /** La Présidence rend un partenariat soumis visible sur la vitrine. */
   async publier(id: string, utilisateur?: ContexteUtilisateur | null) {
     const partenariat = await this.findOne(id);
 
     const estDonneePresidence = partenariat.cree_par_role === Role.PRESIDENCE;
     if (!partenariat.soumis_le && !estDonneePresidence) {
       throw new ConflictException(
-        'Seul un partenariat soumis ou créé par la Présidence peut être publié',
+        'Seul un partenariat soumis ou créé par la Présidence peut être ajouté à la vitrine',
       );
     }
     if (partenariat.publie_le) {
-      throw new ConflictException('Ce partenariat est déjà publié');
+      throw new ConflictException(
+        'Ce partenariat est déjà présent sur la vitrine',
+      );
     }
 
     await this.partenariatRepo.update(id, {
@@ -467,8 +490,8 @@ export class PartenariatsService {
     this.eventEmitter.emit('partenariat.publie', {
       type: TypeNotification.PARTENARIAT_PUBLIE,
       priorite: PrioriteNotification.MOYENNE,
-      titre: `Partenariat publie : ${partenariat.intitule}`,
-      message: `Le partenariat "${partenariat.intitule}" a ete publie par la presidence.`,
+      titre: `Partenariat ajouté à la vitrine : ${partenariat.intitule}`,
+      message: `Le partenariat « ${partenariat.intitule} » a été ajouté à la vitrine par la Présidence.`,
       utilisateur_id: null,
       reference_type: 'Partenariat',
       reference_id: id,

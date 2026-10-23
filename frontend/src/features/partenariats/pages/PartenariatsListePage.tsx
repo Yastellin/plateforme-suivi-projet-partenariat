@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formaterDate } from "@/lib/format";
+import { filtrerListeGenerale } from "@/lib/perimetre-liste";
 import {
   LIBELLES_DOMAINE_PARTENARIAT,
   LIBELLES_STATUT_PARTENARIAT,
@@ -47,7 +48,7 @@ export function PartenariatsListePage() {
         ? "/etablissement"
         : "/decideur";
   const cheminCreation = `${cheminBase}/partenaires-partenariats/partenariats/nouveau`;
-  const partenariats = data?.data ?? [];
+  const partenariats = filtrerListeGenerale(data?.data ?? [], role);
   const soumissibles = partenariats.filter(
     (item) =>
       item.cree_par_role === "ETABLISSEMENT" &&
@@ -101,7 +102,11 @@ export function PartenariatsListePage() {
     <div>
       <PageHeader
         titre="Partenariats"
-        description="Tous les partenariats de la plateforme."
+        description={
+          role === "PRESIDENCE"
+            ? "Partenariats créés et gérés par la Présidence. Les partenariats des établissements restent dans leurs fiches dédiées."
+            : "Partenariats accessibles dans votre périmètre."
+        }
         actions={
           <>
             {permissions.peutCreer ? (
@@ -181,7 +186,7 @@ export function PartenariatsListePage() {
                       "Domaine",
                       "Période",
                       "Établissements",
-                      "Transmission",
+                      "Transmission / vitrine",
                       "Statut",
                     ].map((entete) => (
                       <th
@@ -284,7 +289,7 @@ export function PartenariatsListePage() {
                         </td>
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-xs font-medium text-[var(--color-text-secondary)]">
                           {partenariat.publie_le
-                            ? "Publié"
+                            ? "Présent sur la vitrine"
                             : partenariat.soumis_le
                               ? "Soumis à la Présidence"
                               : partenariat.cree_par_role === "PRESIDENCE"

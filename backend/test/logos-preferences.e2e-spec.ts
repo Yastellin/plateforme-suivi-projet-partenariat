@@ -19,6 +19,7 @@ const PNG_1X1 = Buffer.from(
 describe('Logos et préférences (e2e)', () => {
   let ctx: ApplicationTest;
   let presidence: any;
+  let compteEtablissement: any;
   let partenaireId: string;
   let etablissementId: string;
   const fichiersCrees: string[] = [];
@@ -28,10 +29,13 @@ describe('Logos et préférences (e2e)', () => {
     await ctx.seed();
 
     const utilisateurs = await ctx.dataSource.query(
-      `SELECT id, email, role FROM "Utilisateur"`,
+      `SELECT id, email, role, etablissement_id FROM "Utilisateur"`,
     );
     presidence = utilisateurs.find((utilisateur: any) =>
       utilisateur.email.startsWith('presidence@'),
+    );
+    compteEtablissement = utilisateurs.find((utilisateur: any) =>
+      utilisateur.email.startsWith('fds@'),
     );
     const [partenaire] = await ctx.dataSource.query(
       `SELECT id FROM "Partenaire" WHERE nom = 'Université de Toliara'`,
@@ -199,10 +203,19 @@ describe('Logos et préférences (e2e)', () => {
       .expect(200);
   });
 
-  it("propage le logo d'un établissement dans les réponses qui le référencent", async () => {
-    const reponse = await request(ctx.app.getHttpServer())
+  it("réserve le logo à l'établissement et le propage dans les réponses qui le référencent", async () => {
+    await request(ctx.app.getHttpServer())
       .post(`/api/etablissements/${etablissementId}/logo`)
       .set(...enteteBearer(presidence))
+      .attach('fichier', PNG_1X1, {
+        filename: 'logo-interdit-presidence.png',
+        contentType: 'image/png',
+      })
+      .expect(403);
+
+    const reponse = await request(ctx.app.getHttpServer())
+      .post(`/api/etablissements/${etablissementId}/logo`)
+      .set(...enteteBearer(compteEtablissement))
       .attach('fichier', PNG_1X1, {
         filename: 'logo-faculte-sciences.png',
         contentType: 'image/png',

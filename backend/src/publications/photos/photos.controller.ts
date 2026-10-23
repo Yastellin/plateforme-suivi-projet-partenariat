@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -21,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { PhotosService } from './photos.service';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
+import { UpdatePhotoDto } from './dto/update-photo.dto';
 import { PhotoResponseDto } from './dto/photo-response.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -80,6 +82,20 @@ export class PhotosController {
     @Param('publicationId', ParseUUIDPipe) publicationId: string,
   ) {
     return this.photosService.findAllByPublication(publicationId);
+  }
+
+  @Patch('photos/:id')
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({
+    summary:
+      "Modifier la légende ou l'ordre d'une photo (Présidence uniquement)",
+  })
+  @ApiResponse({ status: 200, type: PhotoResponseDto })
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePhotoDto,
+  ): Promise<PhotoResponseDto> {
+    return this.photosService.update(id, dto);
   }
 
   @Delete('photos/:id')

@@ -26,6 +26,7 @@ import { NotificationWorkflowTypes1793100000001 } from '../../src/database/migra
 import { NormalizeContactDetails1793200000000 } from '../../src/database/migrations/1793200000000-NormalizeContactDetails';
 import { AddUserPreferences1793300000000 } from '../../src/database/migrations/1793300000000-AddUserPreferences';
 import { EnforceDocumentParentAndBackfillPublication1793400000000 } from '../../src/database/migrations/1793400000000-EnforceDocumentParentAndBackfillPublication';
+import { RepairLegacySubmissionActivity1793500000000 } from '../../src/database/migrations/1793500000000-RepairLegacySubmissionActivity';
 import { demarrerBaseTest, type BaseTest } from './base-postgres';
 
 export const JWT_SECRET_TEST =
@@ -77,6 +78,7 @@ export async function creerApplicationTest(): Promise<ApplicationTest> {
       NormalizeContactDetails1793200000000,
       AddUserPreferences1793300000000,
       EnforceDocumentParentAndBackfillPublication1793400000000,
+      RepairLegacySubmissionActivity1793500000000,
     ],
     migrationsTableName: 'migrations_typeorm',
     synchronize: false,

@@ -25,6 +25,49 @@ interface RafraichissementReponse {
   refresh_token: string;
 }
 
+/**
+ * React exécute les effets deux fois en développement sous StrictMode. La
+ * restauration est donc partagée au niveau du module afin de ne jamais faire
+ * tourner deux fois le même jeton de renouvellement en parallèle.
+ */
+let restaurationSession: {
+  refreshToken: string;
+  promesse: Promise<Utilisateur | null>;
+} | null = null;
+
+function restaurerSessionUneFois(): Promise<Utilisateur | null> {
+  const refreshToken = tokenStorage.getRefreshToken();
+  if (!refreshToken) return Promise.resolve(null);
+  if (restaurationSession?.refreshToken === refreshToken) {
+    return restaurationSession.promesse;
+  }
+
+  const sessionPersistante = tokenStorage.estPersistant();
+  const promesse = (async () => {
+    try {
+      const reponseRefresh = await apiClient.post<RafraichissementReponse>(
+        '/auth/refresh',
+        { refresh_token: refreshToken },
+      );
+      definirAccessToken(reponseRefresh.data.access_token);
+      tokenStorage.setRefreshToken(
+        reponseRefresh.data.refresh_token,
+        sessionPersistante,
+      );
+
+      const reponseMe = await apiClient.get<Utilisateur>('/auth/me');
+      return reponseMe.data;
+    } catch {
+      tokenStorage.clearRefreshToken();
+      definirAccessToken(null);
+      return null;
+    }
+  })();
+
+  restaurationSession = { refreshToken, promesse };
+  return promesse;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { definirTheme } = useTheme();
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
@@ -49,44 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [utilisateur?.preferences, definirTheme]);
 
   useEffect(() => {
-    let annule = false;
+    let actif = true;
 
-    async function restaurerSession() {
-      const refreshToken = tokenStorage.getRefreshToken();
-      const sessionPersistante = tokenStorage.estPersistant();
-      if (!refreshToken) {
-        setEstCharge(false);
-        return;
-      }
-
-      try {
-        const reponseRefresh = await apiClient.post<RafraichissementReponse>('/auth/refresh', {
-          refresh_token: refreshToken,
-        });
-        definirAccessToken(reponseRefresh.data.access_token);
-        tokenStorage.setRefreshToken(
-          reponseRefresh.data.refresh_token,
-          sessionPersistante,
-        );
-
-        const reponseMe = await apiClient.get<Utilisateur>('/auth/me');
-        if (!annule) {
-          setUtilisateur(reponseMe.data);
-        }
-      } catch {
-        tokenStorage.clearRefreshToken();
-        definirAccessToken(null);
-      } finally {
-        if (!annule) {
-          setEstCharge(false);
-        }
-      }
-    }
-
-    restaurerSession();
+    void restaurerSessionUneFois().then((sessionRestauree) => {
+      if (!actif) return;
+      setUtilisateur(sessionRestauree);
+      setEstCharge(false);
+    });
 
     return () => {
-      annule = true;
+      actif = false;
     };
   }, []);
 

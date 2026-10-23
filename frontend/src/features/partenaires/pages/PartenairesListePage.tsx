@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { LogoMedia } from "@/components/shared/ImageMedia";
+import { filtrerListeGenerale } from "@/lib/perimetre-liste";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -41,12 +42,12 @@ export function PartenairesListePage() {
       : role === "ETABLISSEMENT"
         ? "/etablissement"
         : "/decideur";
-  const partenaires = data?.data ?? [];
+  const partenaires = filtrerListeGenerale(data?.data ?? [], role);
   const soumissibles = partenaires.filter(
     (partenaire) =>
       partenaire.cree_par_role === "ETABLISSEMENT" &&
       !partenaire.soumis_le &&
-      !partenaire.publie_le,
+      partenaire.visibilite !== "PUBLIC",
   );
   const tousSoumissiblesSelectionnes =
     soumissibles.length > 0 &&
@@ -94,7 +95,11 @@ export function PartenairesListePage() {
     <div>
       <PageHeader
         titre="Partenaires"
-        description="Tous les partenaires de la plateforme."
+        description={
+          role === "PRESIDENCE"
+            ? "Partenaires créés et gérés par la Présidence. Les partenaires des établissements restent dans leurs fiches dédiées."
+            : "Partenaires accessibles dans votre périmètre."
+        }
         actions={
           <>
             {permissions.peutCreer ? (
@@ -173,7 +178,7 @@ export function PartenairesListePage() {
                       "Partenaire",
                       "Type",
                       "Pays",
-                      "État de transmission",
+                      "Transmission / vitrine",
                       "Statut",
                     ].map((entete) => (
                       <th
@@ -196,7 +201,7 @@ export function PartenairesListePage() {
                         <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
                           {partenaire.cree_par_role === "ETABLISSEMENT" &&
                           !partenaire.soumis_le &&
-                          !partenaire.publie_le ? (
+                          partenaire.visibilite !== "PUBLIC" ? (
                             <input
                               type="checkbox"
                               checked={selection.has(partenaire.id)}
@@ -228,12 +233,14 @@ export function PartenairesListePage() {
                       </td>
                       <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
                         <span className="text-xs font-medium text-[var(--color-text-secondary)]">
-                          {partenaire.publie_le
-                            ? "Publié"
+                          {partenaire.visibilite === "PUBLIC"
+                            ? partenaire.statut === "ACTIF"
+                              ? "Visible sur la vitrine"
+                              : "Visibilité suspendue"
                             : partenaire.soumis_le
                               ? "Soumis à la Présidence"
                               : partenaire.cree_par_role === "PRESIDENCE"
-                                ? "Donnée Présidence"
+                                ? "Donnée Présidence — visibilité privée"
                                 : "Non soumis"}
                         </span>
                       </td>

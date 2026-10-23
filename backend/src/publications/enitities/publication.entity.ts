@@ -2,7 +2,7 @@ import {
   Entity,
   PrimaryColumn,
   Column,
-  ManyToOne,
+  OneToOne,
   OneToMany,
   JoinColumn,
   CreateDateColumn,
@@ -45,7 +45,9 @@ export class Publication {
   @Column({ type: 'uuid', unique: true })
   projet_id: string;
 
-  @ManyToOne(() => Projet, { onDelete: 'CASCADE' })
+  @OneToOne(() => Projet, (projet) => projet.publication, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'projet_id' })
   projet: Projet;
 

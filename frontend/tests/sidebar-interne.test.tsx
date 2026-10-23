@@ -8,18 +8,27 @@ import { SidebarInterne } from '@/components/layout/SidebarInterne';
 
 const etat = vi.hoisted(() => ({
   deconnecter: vi.fn(),
+  utilisateur: {
+    id: 'rakoto',
+    email: 'rakoto@univ-toliara.mg',
+    role: 'PRESIDENCE',
+    etablissement_id: null as string | null,
+    etablissement_nom: null as string | null,
+  },
+  etablissement: undefined as
+    | { id: string; nom: string; logo_url: string | null }
+    | undefined,
 }));
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
-    utilisateur: {
-      id: 'rakoto',
-      email: 'rakoto@univ-toliara.mg',
-      role: 'PRESIDENCE',
-      etablissement_nom: null,
-    },
+    utilisateur: etat.utilisateur,
     deconnecter: etat.deconnecter,
   }),
+}));
+
+vi.mock('@/features/etablissements/api/useEtablissement', () => ({
+  useEtablissement: () => ({ data: etat.etablissement }),
 }));
 
 vi.mock('@/router', () => ({
@@ -44,6 +53,14 @@ let racine: Root;
 
 beforeEach(() => {
   etat.deconnecter.mockReset();
+  Object.assign(etat.utilisateur, {
+    id: 'rakoto',
+    email: 'rakoto@univ-toliara.mg',
+    role: 'PRESIDENCE',
+    etablissement_id: null,
+    etablissement_nom: null,
+  });
+  etat.etablissement = undefined;
   window.localStorage.clear();
   conteneur = document.createElement('div');
   document.body.appendChild(conteneur);
@@ -96,5 +113,38 @@ describe('barre latérale interne', () => {
       boutonDeconnexion?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(etat.deconnecter).toHaveBeenCalledOnce();
+  });
+
+  it("affiche le logo propre de l'établissement dans le pied", async () => {
+    Object.assign(etat.utilisateur, {
+      id: 'compte-fds',
+      email: 'direction@univ-fianarantsoa.mg',
+      role: 'ETABLISSEMENT',
+      etablissement_id: 'fds',
+      etablissement_nom: 'Faculté des Sciences',
+    });
+    etat.etablissement = {
+      id: 'fds',
+      nom: 'Faculté des Sciences',
+      logo_url: '/uploads/logos/etablissements/fds/logo-fds.png',
+    };
+
+    await act(async () => {
+      racine.render(
+        createElement(
+          MemoryRouter,
+          { initialEntries: ['/etablissement'] },
+          createElement(SidebarInterne),
+        ),
+      );
+    });
+
+    const boutonCompte = conteneur.querySelector<HTMLButtonElement>(
+      'button[aria-haspopup="menu"]',
+    );
+    expect(boutonCompte?.querySelector('img')?.getAttribute('src')).toBe(
+      '/api/uploads/logos/etablissements/fds/logo-fds.png',
+    );
+    expect(boutonCompte?.textContent).toContain('Faculté des Sciences');
   });
 });

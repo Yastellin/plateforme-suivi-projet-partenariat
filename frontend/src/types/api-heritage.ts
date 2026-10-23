@@ -221,7 +221,7 @@ export type StatutPublication = "BROUILLON" | "PUBLIEE";
 export interface PhotoPublication {
   id: string;
   url_fichier: string;
-  legende?: string;
+  legende?: string | null;
   ordre: number;
   publication_id: string;
 }

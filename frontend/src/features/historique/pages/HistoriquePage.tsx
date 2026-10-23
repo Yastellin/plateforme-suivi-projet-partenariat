@@ -187,7 +187,7 @@ export function HistoriquePage() {
             <EmptyState
               icone={History}
               titre="Historique indisponible"
-              description="La consultation de l'historique a échoué. Réessayez après avoir vérifié que l'API est à jour."
+              description="La consultation de l'historique a échoué. Vérifiez votre connexion, puis réessayez."
             />
           ) : !data || data.data.length === 0 ? (
             <EmptyState

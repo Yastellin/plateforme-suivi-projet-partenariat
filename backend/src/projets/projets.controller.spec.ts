@@ -159,13 +159,26 @@ describe('ProjetsController', () => {
     it('transmet le role Présidence sans restriction établissement', async () => {
       const modification = { nom: 'Projet Présidence actualisé' };
 
-      await controller.update({ role: Role.PRESIDENCE }, 'p1', modification);
+      await controller.update(
+        {
+          id: 'utilisateur-presidence',
+          email: 'presidence@univ-fianarantsoa.mg',
+          role: Role.PRESIDENCE,
+        },
+        'p1',
+        modification,
+      );
 
       expect(service.update).toHaveBeenCalledWith(
         'p1',
         modification,
         Role.PRESIDENCE,
         undefined,
+        {
+          id: 'utilisateur-presidence',
+          email: 'presidence@univ-fianarantsoa.mg',
+          role: Role.PRESIDENCE,
+        },
       );
     });
 
@@ -173,7 +186,12 @@ describe('ProjetsController', () => {
       const modification = { nom: 'Projet établissement actualisé' };
 
       await controller.update(
-        { role: Role.ETABLISSEMENT, etablissement_id: 'etab-1' },
+        {
+          id: 'utilisateur-etablissement',
+          email: 'direction@univ-toliara.mg',
+          role: Role.ETABLISSEMENT,
+          etablissement_id: 'etab-1',
+        },
         'p1',
         modification,
       );
@@ -183,6 +201,11 @@ describe('ProjetsController', () => {
         modification,
         Role.ETABLISSEMENT,
         'etab-1',
+        {
+          id: 'utilisateur-etablissement',
+          email: 'direction@univ-toliara.mg',
+          role: Role.ETABLISSEMENT,
+        },
       );
     });
   });

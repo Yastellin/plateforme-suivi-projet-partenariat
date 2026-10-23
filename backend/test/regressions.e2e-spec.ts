@@ -16,6 +16,7 @@ import { dateIsoDans } from './harness/dates';
 describe('Correctifs signales (e2e)', () => {
   let ctx: ApplicationTest;
   let presidence: any;
+  let compteEtablissement: any;
   let etablissementId: string;
   let partenariatId: string;
 
@@ -30,6 +31,9 @@ describe('Correctifs signales (e2e)', () => {
     );
     presidence = utilisateurs.find((u: any) =>
       u.email.startsWith('presidence@'),
+    );
+    compteEtablissement = utilisateurs.find((u: any) =>
+      u.email.startsWith('fds@'),
     );
 
     // Le compte presidence n'est rattache a aucun etablissement : il doit
@@ -443,6 +447,7 @@ describe('Correctifs signales (e2e)', () => {
 
   describe('Publications : photos', () => {
     let publicationId: string;
+    let photoId: string;
 
     beforeAll(async () => {
       const [projet] = await ctx.dataSource.query(
@@ -475,7 +480,10 @@ describe('Correctifs signales (e2e)', () => {
         .attach('fichier', png, 'photo.png')
         .expect(201);
 
-      expect(donnees<any>(reponse.body).legende).toBe('Photo de terrain');
+      const photo = donnees<any>(reponse.body);
+      photoId = photo.id;
+      expect(photo.legende).toBe('Photo de terrain');
+      expect(photo.ordre).toBe(0);
     });
 
     it('refuse l ancien nom de champ photo', async () => {
@@ -486,6 +494,26 @@ describe('Correctifs signales (e2e)', () => {
         .expect(400);
     });
 
+    it("modifie la légende facultative et l'ordre", async () => {
+      const reponse = await request(url())
+        .patch(`/api/photos/${photoId}`)
+        .set(...enteteBearer(presidence))
+        .send({ legende: '', ordre: 4 })
+        .expect(200);
+
+      expect(donnees<any>(reponse.body)).toMatchObject({
+        id: photoId,
+        legende: null,
+        ordre: 4,
+      });
+
+      await request(url())
+        .patch(`/api/photos/${photoId}`)
+        .set(...enteteBearer(compteEtablissement))
+        .send({ legende: 'Modification interdite' })
+        .expect(403);
+    });
+
     it('liste les photos de la publication', async () => {
       const reponse = await request(url())
         .get(`/api/publications/${publicationId}/photos`)
@@ -494,6 +522,7 @@ describe('Correctifs signales (e2e)', () => {
 
       const photos = donnees<any>(reponse.body);
       expect(photos).toHaveLength(1);
+      expect(photos[0]).toMatchObject({ legende: null, ordre: 4 });
       expect(photos[0].url_fichier).toContain('/uploads/');
     });
   });

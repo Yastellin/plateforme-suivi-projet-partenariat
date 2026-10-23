@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
 import type { RoleUtilisateur } from '@/types/api';
 import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
+import { useEtablissement } from '@/features/etablissements/api/useEtablissement';
 
 const CLE_REPLI = 'uf_sidebar_reduit';
 
@@ -38,6 +39,11 @@ function sousLibellePied(role: RoleUtilisateur, etablissementNom: string | null)
 export function SidebarInterne() {
   const { utilisateur, deconnecter } = useAuth();
   const location = useLocation();
+  const { data: etablissementCompte } = useEtablissement(
+    utilisateur?.role === 'ETABLISSEMENT'
+      ? utilisateur.etablissement_id ?? undefined
+      : undefined,
+  );
 
   const [reduit, setReduit] = useState(() => window.localStorage.getItem(CLE_REPLI) === 'true');
   const [groupeOuvert, setGroupeOuvert] = useState<string | null>(null);
@@ -244,6 +250,10 @@ export function SidebarInterne() {
           <AvatarCompte
             role={utilisateur.role}
             email={utilisateur.email}
+            logoEtablissement={etablissementCompte?.logo_url}
+            nomEtablissement={
+              etablissementCompte?.nom ?? utilisateur.etablissement_nom
+            }
             className="h-[34px] w-[34px] text-[12px]"
           />
           {!reduit ? (

@@ -15,6 +15,7 @@ import apiClient from "@/lib/api-client"
 import type { PublicationPublique } from "@/types/api"
 import { useState } from "react"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
+import { ImageMedia } from "@/components/shared/ImageMedia"
 
 // Page detail d'une publication publique (section 7.4 : "detail d'une
 // publication"). Accessible sans authentification.
@@ -34,7 +35,11 @@ export function PublicationDetailPage() {
   useTitreBreadcrumb(publication?.titre)
 
   const [photoActive, setPhotoActive] = useState(0)
-  const photos = publication?.photos ?? []
+  const photos = [...(publication?.photos ?? [])].sort(
+    (premiere, seconde) => premiere.ordre - seconde.ordre,
+  )
+  const indexPhotoActive = Math.min(photoActive, Math.max(photos.length - 1, 0))
+  const photoAffichee = photos[indexPhotoActive]
 
   if (isLoading) {
     return (
@@ -111,9 +116,10 @@ export function PublicationDetailPage() {
       {photos.length > 0 && (
         <div className="mt-8">
           <div className="relative overflow-hidden rounded-xl bg-muted">
-            <img
-              src={photos[photoActive].url_fichier}
-              alt={photos[photoActive].legende ?? publication.titre}
+            <ImageMedia
+              key={photoAffichee.id}
+              src={photoAffichee.url_fichier}
+              alt={photoAffichee.legende || publication.titre}
               className="h-64 w-full object-cover sm:h-96"
             />
             {photos.length > 1 && (
@@ -159,7 +165,7 @@ export function PublicationDetailPage() {
                   onClick={() => setPhotoActive(i)}
                   aria-label={`Photo ${i + 1}`}
                   className={`h-2 w-2 rounded-full transition-all ${
-                    i === photoActive
+                    i === indexPhotoActive
                       ? "w-4 bg-primary"
                       : "bg-muted-foreground/30"
                   }`}
@@ -167,11 +173,11 @@ export function PublicationDetailPage() {
               ))}
             </div>
           )}
-          {photos[photoActive].legende && (
+          {photoAffichee.legende ? (
             <p className="mt-2 text-center text-sm text-muted-foreground">
-              {photos[photoActive].legende}
+              {photoAffichee.legende}
             </p>
-          )}
+          ) : null}
         </div>
       )}
 

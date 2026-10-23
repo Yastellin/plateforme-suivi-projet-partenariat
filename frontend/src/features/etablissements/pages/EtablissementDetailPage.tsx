@@ -5,7 +5,7 @@ import { Building2, FolderKanban, Handshake, Network } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Panel, PanelHeader, PanelBody } from "@/components/shared/Panel";
-import { LogoUploader } from "@/components/shared/LogoUploader";
+import { LogoMedia } from "@/components/shared/ImageMedia";
 import { useEtablissement } from "@/features/etablissements/api/useEtablissement";
 import { useComparatifEtablissements } from "@/features/tableau-de-bord/api/useComparatifEtablissements";
 import { useProjets } from "@/features/projets/api/useProjets";
@@ -65,23 +65,16 @@ export function EtablissementDetailPage() {
         <Panel>
           <PanelHeader titre="Identité et description" />
           <PanelBody className="flex flex-col gap-5">
-            <LogoUploader
-              endpoint={`/etablissements/${etablissement.id}/logo`}
-              logoUrl={etablissement.logo_url}
-              nom={etablissement.nom}
-              queryKeys={[
-                ["etablissements", etablissement.id],
-                ["etablissements"],
-                ["partenariats"],
-                ["projets"],
-                ["synthese"],
-                ["public"],
-                ["public-etablissements"],
-                ["public-publications"],
-                ["public-publication"],
-              ]}
-              lectureSeule={!permissions.estPresidence}
-            />
+            <div className="flex items-center gap-4">
+              <LogoMedia
+                src={etablissement.logo_url}
+                nom={etablissement.nom}
+                className="h-20 w-20 flex-shrink-0 rounded-lg border border-[var(--color-border)] bg-white object-contain p-1 text-lg"
+              />
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                Ce logo est géré exclusivement par le compte de l’établissement.
+              </p>
+            </div>
             <p className="text-[13.5px] leading-relaxed text-[var(--color-text-secondary)]">
               {etablissement.description ?? "Aucune description renseignée."}
             </p>

@@ -38,7 +38,7 @@ export class EtablissementsService {
     return etablissement;
   }
 
-  /** Televersement du logo d un etablissement (Presidence). */
+  /** Téléversement du logo par le compte de l'établissement concerné. */
   async televerserLogo(
     id: string,
     fichier: Express.Multer.File,
@@ -48,11 +48,7 @@ export class EtablissementsService {
       throw new BadRequestException('Aucun fichier fourni');
     }
 
-    const MIME_AUTORISES = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-    ];
+    const MIME_AUTORISES = ['image/jpeg', 'image/png', 'image/webp'];
     if (!MIME_AUTORISES.includes(fichier.mimetype)) {
       throw new BadRequestException(
         'Format de logo non autorise (JPEG, PNG ou WebP)',

@@ -47,7 +47,7 @@ export class EtablissementsController {
 
   @Post(':id/logo')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @Roles(Role.ETABLISSEMENT)
   @UseInterceptors(
     FileInterceptor('fichier', {
       limits: { fileSize: 2 * 1024 * 1024 },
@@ -69,8 +69,10 @@ export class EtablissementsController {
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() fichier: Express.Multer.File,
   ) {
-    if (user.role === Role.ETABLISSEMENT && user.etablissement_id !== id) {
-      throw new ForbiddenException("Vous ne pouvez modifier que le logo de votre établissement.");
+    if (user.etablissement_id !== id) {
+      throw new ForbiddenException(
+        'Vous ne pouvez modifier que le logo de votre établissement.',
+      );
     }
     return this.etablissementsService.televerserLogo(id, fichier, {
       id: user.id,
