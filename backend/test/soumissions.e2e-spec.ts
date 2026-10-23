@@ -14,6 +14,7 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
   let presidence: any;
   let etablissement: any;
   let etablissementId: string;
+  let etablissementNom: string;
   let autreEtablissementId: string;
   let partenaireIndividuel: any;
   let partenaireMasse: any;
@@ -98,7 +99,7 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
        WHERE role = 'PRESIDENCE' AND actif = true`,
     );
     const notifications = await ctx.dataSource.query(
-      `SELECT n.type, n.reference_id, u.role, u.actif
+      `SELECT n.type, n.reference_id, n.message, u.role, u.actif
        FROM "Notification" n
        JOIN "Utilisateur" u ON u.id = n.utilisateur_id
        WHERE n.reference_id = $1`,
@@ -107,6 +108,11 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
 
     expect(notifications).toHaveLength(total);
     expect(notifications.every((item: any) => item.type === type)).toBe(true);
+    expect(
+      notifications.every((item: any) =>
+        item.message.includes(`l’établissement « ${etablissementNom} »`),
+      ),
+    ).toBe(true);
     expect(
       notifications.every(
         (item: any) => item.role === 'PRESIDENCE' && item.actif === true,
@@ -127,6 +133,11 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       item.email.startsWith('fds@'),
     );
     etablissementId = etablissement.etablissement_id;
+    const [etablissementCourant] = await ctx.dataSource.query(
+      `SELECT nom FROM "Etablissement" WHERE id = $1`,
+      [etablissementId],
+    );
+    etablissementNom = etablissementCourant.nom;
     const [autreEtablissement] = await ctx.dataSource.query(
       `SELECT id FROM "Etablissement" WHERE id <> $1 ORDER BY nom LIMIT 1`,
       [etablissementId],

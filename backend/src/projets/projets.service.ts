@@ -43,6 +43,7 @@ import { Site } from '../referentiels/sites/entities/site.entity';
 import { TypePorteur } from '../common/enums/type-porteur.enum';
 import { Role } from '../common/enums/role.enum';
 import type { PerimetreListeDonnees } from '../common/utils/perimetre-liste';
+import { nommerEtablissementSoumission } from '../common/utils/notification-soumission';
 
 @Injectable()
 export class ProjetsService {
@@ -397,11 +398,15 @@ export class ProjetsService {
       soumis_le: new Date(),
     });
 
+    const etablissement = projet.etablissement as Pick<
+      Etablissement,
+      'nom'
+    > | null;
     await this.eventEmitter.emitAsync('projet.soumis', {
       type: TypeNotification.PROJET_SOUMIS,
       priorite: PrioriteNotification.HAUTE,
       titre: `Projet soumis : ${projet.nom}`,
-      message: `Le projet "${projet.nom}" a été soumis par l'établissement.`,
+      message: `Le projet « ${projet.nom} » a été soumis par ${nommerEtablissementSoumission(etablissement?.nom)}.`,
       reference_type: 'Projet',
       reference_id: id,
     });

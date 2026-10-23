@@ -25,6 +25,7 @@ import { HistoriqueService } from '../historique/historique.service';
 import type { ContexteUtilisateur } from '../historique/historique.service';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
 import type { PerimetreListeDonnees } from '../common/utils/perimetre-liste';
+import { nommerEtablissementSoumission } from '../common/utils/notification-soumission';
 
 @Injectable()
 export class PartenariatsService {
@@ -371,11 +372,15 @@ export class PartenariatsService {
       soumis_le: new Date(),
     });
 
+    const etablissementSoumissionnaire =
+      partenariat.etablissements.find(
+        (etablissement) => etablissement.id === etablissementId,
+      ) ?? partenariat.etablissements[0];
     await this.eventEmitter.emitAsync('partenariat.soumis', {
       type: TypeNotification.PARTENARIAT_SOUMIS,
       priorite: PrioriteNotification.HAUTE,
       titre: `Partenariat soumis : ${partenariat.intitule}`,
-      message: `Le partenariat "${partenariat.intitule}" a été soumis par l'établissement.`,
+      message: `Le partenariat « ${partenariat.intitule} » a été soumis par ${nommerEtablissementSoumission(etablissementSoumissionnaire?.nom)}.`,
       utilisateur_id: null,
       reference_type: 'Partenariat',
       reference_id: id,
