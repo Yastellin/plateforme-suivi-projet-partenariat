@@ -1,11 +1,11 @@
 // src/features/espace-public/components/SectionEtablissements.tsx
 import { Link } from "react-router-dom"
-import { Building2, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
-import { resoudreUrlFichier } from "@/lib/url"
+import { LogoMedia } from "@/components/shared/ImageMedia"
 
 // Section etablissements mis en avant sur la page d'accueil publique.
 // Affiche les etablissements a la une renvoyes par /public/accueil.
@@ -52,15 +52,12 @@ export function SectionEtablissements() {
                 <Card className="group h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
                   <CardContent className="flex items-center gap-4 p-5">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-background text-primary ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
-                      {etab.logo_url ? (
-                        <img
-                          src={resoudreUrlFichier(etab.logo_url)}
-                          alt={etab.nom}
-                          className="h-8 w-8 rounded object-contain"
-                        />
-                      ) : (
-                        <Building2 size={22} />
-                      )}
+                      <LogoMedia
+                        src={etab.logo_url}
+                        nom={etab.nom}
+                        className="h-8 w-8 rounded object-contain text-xs"
+                        loading="lazy"
+                      />
                     </div>
                     <div className="min-w-0">
                       <p className="truncate font-heading text-sm font-semibold text-foreground">

@@ -29,8 +29,8 @@ export class SitesController {
   constructor(private sitesService: SitesService) {}
 
   @Post()
-  @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Creer un site (Presidence uniquement)' })
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Creer un site (Présidence ou établissement)' })
   @ApiResponse({ status: 201, type: SiteResponseDto })
   create(@Body() dto: CreateSiteDto): Promise<SiteResponseDto> {
     return this.sitesService.create(dto);
@@ -54,7 +54,9 @@ export class SitesController {
 
   @Patch(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Mettre a jour un site (Presidence uniquement)' })
+  @ApiOperation({
+    summary: 'Mettre a jour un site (Présidence ou établissement)',
+  })
   @ApiResponse({ status: 200, type: SiteResponseDto })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -65,7 +67,7 @@ export class SitesController {
 
   @Delete(':id')
   @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Supprimer un site (Presidence uniquement)' })
+  @ApiOperation({ summary: 'Supprimer un site (Présidence ou établissement)' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.sitesService.remove(id);
   }

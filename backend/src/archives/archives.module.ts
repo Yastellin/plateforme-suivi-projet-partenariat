@@ -9,10 +9,12 @@ import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 import { Document } from '../documents/entities/document.entity';
 import { ArchivesController } from './archives.controller';
 import { ArchivesService } from './archives.service';
+import { DocumentsModule } from '../documents/documents.module';
 
 @Module({
   imports: [
     HistoriqueModule,
+    DocumentsModule,
     TypeOrmModule.forFeature([
       Partenaire,
       Partenariat,

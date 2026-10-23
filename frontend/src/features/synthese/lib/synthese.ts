@@ -153,6 +153,12 @@ export function normaliserPartenaireStrategique(brut: unknown): SynthesePartenai
     annee: brut.annee === undefined ? undefined : versNombre(brut.annee),
     partenaire_id: versTexte(brut.partenaire_id),
     partenaire_nom: nom,
+    partenaire_logo_url:
+      typeof brut.partenaire_logo_url === 'string'
+        ? brut.partenaire_logo_url
+        : partenaire && typeof partenaire.logo_url === 'string'
+          ? partenaire.logo_url
+          : null,
   };
 }
 
@@ -162,6 +168,10 @@ export function normaliserSyntheseEtablissement(brut: unknown, anneeDefaut = 0):
   return {
     etablissement_id: versTexte(source.etablissement_id),
     etablissement_nom: versTexte(source.etablissement_nom, 'Établissement'),
+    etablissement_logo_url:
+      typeof source.etablissement_logo_url === 'string'
+        ? source.etablissement_logo_url
+        : null,
     annee: source.annee === undefined ? anneeDefaut : versNombre(source.annee),
     compteurs: normaliserCompteurs(source.compteurs),
     items: versTableau(source.items)
@@ -302,6 +312,7 @@ export function totaliserSyntheseGlobale(etablissements: SyntheseEtablissement[]
 export interface LigneComparatifEtablissement {
   etablissement_id: string;
   etablissement_nom: string;
+  etablissement_logo_url: string | null;
   libelle_court: string;
   partenaires: number;
   conventions_actives: number;
@@ -321,6 +332,7 @@ export function construireComparatif(etablissements: SyntheseEtablissement[]): L
     return {
       etablissement_id: etablissement.etablissement_id,
       etablissement_nom: etablissement.etablissement_nom,
+      etablissement_logo_url: etablissement.etablissement_logo_url ?? null,
       libelle_court: tronquerLibelle(etablissement.etablissement_nom),
       partenaires: etablissement.compteurs.partenaires,
       conventions_actives: etablissement.compteurs.conventions_actives,

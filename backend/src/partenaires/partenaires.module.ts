@@ -6,10 +6,15 @@ import { PartenairesService } from './partenaires.service';
 import { ContactsModule } from './contacts/contacts.module';
 import { Partenaire } from './entities/partenaire.entity';
 import { Contact } from './entities/contact.entity';
+import { CoordonneesModule } from '../coordonnees/coordonnees.module';
 
 @Module({
   imports: [
-    HistoriqueModule,TypeOrmModule.forFeature([Partenaire, Contact]), ContactsModule],
+    HistoriqueModule,
+    TypeOrmModule.forFeature([Partenaire, Contact]),
+    CoordonneesModule,
+    ContactsModule,
+  ],
   controllers: [PartenairesController],
   providers: [PartenairesService],
   exports: [PartenairesService, TypeOrmModule],

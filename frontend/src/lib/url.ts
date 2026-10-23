@@ -1,25 +1,64 @@
 // src/lib/url.ts
 //
-// Les fichiers envoyes (logos, photos, documents) sont exposes par le backend
-// sous le prefixe "/uploads/" (static assets). Le client tourne sur une origine
-// differente (Vite :5173) de l'API (:3000), donc une URL relative type
-// "/uploads/publications/xxx.png" resoudrait contre le mauvais host.
-// Cette helper reconstitue une URL absolue pointant vers le backend.
+// Les médias publics envoyés (logos et photos) sont exposés par le backend
+// sous le préfixe "/uploads/" et, pour les déploiements qui ne proxifient que
+// l'API, sous "/api/uploads/". Les documents restent téléchargés via une route
+// authentifiée.
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+const API_BASE_URL = (import.meta.env.VITE_API_URL?.trim() || "/api").replace(
+  /\/+$/,
+  "",
+);
 
-// Origine du backend (on retire le suffixe "/api" eventuel).
-const BACKEND_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
+const API_EST_ABSOLUE = /^https?:\/\//i.test(API_BASE_URL);
+const BACKEND_ORIGIN = API_EST_ABSOLUE ? new URL(API_BASE_URL).origin : "";
 
-/**
- * Transforme une URL de stockage relative (ex. "/uploads/publications/1/abc.png")
- * en URL absolue vers le backend. Les URLs deja absolues sont retourne telles quelles.
- */
-export function resoudreUrlFichier(url: string | null | undefined): string {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`;
-  return `${BACKEND_ORIGIN}/${url}`;
+function estUrlAutonome(url: string): boolean {
+  return /^(?:https?:)?\/\//i.test(url) || /^(?:blob|data):/i.test(url);
 }
 
-export { BACKEND_ORIGIN };
+/**
+ * Retourne les URLs publiques à essayer pour un média stocké. Le chemin sous
+ * `/api/uploads` est prioritaire, car il fonctionne derrière un proxy qui
+ * n'expose que l'API. Le chemin historique `/uploads` reste un repli utile
+ * pendant un déploiement progressif ou lorsque le backend a sa propre origine.
+ */
+export function resoudreUrlsFichier(
+  url: string | null | undefined,
+): string[] {
+  if (!url) return [];
+  const valeur = url.trim();
+  if (!valeur) return [];
+  if (estUrlAutonome(valeur)) return [valeur];
+
+  let cheminUploads: string | null = null;
+  if (valeur.startsWith("/api/uploads/")) {
+    cheminUploads = valeur.slice(4);
+  } else if (valeur.startsWith("/uploads/")) {
+    cheminUploads = valeur;
+  } else if (valeur.startsWith("uploads/")) {
+    cheminUploads = `/${valeur}`;
+  }
+
+  if (cheminUploads) {
+    return Array.from(
+      new Set([
+        `${API_BASE_URL}${cheminUploads}`,
+        `${BACKEND_ORIGIN}${cheminUploads}`,
+      ]),
+    );
+  }
+
+  return [
+    valeur.startsWith("/")
+      ? `${BACKEND_ORIGIN}${valeur}`
+      : `${BACKEND_ORIGIN}/${valeur}`,
+  ];
+}
+
+/** Retourne l'URL prioritaire d'un média public. */
+export function resoudreUrlFichier(url: string | null | undefined): string {
+  return resoudreUrlsFichier(url)[0] ?? "";
+}
+
+export { API_BASE_URL, BACKEND_ORIGIN };

@@ -28,6 +28,16 @@ export interface Utilisateur {
   role: RoleUtilisateur;
   etablissement_id: string | null;
   etablissement_nom: string | null;
+  actif?: boolean;
+  derniere_connexion?: string | null;
+  preferences?: PreferencesCompte;
+}
+
+export interface PreferencesCompte {
+  theme?: 'CLAIR' | 'SOMBRE' | 'SYSTEME';
+  densite?: 'CONFORTABLE' | 'COMPACTE';
+  animations?: boolean;
+  aide_contextuelle?: boolean;
 }
 
 export interface ConnexionReponse {
@@ -109,10 +119,15 @@ export interface CompteursTableauDeBord {
 export interface TableauDeBordReponse {
   compteurs: {
     partenaires: number;
+    partenaires_actifs?: number;
     partenariats: number;
     cotutelles: number;
     projets: number;
+    projets_en_cours?: number;
     conventions: number;
+    conventions_signees?: number;
+    conventions_actives?: number;
+    conventions_a_echeance?: number;
     publications: number;
     repartition_conventions: Record<StatutConvention, number>;
   };
@@ -146,6 +161,8 @@ export interface ComparatifEtablissement {
   projets?: number;
   projets_en_cours?: number;
   projets_actifs?: number;
+  partenariats?: number;
+  cotutelles?: number;
   conventions?: number;
 }
 
@@ -165,6 +182,8 @@ export interface Contact {
   fonction: string | null;
   email: string | null;
   telephone: string | null;
+  emails?: string[];
+  telephones?: string[];
   partenaire_id: string;
   created_at: string;
   updated_at: string;
@@ -178,6 +197,8 @@ export interface Partenaire {
   adresse: string | null;
   telephone: string | null;
   email: string | null;
+  telephones?: string[];
+  emails?: string[];
   site_web: string | null;
   description: string | null;
   statut: StatutPartenaire;
@@ -187,6 +208,7 @@ export interface Partenaire {
   archive: boolean;
   soumis_le: string | null;
   publie_le: string | null;
+  cree_par_role: RoleUtilisateur | null;
   etablissement_id: string;
   created_at: string;
   updated_at: string;
@@ -197,11 +219,13 @@ export interface PartenariatEtablissementRef {
   id: string;
   nom: string;
   sigle: string | null;
+  logo_url: string | null;
 }
 
 export interface PartenariatPartenaireRef {
   id: string;
   nom: string;
+  logo_url: string | null;
 }
 export interface Projet {
   id: string;
@@ -217,17 +241,22 @@ export interface Projet {
   etablissement_id: string | null;
   partenariat_id: string | null;
   porteur_id: string | null;
+  porteur?: import('./api-heritage').Porteur | null;
+  etablissement?: Etablissement | null;
+  partenariat?: Partenariat | null;
   etablissement_nom: string | null;
   etablissement_sigle: string | null;
   soumis_le: string | null;
   publie_le: string | null;
+  cree_par_role: RoleUtilisateur | null;
   avancement: number;
   en_retard: boolean;
   created_at: string;
   updated_at: string;
-  bailleurs?: { bailleur_id: string; nom?: string }[];
-  beneficiaires?: { beneficiaire_id: string; nom?: string }[];
-  sites?: { site_id: string; nom?: string }[];
+  partenaires?: { partenaire_id: string; partenaire?: Partenaire }[];
+  bailleurs?: { bailleur_id: string; bailleur?: import('./api-heritage').Bailleur }[];
+  beneficiaires?: { beneficiaire_id: string; beneficiaire?: import('./api-heritage').Beneficiaire }[];
+  sites?: { site_id: string; site?: import('./api-heritage').Site }[];
 }
 
 export interface Partenariat {
@@ -247,6 +276,7 @@ export interface Partenariat {
   archive: boolean;
   soumis_le: string | null;
   publie_le: string | null;
+  cree_par_role: RoleUtilisateur | null;
   created_at: string;
   updated_at: string;
   etablissements: PartenariatEtablissementRef[];
@@ -285,6 +315,7 @@ export interface SynthesePartenaireStrategique {
   annee?: number;
   partenaire_id: string;
   partenaire_nom?: string;
+  partenaire_logo_url?: string | null;
   partenaire?: Partenaire;
 }
 
@@ -292,6 +323,7 @@ export interface SynthesePartenaireStrategique {
 export interface SyntheseEtablissement {
   etablissement_id: string;
   etablissement_nom: string;
+  etablissement_logo_url?: string | null;
   annee: number;
   compteurs: SyntheseCompteurs;
   items: SyntheseItem[];
@@ -330,6 +362,7 @@ export interface EtablissementPublicRef {
   id: string;
   nom: string;
   sigle: string | null;
+  logo_url: string | null;
 }
 
 export interface PartenairePublicRef {

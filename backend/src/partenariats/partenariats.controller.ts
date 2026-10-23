@@ -27,6 +27,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { OwnEtablissementGuard } from '../common/guards/own-etablissement.guard';
+import { SoumissionMasseDto } from '../common/dto/soumission-masse.dto';
+import { StatutPartenariat } from '../common/enums/statut-partenariat.enum';
 
 @ApiTags('Partenariats')
 @ApiBearerAuth()
@@ -49,12 +51,10 @@ export class PartenariatsController {
           'Aucun établissement associé à ce compte.',
         );
       }
-      // L'établissement qui crée doit être dans la liste des établissements associés (RG06)
-      if (!dto.etablissements_ids.includes(etablissementId)) {
-        throw new BadRequestException(
-          "L'établissement connecté doit être dans la liste des établissements associés.",
-        );
-      }
+      // Le rattachement est déduit du compte : le frontend n'a pas à envoyer
+      // son propre identifiant et ne peut pas rattacher le brouillon ailleurs.
+      dto.etablissements_ids = [etablissementId];
+      dto.statut = StatutPartenariat.BROUILLON;
     } else if (user.role === Role.PRESIDENCE) {
       if (!dto.etablissements_ids || dto.etablissements_ids.length === 0) {
         throw new BadRequestException('Au moins un établissement est requis.');
@@ -64,7 +64,11 @@ export class PartenariatsController {
       throw new ForbiddenException('Rôle non autorisé pour cette action.');
     }
 
-    return this.partenariatsService.create(etablissementId, dto);
+    return this.partenariatsService.create(etablissementId, dto, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   @Get()
@@ -105,8 +109,8 @@ export class PartenariatsController {
 
   @Post(':id/soumettre')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
-  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence' })
+  @Roles(Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Soumettre un partenariat à la Présidence (établissement)' })
   @ApiResponse({ status: 200, type: PartenariatResponseDto })
   soumettre(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
     const etablissementId =
@@ -120,14 +124,14 @@ export class PartenariatsController {
 
   @Post('soumettre')
   @HttpCode(200)
-  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @Roles(Role.ETABLISSEMENT)
   @ApiOperation({
-    summary: 'Soumettre plusieurs partenariats a la Presidence en une fois',
+    summary: 'Soumettre plusieurs partenariats à la Présidence en une fois (établissement)',
   })
   @ApiResponse({ status: 200 })
   soumettreEnMasse(
     @CurrentUser() user: any,
-    @Body() dto: { ids: string[] },
+    @Body() dto: SoumissionMasseDto,
   ) {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;

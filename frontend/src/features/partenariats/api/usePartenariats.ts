@@ -1,4 +1,4 @@
-﻿// src/features/partenariats/api/usePartenariats.ts
+// src/features/partenariats/api/usePartenariats.ts
 
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
@@ -8,6 +8,7 @@ interface ParametresPartenariats {
   page: number;
   limit: number;
   recherche?: string;
+  etablissement_id?: string;
 }
 
 async function recupererPartenariats(parametres: ParametresPartenariats): Promise<PageServeur<Partenariat>> {
@@ -16,6 +17,7 @@ async function recupererPartenariats(parametres: ParametresPartenariats): Promis
       page: parametres.page,
       limit: parametres.limit,
       intitule: parametres.recherche || undefined,
+      etablissement_id: parametres.etablissement_id,
     },
   });
   return reponse.data;

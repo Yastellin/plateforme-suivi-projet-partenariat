@@ -1,40 +1,54 @@
-﻿// src/features/cotutelles/pages/CotutelleDetailPage.tsx
+// src/features/cotutelles/pages/CotutelleDetailPage.tsx
 
-import { useState } from "react"
-import { useParams } from "react-router-dom"
-import { GraduationCap, Archive, Pencil } from "lucide-react"
-import { toast } from "sonner"
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { GraduationCap, Archive, Pencil } from "lucide-react";
+import { toast } from "sonner";
 
-import { EmptyState } from "@/components/shared/EmptyState"
-import { PageHeader } from "@/components/shared/PageHeader"
-import { Panel, PanelHeader, PanelBody } from "@/components/shared/Panel"
-import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { CotutelleForm } from "@/features/cotutelles/components/CotutelleForm"
-import { useCotutelle } from "@/features/cotutelles/api/useCotutelle"
-import { useArchiverCotutelle } from "@/features/cotutelles/api/useArchiverCotutelle"
-import { usePermissions } from "@/hooks/usePermissions"
-import { formaterDate } from "@/lib/format"
-import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
+import { EmptyState } from "@/components/shared/EmptyState";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Panel, PanelHeader, PanelBody } from "@/components/shared/Panel";
+import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CotutelleForm } from "@/features/cotutelles/components/CotutelleForm";
+import { useCotutelle } from "@/features/cotutelles/api/useCotutelle";
+import { useArchiverCotutelle } from "@/features/cotutelles/api/useArchiverCotutelle";
+import { usePermissions } from "@/hooks/usePermissions";
+import { formaterDate } from "@/lib/format";
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext";
+import { ListeDocumentsEntite } from "@/features/documents/components/ListeDocumentsEntite";
 
-function Champ({ libelle, valeur }: { libelle: string; valeur?: string | null }) {
+function Champ({
+  libelle,
+  valeur,
+}: {
+  libelle: string;
+  valeur?: string | null;
+}) {
   return (
     <div>
-      <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">{libelle}</dt>
+      <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">
+        {libelle}
+      </dt>
       <dd className="mt-1 text-[13.5px]">{valeur || "—"}</dd>
     </div>
-  )
+  );
 }
 
 export function CotutelleDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const permissions = usePermissions()
-  const [modificationOuverte, setModificationOuverte] = useState(false)
-  const [archivageOuvert, setArchivageOuvert] = useState(false)
-  const { data: cotutelle, isLoading } = useCotutelle(id)
-  useTitreBreadcrumb(cotutelle?.nom_doctorant)
-  const archiver = useArchiverCotutelle()
+  const { id } = useParams<{ id: string }>();
+  const permissions = usePermissions();
+  const [modificationOuverte, setModificationOuverte] = useState(false);
+  const [archivageOuvert, setArchivageOuvert] = useState(false);
+  const { data: cotutelle, isLoading } = useCotutelle(id);
+  useTitreBreadcrumb(cotutelle?.nom_doctorant);
+  const archiver = useArchiverCotutelle();
 
   if (isLoading) {
     return (
@@ -42,13 +56,17 @@ export function CotutelleDetailPage() {
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-64 w-full rounded-[var(--radius)]" />
       </div>
-    )
+    );
   }
 
   if (!cotutelle) {
     return (
-      <EmptyState icone={GraduationCap} titre="Cotutelle introuvable" description="Cette cotutelle n'existe pas ou a été supprimée." />
-    )
+      <EmptyState
+        icone={GraduationCap}
+        titre="Cotutelle introuvable"
+        description="Cette cotutelle n'existe pas ou a été supprimée."
+      />
+    );
   }
 
   return (
@@ -58,7 +76,7 @@ export function CotutelleDetailPage() {
         description={`${cotutelle.type === "COTUTELLE" ? "Co-tutelle" : "Co-encadrement"} — ${cotutelle.specialite || "Non précisé"}`}
         actions={
           <div className="flex gap-2">
-            {permissions.peutModifier ? (
+            {permissions.estPresidence ? (
               <button
                 type="button"
                 onClick={() => setModificationOuverte(true)}
@@ -87,13 +105,28 @@ export function CotutelleDetailPage() {
           <PanelHeader titre="Informations générales" />
           <PanelBody>
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Champ libelle="Directeur local" valeur={cotutelle.directeur_these_local} />
-              <Champ libelle="Directeur partenaire" valeur={cotutelle.directeur_these_partenaire} />
-              <Champ libelle="Financement" valeur={cotutelle.financement_bourse} />
+              <Champ
+                libelle="Directeur local"
+                valeur={cotutelle.directeur_these_local}
+              />
+              <Champ
+                libelle="Directeur partenaire"
+                valeur={cotutelle.directeur_these_partenaire}
+              />
+              <Champ
+                libelle="Financement"
+                valeur={cotutelle.financement_bourse}
+              />
               <Champ libelle="Avancement" valeur={cotutelle.etat_avancement} />
-              <Champ libelle="Date de début" valeur={formaterDate(cotutelle.date_debut)} />
+              <Champ
+                libelle="Date de début"
+                valeur={formaterDate(cotutelle.date_debut)}
+              />
               {cotutelle.date_prevue_soutenance && (
-                <Champ libelle="Soutenance prévue" valeur={formaterDate(cotutelle.date_prevue_soutenance)} />
+                <Champ
+                  libelle="Soutenance prévue"
+                  valeur={formaterDate(cotutelle.date_prevue_soutenance)}
+                />
               )}
             </dl>
           </PanelBody>
@@ -104,7 +137,9 @@ export function CotutelleDetailPage() {
             <Panel>
               <PanelHeader titre="Publications produites" />
               <PanelBody>
-                <p className="text-[13.5px]">{cotutelle.publications_produites}</p>
+                <p className="text-[13.5px]">
+                  {cotutelle.publications_produites}
+                </p>
               </PanelBody>
             </Panel>
           )}
@@ -112,7 +147,9 @@ export function CotutelleDetailPage() {
             <Panel>
               <PanelHeader titre="Difficultés rencontrées" />
               <PanelBody>
-                <p className="text-[13.5px]">{cotutelle.difficultes_rencontrees}</p>
+                <p className="text-[13.5px]">
+                  {cotutelle.difficultes_rencontrees}
+                </p>
               </PanelBody>
             </Panel>
           )}
@@ -127,6 +164,18 @@ export function CotutelleDetailPage() {
         </div>
       </div>
 
+      {!permissions.estEtablissement ? (
+        <Panel className="mb-[22px]">
+          <PanelHeader
+            titre="Documents"
+            sousTitre="Pièces rattachées à cette cotutelle"
+          />
+          <PanelBody>
+            <ListeDocumentsEntite cotutelleId={cotutelle.id} />
+          </PanelBody>
+        </Panel>
+      ) : null}
+
       <Dialog open={modificationOuverte} onOpenChange={setModificationOuverte}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
@@ -135,8 +184,8 @@ export function CotutelleDetailPage() {
           <CotutelleForm
             cotutelle={cotutelle}
             onSucces={() => {
-              setModificationOuverte(false)
-              toast.success("Cotutelle mise à jour")
+              setModificationOuverte(false);
+              toast.success("Cotutelle mise à jour");
             }}
             onAnnuler={() => setModificationOuverte(false)}
           />
@@ -149,8 +198,8 @@ export function CotutelleDetailPage() {
         onConfirmer={() =>
           archiver.mutate(cotutelle.id, {
             onSuccess: () => {
-              toast.success("Cotutelle archivée")
-              setArchivageOuvert(false)
+              toast.success("Cotutelle archivée");
+              setArchivageOuvert(false);
             },
             onError: (e: Error) => toast.error(e.message),
           })
@@ -161,5 +210,5 @@ export function CotutelleDetailPage() {
         libelleAction="Archiver"
       />
     </div>
-  )
+  );
 }

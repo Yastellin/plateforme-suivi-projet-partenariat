@@ -1,4 +1,4 @@
-﻿// src/features/comptes/components/FormulaireMotDePasse.tsx
+// src/features/comptes/components/FormulaireMotDePasse.tsx
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -20,7 +20,7 @@ export function FormulaireMotDePasse() {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<ChangerMotDePasseFormValues>({
     resolver: zodResolver(schemaChangerMotDePasse),
     mode: "onChange",
@@ -95,7 +95,7 @@ export function FormulaireMotDePasse() {
         )}
       </div>
 
-      <Button type="submit" disabled={changement.isPending} className="mt-2 self-start">
+      <Button type="submit" disabled={changement.isPending || !isValid} className="mt-2 self-start">
         {changement.isPending && <LoaderCircle className="animate-spin" />}
         Modifier le mot de passe
       </Button>

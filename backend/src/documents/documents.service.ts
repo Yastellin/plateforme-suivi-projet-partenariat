@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, IsNull, Repository } from 'typeorm';
+import { basename, extname } from 'path';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 import { QueryDocumentDto } from './dto/query-document.dto';
 import { DocumentResponseDto } from './dto/document-response.dto';
@@ -17,6 +18,9 @@ import { Projet } from '../projets/entities/projet.entity';
 import { Convention } from '../conventions/entities/convention.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
+import { HistoriqueService } from '../historique/historique.service';
+import type { ContexteUtilisateur } from '../historique/historique.service';
+import { ActionHistorique } from '../common/enums/action-historique.enum';
 
 type ParentDocument = {
   cle: 'projet_id' | 'convention_id' | 'cotutelle_id' | 'partenariat_id';
@@ -37,11 +41,13 @@ export class DocumentsService {
     @InjectRepository(Partenariat)
     private partenariatRepo: Repository<Partenariat>,
     @Inject(STORAGE_PORT) private storage: StoragePort,
+    private historique: HistoriqueService,
   ) {}
 
   async upload(
     fichier: Express.Multer.File,
     dto: UploadDocumentDto,
+    utilisateur?: ContexteUtilisateur | null,
   ): Promise<DocumentResponseDto> {
     if (!fichier) throw new BadRequestException('Aucun fichier fourni');
 
@@ -54,27 +60,40 @@ export class DocumentsService {
 
     await this.verifierParent(parent);
 
-    // Archiver l'ancienne version du meme type pour le meme parent (RG24)
-    const ancienneVersion = await this.documentRepo.findOne({
-      where: {
-        type: dto.type,
-        est_archive: false,
-        projet_id: parent.cle === 'projet_id' ? parent.valeur : IsNull(),
-        convention_id:
-          parent.cle === 'convention_id' ? parent.valeur : IsNull(),
-        cotutelle_id:
-          parent.cle === 'cotutelle_id' ? parent.valeur : IsNull(),
-        partenariat_id:
-          parent.cle === 'partenariat_id' ? parent.valeur : IsNull(),
-      },
-      order: { version: 'DESC' },
-    });
+    const rattachement = {
+      type: dto.type,
+      projet_id: parent.cle === 'projet_id' ? parent.valeur : IsNull(),
+      convention_id: parent.cle === 'convention_id' ? parent.valeur : IsNull(),
+      cotutelle_id: parent.cle === 'cotutelle_id' ? parent.valeur : IsNull(),
+      partenariat_id:
+        parent.cle === 'partenariat_id' ? parent.valeur : IsNull(),
+    };
 
-    let nouvelleVersion = 1;
-    if (ancienneVersion) {
-      nouvelleVersion = ancienneVersion.version + 1;
-      await this.documentRepo.update(ancienneVersion.id, {
+    // Le numéro repart de la dernière version connue, même lorsque toutes les
+    // versions ont été archivées manuellement. La version active (qui peut
+    // avoir été restaurée et ne pas être la plus récente) est ensuite archivée.
+    const [derniereVersion, ancienneVersionActive] = await Promise.all([
+      this.documentRepo.findOne({
+        where: rattachement,
+        order: { version: 'DESC' },
+      }),
+      this.documentRepo.findOne({
+        where: { ...rattachement, est_archive: false },
+      }),
+    ]);
+    const nouvelleVersion = (derniereVersion?.version ?? 0) + 1;
+
+    if (ancienneVersionActive) {
+      await this.documentRepo.update(ancienneVersionActive.id, {
         est_archive: true,
+      });
+      await this.historique.enregistrer({
+        action: ActionHistorique.ARCHIVAGE,
+        entite_type: 'Document',
+        entite_id: ancienneVersionActive.id,
+        entite_nom: ancienneVersionActive.nom_fichier,
+        utilisateur: utilisateur ?? null,
+        details: `Remplacé par la version ${nouvelleVersion}`,
       });
     }
 
@@ -82,30 +101,50 @@ export class DocumentsService {
     const urlFichier = await this.storage.enregistrer(fichier, dossier);
 
     const document = this.documentRepo.create({
-      nom_fichier: dto.nom_fichier || fichier.originalname,
+      nom_fichier: this.nettoyerNomFichier(
+        dto.nom_fichier || fichier.originalname,
+      ),
       url_fichier: urlFichier,
       type: dto.type,
       version: nouvelleVersion,
       est_archive: false,
       projet_id: parent.cle === 'projet_id' ? parent.valeur : null,
-      convention_id:
-        parent.cle === 'convention_id' ? parent.valeur : null,
+      convention_id: parent.cle === 'convention_id' ? parent.valeur : null,
       cotutelle_id: parent.cle === 'cotutelle_id' ? parent.valeur : null,
-      partenariat_id:
-        parent.cle === 'partenariat_id' ? parent.valeur : null,
+      partenariat_id: parent.cle === 'partenariat_id' ? parent.valeur : null,
     });
 
-    return this.mapToResponse(await this.documentRepo.save(document));
+    const enregistre = await this.documentRepo.save(document);
+    await this.historique.enregistrer({
+      action: ActionHistorique.CREATION,
+      entite_type: 'Document',
+      entite_id: enregistre.id,
+      entite_nom: enregistre.nom_fichier,
+      utilisateur: utilisateur ?? null,
+      details: `Version ${enregistre.version}`,
+    });
+    return this.mapToResponse(enregistre);
   }
 
-  async findOne(id: string): Promise<DocumentResponseDto> {
-    const document = await this.documentRepo.findOne({ where: { id } });
+  async findOne(
+    id: string,
+    inclureArchives = false,
+  ): Promise<DocumentResponseDto> {
+    const document = await this.documentRepo.findOne({
+      where: {
+        id,
+        ...(inclureArchives ? {} : { est_archive: false }),
+      },
+    });
     if (!document) throw new NotFoundException('Document non trouve');
     return this.mapToResponse(document);
   }
 
-  async telecharger(id: string): Promise<{ chemin: string; nom: string }> {
-    const document = await this.findOne(id);
+  async telecharger(
+    id: string,
+    inclureArchives = false,
+  ): Promise<{ chemin: string; nom: string }> {
+    const document = await this.findOne(id, inclureArchives);
     const chemin = `${process.cwd()}${document.url_fichier}`;
     return { chemin, nom: document.nom_fichier };
   }
@@ -123,7 +162,9 @@ export class DocumentsService {
       nom,
     } = query;
 
-    const where: FindOptionsWhere<Document> = {};
+    // La liste courante ne mélange pas les archives et les versions remplacées ;
+    // celles-ci restent accessibles par l'historique et le module Archives.
+    const where: FindOptionsWhere<Document> = { est_archive: false };
     if (projet_id) where.projet_id = projet_id;
     if (convention_id) where.convention_id = convention_id;
     if (cotutelle_id) where.cotutelle_id = cotutelle_id;
@@ -161,19 +202,29 @@ export class DocumentsService {
     return versions.map((version) => this.mapToResponse(version));
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<{ message: string }> {
     const document = await this.findOne(id);
+    if (document.est_archive) {
+      throw new BadRequestException('Ce document est déjà archivé');
+    }
 
-    await this.storage.supprimer(document.url_fichier);
+    // L'archivage logique conserve le fichier, son nom et toutes ses versions.
+    await this.documentRepo.update(id, { est_archive: true });
+    await this.historique.enregistrer({
+      action: ActionHistorique.ARCHIVAGE,
+      entite_type: 'Document',
+      entite_id: id,
+      entite_nom: document.nom_fichier,
+      utilisateur: utilisateur ?? null,
+    });
 
-    await this.documentRepo.delete(id);
-
-    return { message: 'Document supprime' };
+    return { message: 'Document archive' };
   }
 
-  private extraireParent(
-    dto: UploadDocumentDto,
-  ): ParentDocument | null {
+  private extraireParent(dto: UploadDocumentDto): ParentDocument | null {
     const candidats: ParentDocument[] = [
       { cle: 'projet_id' as const, valeur: dto.projet_id ?? '' },
       { cle: 'convention_id' as const, valeur: dto.convention_id ?? '' },
@@ -182,6 +233,11 @@ export class DocumentsService {
     ].filter((candidat) => Boolean(candidat.valeur));
 
     if (candidats.length === 0) return null;
+    if (candidats.length > 1) {
+      throw new BadRequestException(
+        'Un document ne peut etre rattache qu a une seule entite a la fois',
+      );
+    }
     return candidats[0];
   }
 
@@ -219,6 +275,26 @@ export class DocumentsService {
     if (!existant) {
       throw new NotFoundException(intituleManquant);
     }
+  }
+
+  /**
+   * Conserve le nom et l'extension fournis tout en empêchant qu'un chemin ou
+   * des caractères de contrôle n'atteignent l'en-tête Content-Disposition.
+   */
+  private nettoyerNomFichier(valeur: string): string {
+    const nom = [...basename(valeur.replace(/\\/g, '/'))]
+      .filter((caractere) => {
+        const code = caractere.codePointAt(0) ?? 0;
+        return code >= 32 && code !== 127;
+      })
+      .join('')
+      .trim();
+    if (!nom) return 'document';
+
+    const extensionComplete = extname(nom);
+    const extension = extensionComplete.slice(0, 32);
+    const racine = basename(nom, extensionComplete).trim() || 'document';
+    return `${racine.slice(0, 255 - extension.length)}${extension}`;
   }
 
   private mapToResponse(document: Document): DocumentResponseDto {

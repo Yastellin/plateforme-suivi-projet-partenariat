@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FileText, PencilLine } from 'lucide-react';
 
 import { EmptyState } from '@/components/shared/EmptyState';
+import { LogoMedia } from '@/components/shared/ImageMedia';
 import { Skeleton } from '@/components/ui/skeleton';
 import { libelleTypeItem } from '../lib/synthese';
 import type { SyntheseEtablissement, SyntheseItem } from '@/types/api';
@@ -67,9 +68,15 @@ export function SyntheseNarratifConsolide({
           <header className="flex flex-wrap items-center justify-between gap-2">
             <Link
               to={`${cheminBase}/synthese/${etablissement.etablissement_id}`}
-              className="text-[13.5px] font-bold hover:text-[var(--color-brand)]"
+              className="flex items-center gap-2 text-[13.5px] font-bold hover:text-[var(--color-brand)]"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
+              <LogoMedia
+                src={etablissement.etablissement_logo_url}
+                nom={etablissement.etablissement_nom}
+                className="h-7 w-7 shrink-0 rounded-md border border-[var(--color-border)] bg-white object-contain p-0.5 text-[9px]"
+                loading="lazy"
+              />
               {etablissement.etablissement_nom}
             </Link>
             <span className="font-mono text-[11.5px] font-semibold text-[var(--color-text-secondary)]">

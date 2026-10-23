@@ -1,6 +1,13 @@
 import { useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Archive, Download, FileText, RotateCcw } from "lucide-react"
+import {
+  ArrowLeft,
+  Archive,
+  Clock3,
+  Download,
+  FileText,
+  RotateCcw,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { EmptyState } from "@/components/shared/EmptyState"
@@ -10,6 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog"
 import { useArchiveDetail } from "@/features/archives/api/useArchiveDetail"
 import { useRestaurerArchive } from "@/features/archives/api/useRestaurerArchive"
+import { useArchiveHistorique } from "@/features/archives/api/useArchiveHistorique"
+import { useTelechargerDocument } from "@/features/documents/api/useTelechargerDocument"
 import { useAuth } from "@/hooks/useAuth"
 import { formaterDate } from "@/lib/format"
 import type { TypeArchive } from "@/types/api"
@@ -39,27 +48,49 @@ function estTypeValide(valeur: string | undefined): valeur is TypeArchive {
 
 function titreEntite(type: TypeArchive, data: Record<string, unknown>): string {
   switch (type) {
-    case "partenaires": return String(data.nom ?? "Partenaire")
-    case "partenariats": return String(data.intitule ?? "Partenariat")
-    case "projets": return String(data.nom ?? "Projet")
-    case "conventions": return String(data.titre ?? "Convention")
-    case "cotutelles": return String(data.nom_doctorant ?? "Cotutelle")
-    case "documents": return String(data.nom_fichier ?? "Document")
+    case "partenaires":
+      return String(data.nom ?? "Partenaire")
+    case "partenariats":
+      return String(data.intitule ?? "Partenariat")
+    case "projets":
+      return String(data.nom ?? "Projet")
+    case "conventions":
+      return String(data.titre ?? "Convention")
+    case "cotutelles":
+      return String(data.nom_doctorant ?? "Cotutelle")
+    case "documents":
+      return String(data.nom_fichier ?? "Document")
   }
 }
 
-function Champ({ libelle, valeur }: { libelle: string; valeur: string | number | null | undefined }) {
+function Champ({
+  libelle,
+  valeur,
+}: {
+  libelle: string
+  valeur: string | number | null | undefined
+}) {
   return (
     <div>
       <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">
         {libelle}
       </dt>
-      <dd className="mt-1 text-[13px]">{valeur === null || valeur === undefined || valeur === "" ? "—" : String(valeur)}</dd>
+      <dd className="mt-1 text-[13px]">
+        {valeur === null || valeur === undefined || valeur === ""
+          ? "—"
+          : String(valeur)}
+      </dd>
     </div>
   )
 }
 
-function DetailParType({ type, data }: { type: TypeArchive; data: Record<string, any> }) {
+function DetailParType({
+  type,
+  data,
+}: {
+  type: TypeArchive
+  data: Record<string, any>
+}) {
   switch (type) {
     case "partenaires":
       return (
@@ -85,8 +116,14 @@ function DetailParType({ type, data }: { type: TypeArchive; data: Record<string,
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Champ libelle="Intitule" valeur={data.intitule} />
           <Champ libelle="Domaine" valeur={data.domaine} />
-          <Champ libelle="Date de debut" valeur={data.date_debut ? formaterDate(data.date_debut) : null} />
-          <Champ libelle="Date de fin" valeur={data.date_fin ? formaterDate(data.date_fin) : null} />
+          <Champ
+            libelle="Date de debut"
+            valeur={data.date_debut ? formaterDate(data.date_debut) : null}
+          />
+          <Champ
+            libelle="Date de fin"
+            valeur={data.date_fin ? formaterDate(data.date_fin) : null}
+          />
           <Champ libelle="Statut" valeur={data.statut} />
           {data.objet ? (
             <div className="sm:col-span-2">
@@ -95,12 +132,18 @@ function DetailParType({ type, data }: { type: TypeArchive; data: Record<string,
           ) : null}
           {data.actions_realisees ? (
             <div className="sm:col-span-2">
-              <Champ libelle="Actions realisees" valeur={data.actions_realisees} />
+              <Champ
+                libelle="Actions realisees"
+                valeur={data.actions_realisees}
+              />
             </div>
           ) : null}
           {data.resultats_obtenus ? (
             <div className="sm:col-span-2">
-              <Champ libelle="Resultats obtenus" valeur={data.resultats_obtenus} />
+              <Champ
+                libelle="Resultats obtenus"
+                valeur={data.resultats_obtenus}
+              />
             </div>
           ) : null}
         </dl>
@@ -113,10 +156,21 @@ function DetailParType({ type, data }: { type: TypeArchive; data: Record<string,
           <Champ libelle="Intitule officiel" valeur={data.intitule_officiel} />
           <Champ libelle="Type" valeur={data.type} />
           <Champ libelle="Domaine" valeur={data.domaine} />
-          <Champ libelle="Budget" valeur={data.budget != null ? `${data.budget} Ar` : null} />
+          <Champ
+            libelle="Budget"
+            valeur={data.budget != null ? `${data.budget} Ar` : null}
+          />
           <Champ libelle="Statut" valeur={data.statut} />
-          <Champ libelle="Date de debut" valeur={data.date_debut ? formaterDate(data.date_debut) : null} />
-          <Champ libelle="Date de fin prevue" valeur={data.date_fin_prevue ? formaterDate(data.date_fin_prevue) : null} />
+          <Champ
+            libelle="Date de debut"
+            valeur={data.date_debut ? formaterDate(data.date_debut) : null}
+          />
+          <Champ
+            libelle="Date de fin prevue"
+            valeur={
+              data.date_fin_prevue ? formaterDate(data.date_fin_prevue) : null
+            }
+          />
         </dl>
       )
 
@@ -126,9 +180,20 @@ function DetailParType({ type, data }: { type: TypeArchive; data: Record<string,
           <Champ libelle="Reference" valeur={data.reference} />
           <Champ libelle="Titre" valeur={data.titre} />
           <Champ libelle="Statut" valeur={data.statut} />
-          <Champ libelle="Date de signature" valeur={data.date_signature ? formaterDate(data.date_signature) : null} />
-          <Champ libelle="Date de debut" valeur={data.date_debut ? formaterDate(data.date_debut) : null} />
-          <Champ libelle="Date de fin" valeur={data.date_fin ? formaterDate(data.date_fin) : null} />
+          <Champ
+            libelle="Date de signature"
+            valeur={
+              data.date_signature ? formaterDate(data.date_signature) : null
+            }
+          />
+          <Champ
+            libelle="Date de debut"
+            valeur={data.date_debut ? formaterDate(data.date_debut) : null}
+          />
+          <Champ
+            libelle="Date de fin"
+            valeur={data.date_fin ? formaterDate(data.date_fin) : null}
+          />
           {data.description ? (
             <div className="sm:col-span-2">
               <Champ libelle="Description" valeur={data.description} />
@@ -142,15 +207,34 @@ function DetailParType({ type, data }: { type: TypeArchive; data: Record<string,
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Champ libelle="Nom du doctorant" valeur={data.nom_doctorant} />
           <Champ libelle="Specialite" valeur={data.specialite} />
-          <Champ libelle="Directeur local" valeur={data.directeur_these_local} />
-          <Champ libelle="Directeur partenaire" valeur={data.directeur_these_partenaire} />
+          <Champ
+            libelle="Directeur local"
+            valeur={data.directeur_these_local}
+          />
+          <Champ
+            libelle="Directeur partenaire"
+            valeur={data.directeur_these_partenaire}
+          />
           <Champ libelle="Type" valeur={data.type} />
-          <Champ libelle="Date de debut" valeur={data.date_debut ? formaterDate(data.date_debut) : null} />
-          <Champ libelle="Soutenance prevue" valeur={data.date_prevue_soutenance ? formaterDate(data.date_prevue_soutenance) : null} />
+          <Champ
+            libelle="Date de debut"
+            valeur={data.date_debut ? formaterDate(data.date_debut) : null}
+          />
+          <Champ
+            libelle="Soutenance prevue"
+            valeur={
+              data.date_prevue_soutenance
+                ? formaterDate(data.date_prevue_soutenance)
+                : null
+            }
+          />
           <Champ libelle="Financement" valeur={data.financement_bourse} />
           {data.etat_avancement ? (
             <div className="sm:col-span-2">
-              <Champ libelle="Etat d'avancement" valeur={data.etat_avancement} />
+              <Champ
+                libelle="Etat d'avancement"
+                valeur={data.etat_avancement}
+              />
             </div>
           ) : null}
         </dl>
@@ -162,8 +246,14 @@ function DetailParType({ type, data }: { type: TypeArchive; data: Record<string,
           <Champ libelle="Nom du fichier" valeur={data.nom_fichier} />
           <Champ libelle="Type" valeur={data.type} />
           <Champ libelle="Version" valeur={data.version} />
-          <Champ libelle="Rattache a un projet" valeur={data.projet_id ? "Oui" : "Non"} />
-          <Champ libelle="Rattache a une convention" valeur={data.convention_id ? "Oui" : "Non"} />
+          <Champ
+            libelle="Rattache a un projet"
+            valeur={data.projet_id ? "Oui" : "Non"}
+          />
+          <Champ
+            libelle="Rattache a une convention"
+            valeur={data.convention_id ? "Oui" : "Non"}
+          />
         </dl>
       )
   }
@@ -180,10 +270,12 @@ export function ArchiveDetailPage() {
     typeValide as TypeArchive,
     id,
   )
+  const { data: historique = [] } = useArchiveHistorique(typeValide, id)
   const titrePourBreadcrumb =
     data && typeValide ? titreEntite(typeValide, data) : null
   useTitreBreadcrumb(titrePourBreadcrumb)
   const restaurer = useRestaurerArchive()
+  const telechargement = useTelechargerDocument()
 
   const cheminBase =
     utilisateur?.role === "PRESIDENCE"
@@ -192,8 +284,7 @@ export function ArchiveDetailPage() {
         ? "/etablissement"
         : "/decideur"
 
-  const peutRestaurer =
-    utilisateur?.role === "PRESIDENCE" || utilisateur?.role === "ETABLISSEMENT"
+  const peutRestaurer = utilisateur?.role === "PRESIDENCE"
 
   if (!typeValide || !id) {
     return (
@@ -225,7 +316,9 @@ export function ArchiveDetailPage() {
   }
 
   const titre = titreEntite(typeValide, data)
-  const dateArchivage = data.updated_at ? formaterDate(String(data.updated_at)) : "—"
+  const dateArchivage = data.updated_at
+    ? formaterDate(String(data.updated_at))
+    : "—"
 
   return (
     <div>
@@ -242,15 +335,21 @@ export function ArchiveDetailPage() {
               Retour aux archives
             </Link>
             {typeValide === "documents" ? (
-              <a
-                href={`${import.meta.env.VITE_API_URL ?? "http://localhost:3000/api"}/documents/${id}/telecharger`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+              <button
+                type="button"
+                onClick={() =>
+                  telechargement.mutate({
+                    id,
+                    nomFichier: String(data.nom_fichier ?? "document"),
+                    archive: true,
+                  })
+                }
+                disabled={telechargement.isPending}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] disabled:opacity-60"
               >
                 <Download className="h-3.5 w-3.5" />
-                Telecharger
-              </a>
+                {telechargement.isPending ? "Téléchargement…" : "Télécharger"}
+              </button>
             ) : null}
             {peutRestaurer ? (
               <button
@@ -270,6 +369,47 @@ export function ArchiveDetailPage() {
         <PanelHeader titre={`Informations (${LABEL_TYPE[typeValide]})`} />
         <PanelBody>
           <DetailParType type={typeValide} data={data} />
+        </PanelBody>
+      </Panel>
+
+      <Panel className="mt-4">
+        <PanelHeader
+          titre="Historique"
+          sousTitre="Archivage, restauration et autres actions tracées"
+        />
+        <PanelBody>
+          {historique.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              Aucune action historisée pour cet élément.
+            </p>
+          ) : (
+            <ol className="flex flex-col gap-4">
+              {historique.map((action) => (
+                <li
+                  key={action.id}
+                  className="flex gap-3 border-b border-[var(--color-border)] pb-4 last:border-0 last:pb-0"
+                >
+                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--color-page-bg)] text-[var(--color-brand)]">
+                    <Clock3 className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {action.action.replaceAll("_", " ")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+                      {formaterDate(action.date_creation)} ·{" "}
+                      {action.utilisateur_nom ?? "Système"}
+                    </p>
+                    {action.details ? (
+                      <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                        {action.details}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
         </PanelBody>
       </Panel>
 

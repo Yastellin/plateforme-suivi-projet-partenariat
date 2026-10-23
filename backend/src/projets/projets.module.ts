@@ -12,6 +12,11 @@ import { Activite } from './entities/activite.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
 import { HistoriqueModule } from '../historique/historique.module';
+import { Porteur } from '../referentiels/porteurs/entities/porteur.entity';
+import { Partenaire } from '../partenaires/entities/partenaire.entity';
+import { Beneficiaire } from '../referentiels/beneficiaires/entities/beneficiaire.entity';
+import { Bailleur } from '../referentiels/bailleurs/entities/bailleur.entity';
+import { Site } from '../referentiels/sites/entities/site.entity';
 
 @Module({
   imports: [
@@ -24,6 +29,11 @@ import { HistoriqueModule } from '../historique/historique.module';
       Activite,
       Etablissement,
       Partenariat,
+      Porteur,
+      Partenaire,
+      Beneficiaire,
+      Bailleur,
+      Site,
     ]),
     HistoriqueModule,
   ],

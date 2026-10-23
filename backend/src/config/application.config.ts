@@ -19,6 +19,9 @@ export function configurerApplication(app: NestExpressApplication): void {
     helmet({
       contentSecurityPolicy: false,
       crossOriginEmbedderPolicy: false,
+      // Les photos et logos sont servis par l'API et affichés par le frontend,
+      // souvent depuis une origine distincte en développement.
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
 
@@ -50,8 +53,23 @@ export function configurerApplication(app: NestExpressApplication): void {
   });
   logger.log(`Origines CORS autorisees : ${corsOrigins.join(', ')}`);
 
-  // Servir les fichiers uploades (documents, logos, photos)
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
-    prefix: '/uploads/',
-  });
+  // Seuls les medias réellement publics sont servis sans authentification.
+  // Les documents restent hors du middleware statique et passent par
+  // /api/documents/:id/telecharger afin d'appliquer les droits d'accès.
+  const mediasPublics = [
+    { dossier: 'logos', chemin: 'logos' },
+    { dossier: 'publications', chemin: 'publications' },
+  ];
+  for (const media of mediasPublics) {
+    const racine = join(process.cwd(), 'uploads', media.dossier);
+    // Le second préfixe fonctionne lorsque le proxy de production ne transmet
+    // que /api au backend. Le préfixe historique reste disponible pour les
+    // liens déjà enregistrés ou les déploiements à origines séparées.
+    for (const prefixe of [
+      `/uploads/${media.chemin}/`,
+      `/api/uploads/${media.chemin}/`,
+    ]) {
+      app.useStaticAssets(racine, { prefix: prefixe });
+    }
+  }
 }

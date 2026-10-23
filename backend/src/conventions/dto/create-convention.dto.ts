@@ -20,7 +20,7 @@ export class CreateConventionDto {
   reference: string;
 
   @ApiProperty({
-    example: 'Convention de partenariat FDS - Universite de Toulouse',
+    example: 'Convention de partenariat FDS - Université de Toliara',
   })
   @IsString()
   @MinLength(3)

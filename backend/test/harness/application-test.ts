@@ -21,6 +21,11 @@ import { AddSoumissionPublication1792000000002 } from '../../src/database/migrat
 import { CreateHistoriqueActions1792000000003 } from '../../src/database/migrations/1792000000003-CreateHistoriqueActions';
 import { CreateConfiguration1792000000004 } from '../../src/database/migrations/1792000000004-CreateConfiguration';
 import { ProjetEtablissementFacultatif1793000000000 } from '../../src/database/migrations/1793000000000-ProjetEtablissementFacultatif';
+import { AddCreationProvenance1793100000000 } from '../../src/database/migrations/1793100000000-AddCreationProvenance';
+import { NotificationWorkflowTypes1793100000001 } from '../../src/database/migrations/1793100000001-NotificationWorkflowTypes';
+import { NormalizeContactDetails1793200000000 } from '../../src/database/migrations/1793200000000-NormalizeContactDetails';
+import { AddUserPreferences1793300000000 } from '../../src/database/migrations/1793300000000-AddUserPreferences';
+import { EnforceDocumentParentAndBackfillPublication1793400000000 } from '../../src/database/migrations/1793400000000-EnforceDocumentParentAndBackfillPublication';
 import { demarrerBaseTest, type BaseTest } from './base-postgres';
 
 export const JWT_SECRET_TEST =
@@ -67,6 +72,11 @@ export async function creerApplicationTest(): Promise<ApplicationTest> {
       CreateHistoriqueActions1792000000003,
       CreateConfiguration1792000000004,
       ProjetEtablissementFacultatif1793000000000,
+      AddCreationProvenance1793100000000,
+      NotificationWorkflowTypes1793100000001,
+      NormalizeContactDetails1793200000000,
+      AddUserPreferences1793300000000,
+      EnforceDocumentParentAndBackfillPublication1793400000000,
     ],
     migrationsTableName: 'migrations_typeorm',
     synchronize: false,

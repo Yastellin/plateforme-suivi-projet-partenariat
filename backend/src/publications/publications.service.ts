@@ -36,14 +36,21 @@ export class PublicationsService {
       throw new ConflictException('Ce projet possede deja une publication');
     }
 
+    const statut = dto.statut ?? StatutPublication.BROUILLON;
+    if (statut === StatutPublication.PUBLIEE) {
+      this.verifierProjetPublie(projet);
+    }
+
     const publication = await this.publicationRepo.save(
       this.publicationRepo.create({
         titre: dto.titre,
         description_publique: dto.description_publique ?? null,
         date_publication: dto.date_publication
           ? new Date(dto.date_publication)
-          : null,
-        statut: dto.statut || StatutPublication.BROUILLON,
+          : statut === StatutPublication.PUBLIEE
+            ? new Date()
+            : null,
+        statut,
         resultats: dto.resultats ?? null,
         projet_id: dto.projet_id,
       }),
@@ -88,13 +95,14 @@ export class PublicationsService {
     id: string,
     dto: UpdatePublicationDto,
   ): Promise<PublicationResponseDto> {
-    await this.findOne(id);
+    const publication = await this.findOne(id);
+    let projetCible: Projet | null = null;
 
     if (dto.projet_id) {
-      const projet = await this.projetRepo.findOne({
+      projetCible = await this.projetRepo.findOne({
         where: { id: dto.projet_id, archive: false },
       });
-      if (!projet) throw new NotFoundException('Projet non trouve');
+      if (!projetCible) throw new NotFoundException('Projet non trouve');
 
       const existante = await this.publicationRepo.findOne({
         where: { projet_id: dto.projet_id },
@@ -102,6 +110,15 @@ export class PublicationsService {
       if (existante && existante.id !== id) {
         throw new ConflictException('Ce projet possede deja une publication');
       }
+    }
+
+    const statutFinal = dto.statut ?? publication.statut;
+    if (statutFinal === StatutPublication.PUBLIEE) {
+      projetCible ??= await this.projetRepo.findOne({
+        where: { id: dto.projet_id ?? publication.projet_id, archive: false },
+      });
+      if (!projetCible) throw new NotFoundException('Projet non trouve');
+      this.verifierProjetPublie(projetCible);
     }
 
     const data: Partial<Publication> = {};
@@ -112,7 +129,14 @@ export class PublicationsService {
     if (dto.date_publication !== undefined) {
       data.date_publication = dto.date_publication
         ? new Date(dto.date_publication)
-        : null;
+        : statutFinal === StatutPublication.PUBLIEE
+          ? publication.date_publication || new Date()
+          : null;
+    } else if (
+      dto.statut === StatutPublication.PUBLIEE &&
+      !publication.date_publication
+    ) {
+      data.date_publication = new Date();
     }
     if (dto.statut) data.statut = dto.statut;
     if (dto.resultats !== undefined) data.resultats = dto.resultats ?? null;
@@ -129,12 +153,26 @@ export class PublicationsService {
       throw new ConflictException('Cette publication est deja publiee');
     }
 
+    const projet = await this.projetRepo.findOne({
+      where: { id: publication.projet_id, archive: false },
+    });
+    if (!projet) throw new NotFoundException('Projet non trouve');
+    this.verifierProjetPublie(projet);
+
     await this.publicationRepo.update(id, {
       statut: StatutPublication.PUBLIEE,
       date_publication: publication.date_publication || new Date(),
     });
 
     return this.findOne(id);
+  }
+
+  private verifierProjetPublie(projet: Projet): void {
+    if (!projet.publie_le) {
+      throw new ConflictException(
+        'Publiez d’abord le projet avant de publier son contenu éditorial',
+      );
+    }
   }
 
   private mapToResponse(data: Publication): PublicationResponseDto {

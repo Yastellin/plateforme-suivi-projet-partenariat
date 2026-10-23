@@ -5,6 +5,8 @@ import { AnimatePresence, LayoutGroup, motion } from "framer-motion"
 import { Menu, X, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
+import { LogoInstitutionnel } from "@/components/shared/LogoInstitutionnel"
+import { useIdentiteVisuelle } from "@/contexts/identite-visuelle-context"
 import { cn } from "@/lib/utils"
 
 interface LienNav {
@@ -28,7 +30,10 @@ const LIENS_NAV: LienNav[] = [
 // anime (layoutId) sous le lien actif, menu mobile deroulant.
 export function TopbarPublique() {
   const [menuOuvert, setMenuOuvert] = useState(false)
-  const [defile, setDefile] = useState(() => typeof window !== "undefined" && window.scrollY > 8)
+  const [defile, setDefile] = useState(
+    () => typeof window !== "undefined" && window.scrollY > 8,
+  )
+  const { logoUrl } = useIdentiteVisuelle()
 
   useEffect(() => {
     const surveiller = () => setDefile(window.scrollY > 8)
@@ -42,13 +47,25 @@ export function TopbarPublique() {
         "sticky top-0 z-50 border-b transition-all duration-300",
         defile
           ? "border-border/80 bg-background/80 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-background/70"
-          : "border-transparent bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/50"
+          : "border-transparent bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/50",
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="group flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[var(--color-brand-deep)] text-sm font-bold text-primary-foreground shadow-md shadow-primary/30 transition-transform duration-300 group-hover:scale-105">
-            SP
+          <span
+            className={cn(
+              "flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl text-sm font-bold shadow-md transition-transform duration-300 group-hover:scale-105",
+              logoUrl
+                ? "border border-border bg-background shadow-black/10"
+                : "bg-gradient-to-br from-primary to-[var(--color-brand-deep)] text-primary-foreground shadow-primary/30",
+            )}
+          >
+            <LogoInstitutionnel
+              className={cn(
+                "h-full w-full rounded-xl object-contain p-0.5 text-sm",
+                logoUrl ? "bg-background" : "bg-transparent text-white",
+              )}
+            />
           </span>
           <span className="font-heading text-base font-semibold text-foreground">
             Suivi Partenariats
@@ -67,7 +84,7 @@ export function TopbarPublique() {
                     "relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
                     isActive
                       ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )
                 }
               >
@@ -77,7 +94,11 @@ export function TopbarPublique() {
                       <motion.span
                         layoutId="nav-publique-pastille"
                         className="absolute inset-0 -z-10 rounded-full bg-accent"
-                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 32,
+                        }}
                       />
                     )}
                     {lien.label}
@@ -90,7 +111,11 @@ export function TopbarPublique() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <ThemeToggle />
-          <Button asChild size="sm" className="rounded-full px-4 shadow-md shadow-primary/20">
+          <Button
+            asChild
+            size="sm"
+            className="rounded-full px-4 shadow-md shadow-primary/20"
+          >
             <Link to="/connexion">
               <LogIn size={16} />
               Espace privé
@@ -138,7 +163,7 @@ export function TopbarPublique() {
                     className={({ isActive }) =>
                       cn(
                         "block rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                        isActive && "bg-accent text-accent-foreground"
+                        isActive && "bg-accent text-accent-foreground",
                       )
                     }
                   >

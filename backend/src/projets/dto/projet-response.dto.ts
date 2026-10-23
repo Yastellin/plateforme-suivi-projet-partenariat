@@ -42,10 +42,34 @@ export class ProjetResponseDto {
   publie_le: Date | null;
 
   @ApiProperty({ nullable: true })
+  cree_par_role: string | null;
+
+  @ApiProperty({ nullable: true })
   partenariat_id: string | null;
 
   @ApiProperty({ nullable: true })
   porteur_id: string | null;
+
+  @ApiProperty({ nullable: true })
+  etablissement: unknown;
+
+  @ApiProperty({ nullable: true })
+  partenariat: unknown;
+
+  @ApiProperty({ nullable: true })
+  porteur: unknown;
+
+  @ApiProperty({ type: [Object] })
+  partenaires: unknown[];
+
+  @ApiProperty({ type: [Object] })
+  bailleurs: unknown[];
+
+  @ApiProperty({ type: [Object] })
+  beneficiaires: unknown[];
+
+  @ApiProperty({ type: [Object] })
+  sites: unknown[];
 
   @ApiProperty()
   avancement: number;

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Building2, ChevronRight } from 'lucide-react';
 
 import { EmptyState } from '@/components/shared/EmptyState';
+import { LogoMedia } from '@/components/shared/ImageMedia';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { LigneComparatifEtablissement } from '../lib/synthese';
 
@@ -88,8 +89,14 @@ export function SyntheseTableauEtablissements({
               <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
                 <Link
                   to={`${cheminBase}/synthese/${ligne.etablissement_id}`}
-                  className="text-[13.5px] font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand)]"
+                  className="flex items-center gap-2.5 text-[13.5px] font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand)]"
                 >
+                  <LogoMedia
+                    src={ligne.etablissement_logo_url}
+                    nom={ligne.etablissement_nom}
+                    className="h-8 w-8 shrink-0 rounded-md border border-[var(--color-border)] bg-white object-contain p-0.5 text-[10px]"
+                    loading="lazy"
+                  />
                   {ligne.etablissement_nom}
                 </Link>
               </td>

@@ -1,15 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, In, Not, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, IsNull, Not, Repository } from 'typeorm';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Projet } from '../projets/entities/projet.entity';
 import { Convention } from '../conventions/entities/convention.entity';
 import { Publication } from '../publications/enitities/publication.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
+import { Configuration } from '../configuration/entities/configuration.entity';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
 import { StatutConvention } from '../common/enums/statut-convention.enum';
 import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
+import { StatutPartenariat } from '../common/enums/statut-partenariat.enum';
 import { StatutPublication } from '../common/enums/statut-publication.enum';
 import { Visibilite } from '../common/enums/visibilite.enum';
 import {
@@ -21,6 +23,7 @@ import { PartenairePublicDto } from './dto/partenaire-public.dto';
 import { PartenariatPublicDto } from './dto/partenariat-public.dto';
 import { ProjetPublicDto } from './dto/projet-public.dto';
 import { PublicationPubliqueDto } from './dto/publication-publique.dto';
+import { ConfigurationPubliqueDto } from './dto/configuration-publique.dto';
 import {
   PublicEtablissementQueryDto,
   PublicPartenaireQueryDto,
@@ -46,16 +49,20 @@ const PARTENAIRE_VISIBLE: FindOptionsWhere<Partenaire> = {
   visibilite: Visibilite.PUBLIC,
   statut: StatutPartenaire.ACTIF,
   archive: false,
+  publie_le: Not(IsNull()),
 };
 
 const PUBLICATION_VISIBLE: FindOptionsWhere<Publication> = {
   statut: StatutPublication.PUBLIEE,
-  projet: { archive: false },
+  // Publier le contenu éditorial ne doit jamais contourner la validation du
+  // projet lui-même par la Présidence.
+  projet: { archive: false, publie_le: Not(IsNull()) },
 };
 
 const PROJET_VISIBLE: FindOptionsWhere<Projet> = {
   archive: false,
   statut: In(STATUTS_PROJET_VISIBLES),
+  publie_le: Not(IsNull()),
 };
 
 @Injectable()
@@ -72,7 +79,18 @@ export class EspacePublicService {
     private conventionRepo: Repository<Convention>,
     @InjectRepository(Publication)
     private publicationRepo: Repository<Publication>,
+    @InjectRepository(Configuration)
+    private configurationRepo: Repository<Configuration>,
   ) {}
+
+  /** N'expose que les informations nécessaires à l'habillage public. */
+  async getConfigurationPublique(): Promise<ConfigurationPubliqueDto> {
+    const configuration = await this.configurationRepo.findOne({
+      where: { cle: 'presidence' },
+      select: { logo_url: true },
+    });
+    return { logo_url: configuration?.logo_url ?? null };
+  }
 
   async getAccueil(): Promise<AccueilPublicDto> {
     const [
@@ -93,8 +111,8 @@ export class EspacePublicService {
       }),
       this.projetRepo.count({
         where: {
-          archive: false,
-          statut: In([StatutProjet.EN_COURS, StatutProjet.EN_ATTENTE]),
+          ...PROJET_VISIBLE,
+          statut: StatutProjet.EN_COURS,
         },
       }),
       this.publicationRepo.count({ where: PUBLICATION_VISIBLE }),
@@ -223,7 +241,7 @@ export class EspacePublicService {
     const projets = await this.projetRepo.find({
       where: {
         archive: false,
-        publie_le: Not(null) as unknown as never,
+        publie_le: Not(IsNull()),
       },
       relations: this.relationsProjet(),
       order: { publie_le: 'DESC' },
@@ -289,10 +307,16 @@ export class EspacePublicService {
     const partenariats = await this.partenariatRepo.find({
       where: {
         archive: false,
-        publie_le: Not(null) as unknown as never,
+        statut: In([
+          StatutPartenariat.EN_COURS,
+          StatutPartenariat.SUSPENDU,
+          StatutPartenariat.TERMINE,
+        ]),
+        publie_le: Not(IsNull()),
       },
       relations: {
         etablissements: { etablissement: true },
+        partenaires: { partenaire: true },
       },
       order: { publie_le: 'DESC' },
     });
@@ -308,7 +332,16 @@ export class EspacePublicService {
         id: lien.etablissement.id,
         nom: lien.etablissement.nom,
         sigle: lien.etablissement.sigle,
+        logo_url: lien.etablissement.logo_url,
       })),
+      partenaires: (partenariat.partenaires ?? [])
+        .map((lien) => lien.partenaire)
+        .filter((partenaire) => this.partenaireEstVisible(partenaire))
+        .map((partenaire) => ({
+          id: partenaire.id,
+          nom: partenaire.nom,
+          logo_url: partenaire.logo_url,
+        })),
     }));
   }
 
@@ -334,6 +367,18 @@ export class EspacePublicService {
       data,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
+  }
+
+  private partenaireEstVisible(
+    partenaire: Partenaire | null | undefined,
+  ): partenaire is Partenaire {
+    return Boolean(
+      partenaire &&
+      partenaire.visibilite === Visibilite.PUBLIC &&
+      partenaire.statut === StatutPartenaire.ACTIF &&
+      !partenaire.archive &&
+      partenaire.publie_le != null,
+    );
   }
 
   private versPartenaire(p: Partenaire): PartenairePublicDto {
@@ -385,6 +430,7 @@ export class EspacePublicService {
             id: projet.etablissement.id,
             nom: projet.etablissement.nom,
             sigle: projet.etablissement.sigle,
+            logo_url: projet.etablissement.logo_url,
           }
         : null,
       etablissement_nom: projet.etablissement?.nom ?? null,
@@ -392,13 +438,7 @@ export class EspacePublicService {
       // Seuls les partenaires publics et actifs sont exposés.
       partenaires: (projet.partenaires ?? [])
         .map((pp) => pp.partenaire)
-        .filter(
-          (p): p is Partenaire =>
-            !!p &&
-            p.visibilite === Visibilite.PUBLIC &&
-            p.statut === StatutPartenaire.ACTIF &&
-            !p.archive,
-        )
+        .filter((partenaire) => this.partenaireEstVisible(partenaire))
         .map((p) => this.versPartenaire(p)),
     };
   }

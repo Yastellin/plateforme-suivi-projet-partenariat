@@ -4,6 +4,7 @@ import {
   IsDateString,
   IsEnum,
   IsArray,
+  ArrayMinSize,
   IsUUID,
   MinLength,
 } from 'class-validator';
@@ -16,7 +17,9 @@ import {
 } from '../../common/validators/dates.validator';
 
 export class CreatePartenariatDto {
-  @ApiProperty({ example: 'Coopération scientifique Madagascar - France' })
+  @ApiProperty({
+    example: 'Coopération scientifique interuniversitaire à Madagascar',
+  })
   @IsString()
   @MinLength(3)
   intitule: string;
@@ -46,12 +49,13 @@ export class CreatePartenariatDto {
   })
   date_fin?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     enum: StatutPartenariat,
     default: StatutPartenariat.BROUILLON,
   })
+  @IsOptional()
   @IsEnum(StatutPartenariat)
-  statut?: StatutPartenariat = StatutPartenariat.BROUILLON;
+  statut?: StatutPartenariat;
 
   @ApiPropertyOptional({ example: "Missions d'échange réalisées en 2024" })
   @IsOptional()
@@ -98,6 +102,7 @@ export class CreatePartenariatDto {
     example: ['67d13845-635b-4427-a6e3-d85b11337f4f'],
   })
   @IsArray()
+  @ArrayMinSize(1, { message: 'Au moins un partenaire est requis.' })
   @IsUUID('4', { each: true })
   partenaires_ids: string[];
 }

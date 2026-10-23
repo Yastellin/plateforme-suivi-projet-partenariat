@@ -20,6 +20,11 @@ function chargeProjet(nom: string, etablissementId?: string) {
     budget: 12000,
     date_debut: dans(15),
     date_fin_prevue: dans(400),
+    porteur: {
+      type_porteur: 'PERSONNE',
+      nom: 'Rakoto Soa',
+      institution_rattachement: 'Université de Toliara',
+    },
     ...(etablissementId ? { etablissement_id: etablissementId } : {}),
   };
 }
@@ -64,10 +69,14 @@ describe('Espace public (e2e)', () => {
           .expect(201)
       ).body,
     );
-    await ctx.dataSource.query(
-      `UPDATE "Projet" SET statut = 'EN_COURS' WHERE id = $1`,
-      [projetPublie.id],
-    );
+    await request(url())
+      .post(`/api/projets/${projetPublie.id}/soumettre`)
+      .set(...enteteBearer(etablissementFds))
+      .expect(200);
+    await request(url())
+      .post(`/api/projets/${projetPublie.id}/publier`)
+      .set(...enteteBearer(presidence))
+      .expect(200);
 
     const publication = donnees<any>(
       (
@@ -83,12 +92,23 @@ describe('Espace public (e2e)', () => {
       ).body,
     );
     publicationId = publication.id;
+    const photoPng = Buffer.from(
+      '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c6360000002000154a24f5f0000000049454e44ae426082',
+      'hex',
+    );
+    await request(url())
+      .post(`/api/publications/${publicationId}/photos`)
+      .set(...enteteBearer(presidence))
+      .field('legende', 'Terrain à Toliara')
+      .attach('fichier', photoPng, 'toliara.png')
+      .expect(201);
     await request(url())
       .patch(`/api/publications/${publicationId}/publier`)
       .set(...enteteBearer(presidence))
       .expect(200);
 
-    // Projet brouillon avec une publication non publiee : rien ne doit apparaitre.
+    // Même si son contenu éditorial est publié, un projet qui n'a pas été
+    // publié par le workflow de la Présidence doit rester invisible.
     projetBrouillon = donnees<any>(
       (
         await request(url())
@@ -107,11 +127,26 @@ describe('Espace public (e2e)', () => {
           .set(...enteteBearer(presidence))
           .send({
             projet_id: projetBrouillon.id,
-            titre: 'Publication non publiée',
+            titre: 'Publication d’un projet non publié',
           })
           .expect(201)
       ).body,
     ).id;
+    await request(url())
+      .patch(`/api/publications/${brouillonPublicationId}`)
+      .set(...enteteBearer(presidence))
+      .send({ statut: 'PUBLIEE' })
+      .expect(409);
+    await request(url())
+      .patch(`/api/publications/${brouillonPublicationId}/publier`)
+      .set(...enteteBearer(presidence))
+      .expect(409);
+    // Défense en profondeur : même une donnée héritée incohérente ne doit pas
+    // contourner le filtre public.
+    await ctx.dataSource.query(
+      `UPDATE "Publication" SET statut = 'PUBLIEE', date_publication = NOW() WHERE id = $1`,
+      [brouillonPublicationId],
+    );
 
     // Partenaires : un public actif, un prive, un public suspendu.
     const creerPartenaire = async (nom: string) =>
@@ -133,8 +168,19 @@ describe('Espace public (e2e)', () => {
     partenairePrive = await creerPartenaire('Partenaire Privé');
     partenaireSuspendu = await creerPartenaire('Partenaire Suspendu');
 
+    for (const partenaire of [partenairePublic, partenaireSuspendu]) {
+      await request(url())
+        .post(`/api/partenaires/${partenaire.id}/soumettre`)
+        .set(...enteteBearer(etablissementFds))
+        .expect(200);
+      await request(url())
+        .post(`/api/partenaires/${partenaire.id}/publier`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+    }
+
     await ctx.dataSource.query(
-      `UPDATE "Partenaire" SET visibilite = 'PUBLIC', statut = 'ACTIF', description = $2 WHERE id = $1`,
+      `UPDATE "Partenaire" SET statut = 'ACTIF', description = $2 WHERE id = $1`,
       [partenairePublic.id, 'Partenaire historique de recherche.'],
     );
     await ctx.dataSource.query(
@@ -142,7 +188,7 @@ describe('Espace public (e2e)', () => {
       [partenairePrive.id],
     );
     await ctx.dataSource.query(
-      `UPDATE "Partenaire" SET visibilite = 'PUBLIC', statut = 'SUSPENDU' WHERE id = $1`,
+      `UPDATE "Partenaire" SET statut = 'SUSPENDU' WHERE id = $1`,
       [partenaireSuspendu.id],
     );
 
@@ -159,6 +205,38 @@ describe('Espace public (e2e)', () => {
     await ctx.fermer();
   });
 
+  it('configuration : expose uniquement le logo de la Présidence', async () => {
+    await ctx.dataSource.query(
+      `INSERT INTO "Configuration" (id, cle, valeur, logo_url, created_at, updated_at)
+       VALUES ($1, 'presidence', 'parametre-interne', '/uploads/logos/presidence/logo.png', NOW(), NOW())
+       ON CONFLICT (cle) DO UPDATE SET valeur = EXCLUDED.valeur, logo_url = EXCLUDED.logo_url, updated_at = NOW()`,
+      [randomUUID()],
+    );
+
+    const reponse = await request(url())
+      .get('/api/public/configuration')
+      .expect(200);
+    const configuration = donnees<any>(reponse.body);
+
+    expect(configuration).toEqual({
+      logo_url: '/uploads/logos/presidence/logo.png',
+    });
+    expect(configuration).not.toHaveProperty('valeur');
+
+    const configurationInterne = donnees<any>(
+      (
+        await request(url())
+          .get('/api/configuration')
+          .set(...enteteBearer(presidence))
+          .expect(200)
+      ).body,
+    );
+    expect(configurationInterne.logo_url).toBe(
+      '/uploads/logos/presidence/logo.png',
+    );
+    expect(configurationInterne.valeur).toBe('parametre-interne');
+  });
+
   it('accueil : compteurs calculés sur la base de données', async () => {
     const reponse = await request(url()).get('/api/public/accueil').expect(200);
     const accueil = donnees<any>(reponse.body);
@@ -166,17 +244,21 @@ describe('Espace public (e2e)', () => {
     // Les compteurs doivent egaler les decomptes SQL : le jeu de demonstration
     // contient aussi des partenaires et des etablissements.
     const [{ n: partenaires }] = await ctx.dataSource.query(
-      `SELECT COUNT(*)::int AS n FROM "Partenaire" WHERE visibilite = 'PUBLIC' AND statut = 'ACTIF' AND archive = false`,
+      `SELECT COUNT(*)::int AS n FROM "Partenaire" WHERE visibilite = 'PUBLIC' AND statut = 'ACTIF' AND archive = false AND publie_le IS NOT NULL`,
     );
     const [{ n: etablissements }] = await ctx.dataSource.query(
       `SELECT COUNT(*)::int AS n FROM "Etablissement"`,
     );
     const [{ n: publications }] = await ctx.dataSource.query(
-      `SELECT COUNT(*)::int AS n FROM "Publication" p JOIN "Projet" pr ON pr.id = p.projet_id WHERE p.statut = 'PUBLIEE' AND pr.archive = false`,
+      `SELECT COUNT(*)::int AS n FROM "Publication" p JOIN "Projet" pr ON pr.id = p.projet_id WHERE p.statut = 'PUBLIEE' AND pr.archive = false AND pr.publie_le IS NOT NULL`,
+    );
+    const [{ n: projetsEnCours }] = await ctx.dataSource.query(
+      `SELECT COUNT(*)::int AS n FROM "Projet" WHERE archive = false AND statut = 'EN_COURS' AND publie_le IS NOT NULL`,
     );
     expect(accueil.compteurs.nombre_partenaires).toBe(partenaires);
     expect(accueil.compteurs.nombre_etablissements).toBe(etablissements);
     expect(accueil.compteurs.nombre_publications).toBe(publications);
+    expect(accueil.compteurs.nombre_projets_actifs).toBe(projetsEnCours);
     expect(accueil.compteurs.nombre_publications).toBe(1);
 
     expect(accueil.dernieres_publications.map((p: any) => p.id)).toContain(
@@ -197,10 +279,16 @@ describe('Espace public (e2e)', () => {
     expect(liste.meta.total).toBe(1);
     expect(liste.data[0].id).toBe(publicationId);
     expect(liste.data[0].projet.etablissement.id).toBe(etablissementFdsId);
-    expect(JSON.stringify(liste)).not.toContain('Publication non publiée');
+    expect(liste.data[0].photo_url).toMatch(/^\/uploads\/publications\//);
+    expect(liste.data[0].photos[0]).toMatchObject({
+      legende: 'Terrain à Toliara',
+    });
+    expect(JSON.stringify(liste)).not.toContain(
+      'Publication d’un projet non publié',
+    );
   });
 
-  it('publication non publiee : introuvable (404)', async () => {
+  it('publication publiée rattachée à un projet non publié : introuvable (404)', async () => {
     await request(url())
       .get(`/api/public/publications/${brouillonPublicationId}`)
       .expect(404);
@@ -245,7 +333,7 @@ describe('Espace public (e2e)', () => {
       liste.data.find((p: any) => p.id === partenairePublic.id).description,
     ).toBe('Partenaire historique de recherche.');
     const [{ n }] = await ctx.dataSource.query(
-      `SELECT COUNT(*)::int AS n FROM "Partenaire" WHERE visibilite = 'PUBLIC' AND statut = 'ACTIF' AND archive = false`,
+      `SELECT COUNT(*)::int AS n FROM "Partenaire" WHERE visibilite = 'PUBLIC' AND statut = 'ACTIF' AND archive = false AND publie_le IS NOT NULL`,
     );
     expect(liste.meta.total).toBe(n);
   });

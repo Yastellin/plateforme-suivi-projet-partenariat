@@ -1,6 +1,6 @@
 // src/features/partenariats/components/PartenariatWizard.tsx
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ import { useWizardDraft } from '@/components/forms/wizard/useWizardDraft';
 import { GardeNavigation } from '@/components/shared/GardeNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { formaterDate } from '@/lib/format';
+import { jourCourant } from '@/lib/validators/regles-dates';
 import { LIBELLES_DOMAINE_PARTENARIAT } from '@/lib/status-mappings';
 import { creerSchemaPartenariat, type PartenariatFormValues } from '@/lib/validators/partenariat.schema';
 import { useCreatePartenariat } from '../api/useCreatePartenariat';
@@ -104,7 +105,7 @@ export function PartenariatWizard() {
     watch,
     setValue,
     reset,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, isValid },
   } = useForm<PartenariatFormValues>({
     resolver: zodResolver(creerSchemaPartenariat(estPresidence, { exigerDateDebutFuture: true })),
     mode: 'onChange',
@@ -121,6 +122,25 @@ export function PartenariatWizard() {
   });
 
   const valeurs = watch();
+  useEffect(() => {
+    if (valeurs.date_debut && valeurs.date_fin) {
+      void trigger(['date_debut', 'date_fin']);
+    }
+  }, [valeurs.date_debut, valeurs.date_fin, trigger]);
+  const etapeValide =
+    etape.cle === 'partenaires'
+      ? valeurs.partenaires_ids.length > 0
+      : etape.cle === 'etablissements'
+        ? valeurs.etablissements_ids.length > 0
+        : etape.cle === 'informations'
+          ? Boolean(
+              valeurs.intitule.trim() &&
+              valeurs.domaine &&
+              valeurs.date_debut &&
+              valeurs.date_debut >= jourCourant() &&
+              (!valeurs.date_fin || valeurs.date_fin > valeurs.date_debut),
+            )
+          : isValid;
   const { mutate: creer, isPending } = useCreatePartenariat();
 
   const { effacerBrouillon } = useWizardDraft<BrouillonWizard>({
@@ -220,7 +240,7 @@ export function PartenariatWizard() {
               <button
                 type="button"
                 onClick={handleSubmit(creerPartenariat, signalerFormulaireIncomplet)}
-                disabled={isPending}
+                disabled={isPending || !isValid}
                 className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
               >
                 {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -230,7 +250,8 @@ export function PartenariatWizard() {
               <button
                 type="button"
                 onClick={allerEtapeSuivante}
-                className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)]"
+                disabled={isPending || !etapeValide}
+                className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Suivant
                 <ChevronRight className="h-3.5 w-3.5" />

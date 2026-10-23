@@ -10,13 +10,16 @@ RUN npm config set fetch-retries 5 \
  && npm config set fetch-retry-mintimeout 1000 \
  && npm ci --legacy-peer-deps
 
-# Copier tout le code source
 COPY . .
-
-# Compiler le projet TypeScript
 RUN npm run build
 
-FROM node:20-alpine
+# Cible utilisée par docker-compose : le code source est monté et Nest le
+# recompile à chaud. Les nouvelles routes backend ne restent ainsi jamais
+# masquées derrière une ancienne image `dist`.
+FROM builder AS development
+CMD ["sh", "-c", "npm run migration:run && npm run start:dev"]
+
+FROM node:20-alpine AS production
 
 WORKDIR /app
 

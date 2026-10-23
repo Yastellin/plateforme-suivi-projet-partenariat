@@ -1,6 +1,7 @@
 // src/components/layout/FooterPublique.tsx
 import { Link } from "react-router-dom"
 import { Mail, MapPin, Phone } from "lucide-react"
+import { LogoInstitutionnel } from "@/components/shared/LogoInstitutionnel"
 
 const LIENS_RAPIDES = [
   { label: "À propos", href: "/a-propos" },
@@ -17,9 +18,7 @@ export function FooterPublique() {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3 lg:px-8">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[var(--color-brand-deep)] text-sm font-bold text-primary-foreground">
-              SP
-            </span>
+            <LogoInstitutionnel className="h-9 w-9 rounded-xl border border-border bg-white object-contain p-1 text-sm shadow-sm" />
             <span className="font-heading text-base font-semibold text-foreground">
               Suivi Partenariats
             </span>

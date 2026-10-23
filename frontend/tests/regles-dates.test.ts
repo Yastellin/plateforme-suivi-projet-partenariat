@@ -139,7 +139,8 @@ describe('convention : regles de dates', () => {
     description: '',
     date_signature: '',
     partenariat_id: '',
-    projet_id: '',
+    projet_id: 'projet-1',
+    cotutelle_id: '',
     ...dates,
   });
 
@@ -173,6 +174,17 @@ describe('convention : regles de dates', () => {
     expect(schemaConvention.safeParse({ reference: '', titre: 'C', statut: 'BROUILLON' }).success).toBe(false);
   });
 
+  it('exige au moins un rattachement métier', () => {
+    const resultat = schemaConvention.safeParse({
+      ...valeurs({}),
+      partenariat_id: '',
+      projet_id: '',
+      cotutelle_id: '',
+    });
+    expect(resultat.success).toBe(false);
+    expect(cheminsEnErreur(resultat)).toContain('partenariat_id');
+  });
+
   it('accepte les champs optionnels vides avant normalisation', () => {
     expect(
       schemaConvention.safeParse({
@@ -185,6 +197,7 @@ describe('convention : regles de dates', () => {
         date_fin: '',
         partenariat_id: '',
         projet_id: '',
+        cotutelle_id: 'cotutelle-1',
       }).success,
     ).toBe(true);
   });

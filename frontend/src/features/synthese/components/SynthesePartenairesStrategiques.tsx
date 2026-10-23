@@ -4,6 +4,7 @@ import { Handshake, Loader2, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { DestructiveConfirmDialog } from '@/components/shared/DestructiveConfirmDialog';
+import { LogoMedia } from '@/components/shared/ImageMedia';
 import {
   Dialog,
   DialogContent,
@@ -122,7 +123,12 @@ export function SynthesePartenairesStrategiques({
               className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2.5"
             >
               <span className="flex min-w-0 items-center gap-2">
-                <Handshake className="h-3.5 w-3.5 flex-shrink-0 text-[var(--color-brand)]" />
+                <LogoMedia
+                  src={partenaire.partenaire_logo_url}
+                  nom={partenaire.partenaire_nom ?? 'Partenaire'}
+                  className="h-8 w-8 shrink-0 rounded-md border border-[var(--color-border)] bg-white object-contain p-0.5 text-[10px]"
+                  loading="lazy"
+                />
                 <span className="truncate text-[13px] font-semibold">
                   {partenaire.partenaire_nom ?? 'Partenaire'}
                 </span>

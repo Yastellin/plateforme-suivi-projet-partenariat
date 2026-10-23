@@ -54,7 +54,7 @@ export function ResetPasswordPage() {
     register,
     handleSubmit,
     watch,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<ReinitialiserMotDePasseFormValues>({
     resolver: zodResolver(reinitialiserMotDePasseSchema),
     mode: "onChange",
@@ -123,7 +123,7 @@ export function ResetPasswordPage() {
     reinitialisation.isError && !estTropDeRequetes(reinitialisation.error.message)
       ? libelleErreurToken(reinitialisation.error.message)
       : null
-  const boutonBloque = reinitialisation.isPending || bloque
+  const boutonBloque = reinitialisation.isPending || bloque || !isValid
 
   return (
     <LayoutAuthentification

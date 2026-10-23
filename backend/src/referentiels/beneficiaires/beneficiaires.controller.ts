@@ -29,8 +29,10 @@ export class BeneficiairesController {
   constructor(private beneficiairesService: BeneficiairesService) {}
 
   @Post()
-  @Roles(Role.PRESIDENCE)
-  @ApiOperation({ summary: 'Creer un beneficiaire (Presidence uniquement)' })
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({
+    summary: 'Creer un beneficiaire (Présidence ou établissement)',
+  })
   @ApiResponse({ status: 201, type: BeneficiaireResponseDto })
   create(@Body() dto: CreateBeneficiaireDto): Promise<BeneficiaireResponseDto> {
     return this.beneficiairesService.create(dto);
@@ -57,7 +59,7 @@ export class BeneficiairesController {
   @Patch(':id')
   @Roles(Role.PRESIDENCE)
   @ApiOperation({
-    summary: 'Mettre a jour un beneficiaire (Presidence uniquement)',
+    summary: 'Mettre a jour un beneficiaire (Présidence ou établissement)',
   })
   @ApiResponse({ status: 200, type: BeneficiaireResponseDto })
   update(
@@ -70,7 +72,7 @@ export class BeneficiairesController {
   @Delete(':id')
   @Roles(Role.PRESIDENCE)
   @ApiOperation({
-    summary: 'Supprimer un beneficiaire (Presidence uniquement)',
+    summary: 'Supprimer un beneficiaire (Présidence ou établissement)',
   })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.beneficiairesService.remove(id);

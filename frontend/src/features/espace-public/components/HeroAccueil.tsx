@@ -8,7 +8,7 @@ import { AnimatedCounter } from "@/components/shared/AnimatedCounter"
 import { InfiniteMarquee } from "@/components/shared/InfiniteMarquee"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { resoudreUrlFichier } from "@/lib/url"
+import { LogoMedia } from "@/components/shared/ImageMedia"
 
 const elementHero: Variants = {
   cache: { opacity: 0, y: 16 },
@@ -204,9 +204,12 @@ export function HeroAccueil() {
                 to={`/etablissements`}
                 className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/50"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                  <Building2 size={24} />
-                </div>
+                <LogoMedia
+                  src={etab.logo_url}
+                  nom={etab.nom}
+                  className="h-12 w-12 shrink-0 rounded-lg border border-border bg-white object-contain p-1 text-sm"
+                  loading="lazy"
+                />
                 <div className="min-w-0">
                   <p className="truncate font-heading text-sm font-medium text-foreground">
                     {etab.nom}
@@ -232,17 +235,15 @@ export function HeroAccueil() {
             cleItem={(p) => p.id}
             renderItem={(partenaire) => (
               <div className="flex h-16 items-center rounded-lg border border-border bg-card px-6">
-                {partenaire.logo_url ? (
-                  <img
-                    src={resoudreUrlFichier(partenaire.logo_url)}
-                    alt={partenaire.nom}
-                    className="h-8 w-auto object-contain"
-                  />
-                ) : (
-                  <span className="font-heading text-sm font-medium text-muted-foreground">
-                    {partenaire.nom}
-                  </span>
-                )}
+                <LogoMedia
+                  src={partenaire.logo_url}
+                  nom={partenaire.nom}
+                  className="h-8 w-8 flex-shrink-0 rounded object-contain text-xs"
+                  loading="lazy"
+                />
+                <span className="ml-2 max-w-48 truncate font-heading text-sm font-medium text-muted-foreground">
+                  {partenaire.nom}
+                </span>
               </div>
             )}
             itemClassName="mx-5"

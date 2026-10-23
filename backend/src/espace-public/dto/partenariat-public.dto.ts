@@ -1,5 +1,30 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export class EtablissementPartenariatPublicDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  nom: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  sigle: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  logo_url: string | null;
+}
+
+export class PartenairePartenariatPublicDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  nom: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  logo_url: string | null;
+}
+
 export class PartenariatPublicDto {
   @ApiProperty()
   id: string;
@@ -19,6 +44,9 @@ export class PartenariatPublicDto {
   @ApiPropertyOptional({ nullable: true })
   date_fin: Date | null;
 
-  @ApiPropertyOptional({ nullable: true })
-  etablissements: { id: string; nom: string; sigle: string | null }[];
+  @ApiProperty({ type: [EtablissementPartenariatPublicDto] })
+  etablissements: EtablissementPartenariatPublicDto[];
+
+  @ApiProperty({ type: [PartenairePartenariatPublicDto] })
+  partenaires: PartenairePartenariatPublicDto[];
 }

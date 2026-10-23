@@ -10,6 +10,7 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Index,
+  Check,
 } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { TypeDocument } from '../../common/enums/type-document.enum';
@@ -24,6 +25,13 @@ import { Partenariat } from '../../partenariats/entities/partenariat.entity';
 @Index(['cotutelle_id'])
 @Index(['partenariat_id'])
 @Index(['est_archive'])
+@Check(
+  'ck_document_un_parent',
+  `(CASE WHEN "projet_id" IS NULL THEN 0 ELSE 1 END) +
+   (CASE WHEN "convention_id" IS NULL THEN 0 ELSE 1 END) +
+   (CASE WHEN "cotutelle_id" IS NULL THEN 0 ELSE 1 END) +
+   (CASE WHEN "partenariat_id" IS NULL THEN 0 ELSE 1 END) = 1`,
+)
 export class Document {
   @PrimaryColumn('uuid')
   id: string;

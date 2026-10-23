@@ -1,4 +1,5 @@
-﻿// src/features/cotutelles/components/CotutelleForm.tsx
+// src/features/cotutelles/components/CotutelleForm.tsx
+import { useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
@@ -32,7 +33,9 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
     register,
     control,
     handleSubmit,
-    formState: { errors },
+    watch,
+    trigger,
+    formState: { errors, isValid },
   } = useForm<CotutelleFormValues>({
     resolver: zodResolver(creerSchemaCotutelle({ exigerDateDebutFuture: !cotutelle })),
     mode: "onChange",
@@ -50,6 +53,14 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
       partenaire_id: cotutelle?.partenaire_id ?? "",
     },
   })
+
+  const dateDebut = watch("date_debut")
+  const dateSoutenance = watch("date_prevue_soutenance")
+  useEffect(() => {
+    if (dateDebut && dateSoutenance) {
+      void trigger(["date_debut", "date_prevue_soutenance"])
+    }
+  }, [dateDebut, dateSoutenance, trigger])
 
   const onSubmit = (valeurs: CotutelleFormValues) => {
     if (cotutelle) {
@@ -112,7 +123,7 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_prevue_soutenance">Date prevue de soutenance</Label>
-          <Input id="date_prevue_soutenance" type="date" aria-invalid={!!errors.date_prevue_soutenance} {...register("date_prevue_soutenance")} />
+          <Input id="date_prevue_soutenance" type="date" min={dateDebut || undefined} aria-invalid={!!errors.date_prevue_soutenance} {...register("date_prevue_soutenance")} />
           {errors.date_prevue_soutenance && <p className="text-sm text-destructive">{errors.date_prevue_soutenance.message}</p>}
         </div>
       </div>
@@ -139,7 +150,7 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
         <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>
           Annuler
         </Button>
-        <Button type="submit" disabled={enCours}>
+        <Button type="submit" disabled={enCours || !isValid}>
           {enCours && <LoaderCircle className="animate-spin" />}
           {cotutelle ? "Enregistrer les modifications" : "Creer la cotutelle"}
         </Button>

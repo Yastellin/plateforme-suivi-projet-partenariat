@@ -10,9 +10,13 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      VITE_API_URL: ${VITE_API_URL}
+      # Par défaut, le navigateur utilise /api sur l'origine du frontend ;
+      # Vite relaie ensuite la requête vers le service backend du compose.
+      VITE_API_URL: ${VITE_API_URL:-/api}
+      DEV_API_PROXY_TARGET: http://backend:3000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   db:
     image: postgres:16-alpine
@@ -35,6 +39,7 @@ services:
   backend:
     build:
       context: ./backend
+      target: development
     container_name: uf_backend
     ports:
       - "3000:3000"
@@ -59,7 +64,22 @@ services:
       NODE_ENV: development
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
     volumes:
+      # Le backend suit désormais les changements de source comme le frontend.
+      - ./backend:/app
+      - /app/node_modules
       - ./backend/uploads:/app/uploads
+    healthcheck:
+      # Vérifie aussi le contrat requis par le frontend. Une ancienne image API
+      # ne peut ainsi plus démarrer silencieusement avec des routes manquantes.
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:3000/api/health | grep -q '\"parametres_logos\":\"v2\"'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
 
 volumes:
   db_data:
