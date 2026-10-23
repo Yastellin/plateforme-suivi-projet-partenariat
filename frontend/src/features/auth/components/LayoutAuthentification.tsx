@@ -1,6 +1,7 @@
 // src/features/auth/components/LayoutAuthentification.tsx
 
 import type { ReactNode } from "react"
+import { LogoInstitutionnel } from "@/components/shared/LogoInstitutionnel"
 
 /**
  * Image de fond du panneau gauche de la page de connexion.
@@ -17,13 +18,7 @@ interface LayoutAuthentificationProps {
 
 function Embleme() {
   return (
-    <div
-      className="grid h-11 w-11 place-items-center rounded-xl border border-white/25 bg-white/10 text-base font-extrabold text-white backdrop-blur-sm"
-      style={{ fontFamily: "var(--font-heading)" }}
-      aria-hidden="true"
-    >
-      UF
-    </div>
+    <LogoInstitutionnel className="h-11 w-11 rounded-xl border border-white/25 bg-white/95 object-contain p-1 text-base shadow-sm" />
   )
 }
 
@@ -74,13 +69,7 @@ export function LayoutAuthentification({ titre, description, children }: LayoutA
       <main className="flex items-center justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-[460px]">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div
-              className="grid h-10 w-10 place-items-center rounded-xl bg-[#047857] text-sm font-extrabold text-white"
-              style={{ fontFamily: "var(--font-heading)" }}
-              aria-hidden="true"
-            >
-              UF
-            </div>
+            <LogoInstitutionnel className="h-10 w-10 rounded-xl border border-[#047857]/20 bg-white object-contain p-1 text-sm shadow-sm" />
             <div>
               <strong className="block text-[14px] font-semibold text-[#0f2f23]">Université de Fianarantsoa</strong>
               <span className="block text-[12px] text-[#5b6b64]">Projets &amp; Partenariats</span>

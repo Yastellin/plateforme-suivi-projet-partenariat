@@ -204,9 +204,12 @@ export function HeroAccueil() {
                 to={`/etablissements`}
                 className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/50"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                  <Building2 size={24} />
-                </div>
+                <LogoMedia
+                  src={etab.logo_url}
+                  nom={etab.nom}
+                  className="h-12 w-12 shrink-0 rounded-lg border border-border bg-white object-contain p-1 text-sm"
+                  loading="lazy"
+                />
                 <div className="min-w-0">
                   <p className="truncate font-heading text-sm font-medium text-foreground">
                     {etab.nom}

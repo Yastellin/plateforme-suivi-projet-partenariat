@@ -5,8 +5,8 @@ import { AnimatePresence, LayoutGroup, motion } from "framer-motion"
 import { Menu, X, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/layout/ThemeToggle"
-import { useConfigurationPublique } from "@/features/espace-public/api/useConfigurationPublique"
-import { LogoMedia } from "@/components/shared/ImageMedia"
+import { LogoInstitutionnel } from "@/components/shared/LogoInstitutionnel"
+import { useIdentiteVisuelle } from "@/contexts/identite-visuelle-context"
 import { cn } from "@/lib/utils"
 
 interface LienNav {
@@ -33,8 +33,7 @@ export function TopbarPublique() {
   const [defile, setDefile] = useState(
     () => typeof window !== "undefined" && window.scrollY > 8,
   )
-  const { data: configuration } = useConfigurationPublique()
-  const logoUrl = configuration?.logo_url ?? null
+  const { logoUrl } = useIdentiteVisuelle()
 
   useEffect(() => {
     const surveiller = () => setDefile(window.scrollY > 8)
@@ -61,15 +60,12 @@ export function TopbarPublique() {
                 : "bg-gradient-to-br from-primary to-[var(--color-brand-deep)] text-primary-foreground shadow-primary/30",
             )}
           >
-            {logoUrl ? (
-              <LogoMedia
-                src={logoUrl}
-                nom="Suivi Partenariats"
-                className="h-full w-full rounded-xl object-contain p-0.5 text-sm"
-              />
-            ) : (
-              "SP"
-            )}
+            <LogoInstitutionnel
+              className={cn(
+                "h-full w-full rounded-xl object-contain p-0.5 text-sm",
+                logoUrl ? "bg-background" : "bg-transparent text-white",
+              )}
+            />
           </span>
           <span className="font-heading text-base font-semibold text-foreground">
             Suivi Partenariats

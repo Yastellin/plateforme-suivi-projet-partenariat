@@ -13,6 +13,8 @@ import { PageHeaderPublique } from "@/features/espace-public/components/PageHead
 import { RevealItem } from "@/features/espace-public/components/Reveal"
 import { formaterDate } from "@/lib/format"
 import { StatusBadge } from "@/components/shared/StatusBadge"
+import { LogoMedia } from "@/components/shared/ImageMedia"
+import { LogoInstitutionnel } from "@/components/shared/LogoInstitutionnel"
 
 // Page "Projets & partenariats" de la vitrine publique : liste les projets et
 // partenariats publies par la Presidence.
@@ -92,14 +94,22 @@ export function ProjetsPartenariatsPubliquePage() {
                       {projet.intitule_officiel}
                     </p>
                   )}
-                  <div className="mt-auto flex items-center gap-1 text-xs text-muted-foreground">
+                  <div className="mt-auto flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                     <span className="font-medium">{projet.type}</span>
-                    {projet.etablissement_nom && (
-                      <>
-                        <span className="text-[var(--color-text-secondary)]">·</span>
-                        {projet.etablissement_nom}
-                      </>
-                    )}
+                    <span className="text-[var(--color-text-secondary)]">·</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      {projet.etablissement ? (
+                        <LogoMedia
+                          src={projet.etablissement.logo_url}
+                          nom={projet.etablissement.nom}
+                          className="h-5 w-5 shrink-0 rounded bg-white object-contain text-[8px]"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <LogoInstitutionnel className="h-5 w-5 shrink-0 rounded bg-white object-contain text-[8px]" />
+                      )}
+                      {projet.etablissement?.nom ?? "Présidence"}
+                    </span>
                   </div>
                   <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar size={12} />
@@ -140,7 +150,12 @@ export function ProjetsPartenariatsPubliquePage() {
                       .slice(0, 3)
                       .map((etab) => (
                         <span key={etab.id} className="flex items-center gap-1">
-                          <Building2 size={12} />
+                          <LogoMedia
+                            src={etab.logo_url}
+                            nom={etab.nom}
+                            className="h-5 w-5 shrink-0 rounded bg-white object-contain text-[8px]"
+                            loading="lazy"
+                          />
                           {etab.nom}
                         </span>
                       ))}
@@ -150,6 +165,21 @@ export function ProjetsPartenariatsPubliquePage() {
                       </span>
                     )}
                   </div>
+                  {(partenariat.partenaires ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      {(partenariat.partenaires ?? []).slice(0, 3).map((partenaire) => (
+                        <span key={partenaire.id} className="flex items-center gap-1">
+                          <LogoMedia
+                            src={partenaire.logo_url}
+                            nom={partenaire.nom}
+                            className="h-5 w-5 shrink-0 rounded bg-white object-contain text-[8px]"
+                            loading="lazy"
+                          />
+                          {partenaire.nom}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </RevealItem>

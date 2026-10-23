@@ -124,6 +124,7 @@ export class SyntheseService {
     return {
       etablissement_id: etablissement.id,
       etablissement_nom: etablissement.nom,
+      etablissement_logo_url: etablissement.logo_url,
       annee,
       compteurs: {
         partenaires,
@@ -137,6 +138,7 @@ export class SyntheseService {
         id: item.id,
         partenaire_id: item.partenaire_id,
         partenaire_nom: item.partenaire.nom,
+        partenaire_logo_url: item.partenaire.logo_url,
       })),
     };
   }
@@ -227,6 +229,7 @@ export class SyntheseService {
       id: item.id,
       partenaire_id: item.partenaire_id,
       partenaire_nom: item.partenaire.nom,
+      partenaire_logo_url: item.partenaire.logo_url,
     }));
   }
 

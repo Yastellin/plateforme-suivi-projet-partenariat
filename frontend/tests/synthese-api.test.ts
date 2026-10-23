@@ -107,7 +107,12 @@ describe('GET /synthese/partenaires-strategiques', () => {
   it('renvoie la liste normalisée', async () => {
     api.get.mockResolvedValue({
       data: [
-        { id: 'ps-1', partenaire_id: 'p-1', partenaire_nom: 'AUF' },
+        {
+          id: 'ps-1',
+          partenaire_id: 'p-1',
+          partenaire_nom: 'Université de Toliara',
+          partenaire_logo_url: '/uploads/logos/partenaires/toliara.png',
+        },
         { partenaire_id: 'p-2' },
       ],
     });
@@ -123,7 +128,8 @@ describe('GET /synthese/partenaires-strategiques', () => {
         etablissement_id: undefined,
         annee: undefined,
         partenaire_id: 'p-1',
-        partenaire_nom: 'AUF',
+        partenaire_nom: 'Université de Toliara',
+        partenaire_logo_url: '/uploads/logos/partenaires/toliara.png',
       },
     ]);
   });
@@ -133,7 +139,14 @@ describe('sélection des partenaires pour la désignation', () => {
   it('interroge /partenaires avec la recherche et l’établissement', async () => {
     api.get.mockResolvedValue({
       data: {
-        data: [{ id: 'p-1', nom: 'AUF', etablissement_id: 'etab-1', statut: 'ACTIF' }],
+        data: [
+          {
+            id: 'p-1',
+            nom: 'Université de Toliara',
+            etablissement_id: 'etab-1',
+            statut: 'ACTIF',
+          },
+        ],
         meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
       },
     });

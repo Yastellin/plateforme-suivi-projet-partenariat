@@ -11,6 +11,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { LogoInstitutionnel } from '@/components/shared/LogoInstitutionnel';
 import { construireNavigation } from '@/components/layout/navigation-interne';
 import { cheminTableauDeBord } from '@/router';
 import { cn } from '@/lib/utils';
@@ -112,12 +113,7 @@ export function SidebarInterne() {
           reduit && 'justify-center px-0',
         )}
       >
-        <div
-          className="grid h-[34px] w-[34px] flex-shrink-0 place-items-center rounded-[var(--radius-sm)] bg-[var(--color-brand)] text-[15px] font-extrabold text-white"
-          style={{ fontFamily: 'var(--font-heading)' }}
-        >
-          UF
-        </div>
+        <LogoInstitutionnel className="h-[34px] w-[34px] flex-shrink-0 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white object-contain p-0.5 text-[13px]" />
         {!reduit ? (
           <div className="min-w-0 leading-tight">
             <strong className="block truncate text-[13.5px] font-bold">Université de Fianarantsoa</strong>

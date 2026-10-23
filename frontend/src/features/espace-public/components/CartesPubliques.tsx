@@ -15,7 +15,8 @@ import {
   teinteDe,
 } from "@/features/espace-public/lib/publique"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
-import { ImageMedia } from "@/components/shared/ImageMedia"
+import { ImageMedia, LogoMedia } from "@/components/shared/ImageMedia"
+import { LogoInstitutionnel } from "@/components/shared/LogoInstitutionnel"
 
 function classeBadgeStatut(statut: StatutProjet): string {
   switch (statut) {
@@ -99,14 +100,31 @@ export function CarteProjet({ projet, className }: { projet: ProjetPublic; class
         {partenairesAffiches.length > 0 && (
           <ul className="vt-tags" aria-label="Partenaires du projet">
             {partenairesAffiches.map((p) => (
-              <li key={p.id}>{p.nom}</li>
+              <li key={p.id} className="inline-flex items-center gap-1.5">
+                <LogoMedia
+                  src={p.logo_url}
+                  nom={p.nom}
+                  className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain text-[7px]"
+                  loading="lazy"
+                />
+                {p.nom}
+              </li>
             ))}
             {reste > 0 && <li>+{reste}</li>}
           </ul>
         )}
         <div className="vt-meta">
           <span>
-            <Landmark aria-hidden="true" />
+            {projet.etablissement ? (
+              <LogoMedia
+                src={projet.etablissement.logo_url}
+                nom={projet.etablissement.nom}
+                className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain text-[7px]"
+                loading="lazy"
+              />
+            ) : (
+              <LogoInstitutionnel className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain text-[7px]" />
+            )}
             {projet.etablissement ? (projet.etablissement.sigle ?? projet.etablissement.nom) : "Présidence"}
           </span>
           <span>
@@ -151,7 +169,19 @@ export function CartePublication({ publication, className }: { publication: Publ
           />
         </div>
         <div className="vt-pub-body">
-          <span className="vt-badge vt-badge-info">{etablissement ? (etablissement.sigle ?? etablissement.nom) : "Présidence"}</span>
+          <span className="vt-badge vt-badge-info inline-flex items-center gap-1.5">
+            {etablissement ? (
+              <LogoMedia
+                src={etablissement.logo_url}
+                nom={etablissement.nom}
+                className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain text-[7px]"
+                loading="lazy"
+              />
+            ) : (
+              <LogoInstitutionnel className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain text-[7px]" />
+            )}
+            {etablissement ? (etablissement.sigle ?? etablissement.nom) : "Présidence"}
+          </span>
           <h3>{publication.titre}</h3>
           <p>{resumePublication(publication)}</p>
           <div className="vt-meta">

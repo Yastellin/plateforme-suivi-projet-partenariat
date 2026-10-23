@@ -27,7 +27,7 @@ export class HealthService {
       // Ce contrat permet au compose de ne pas exposer un frontend récent
       // devant une ancienne image backend qui ne connaît pas encore ces routes.
       contrats: {
-        parametres_logos: 'v1',
+        parametres_logos: 'v2',
       },
     };
 

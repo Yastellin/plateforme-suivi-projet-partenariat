@@ -7,6 +7,7 @@ import { Building2 } from "lucide-react";
 import { DataTable, type Colonne } from "@/components/shared/DataTable";
 import { TableToolbar } from "@/components/shared/TableToolbar";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { LogoMedia } from "@/components/shared/ImageMedia";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Panel, PanelBody } from "@/components/shared/Panel";
 import { useEtablissements } from "@/features/etablissements/api/useEtablissements";
@@ -19,7 +20,13 @@ const COLONNES: Colonne<Etablissement>[] = [
     id: "nom",
     header: "Nom",
     cell: (e) => (
-      <span className="font-medium text-[var(--color-text-primary)]">
+      <span className="flex items-center gap-2.5 font-medium text-[var(--color-text-primary)]">
+        <LogoMedia
+          src={e.logo_url}
+          nom={e.nom}
+          className="h-8 w-8 shrink-0 rounded-md border border-[var(--color-border)] bg-white object-contain p-0.5 text-[10px]"
+          loading="lazy"
+        />
         {e.nom}
       </span>
     ),

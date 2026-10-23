@@ -74,7 +74,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget -qO- http://localhost:3000/api/health | grep -q '\"parametres_logos\":\"v1\"'",
+          "wget -qO- http://localhost:3000/api/health | grep -q '\"parametres_logos\":\"v2\"'",
         ]
       interval: 5s
       timeout: 5s

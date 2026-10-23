@@ -208,6 +208,10 @@ export function PartenaireDetailPage() {
                 queryKeys={[
                   ["partenaires"],
                   ["partenaires", partenaire.id],
+                  ["partenariats"],
+                  ["projets"],
+                  ["synthese"],
+                  ["public"],
                   ["public-partenaires"],
                 ]}
                 lectureSeule={!peutModifierPartenaire}

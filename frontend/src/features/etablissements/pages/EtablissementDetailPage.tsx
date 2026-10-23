@@ -72,7 +72,13 @@ export function EtablissementDetailPage() {
               queryKeys={[
                 ["etablissements", etablissement.id],
                 ["etablissements"],
+                ["partenariats"],
+                ["projets"],
+                ["synthese"],
+                ["public"],
                 ["public-etablissements"],
+                ["public-publications"],
+                ["public-publication"],
               ]}
               lectureSeule={!permissions.estPresidence}
             />
