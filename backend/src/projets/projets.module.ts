@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProjetsController } from './projets.controller';
 import { ProjetsService } from './projets.service';
-import { AvancementService } from './avancement.service';
 import { Projet } from './entities/projet.entity';
 import { ProjetPartenaire } from './entities/projet-partenaire.entity';
 import { ProjetBeneficiaire } from './entities/projet-beneficiaire.entity';
@@ -41,11 +40,7 @@ import { DemandesModificationProjetService } from './demandes-modification-proje
     NotificationsModule,
   ],
   controllers: [ProjetsController],
-  providers: [
-    ProjetsService,
-    AvancementService,
-    DemandesModificationProjetService,
-  ],
-  exports: [ProjetsService, AvancementService],
+  providers: [ProjetsService, DemandesModificationProjetService],
+  exports: [ProjetsService],
 })
 export class ProjetsModule {}

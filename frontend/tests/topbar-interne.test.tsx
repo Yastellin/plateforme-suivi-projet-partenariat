@@ -23,6 +23,10 @@ vi.mock('@/hooks/usePermissions', () => ({
   }),
 }));
 
+vi.mock('@/features/notifications/api/useNombreNotificationsNonLues', () => ({
+  useNombreNotificationsNonLues: () => ({ data: 27 }),
+}));
+
 vi.mock('@/contexts/identite-visuelle-context', () => ({
   NOM_INSTITUTION: 'Université de Fianarantsoa',
   useIdentiteVisuelle: () => ({
@@ -69,5 +73,13 @@ describe('barre supérieure interne', () => {
     expect(conteneur.querySelector('img')?.getAttribute('src')).toBe(
       '/api/uploads/logos/presidence/logo-universite.png',
     );
+
+    const boutonNotifications = conteneur.querySelector<HTMLButtonElement>(
+      'button[aria-label="Ouvrir les notifications"]',
+    );
+    expect(boutonNotifications?.textContent).toBe('27');
+    expect(
+      boutonNotifications?.querySelector('[aria-label="27 notifications non lues"]'),
+    ).not.toBeNull();
   });
 });

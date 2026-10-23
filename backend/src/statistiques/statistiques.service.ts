@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { Partenaire } from '../partenaires/entities/partenaire.entity';
 import { Partenariat } from '../partenariats/entities/partenariat.entity';
@@ -12,6 +12,7 @@ import {
   StatistiquesEtablissementDto,
 } from './dto/comparatif-response.dto';
 import { StatutProjet } from '../common/enums/statut-projet.enum';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class StatistiquesService {
@@ -40,7 +41,12 @@ export class StatistiquesService {
       const [partenaires, partenariats, projets, projets_actifs, cotutelles] =
         await Promise.all([
           this.partenaireRepo.count({
-            where: { archive: false, etablissement_id: etab.id },
+            where: {
+              archive: false,
+              etablissement_id: etab.id,
+              cree_par_role: Role.ETABLISSEMENT,
+              soumis_le: Not(IsNull()),
+            },
           }),
           this.peRepo
             .createQueryBuilder('pe')
@@ -49,14 +55,25 @@ export class StatistiquesService {
               etablissementId: etab.id,
             })
             .andWhere('partenariat.archive = false')
+            .andWhere('partenariat.cree_par_role = :origine', {
+              origine: Role.ETABLISSEMENT,
+            })
+            .andWhere('partenariat.soumis_le IS NOT NULL')
             .getCount(),
           this.projetRepo.count({
-            where: { archive: false, etablissement_id: etab.id },
+            where: {
+              archive: false,
+              etablissement_id: etab.id,
+              cree_par_role: Role.ETABLISSEMENT,
+              soumis_le: Not(IsNull()),
+            },
           }),
           this.projetRepo.count({
             where: {
               archive: false,
               etablissement_id: etab.id,
+              cree_par_role: Role.ETABLISSEMENT,
+              soumis_le: Not(IsNull()),
               statut: StatutProjet.EN_COURS,
             },
           }),

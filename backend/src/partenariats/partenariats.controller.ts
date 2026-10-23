@@ -29,6 +29,7 @@ import { Role } from '../common/enums/role.enum';
 import { OwnEtablissementGuard } from '../common/guards/own-etablissement.guard';
 import { SoumissionMasseDto } from '../common/dto/soumission-masse.dto';
 import { StatutPartenariat } from '../common/enums/statut-partenariat.enum';
+import { determinerPerimetreListe } from '../common/utils/perimetre-liste';
 
 @ApiTags('Partenariats')
 @ApiBearerAuth()
@@ -75,11 +76,8 @@ export class PartenariatsController {
   @ApiOperation({ summary: 'Lister tous les partenariats' })
   @ApiResponse({ status: 200 })
   findAll(@CurrentUser() user: any, @Query() query: QueryPartenariatDto) {
-    let etablissementId: string | undefined;
-    if (user.role === Role.ETABLISSEMENT) {
-      etablissementId = user.etablissement_id;
-    }
-    return this.partenariatsService.findAll(query, etablissementId);
+    const perimetre = determinerPerimetreListe(user, query.etablissement_id);
+    return this.partenariatsService.findAll(query, perimetre);
   }
 
   @Get(':id')

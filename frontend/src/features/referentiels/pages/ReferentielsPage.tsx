@@ -224,7 +224,7 @@ function TableauReferentiel({
 
     // Un porteur peut avoir un nom null (type ETABLISSEMENT).
     // On affiche le nom de l'etablissement rattache en priorite.
-    const donneesFormatees = data?.data?.map((porteur) => ({
+    const donneesFormatees = data?.map((porteur) => ({
       ...porteur,
       nom:
         porteur.type_porteur === "ETABLISSEMENT"
@@ -261,7 +261,7 @@ function BailleursTab() {
 
   return (
     <TableauReferentiel
-      donnees={data?.data}
+      donnees={data}
       isLoading={isLoading}
       onCreer={(nom, extra) => createBailleur.mutate({ nom, description: extra })}
       onModifier={(id, nom, extra) => updateBailleur.mutate({ id, donnees: { nom, description: extra } }, { onSuccess: () => toast.success("Bailleur modifié") })}
@@ -279,7 +279,7 @@ function BeneficiairesTab() {
 
   return (
     <TableauReferentiel
-      donnees={data?.data}
+      donnees={data}
       isLoading={isLoading}
       onCreer={(nom, extra) => createBeneficiaire.mutate({ nom, categorie: extra })}
       onModifier={(id, nom, extra) => updateBeneficiaire.mutate({ id, donnees: { nom, categorie: extra } }, { onSuccess: () => toast.success("Bénéficiaire modifié") })}
@@ -297,7 +297,7 @@ function SitesTab() {
 
   return (
     <TableauReferentiel
-      donnees={data?.data}
+      donnees={data}
       isLoading={isLoading}
       onCreer={(nom, extra) => createSite.mutate({ nom, description: extra })}
       onModifier={(id, nom, extra) => updateSite.mutate({ id, donnees: { nom, description: extra } }, { onSuccess: () => toast.success("Site modifié") })}

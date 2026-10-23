@@ -26,6 +26,10 @@ vi.mock('@/router', () => ({
   cheminTableauDeBord: () => '/presidence',
 }));
 
+vi.mock('@/features/notifications/api/useNombreNotificationsNonLues', () => ({
+  useNombreNotificationsNonLues: () => ({ data: 27 }),
+}));
+
 vi.mock('@/contexts/identite-visuelle-context', () => ({
   NOM_INSTITUTION: 'Université de Fianarantsoa',
   useIdentiteVisuelle: () => ({
@@ -64,6 +68,12 @@ describe('barre latérale interne', () => {
     });
 
     expect(conteneur.querySelector('nav')?.className).toContain('overflow-y-auto');
+
+    const lienNotifications = conteneur.querySelector<HTMLAnchorElement>(
+      'a[href="/presidence/notifications"]',
+    );
+    expect(lienNotifications?.textContent).toContain('Notifications');
+    expect(lienNotifications?.textContent).toContain('27');
 
     const boutonCompte = conteneur.querySelector<HTMLButtonElement>(
       'button[aria-haspopup="menu"]',

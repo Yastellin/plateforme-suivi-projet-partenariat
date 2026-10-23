@@ -230,6 +230,105 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
     }
   });
 
+  it('sépare les listes de la Présidence des sections établissements', async () => {
+    const partenairePresidence = await creerPartenaire(
+      `Partenaire Présidence Antananarivo ${suffixe()}`,
+      presidence,
+    );
+    const projetPresidence = await creerProjet(
+      `Projet Présidence Analamanga ${suffixe()}`,
+      presidence,
+    );
+    const partenariatPresidence = await creerPartenariat(
+      `Partenariat Présidence Madagascar ${suffixe()}`,
+      partenairePresidence.id,
+      presidence,
+    );
+
+    const cas = [
+      {
+        ressource: 'partenaires',
+        propreId: partenairePresidence.id,
+        etablissementsIds: [partenaireIndividuel.id, partenaireMasse.id],
+      },
+      {
+        ressource: 'projets',
+        propreId: projetPresidence.id,
+        etablissementsIds: [projetIndividuel.id, projetMasse.id],
+      },
+      {
+        ressource: 'partenariats',
+        propreId: partenariatPresidence.id,
+        etablissementsIds: [partenariatIndividuel.id, partenariatMasse.id],
+      },
+    ];
+    const totauxSections: Record<string, number> = {};
+
+    for (const { ressource, propreId, etablissementsIds } of cas) {
+      const listePresidence = donnees<any>(
+        (
+          await request(serveur())
+            .get(`/api/${ressource}?limit=100`)
+            .set(...enteteBearer(presidence))
+            .expect(200)
+        ).body,
+      );
+      const idsPresidence = listePresidence.data.map((item: any) => item.id);
+      expect(idsPresidence).toContain(propreId);
+      for (const etablissementIdAttendu of etablissementsIds) {
+        expect(idsPresidence).not.toContain(etablissementIdAttendu);
+      }
+      expect(
+        listePresidence.data.every(
+          (item: any) => item.cree_par_role === 'PRESIDENCE',
+        ),
+      ).toBe(true);
+
+      const sectionEtablissement = donnees<any>(
+        (
+          await request(serveur())
+            .get(
+              `/api/${ressource}?limit=100&etablissement_id=${etablissementId}`,
+            )
+            .set(...enteteBearer(presidence))
+            .expect(200)
+        ).body,
+      );
+      const idsEtablissement = sectionEtablissement.data.map(
+        (item: any) => item.id,
+      );
+      totauxSections[ressource] = sectionEtablissement.meta.total;
+      expect(idsEtablissement).toEqual(
+        expect.arrayContaining(etablissementsIds),
+      );
+      expect(idsEtablissement).not.toContain(propreId);
+      expect(
+        sectionEtablissement.data.every(
+          (item: any) =>
+            item.cree_par_role === 'ETABLISSEMENT' && item.soumis_le,
+        ),
+      ).toBe(true);
+    }
+
+    const comparatif = donnees<any>(
+      (
+        await request(serveur())
+          .get('/api/statistiques/comparatif-etablissements')
+          .set(...enteteBearer(presidence))
+          .expect(200)
+      ).body,
+    );
+    expect(
+      comparatif.etablissements.find(
+        (item: any) => item.etablissement_id === etablissementId,
+      ),
+    ).toMatchObject({
+      partenaires: totauxSections.partenaires,
+      partenariats: totauxSections.partenariats,
+      projets: totauxSections.projets,
+    });
+  });
+
   it('verrouille les données établissement après soumission', async () => {
     await request(serveur())
       .patch(`/api/projets/${projetIndividuel.id}`)

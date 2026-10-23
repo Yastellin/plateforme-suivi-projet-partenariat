@@ -5,7 +5,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, ILike, Repository } from 'typeorm';
+import {
+  DataSource,
+  FindOptionsWhere,
+  ILike,
+  IsNull,
+  Not,
+  Repository,
+} from 'typeorm';
 import { CreatePartenaireDto } from './dto/create-partenaire.dto';
 import { UpdatePartenaireDto } from './dto/update-partenaire.dto';
 import { QueryPartenaireDto } from './dto/query-partenaire.dto';
@@ -24,6 +31,7 @@ import { STORAGE_PORT } from '../storage/storage.port';
 import type { StoragePort } from '../storage/storage.port';
 import { CoordonneesService } from '../coordonnees/coordonnees.service';
 import { Role } from '../common/enums/role.enum';
+import type { PerimetreListeDonnees } from '../common/utils/perimetre-liste';
 
 @Injectable()
 export class PartenairesService {
@@ -78,12 +86,18 @@ export class PartenairesService {
     return this.findOne(partenaireId, etablissementId);
   }
 
-  async findAll(query: QueryPartenaireDto, etablissementId?: string) {
+  async findAll(
+    query: QueryPartenaireDto,
+    perimetre: PerimetreListeDonnees = {},
+  ) {
     const { page = 1, limit = 20, nom, type, pays, statut, visibilite } = query;
 
-    const where: any = { archive: false };
-    const etablissementFiltre = etablissementId ?? query.etablissement_id;
+    const where: FindOptionsWhere<Partenaire> = { archive: false };
+    const etablissementFiltre =
+      perimetre.etablissementId ?? query.etablissement_id;
     if (etablissementFiltre) where.etablissement_id = etablissementFiltre;
+    if (perimetre.origine) where.cree_par_role = perimetre.origine;
+    if (perimetre.soumisesUniquement) where.soumis_le = Not(IsNull());
     if (nom) where.nom = ILike(`%${nom}%`);
     if (type) where.type = ILike(`%${type}%`);
     if (pays) where.pays = ILike(`%${pays}%`);
@@ -105,7 +119,7 @@ export class PartenairesService {
   }
 
   async findOne(id: string, etablissementId?: string) {
-    const where: any = { id, archive: false };
+    const where: FindOptionsWhere<Partenaire> = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
     const partenaire = await this.partenaireRepo.findOne({

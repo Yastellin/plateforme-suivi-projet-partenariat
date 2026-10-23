@@ -10,7 +10,16 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { HistoriqueService } from '../historique/historique.service';
 import type { ContexteUtilisateur } from '../historique/historique.service';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
-import { DataSource, EntityManager, ILike, In, Repository } from 'typeorm';
+import {
+  DataSource,
+  EntityManager,
+  FindOptionsWhere,
+  ILike,
+  In,
+  IsNull,
+  Not,
+  Repository,
+} from 'typeorm';
 import { CreateProjetDto } from './dto/create-projet.dto';
 import { UpdateProjetDto } from './dto/update-projet.dto';
 import { QueryProjetDto } from './dto/query-projet.dto';
@@ -33,6 +42,7 @@ import { Bailleur } from '../referentiels/bailleurs/entities/bailleur.entity';
 import { Site } from '../referentiels/sites/entities/site.entity';
 import { TypePorteur } from '../common/enums/type-porteur.enum';
 import { Role } from '../common/enums/role.enum';
+import type { PerimetreListeDonnees } from '../common/utils/perimetre-liste';
 
 @Injectable()
 export class ProjetsService {
@@ -168,7 +178,7 @@ export class ProjetsService {
     return this.findOne(projetId, etablissementId);
   }
 
-  async findAll(query: QueryProjetDto, etablissementId?: string) {
+  async findAll(query: QueryProjetDto, perimetre: PerimetreListeDonnees = {}) {
     const {
       page = 1,
       limit = 20,
@@ -180,9 +190,14 @@ export class ProjetsService {
       archive,
     } = query;
 
-    const where: any = { archive: archive !== undefined ? archive : false };
-    const etablissementFiltre = etablissementId ?? query.etablissement_id;
+    const where: FindOptionsWhere<Projet> = {
+      archive: archive !== undefined ? archive : false,
+    };
+    const etablissementFiltre =
+      perimetre.etablissementId ?? query.etablissement_id;
     if (etablissementFiltre) where.etablissement_id = etablissementFiltre;
+    if (perimetre.origine) where.cree_par_role = perimetre.origine;
+    if (perimetre.soumisesUniquement) where.soumis_le = Not(IsNull());
     if (nom) where.nom = ILike(`%${nom}%`);
     if (type) where.type = ILike(`%${type}%`);
     if (statut) where.statut = statut;
@@ -207,9 +222,7 @@ export class ProjetsService {
       order: { created_at: 'DESC' },
     });
 
-    const enriched = await Promise.all(
-      data.map((projet) => this.enrichir(projet)),
-    );
+    const enriched = data.map((projet) => this.enrichir(projet));
 
     return {
       data: enriched,
@@ -221,7 +234,7 @@ export class ProjetsService {
     id: string,
     etablissementId?: string | null,
   ): Promise<ProjetResponseDto> {
-    const where: any = { id, archive: false };
+    const where: FindOptionsWhere<Projet> = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
     const projet = await this.projetRepo.findOne({
@@ -526,25 +539,6 @@ export class ProjetsService {
     return this.enrichir(projet);
   }
 
-  async getAvancement(id: string) {
-    const projet = await this.projetRepo.findOneBy({ id, archive: false });
-    if (!projet) throw new NotFoundException('Projet non trouvé');
-
-    const [total, terminees] = await Promise.all([
-      this.activiteRepo.count({ where: { projet_id: id } }),
-      this.activiteRepo.count({ where: { projet_id: id, terminee: true } }),
-    ]);
-
-    const avancement = total === 0 ? 0 : Math.round((terminees / total) * 100);
-
-    return {
-      projet_id: id,
-      avancement,
-      activites_total: total,
-      activites_terminees: terminees,
-    };
-  }
-
   private async resoudrePorteur(
     manager: EntityManager,
     dto: Pick<CreateProjetDto, 'porteur_id' | 'porteur'>,
@@ -678,15 +672,7 @@ export class ProjetsService {
     await remplacer(ProjetSite, dto.sites_ids, 'site_id');
   }
 
-  private async enrichir(projet: Projet): Promise<ProjetResponseDto> {
-    const [total, terminees] = await Promise.all([
-      this.activiteRepo.count({ where: { projet_id: projet.id } }),
-      this.activiteRepo.count({
-        where: { projet_id: projet.id, terminee: true },
-      }),
-    ]);
-    const avancement = total === 0 ? 0 : Math.round((terminees / total) * 100);
-
+  private enrichir(projet: Projet): ProjetResponseDto {
     const statutsExclusDuRetard = [
       StatutProjet.BROUILLON,
       StatutProjet.TERMINE,
@@ -720,7 +706,6 @@ export class ProjetsService {
       bailleurs: projet.bailleurs ?? [],
       beneficiaires: projet.beneficiaires ?? [],
       sites: projet.sites ?? [],
-      avancement,
       en_retard: enRetard,
       created_at: projet.created_at,
       updated_at: projet.updated_at,

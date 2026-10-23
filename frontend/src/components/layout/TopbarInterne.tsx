@@ -7,6 +7,7 @@ import { AvatarCompte } from '@/components/shared/AvatarCompte';
 import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
 import { Breadcrumbs } from './Breadcrumbs';
 import { ThemeToggle } from './ThemeToggle';
+import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
 
 interface TopbarInterneProps {
   onOuvrirRecherche: () => void;
@@ -69,9 +70,10 @@ export function TopbarInterne({ onOuvrirRecherche, onOuvrirNotifications, onOuvr
           <button
             onClick={onOuvrirNotifications}
             aria-label="Ouvrir les notifications"
-            className="grid h-9 w-9 place-items-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)] hover:text-[var(--color-brand)]"
+            className="relative grid h-9 w-9 place-items-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)] hover:text-[var(--color-brand)]"
           >
             <Bell className="h-4 w-4" />
+            <NotificationBadge className="absolute -right-1 -top-1" />
           </button>
         ) : null}
 

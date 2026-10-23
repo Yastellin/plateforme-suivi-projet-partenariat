@@ -163,7 +163,7 @@ describe('Partenaires (e2e)', () => {
       }
     });
 
-    it('renvoie tous les partenaires pour la PRESIDENCE', async () => {
+    it('renvoie uniquement les partenaires propres à la PRESIDENCE', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .get('/api/partenaires?pays=Madagascar')
         .set(...enteteBearer(presidence))
@@ -171,7 +171,18 @@ describe('Partenaires (e2e)', () => {
 
       const corps = donnees<any>(reponse.body);
       expect(corps.data.length).toBeGreaterThanOrEqual(1);
-      expect(corps.data[0].pays).toBe('Madagascar');
+      expect(
+        corps.data.every(
+          (partenaire: any) =>
+            partenaire.pays === 'Madagascar' &&
+            partenaire.cree_par_role === 'PRESIDENCE',
+        ),
+      ).toBe(true);
+      expect(
+        corps.data.some(
+          (partenaire: any) => partenaire.nom === 'Université de Toamasina',
+        ),
+      ).toBe(false);
     });
 
     it('respecte la pagination demandee', async () => {

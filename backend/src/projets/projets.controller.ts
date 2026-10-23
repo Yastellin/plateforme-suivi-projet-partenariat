@@ -31,6 +31,7 @@ import { SoumissionMasseDto } from '../common/dto/soumission-masse.dto';
 import { DemanderModificationProjetDto } from './dto/demander-modification-projet.dto';
 import { DemandesModificationProjetService } from './demandes-modification-projet.service';
 import { DecisionDemandeModificationProjet } from './demandes-modification-projet.constants';
+import { determinerPerimetreListe } from '../common/utils/perimetre-liste';
 
 @ApiTags('Projets')
 @ApiBearerAuth()
@@ -72,9 +73,8 @@ export class ProjetsController {
   @Get()
   @ApiOperation({ summary: 'Lister les projets' })
   findAll(@CurrentUser() user: any, @Query() query: QueryProjetDto) {
-    const etablissementId =
-      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
-    return this.projetsService.findAll(query, etablissementId);
+    const perimetre = determinerPerimetreListe(user, query.etablissement_id);
+    return this.projetsService.findAll(query, perimetre);
   }
 
   @Get(':id')
@@ -84,12 +84,6 @@ export class ProjetsController {
     const etablissementId =
       user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
     return this.projetsService.findOne(id, etablissementId);
-  }
-
-  @Get(':id/avancement')
-  @ApiOperation({ summary: "Calculer l'avancement d'un projet" })
-  getAvancement(@Param('id', ParseUUIDPipe) id: string) {
-    return this.projetsService.getAvancement(id);
   }
 
   @Patch(':id')
