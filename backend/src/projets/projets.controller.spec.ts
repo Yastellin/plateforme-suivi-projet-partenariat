@@ -106,17 +106,24 @@ describe('ProjetsController', () => {
         {},
       );
 
-      expect(service.findAll).toHaveBeenCalledWith({}, {
-        etablissementId: 'etab-1',
-      });
+      expect(service.findAll).toHaveBeenCalledWith(
+        {},
+        {
+          etablissementId: 'etab-1',
+        },
+      );
     });
 
     it('restreint la liste générale aux données de la Présidence', async () => {
       await controller.findAll({ role: Role.PRESIDENCE }, {});
 
-      expect(service.findAll).toHaveBeenCalledWith({}, {
-        origine: Role.PRESIDENCE,
-      });
+      expect(service.findAll).toHaveBeenCalledWith(
+        {},
+        {
+          origine: Role.PRESIDENCE,
+          etatSoumission: 'NON_SOUMISES',
+        },
+      );
     });
 
     it("expose les données soumises dans la section d'un établissement", async () => {
@@ -126,8 +133,7 @@ describe('ProjetsController', () => {
 
       expect(service.findAll).toHaveBeenCalledWith(query, {
         etablissementId: 'etab-1',
-        origine: Role.ETABLISSEMENT,
-        soumisesUniquement: true,
+        etatSoumission: 'SOUMISES',
       });
     });
 
@@ -235,7 +241,11 @@ describe('ProjetsController', () => {
   describe('archiver', () => {
     it('delegue l archivage au service', async () => {
       await controller.archiver(
-        { id: 'presidence-1', email: 'presidence@example.mg', role: Role.PRESIDENCE },
+        {
+          id: 'presidence-1',
+          email: 'presidence@example.mg',
+          role: Role.PRESIDENCE,
+        },
         'p1',
       );
 

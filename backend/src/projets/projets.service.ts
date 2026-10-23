@@ -198,7 +198,11 @@ export class ProjetsService {
       perimetre.etablissementId ?? query.etablissement_id;
     if (etablissementFiltre) where.etablissement_id = etablissementFiltre;
     if (perimetre.origine) where.cree_par_role = perimetre.origine;
-    if (perimetre.soumisesUniquement) where.soumis_le = Not(IsNull());
+    if (perimetre.etatSoumission === 'SOUMISES') {
+      where.soumis_le = Not(IsNull());
+    } else if (perimetre.etatSoumission === 'NON_SOUMISES') {
+      where.soumis_le = IsNull();
+    }
     if (nom) where.nom = ILike(`%${nom}%`);
     if (type) where.type = ILike(`%${type}%`);
     if (statut) where.statut = statut;

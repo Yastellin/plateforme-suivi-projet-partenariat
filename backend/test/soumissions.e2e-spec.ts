@@ -242,6 +242,35 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
   });
 
   it('sépare les listes de la Présidence des sections établissements', async () => {
+    // Reproduit les données créées avant l'introduction du suivi de provenance :
+    // elles ont été marquées Présidence par le backfill, mais leur soumission
+    // prouve qu'elles proviennent d'un établissement.
+    const partenaireHistorique = await creerPartenaire(
+      `Partenaire historique Fianarantsoa ${suffixe()}`,
+    );
+    const projetHistorique = await creerProjet(
+      `Projet historique Haute Matsiatra ${suffixe()}`,
+    );
+    const partenariatHistorique = await creerPartenariat(
+      `Partenariat historique Madagascar ${suffixe()}`,
+      partenaireHistorique.id,
+    );
+    const donneesHistoriques = [
+      ['partenaires', 'Partenaire', partenaireHistorique.id],
+      ['projets', 'Projet', projetHistorique.id],
+      ['partenariats', 'Partenariat', partenariatHistorique.id],
+    ] as const;
+    for (const [ressource, table, id] of donneesHistoriques) {
+      await request(serveur())
+        .post(`/api/${ressource}/${id}/soumettre`)
+        .set(...enteteBearer(etablissement))
+        .expect(200);
+      await ctx.dataSource.query(
+        `UPDATE "${table}" SET cree_par_role = 'PRESIDENCE' WHERE id = $1`,
+        [id],
+      );
+    }
+
     const partenairePresidence = await creerPartenaire(
       `Partenaire Présidence Antananarivo ${suffixe()}`,
       presidence,
@@ -260,17 +289,29 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       {
         ressource: 'partenaires',
         propreId: partenairePresidence.id,
-        etablissementsIds: [partenaireIndividuel.id, partenaireMasse.id],
+        etablissementsIds: [
+          partenaireIndividuel.id,
+          partenaireMasse.id,
+          partenaireHistorique.id,
+        ],
       },
       {
         ressource: 'projets',
         propreId: projetPresidence.id,
-        etablissementsIds: [projetIndividuel.id, projetMasse.id],
+        etablissementsIds: [
+          projetIndividuel.id,
+          projetMasse.id,
+          projetHistorique.id,
+        ],
       },
       {
         ressource: 'partenariats',
         propreId: partenariatPresidence.id,
-        etablissementsIds: [partenariatIndividuel.id, partenariatMasse.id],
+        etablissementsIds: [
+          partenariatIndividuel.id,
+          partenariatMasse.id,
+          partenariatHistorique.id,
+        ],
       },
     ];
     const totauxSections: Record<string, number> = {};
@@ -291,7 +332,7 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       }
       expect(
         listePresidence.data.every(
-          (item: any) => item.cree_par_role === 'PRESIDENCE',
+          (item: any) => item.cree_par_role === 'PRESIDENCE' && !item.soumis_le,
         ),
       ).toBe(true);
 
@@ -314,10 +355,7 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
       );
       expect(idsEtablissement).not.toContain(propreId);
       expect(
-        sectionEtablissement.data.every(
-          (item: any) =>
-            item.cree_par_role === 'ETABLISSEMENT' && item.soumis_le,
-        ),
+        sectionEtablissement.data.every((item: any) => item.soumis_le),
       ).toBe(true);
     }
 

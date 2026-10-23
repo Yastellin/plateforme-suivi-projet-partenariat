@@ -144,7 +144,11 @@ export class PartenariatsService {
       where.etablissements = { etablissement_id: etablissementFiltre };
     }
     if (perimetre.origine) where.cree_par_role = perimetre.origine;
-    if (perimetre.soumisesUniquement) where.soumis_le = Not(IsNull());
+    if (perimetre.etatSoumission === 'SOUMISES') {
+      where.soumis_le = Not(IsNull());
+    } else if (perimetre.etatSoumission === 'NON_SOUMISES') {
+      where.soumis_le = IsNull();
+    }
     if (intitule) where.intitule = ILike(`%${intitule}%`);
     if (domaine) where.domaine = domaine;
     if (statut) where.statut = statut;
