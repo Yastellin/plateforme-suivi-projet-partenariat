@@ -1,8 +1,8 @@
 // src/components/layout/FooterPublique.tsx
 import { Link } from "react-router-dom"
 
-// Pied de page de la vitrine publique (style maquette). Ne contient que des
-// liens reels de la plateforme : aucune coordonnee de contact n'est inventee.
+// Pied de page de la vitrine publique : 4 colonnes (equipe, navigation, contact,
+// acces). Ne contient que des liens reels de la plateforme.
 export function FooterPublique() {
   return (
     <footer className="vt-footer">
@@ -12,23 +12,24 @@ export function FooterPublique() {
             <Link to="/" className="vt-brandmark">
               <span className="vt-fanion" aria-hidden="true">UF</span>
               <span>
-                <span className="vt-brand-name">Partenariats UF</span>
+                <span className="vt-brand-name">Équipe Projet et Partenariat</span>
                 <span className="vt-brand-sub">Université de Fianarantsoa</span>
               </span>
             </Link>
             <p>Le suivi public des partenariats de l'université et de ses établissements.</p>
           </div>
           <div>
-            <h4>Découvrir</h4>
+            <h4>Navigation</h4>
             <ul>
-              <li><Link to="/a-propos">À propos</Link></li>
+              <li><Link to="/actualites">Actualités</Link></li>
+              <li><Link to="/projets">Projets</Link></li>
+              <li><Link to="/partenariats">Partenariats</Link></li>
               <li><Link to="/etablissements">Établissements</Link></li>
-              <li><Link to="/projets-partenariats?onglet=partenaires">Partenaires</Link></li>
-              <li><Link to="/projets-partenariats">Projets et partenariats</Link></li>
+              <li><Link to="/a-propos">À propos</Link></li>
             </ul>
           </div>
           <div>
-            <h4>Nous joindre</h4>
+            <h4>Contact</h4>
             <ul>
               <li><Link to="/contact">Formulaire de contact</Link></li>
             </ul>

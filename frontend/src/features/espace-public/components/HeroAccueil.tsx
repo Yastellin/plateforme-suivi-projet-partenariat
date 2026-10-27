@@ -265,6 +265,10 @@ export function HeroAccueil() {
           </div>
         </div>
         <div className="vt-woven" aria-hidden="true" />
+        <div className="vt-wrap vt-hero-ctas">
+          <Link to="/partenariats" className="vt-btn vt-btn-primary">Découvrir nos partenaires</Link>
+          <Link to="/contact" className="vt-btn vt-btn-ghost">Nous contacter</Link>
+        </div>
       </section>
 
       <section className="vt-stats" aria-label="Chiffres clés">

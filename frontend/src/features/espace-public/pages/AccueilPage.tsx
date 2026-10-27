@@ -5,8 +5,10 @@ import { Link } from "react-router-dom"
 import { Briefcase, Building2, FlaskConical, Landmark, Mail, MessageSquare } from "lucide-react"
 import { HeroAccueil } from "@/features/espace-public/components/HeroAccueil"
 import { SectionEtablissements } from "@/features/espace-public/components/SectionEtablissements"
-import { SectionPartenaires } from "@/features/espace-public/components/SectionPartenaires"
-import { SectionPublicationsAlaUne } from "@/features/espace-public/components/SectionPublicationsAlaUne"
+import { SectionActualitesUne } from "@/features/espace-public/components/SectionActualitesUne"
+import { SectionProjetsEnVedette } from "@/features/espace-public/components/SectionProjetsEnVedette"
+import { SectionPartenairesEnVedette } from "@/features/espace-public/components/SectionPartenairesEnVedette"
+import { BandeLogos } from "@/features/espace-public/components/BandeLogos"
 import { FormulaireContact } from "@/features/espace-public/components/FormulaireContact"
 import { Reveal } from "@/features/espace-public/components/Reveal"
 
@@ -14,6 +16,10 @@ export function AccueilPage() {
   return (
     <div>
       <HeroAccueil />
+      <SectionActualitesUne />
+      <SectionProjetsEnVedette />
+      <SectionPartenairesEnVedette />
+      <BandeLogos />
 
       <section className="vt-section vt-section-alt" id="apropos">
         <Reveal className="vt-wrap vt-about">
@@ -58,8 +64,6 @@ export function AccueilPage() {
       </section>
 
       <SectionEtablissements />
-      <SectionPartenaires />
-      <SectionPublicationsAlaUne />
 
       <section className="vt-section" style={{ paddingTop: 0 }}>
         <div className="vt-wrap">
