@@ -1,10 +1,10 @@
 // src/router.tsx
 
 import { lazy, Suspense, useState, useEffect } from "react"
-import { createBrowserRouter, Navigate, RouterProvider, Outlet } from "react-router-dom"
+import { createBrowserRouter, Navigate, RouterProvider, Outlet, useLocation } from "react-router-dom"
 import type { ReactNode } from "react"
 import { X } from "lucide-react"
-import { MotionConfig } from "framer-motion"
+import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 
 import { useAuth } from "@/hooks/useAuth"
 import type { RoleUtilisateur } from "@/types/api"
@@ -12,6 +12,7 @@ import { SidebarInterne } from "@/components/layout/SidebarInterne"
 import { TopbarPublique } from "@/components/layout/TopbarPublique"
 import "@/styles/vitrine.css"
 import { FooterPublique } from "@/components/layout/FooterPublique"
+import { BoutonHautDePage } from "@/components/layout/BoutonHautDePage"
 import { TopbarInterne } from "@/components/layout/TopbarInterne"
 import { NotificationsDrawer } from "@/components/layout/NotificationsDrawer"
 import { CommandPalette } from "@/components/layout/CommandPalette"
@@ -50,6 +51,11 @@ const AProposPage = lazy(() => import("@/features/espace-public/pages/AProposPag
 const EtablissementsPage = lazy(() => import("@/features/espace-public/pages/EtablissementsPage").then((m) => ({ default: m.EtablissementsPage })))
 const ProjetsPartenariatsPubliquePage = lazy(() => import("@/features/espace-public/pages/ProjetsPartenariatsPubliquePage").then((m) => ({ default: m.ProjetsPartenariatsPubliquePage })))
 const PublicationDetailPage = lazy(() => import("@/features/espace-public/pages/PublicationDetailPage").then((m) => ({ default: m.PublicationDetailPage })))
+const ActualitesPage = lazy(() => import("@/features/espace-public/pages/ActualitesPage").then((m) => ({ default: m.ActualitesPage })))
+const PublicProjetsListePage = lazy(() => import("@/features/espace-public/pages/PublicProjetsListePage").then((m) => ({ default: m.PublicProjetsListePage })))
+const PublicProjetDetailPage = lazy(() => import("@/features/espace-public/pages/PublicProjetDetailPage").then((m) => ({ default: m.PublicProjetDetailPage })))
+const PublicPartenairesListePage = lazy(() => import("@/features/espace-public/pages/PublicPartenairesListePage").then((m) => ({ default: m.PublicPartenairesListePage })))
+const PublicPartenaireDetailPage = lazy(() => import("@/features/espace-public/pages/PublicPartenaireDetailPage").then((m) => ({ default: m.PublicPartenaireDetailPage })))
 const ContactPage = lazy(() => import("@/features/espace-public/pages/ContactPage").then((m) => ({ default: m.ContactPage })))
 const RecherchePage = lazy(() => import("@/features/recherche/pages/RecherchePage").then((m) => ({ default: m.RecherchePage })))
 const SynthesePage = lazy(() => import("@/features/synthese/pages/SynthesePage").then((m) => ({ default: m.SynthesePage })))
@@ -120,14 +126,30 @@ function RouteProtegee({
 }
 
 function LayoutPublic() {
+  const location = useLocation()
   return (
     <MotionConfig reducedMotion="user">
       <div className="vitrine flex min-h-screen flex-col">
+        <a href="#contenu-principal" className="vt-skip">
+          Aller au contenu
+        </a>
         <TopbarPublique />
-        <main className="flex-1">
-          <Outlet />
+        <main id="contenu-principal" className="flex-1" tabIndex={-1}>
+          {/* Transition de page : fondu de 400 ms, desactive par MotionConfig si besoin. */}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
         <FooterPublique />
+        <BoutonHautDePage />
       </div>
     </MotionConfig>
   )
@@ -204,9 +226,15 @@ const router = createBrowserRouter([
       { path: "/", element: <Charge><RedirectionAccueil /></Charge> },
       { path: "/a-propos", element: <Charge><AProposPage /></Charge> },
       { path: "/etablissements", element: <Charge><EtablissementsPage /></Charge> },
-      { path: "/partenaires", element: <Navigate to="/projets-partenariats?onglet=partenaires" replace /> },
+      { path: "/partenaires", element: <Navigate to="/partenariats" replace /> },
       { path: "/projets-partenariats", element: <Charge><ProjetsPartenariatsPubliquePage /></Charge> },
       { path: "/projets-partenariats/publication/:id", element: <Charge><PublicationDetailPage /></Charge> },
+      { path: "/actualites", element: <Charge><ActualitesPage /></Charge> },
+      { path: "/actualites/:id", element: <Charge><PublicationDetailPage /></Charge> },
+      { path: "/projets", element: <Charge><PublicProjetsListePage /></Charge> },
+      { path: "/projets/:id", element: <Charge><PublicProjetDetailPage /></Charge> },
+      { path: "/partenariats", element: <Charge><PublicPartenairesListePage /></Charge> },
+      { path: "/partenariats/:id", element: <Charge><PublicPartenaireDetailPage /></Charge> },
       { path: "/contact", element: <Charge><ContactPage /></Charge> },
     ],
   },

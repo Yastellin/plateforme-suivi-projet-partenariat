@@ -1,7 +1,7 @@
 // src/components/layout/TopbarPublique.tsx
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { LockKeyhole, Menu, X } from "lucide-react"
+import { Hexagon, LockKeyhole, Menu, X } from "lucide-react"
 
 interface LienNav {
   label: string
@@ -11,37 +11,46 @@ interface LienNav {
 // Navigation de la vitrine publique (accessible sans authentification).
 const LIENS_NAV: LienNav[] = [
   { label: "Accueil", href: "/" },
-  { label: "À propos", href: "/a-propos" },
+  { label: "Actualités", href: "/actualites" },
+  { label: "Projets", href: "/projets" },
+  { label: "Partenariats", href: "/partenariats" },
   { label: "Établissements", href: "/etablissements" },
-  { label: "Partenaires", href: "/projets-partenariats?onglet=partenaires" },
-  { label: "Projets et partenariats", href: "/projets-partenariats" },
+  { label: "À propos", href: "/a-propos" },
   { label: "Contact", href: "/contact" },
 ]
 
-// Deux liens peuvent partager le meme chemin (projets / partenaires) :
-// l'etat actif tient compte du parametre "onglet".
-function estActif(lien: LienNav, chemin: string, requete: string): boolean {
-  const [cheminLien, requeteLien] = lien.href.split("?")
-  if (cheminLien !== chemin) return false
-  const onglet = new URLSearchParams(requete).get("onglet")
-  if (requeteLien) return onglet === new URLSearchParams(requeteLien).get("onglet")
-  return cheminLien !== "/projets-partenariats" || !onglet || onglet === "projets"
+// Un lien est actif sur sa page et sur les pages de detail qui en dependent.
+function estActif(lien: LienNav, chemin: string): boolean {
+  if (lien.href === "/") return chemin === "/"
+  return chemin === lien.href || chemin.startsWith(`${lien.href}/`)
 }
 
 export function TopbarPublique() {
   const location = useLocation()
   // Le menu mobile est memorise avec la route ouverte : il se ferme seul a la navigation.
   const cleRoute = `${location.pathname}${location.search}`
+  const surAccueil = location.pathname === "/"
   const [menuPour, setMenuPour] = useState<string | null>(null)
   const menuOuvert = menuPour === cleRoute
+  // La barre se réduit et gagne une ombre dès que la page est défilée.
+  const [defile, setDefile] = useState(false)
+  useEffect(() => {
+    const surDefilement = () => setDefile(window.scrollY > 8)
+    surDefilement()
+    window.addEventListener("scroll", surDefilement, { passive: true })
+    return () => window.removeEventListener("scroll", surDefilement)
+  }, [])
 
   return (
-    <header className="vt-top">
+    <header className="vt-top" data-defile={defile} data-transparent={surAccueil && !defile}>
       <div className="vt-wrap">
         <Link to="/" className="vt-brandmark" aria-label="Université de Fianarantsoa, accueil">
-          <span className="vt-logo" aria-hidden="true">UF</span>
+          <span className="vt-fanion" aria-hidden="true">UF</span>
           <span>
-            <span className="vt-brand-name">Partenariats UF</span>
+            <span className="vt-brand-name">
+              <Hexagon className="vt-hex" size={13} aria-hidden="true" />
+              Partenariats UF
+            </span>
             <span className="vt-brand-sub">Université de Fianarantsoa</span>
           </span>
         </Link>
@@ -62,7 +71,7 @@ export function TopbarPublique() {
             <Link
               key={lien.href}
               to={lien.href}
-              aria-current={estActif(lien, location.pathname, location.search) ? "page" : undefined}
+              aria-current={estActif(lien, location.pathname) ? "page" : undefined}
             >
               {lien.label}
             </Link>

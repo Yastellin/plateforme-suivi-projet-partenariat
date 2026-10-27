@@ -2,6 +2,7 @@
 // Cartes de la vitrine (maquette) : partenaires, projets, publications.
 // Les textes de repli viennent de lib/publique.ts et ne contiennent aucune promesse inventee.
 import { Link } from "react-router-dom"
+import { motion } from "framer-motion"
 import { ArrowRight, CalendarDays, ExternalLink, Globe, Landmark, Star } from "lucide-react"
 import { formaterDate } from "@/lib/format"
 import type { PartenairePublic, ProjetPublic, PublicationPublique, StatutProjet } from "@/types/api"
@@ -46,7 +47,11 @@ export function CartePartenaire({ partenaire, className }: { partenaire: Partena
       )}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <b>{partenaire.nom}</b>
+          <b>
+            <Link to={`/partenariats/${partenaire.id}`} className="vt-stretch">
+              {partenaire.nom}
+            </Link>
+          </b>
           {partenaire.est_strategique && (
             <span className="vt-badge vt-badge-warn" style={{ fontSize: 11.5, padding: "1px 8px" }}>
               <Star size={11} aria-hidden="true" style={{ display: "inline", marginRight: 4 }} />
@@ -75,10 +80,10 @@ export function CartePartenaire({ partenaire, className }: { partenaire: Partena
   )
 }
 
-export function CarteProjet({ projet, className }: { projet: ProjetPublic; className?: string }) {
+export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic; className?: string; lien?: string }) {
   const partenairesAffiches = projet.partenaires.slice(0, 3)
   const reste = projet.partenaires.length - partenairesAffiches.length
-  const lienPublication = projet.publication_id ? `/projets-partenariats/publication/${projet.publication_id}` : null
+  const lienPublication = lien ?? (projet.publication_id ? `/actualites/${projet.publication_id}` : null)
 
   const contenu = (
     <>
@@ -112,7 +117,7 @@ export function CarteProjet({ projet, className }: { projet: ProjetPublic; class
         </div>
         {lienPublication && (
           <span className="vt-link">
-            Lire la publication <ArrowRight size={14} aria-hidden="true" />
+            {lien ? "Voir le projet" : "Lire la publication"} <ArrowRight size={14} aria-hidden="true" />
           </span>
         )}
       </div>
@@ -136,10 +141,17 @@ export function CartePublication({ publication, className }: { publication: Publ
   const etablissement = publication.projet.etablissement
   return (
     <article className={`vt-pub ${className ?? ""}`}>
-      <Link to={`/projets-partenariats/publication/${publication.id}`} style={LIEN_PLEINE_CARTE}>
+      <Link to={`/actualites/${publication.id}`} style={LIEN_PLEINE_CARTE}>
         <div className="vt-pub-cover">
           {publication.photo_url ? (
-            <img src={publication.photo_url} alt="" className="vt-art-img" loading="lazy" decoding="async" />
+            <motion.img
+              layoutId={`cover-${publication.id}`}
+              src={publication.photo_url}
+              alt=""
+              className="vt-art-img"
+              loading="lazy"
+              decoding="async"
+            />
           ) : (
             <Illustration type="montagne" />
           )}
