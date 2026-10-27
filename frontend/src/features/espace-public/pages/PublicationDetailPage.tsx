@@ -16,6 +16,7 @@ import type { PublicationPublique } from "@/types/api"
 import { useState } from "react"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 import { ImageMedia } from "@/components/shared/ImageMedia"
+import { motion } from "framer-motion"
 
 // Page detail d'une publication publique (section 7.4 : "detail d'une
 // publication"). Accessible sans authentification.
@@ -66,7 +67,7 @@ export function PublicationDetailPage() {
           Cette publication n'existe pas ou n'est plus disponible.
         </p>
         <Button asChild variant="outline" className="mt-6">
-          <Link to="/projets-partenariats">
+          <Link to="/actualites">
             <ArrowLeft size={16} />
             Retour aux publications
           </Link>
@@ -79,7 +80,7 @@ export function PublicationDetailPage() {
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Retour */}
       <Button asChild variant="ghost" size="sm" className="mb-6 -ml-2">
-        <Link to="/projets-partenariats">
+        <Link to="/actualites">
           <ArrowLeft size={16} />
           Retour
         </Link>
@@ -114,7 +115,7 @@ export function PublicationDetailPage() {
 
       {/* Galerie de photos */}
       {photos.length > 0 && (
-        <div className="mt-8">
+        <motion.div layoutId={`cover-${publication.id}`} className="mt-8">
           <div className="relative overflow-hidden rounded-xl bg-muted">
             <ImageMedia
               key={photoAffichee.id}
@@ -178,7 +179,7 @@ export function PublicationDetailPage() {
               {photoAffichee.legende}
             </p>
           ) : null}
-        </div>
+        </motion.div>
       )}
 
       {/* Contenu */}
