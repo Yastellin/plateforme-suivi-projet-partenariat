@@ -1,7 +1,7 @@
 // src/components/layout/TopbarPublique.tsx
 import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { Hexagon, LockKeyhole, Menu, X } from "lucide-react"
+import { Hexagon, Menu, X } from "lucide-react"
 
 interface LienNav {
   label: string
@@ -76,10 +76,6 @@ export function TopbarPublique() {
               {lien.label}
             </Link>
           ))}
-          <Link to="/connexion" className="vt-btn vt-btn-primary">
-            <LockKeyhole size={16} aria-hidden="true" />
-            Espace interne
-          </Link>
         </nav>
       </div>
     </header>
