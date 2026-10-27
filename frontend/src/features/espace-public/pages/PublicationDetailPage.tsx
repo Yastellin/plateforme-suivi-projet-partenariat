@@ -121,7 +121,7 @@ export function PublicationDetailPage() {
               key={photoAffichee.id}
               src={photoAffichee.url_fichier}
               alt={photoAffichee.legende || publication.titre}
-              className="h-64 w-full object-cover sm:h-96"
+              className="max-h-[70vh] w-full bg-white object-contain"
             />
             {photos.length > 1 && (
               <>
