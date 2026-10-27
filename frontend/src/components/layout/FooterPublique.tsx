@@ -1,8 +1,7 @@
 // src/components/layout/FooterPublique.tsx
 import { Link } from "react-router-dom"
 
-// Pied de page de la vitrine publique : 4 colonnes (equipe, navigation, contact,
-// acces). Ne contient que des liens reels de la plateforme.
+// Pied de page de la vitrine publique : equipe, navigation et contact.
 export function FooterPublique() {
   return (
     <footer className="vt-footer">
@@ -32,12 +31,6 @@ export function FooterPublique() {
             <h4>Contact</h4>
             <ul>
               <li><Link to="/contact">Formulaire de contact</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4>Accès réservé</h4>
-            <ul>
-              <li><Link to="/connexion">Espace interne</Link></li>
             </ul>
           </div>
         </div>
