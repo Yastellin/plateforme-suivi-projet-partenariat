@@ -10,7 +10,7 @@ export function FooterPublique() {
         <div className="vt-footer-cols">
           <div className="vt-about-f">
             <Link to="/" className="vt-brandmark">
-              <span className="vt-logo" aria-hidden="true">UF</span>
+              <span className="vt-fanion" aria-hidden="true">UF</span>
               <span>
                 <span className="vt-brand-name">Partenariats UF</span>
                 <span className="vt-brand-sub">Université de Fianarantsoa</span>

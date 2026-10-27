@@ -1,7 +1,7 @@
 // src/components/layout/TopbarPublique.tsx
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { LockKeyhole, Menu, X } from "lucide-react"
+import { Hexagon, LockKeyhole, Menu, X } from "lucide-react"
 
 interface LienNav {
   label: string
@@ -34,14 +34,25 @@ export function TopbarPublique() {
   const cleRoute = `${location.pathname}${location.search}`
   const [menuPour, setMenuPour] = useState<string | null>(null)
   const menuOuvert = menuPour === cleRoute
+  // La barre se réduit et gagne une ombre dès que la page est défilée.
+  const [defile, setDefile] = useState(false)
+  useEffect(() => {
+    const surDefilement = () => setDefile(window.scrollY > 8)
+    surDefilement()
+    window.addEventListener("scroll", surDefilement, { passive: true })
+    return () => window.removeEventListener("scroll", surDefilement)
+  }, [])
 
   return (
-    <header className="vt-top">
+    <header className="vt-top" data-defile={defile}>
       <div className="vt-wrap">
         <Link to="/" className="vt-brandmark" aria-label="Université de Fianarantsoa, accueil">
-          <span className="vt-logo" aria-hidden="true">UF</span>
+          <span className="vt-fanion" aria-hidden="true">UF</span>
           <span>
-            <span className="vt-brand-name">Partenariats UF</span>
+            <span className="vt-brand-name">
+              <Hexagon className="vt-hex" size={13} aria-hidden="true" />
+              Partenariats UF
+            </span>
             <span className="vt-brand-sub">Université de Fianarantsoa</span>
           </span>
         </Link>

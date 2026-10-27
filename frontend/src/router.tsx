@@ -12,6 +12,7 @@ import { SidebarInterne } from "@/components/layout/SidebarInterne"
 import { TopbarPublique } from "@/components/layout/TopbarPublique"
 import "@/styles/vitrine.css"
 import { FooterPublique } from "@/components/layout/FooterPublique"
+import { BoutonHautDePage } from "@/components/layout/BoutonHautDePage"
 import { TopbarInterne } from "@/components/layout/TopbarInterne"
 import { NotificationsDrawer } from "@/components/layout/NotificationsDrawer"
 import { CommandPalette } from "@/components/layout/CommandPalette"
@@ -128,6 +129,7 @@ function LayoutPublic() {
           <Outlet />
         </main>
         <FooterPublique />
+        <BoutonHautDePage />
       </div>
     </MotionConfig>
   )
