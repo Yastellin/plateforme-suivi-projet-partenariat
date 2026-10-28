@@ -233,6 +233,7 @@ export interface Publication {
   date_publication?: string;
   statut: StatutPublication;
   resultats?: string;
+  image_couverture_url?: string | null;
   projet_id: string;
   photos?: PhotoPublication[];
   created_at: string;

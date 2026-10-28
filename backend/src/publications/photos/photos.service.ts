@@ -3,6 +3,7 @@ import {
   NotFoundException,
   Inject,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -18,6 +19,8 @@ const MIME_AUTORISES = ['image/jpeg', 'image/png', 'image/webp'];
 
 @Injectable()
 export class PhotosService {
+  private readonly logger = new Logger(PhotosService.name);
+
   constructor(
     @InjectRepository(PhotoPublication)
     private photoRepo: Repository<PhotoPublication>,
@@ -25,6 +28,63 @@ export class PhotosService {
     private publicationRepo: Repository<Publication>,
     @Inject(STORAGE_PORT) private storage: StoragePort,
   ) {}
+
+  async uploadCouverture(
+    publicationId: string,
+    fichier: Express.Multer.File,
+  ): Promise<{ image_couverture_url: string }> {
+    if (!fichier) throw new BadRequestException('Aucun fichier fourni');
+    if (!MIME_AUTORISES.includes(fichier.mimetype)) {
+      throw new BadRequestException(
+        'Type d image non autorise (JPEG, PNG, WebP)',
+      );
+    }
+
+    const publication = await this.publicationRepo.findOne({
+      where: { id: publicationId },
+    });
+    if (!publication) throw new NotFoundException('Publication non trouvee');
+
+    const ancienneUrl = publication.image_couverture_url;
+    const nouvelleUrl = await this.storage.enregistrer(
+      fichier,
+      `publications/${publicationId}`,
+    );
+
+    try {
+      await this.publicationRepo.update(publicationId, {
+        image_couverture_url: nouvelleUrl,
+      });
+    } catch (erreur) {
+      await this.supprimerFichierPossede(nouvelleUrl);
+      throw erreur;
+    }
+
+    if (ancienneUrl && ancienneUrl !== nouvelleUrl) {
+      await this.supprimerAncienneCouverture(ancienneUrl);
+    }
+
+    return { image_couverture_url: nouvelleUrl };
+  }
+
+  async supprimerCouverture(
+    publicationId: string,
+  ): Promise<{ image_couverture_url: null }> {
+    const publication = await this.publicationRepo.findOne({
+      where: { id: publicationId },
+    });
+    if (!publication) throw new NotFoundException('Publication non trouvee');
+
+    const ancienneUrl = publication.image_couverture_url;
+    if (ancienneUrl) {
+      await this.publicationRepo.update(publicationId, {
+        image_couverture_url: null,
+      });
+      await this.supprimerAncienneCouverture(ancienneUrl);
+    }
+
+    return { image_couverture_url: null };
+  }
 
   async upload(
     publicationId: string,
@@ -102,6 +162,23 @@ export class PhotosService {
     await this.photoRepo.delete(id);
 
     return { message: 'Photo supprimee' };
+  }
+
+  private async supprimerAncienneCouverture(url: string): Promise<void> {
+    // Les URL de démonstration externes ne sont pas des fichiers gérés par le stockage.
+    if (!url.startsWith('/uploads/')) return;
+    await this.supprimerFichierPossede(url);
+  }
+
+  private async supprimerFichierPossede(url: string): Promise<void> {
+    try {
+      await this.storage.supprimer(url);
+    } catch (erreur) {
+      const message = erreur instanceof Error ? erreur.message : String(erreur);
+      this.logger.warn(
+        `Suppression du fichier de couverture impossible : ${message}`,
+      );
+    }
   }
 
   private async prochainOrdre(publicationId: string): Promise<number> {

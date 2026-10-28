@@ -14,6 +14,7 @@ import {
   resumePartenaire,
   resumeProjet,
   resumePublication,
+  imagePrincipalePublication,
   teinteDe,
 } from "@/features/espace-public/lib/publique"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
@@ -174,21 +175,29 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
 }
 
 export function CartePublication({ publication, className, lien }: { publication: PublicationPublique; className?: string; lien?: string }) {
+  const imagePrincipale = imagePrincipalePublication(publication)
+  const photoIllustrative = [...publication.photos].sort((a, b) => a.ordre - b.ordre)[0]
+  const texteAlternatif = publication.image_couverture_url
+    ? publication.titre
+    : photoIllustrative?.legende || publication.titre
+
   return (
     <article className={`vt-pub ${className ?? ""}`}>
       <Link to={lien ?? `/actualites/${publication.id}`} style={LIEN_PLEINE_CARTE}>
         <div className="vt-pub-cover">
-          {publication.photo_url ? (
+          {imagePrincipale ? (
             <motion.img
               layoutId={`cover-${publication.id}`}
-              src={publication.photo_url}
-              alt=""
+              src={imagePrincipale}
+              alt={texteAlternatif}
               className="vt-art-img"
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <Illustration type="montagne" />
+            <div role="img" aria-label={`Illustration neutre de ${publication.titre}`}>
+              <Illustration type="montagne" />
+            </div>
           )}
         </div>
         <div className="vt-pub-body">

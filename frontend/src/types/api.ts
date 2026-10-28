@@ -411,6 +411,8 @@ export interface PublicationPublique {
     intitule_officiel: string | null;
     etablissement: EtablissementPublicRef | null;
   };
+  image_couverture_url: string | null;
+  /** Champ historique conservé pour les consommateurs existants. */
   photo_url: string | null;
   photos: PhotoPublique[];
 }

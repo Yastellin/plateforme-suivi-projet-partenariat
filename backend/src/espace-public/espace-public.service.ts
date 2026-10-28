@@ -454,6 +454,7 @@ export class EspacePublicService {
       resultats: p.resultats,
       projet_id: p.projet_id,
       projet: this.versProjet(p.projet, false),
+      image_couverture_url: p.image_couverture_url,
       photo_url: photos[0]?.url_fichier ?? null,
       photos: photos.map(({ id, url_fichier, legende, ordre }) => ({
         id,

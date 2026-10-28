@@ -1,59 +1,58 @@
 // src/features/espace-public/pages/PublicationDetailPage.tsx
-import { useParams, Link } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Calendar,
   Newspaper,
   ChevronLeft,
   ChevronRight,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import apiClient from "@/lib/api-client"
-import type { PublicationPublique } from "@/types/api"
-import { useState } from "react"
-import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
-import { ImageMedia } from "@/components/shared/ImageMedia"
-import { motion } from "framer-motion"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { SkeletonPage } from "@/components/shared/SkeletonPage";
+import apiClient from "@/lib/api-client";
+import type { PublicationPublique } from "@/types/api";
+import { useState } from "react";
+import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext";
+import { ImageMedia } from "@/components/shared/ImageMedia";
+import { Illustration } from "@/features/espace-public/components/Illustrations";
 
 // Page detail d'une publication publique (section 7.4 : "detail d'une
 // publication"). Accessible sans authentification.
 export function PublicationDetailPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = useParams<{ id: string }>();
 
-  const { data: publication, isLoading, error } = useQuery({
+  const {
+    data: publication,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["public-publication", id],
     queryFn: async () => {
       const reponse = await apiClient.get<PublicationPublique>(
-        `/public/publications/${id}`
-      )
-      return reponse.data
+        `/public/publications/${id}`,
+      );
+      return reponse.data;
     },
     enabled: !!id,
-  })
-  useTitreBreadcrumb(publication?.titre)
+  });
+  useTitreBreadcrumb(publication?.titre);
 
-  const [photoActive, setPhotoActive] = useState(0)
+  const [photoActive, setPhotoActive] = useState(0);
   const photos = [...(publication?.photos ?? [])].sort(
     (premiere, seconde) => premiere.ordre - seconde.ordre,
-  )
-  const indexPhotoActive = Math.min(photoActive, Math.max(photos.length - 1, 0))
-  const photoAffichee = photos[indexPhotoActive]
+  );
+  const indexPhotoActive = Math.min(
+    photoActive,
+    Math.max(photos.length - 1, 0),
+  );
+  const photoAffichee = photos[indexPhotoActive];
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="mt-6 h-64 w-full rounded-xl" />
-        <div className="mt-6 space-y-3">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </div>
-      </div>
-    )
+      <SkeletonPage cartes={0} avecHero label="Chargement de la publication" />
+    );
   }
 
   if (error || !publication) {
@@ -73,7 +72,7 @@ export function PublicationDetailPage() {
           </Link>
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -86,7 +85,26 @@ export function PublicationDetailPage() {
         </Link>
       </Button>
 
-      {/* En-tete */}
+      <div className="mb-8 aspect-[16/7] w-full overflow-hidden rounded-md bg-muted">
+        {publication.image_couverture_url ? (
+          <img
+            src={publication.image_couverture_url}
+            alt={publication.titre}
+            className="h-full w-full object-cover"
+            decoding="async"
+          />
+        ) : (
+          <div
+            className="h-full w-full"
+            role="img"
+            aria-label={`Illustration neutre de ${publication.titre}`}
+          >
+            <Illustration type="montagne" />
+          </div>
+        )}
+      </div>
+
+      {/* En-tête et galerie d'images illustratives */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
@@ -94,7 +112,9 @@ export function PublicationDetailPage() {
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             {publication.projet.etablissement && (
-              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{publication.projet.etablissement.nom}</span>
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {publication.projet.etablissement.nom}
+              </span>
             )}
             {publication.date_publication && (
               <span className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -105,7 +125,7 @@ export function PublicationDetailPage() {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
-                  }
+                  },
                 )}
               </span>
             )}
@@ -115,8 +135,8 @@ export function PublicationDetailPage() {
 
       {/* Galerie de photos */}
       {photos.length > 0 && (
-        <motion.div layoutId={`cover-${publication.id}`} className="mt-8">
-          <div className="relative overflow-hidden rounded-xl bg-muted">
+        <div className="mt-8">
+          <div className="relative overflow-hidden rounded-md bg-muted">
             <ImageMedia
               key={photoAffichee.id}
               src={photoAffichee.url_fichier}
@@ -132,7 +152,7 @@ export function PublicationDetailPage() {
                   className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full shadow-md"
                   onClick={() =>
                     setPhotoActive((prev) =>
-                      prev === 0 ? photos.length - 1 : prev - 1
+                      prev === 0 ? photos.length - 1 : prev - 1,
                     )
                   }
                   aria-label="Photo précédente"
@@ -146,7 +166,7 @@ export function PublicationDetailPage() {
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full shadow-md"
                   onClick={() =>
                     setPhotoActive((prev) =>
-                      prev === photos.length - 1 ? 0 : prev + 1
+                      prev === photos.length - 1 ? 0 : prev + 1,
                     )
                   }
                   aria-label="Photo suivante"
@@ -179,7 +199,7 @@ export function PublicationDetailPage() {
               {photoAffichee.legende}
             </p>
           ) : null}
-        </motion.div>
+        </div>
       )}
 
       {/* Contenu */}
@@ -211,5 +231,5 @@ export function PublicationDetailPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

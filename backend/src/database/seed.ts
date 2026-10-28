@@ -30,6 +30,9 @@ import { ProjetBeneficiaire } from '../projets/entities/projet-beneficiaire.enti
 import { ProjetSite } from '../projets/entities/projet-site.entity';
 import { ProjetPartenaire } from '../projets/entities/projet-partenaire.entity';
 import { Activite } from '../projets/entities/activite.entity';
+import { Publication } from '../publications/enitities/publication.entity';
+import { PhotoPublication } from '../publications/enitities/photo-publication.entity';
+import { StatutPublication } from '../common/enums/statut-publication.enum';
 import { Convention } from '../conventions/entities/convention.entity';
 import { StatutPartenaire } from '../common/enums/statut-partenaire.enum';
 import { Visibilite } from '../common/enums/visibilite.enum';
@@ -289,6 +292,61 @@ export async function executerSeed(ds: DataSource): Promise<void> {
   await creer(ds, ProjetPartenaire, {
     projet_id: projet.id,
     partenaire_id: partenaire.id,
+  });
+
+  // Projet publié de démonstration pour alimenter la vitrine sans action manuelle.
+  const projetPublieDemo = await creer(ds, Projet, {
+    nom: 'Programme de recherche en partenariat',
+    intitule_officiel: 'Échanges scientifiques entre universités malgaches',
+    type: 'Recherche',
+    domaine: 'Coopération scientifique',
+    budget: null,
+    date_debut: new Date('2025-02-01'),
+    date_fin_prevue: new Date('2027-02-01'),
+    statut: StatutProjet.EN_COURS,
+    etablissement_id: etab1.id,
+    porteur_id: porteur.id,
+    partenariat_id: partenariat.id,
+    cree_par_role: Role.PRESIDENCE,
+    publie_le: new Date(),
+  });
+
+  await creer(ds, ProjetPartenaire, {
+    projet_id: projetPublieDemo.id,
+    partenaire_id: partenaire.id,
+  });
+
+  // Publication de démonstration avec une couverture distincte de sa galerie.
+  await creer(ds, Publication, {
+    titre: 'Découvrir la biodiversité des Hautes Terres',
+    description_publique:
+      'Présentation des travaux de terrain menés dans le cadre du projet.',
+    date_publication: null,
+    statut: StatutPublication.BROUILLON,
+    resultats: null,
+    image_couverture_url:
+      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80',
+    projet_id: projet.id,
+  });
+
+  const publicationPublieeDemo = await creer(ds, Publication, {
+    titre: 'Échanges scientifiques entre universités malgaches',
+    description_publique:
+      'Retour sur les activités de coopération et les échanges menés à Fianarantsoa.',
+    date_publication: new Date(),
+    statut: StatutPublication.PUBLIEE,
+    resultats: 'Les équipes ont défini des pistes de recherche communes.',
+    image_couverture_url:
+      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80',
+    projet_id: projetPublieDemo.id,
+  });
+
+  await creer(ds, PhotoPublication, {
+    url_fichier:
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&q=80',
+    legende: 'Paysage illustrant les échanges de terrain.',
+    ordre: 0,
+    publication_id: publicationPublieeDemo.id,
   });
 
   await creer(ds, Activite, {

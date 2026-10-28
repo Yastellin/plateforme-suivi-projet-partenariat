@@ -5,6 +5,8 @@ export { EmptyState } from './EmptyState';
 export { DataTable, type Colonne } from './DataTable';
 export { ConfirmDialog } from './ConfirmDialog';
 export { SkeletonCard } from './SkeletonCard';
+export { Loader } from './Loader';
+export { SkeletonPage } from './SkeletonPage';
 export { FacetedFilters, type FacetteOptions } from './FacetedFilters';
 export { ErrorBoundary } from './ErrorBoundary';
 export { Dropzone } from './Dropzone';

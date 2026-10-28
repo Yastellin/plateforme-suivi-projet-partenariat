@@ -183,6 +183,7 @@ export class PublicationsService {
       date_publication: data.date_publication,
       statut: data.statut,
       resultats: data.resultats,
+      image_couverture_url: data.image_couverture_url,
       projet_id: data.projet_id,
       photos: (data.photos ?? []).map((p: PhotoPublication) => ({
         id: p.id,
