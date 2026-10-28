@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPartenaires"
 import { BandeLogos } from "@/features/espace-public/components/BandeLogos"
 import { Reveal } from "@/features/espace-public/components/Reveal"
-import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 
 export function SectionPartenaires() {
   const { data, isLoading } = usePublicPartenaires({ page: 1, limit: 100 })
@@ -20,8 +20,6 @@ export function SectionPartenaires() {
           idTitre="titre-partenaires"
           titre="Partenaires"
           sousTitre="Les organisations partenaires de l'Université de Fianarantsoa."
-          lienVoirTout="/partenaires"
-          libelleVoirTout="Voir tous les partenaires"
           direction="left"
         />
         {isLoading ? (
@@ -47,6 +45,7 @@ export function SectionPartenaires() {
             Aucun partenaire public n'est disponible pour le moment.
           </p>
         )}
+        <BoutonVoirTout lien="/partenaires" libelle="Voir tous les partenaires" direction="left" />
       </div>
     </section>
   )

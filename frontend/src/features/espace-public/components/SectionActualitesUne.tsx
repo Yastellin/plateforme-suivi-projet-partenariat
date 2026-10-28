@@ -7,7 +7,7 @@ import {
   RevealGroup,
   RevealItem,
 } from "@/features/espace-public/components/Reveal"
-import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 
 export function SectionActualitesUne() {
   const { data, isLoading } = usePublicAccueil()
@@ -25,8 +25,6 @@ export function SectionActualitesUne() {
           idTitre="titre-actualites"
           titre="Actualités"
           sousTitre="Les dernières publications de la Présidence de l'université."
-          lienVoirTout="/actualites"
-          libelleVoirTout="Voir toutes les actualités"
           direction="right"
         />
         {isLoading ? (
@@ -47,6 +45,7 @@ export function SectionActualitesUne() {
             ))}
           </RevealGroup>
         )}
+        <BoutonVoirTout lien="/actualites" libelle="Voir toutes les actualités" direction="right" />
       </div>
     </section>
   )

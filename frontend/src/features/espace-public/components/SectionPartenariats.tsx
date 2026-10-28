@@ -6,7 +6,7 @@ import {
   RevealGroup,
   RevealItem,
 } from "@/features/espace-public/components/Reveal"
-import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 
 export function SectionPartenariats() {
   const { data, isLoading } = usePublicPartenariatsPublies()
@@ -25,8 +25,6 @@ export function SectionPartenariats() {
           idTitre="titre-partenariats"
           titre="Partenariats"
           sousTitre="Les coopérations entre établissements et partenaires."
-          lienVoirTout="/partenariats"
-          libelleVoirTout="Voir tous les partenariats"
           direction="left"
         />
         {isLoading ? (
@@ -44,6 +42,7 @@ export function SectionPartenariats() {
             ))}
           </RevealGroup>
         )}
+        <BoutonVoirTout lien="/partenariats" libelle="Voir tous les partenariats" direction="left" />
       </div>
     </section>
   )

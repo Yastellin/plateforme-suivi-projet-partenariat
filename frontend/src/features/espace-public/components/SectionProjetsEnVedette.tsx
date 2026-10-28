@@ -7,7 +7,7 @@ import {
   RevealGroup,
   RevealItem,
 } from "@/features/espace-public/components/Reveal"
-import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 
 export function SectionProjetsEnVedette() {
   const { data, isLoading } = usePublicAccueil()
@@ -25,8 +25,6 @@ export function SectionProjetsEnVedette() {
           idTitre="titre-projets"
           titre="Projets"
           sousTitre="Projets publics et collaborations de l'université."
-          lienVoirTout="/projets"
-          libelleVoirTout="Voir tous les projets"
           direction="right"
         />
         {isLoading ? (
@@ -51,6 +49,7 @@ export function SectionProjetsEnVedette() {
             ))}
           </RevealGroup>
         )}
+        <BoutonVoirTout lien="/projets" libelle="Voir tous les projets" direction="right" />
       </div>
     </section>
   )

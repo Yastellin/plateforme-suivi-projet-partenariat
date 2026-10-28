@@ -175,7 +175,10 @@ describe("sections de la page d'accueil publique", () => {
     expect(entetes).toHaveLength(4)
     expect(entetes.map((entete) => entete.querySelector("h2")?.textContent)).toEqual(titres)
     expect(entetes.every((entete) => entete.querySelector("p")?.textContent)).toBe(true)
-    expect(entetes.map((entete) => entete.querySelector("a")?.textContent?.trim())).toEqual(boutons)
+    expect(
+      Array.from(conteneur.querySelectorAll(".vt-accueil-section-action a"))
+        .map((bouton) => bouton.textContent?.trim()),
+    ).toEqual(boutons)
     expect(conteneur.textContent).not.toMatch(/à la une|en vedette|mis en avant/i)
   })
 
@@ -227,14 +230,20 @@ describe("sections de la page d'accueil publique", () => {
     conteneur.innerHTML = rendreAccueil()
 
     for (const section of ["actualites", "projets", "partenariats"]) {
-      expect(
-        conteneur.querySelector(`#${section} .vt-accueil-card-grid`),
-      ).not.toBeNull()
+      const cartes = conteneur.querySelector(`#${section} .vt-accueil-card-grid`)
+      const bouton = conteneur.querySelector(`#${section} .vt-accueil-section-action`)
+      expect(cartes).not.toBeNull()
+      expect(bouton).not.toBeNull()
+      expect(cartes!.compareDocumentPosition(bouton!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     }
     expect(
       conteneur.querySelector("#projets .vt-accueil-card-grid")?.classList.contains("vt-hscroll"),
     ).toBe(false)
-    expect(conteneur.querySelector("#partenaires .vt-logos")).not.toBeNull()
+    const logos = conteneur.querySelector("#partenaires .vt-logos")
+    const boutonPartenaires = conteneur.querySelector("#partenaires .vt-accueil-section-action")
+    expect(logos).not.toBeNull()
+    expect(boutonPartenaires).not.toBeNull()
+    expect(logos!.compareDocumentPosition(boutonPartenaires!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it("privilégie la couverture, puis la première photo de galerie, avec un repli neutre", () => {
