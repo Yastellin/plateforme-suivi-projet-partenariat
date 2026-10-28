@@ -188,6 +188,21 @@ describe("sections de la page d'accueil publique", () => {
     expect(onglets).toEqual(["Projets", "Partenariats", "Partenaires", "Publications"])
   })
 
+  it("centre les grilles et garde les projets en une colonne sur mobile", () => {
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = rendreAccueil()
+
+    for (const section of ["actualites", "projets", "partenariats"]) {
+      expect(
+        conteneur.querySelector(`#${section} .vt-accueil-card-grid`),
+      ).not.toBeNull()
+    }
+    expect(
+      conteneur.querySelector("#projets .vt-accueil-card-grid")?.classList.contains("vt-hscroll"),
+    ).toBe(false)
+    expect(conteneur.querySelector("#partenaires .vt-logos")).not.toBeNull()
+  })
+
   it("privilégie la couverture, puis la première photo de galerie, avec un repli neutre", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
