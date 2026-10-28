@@ -9,13 +9,13 @@ import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/compon
 
 export function SectionProjetsEnVedette() {
   const { data, isLoading } = usePublicAccueil()
-  const projets = data?.projets_a_la_une?.slice(0, 6) ?? []
+  const projets = data?.projets_a_la_une?.slice(0, 3) ?? []
   if (!isLoading && projets.length === 0) return null
 
   return (
     <section className="vt-section vt-section-alt" id="projets" aria-labelledby="titre-projets">
       <div className="vt-wrap">
-        <Reveal className="vt-head">
+        <Reveal className="vt-head" direction="right">
           <div>
             <span className="vt-eyebrow">Projets</span>
             <h2 id="titre-projets">Projets en vedette</h2>
@@ -32,10 +32,15 @@ export function SectionProjetsEnVedette() {
             ))}
           </div>
         ) : (
-          <RevealGroup className="vt-grid-p vt-hscroll">
+          <RevealGroup className="vt-grid-p vt-hscroll" direction="right">
             {projets.map((projet) => (
               <RevealItem key={projet.id} className="h-full">
-                <CarteProjet projet={projet} lien={`/projets/${projet.id}`} />
+                <CarteProjet
+                  projet={projet}
+                  lien={projet.publication_id
+                    ? `/projets-partenariats/publication/${projet.publication_id}`
+                    : `/projets/${projet.id}`}
+                />
               </RevealItem>
             ))}
           </RevealGroup>

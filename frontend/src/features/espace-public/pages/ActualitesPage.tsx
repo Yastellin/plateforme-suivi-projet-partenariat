@@ -20,6 +20,7 @@ import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { resumePublication } from "@/features/espace-public/lib/publique"
+import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
 const TOUS = "tous"
 const PAR_PAGE = 9
@@ -153,8 +154,9 @@ export function ActualitesPage() {
           )}
 
           {enAvant && (
-            <article className="vt-feat vt-pub">
-              <Link to={`/actualites/${enAvant.id}`} className="vt-feat-lien">
+            <Reveal direction="right">
+              <article className="vt-feat vt-pub">
+              <Link to={`/projets-partenariats/publication/${enAvant.id}`} className="vt-feat-lien">
                 <div className="vt-feat-cover vt-pub-cover">
                   {enAvant.photo_url ? (
                     <motion.img
@@ -187,15 +189,21 @@ export function ActualitesPage() {
                   <span className="vt-link">Lire l'actualité</span>
                 </div>
               </Link>
-            </article>
+              </article>
+            </Reveal>
           )}
 
           {grille.length > 0 && (
-            <div className="vt-grid-p vt-mt">
+            <RevealGroup className="vt-grid-p vt-mt" direction="right">
               {grille.map((publication) => (
-                <CartePublication key={publication.id} publication={publication} />
+                <RevealItem key={publication.id} className="h-full">
+                  <CartePublication
+                    publication={publication}
+                    lien={`/projets-partenariats/publication/${publication.id}`}
+                  />
+                </RevealItem>
               ))}
-            </div>
+            </RevealGroup>
           )}
 
           {mobile && reste.length > visibles && (

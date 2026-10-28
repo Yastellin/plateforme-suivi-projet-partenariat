@@ -2,9 +2,10 @@
 import { Link } from "react-router-dom"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { CompteurAnime } from "@/features/espace-public/components/CompteurAnime"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function HeroAccueil() {
-  const { data } = usePublicAccueil()
+  const { data, isLoading } = usePublicAccueil()
   const compteurs = data?.compteurs
   const statistiques = [
     { valeur: compteurs?.nombre_partenaires, libelle: "Partenaires" },
@@ -23,7 +24,7 @@ export function HeroAccueil() {
               Découvrez les collaborations qui font avancer la formation, la recherche et le développement de notre région.
             </p>
             <div className="vt-cta">
-              <Link to="/partenariats" className="vt-btn vt-btn-primary">Découvrir nos partenaires</Link>
+              <Link to="/partenaires" className="vt-btn vt-btn-primary">Nos partenaires</Link>
               <Link to="/contact" className="vt-btn vt-btn-outline">Nous contacter</Link>
             </div>
           </div>
@@ -32,8 +33,8 @@ export function HeroAccueil() {
       <section className="vt-home-stats" aria-label="Chiffres clés">
         <div className="vt-wrap vt-home-stats-grid">
           {statistiques.map(({ valeur, libelle }) => (
-            <div className="vt-home-stat" key={libelle}>
-              <strong><CompteurAnime valeur={valeur ?? 0} /></strong>
+            <div className="vt-home-stat" key={libelle} aria-busy={isLoading}>
+              <strong>{isLoading ? <Skeleton className="mx-auto h-8 w-16" /> : <CompteurAnime valeur={valeur ?? 0} />}</strong>
               <span>{libelle}</span>
             </div>
           ))}

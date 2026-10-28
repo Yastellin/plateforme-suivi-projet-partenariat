@@ -1895,3 +1895,101 @@ select.vt-fld-input {
     font-size: 11.5px;
   }
 }
+
+/* Harmonisation des animations et des rayons de la vitrine publique. */
+.vitrine {
+  --r: 6px;
+  --r-sm: 4px;
+}
+.vitrine .vt-art,
+.vitrine .vt-card,
+.vitrine .vt-pub,
+.vitrine .vt-pt,
+.vitrine .vt-panel,
+.vitrine .vt-detail-cover,
+.vitrine .vt-detail-logo,
+.vitrine .vt-icon-btn,
+.vitrine .vt-menu-btn,
+.vitrine .vt-totop {
+  border-radius: 6px;
+}
+.vitrine :is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+  border-radius: 6px;
+}
+.vitrine .rounded-full:not(.vt-badge):not(.vt-avatar) {
+  border-radius: 6px;
+}
+.vitrine .vt-badge,
+.vitrine .vt-avatar {
+  border-radius: 999px;
+}
+.vitrine .vt-pub-cover,
+.vitrine .vt-home-hero,
+.vitrine .vt-detail-head-carte {
+  border-radius: 6px;
+}
+.vitrine .vt-nav a {
+  position: relative;
+  border-radius: 4px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.vitrine .vt-nav a::after {
+  position: absolute;
+  right: 12px;
+  bottom: 4px;
+  left: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: #d88a16;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+.vitrine .vt-nav a:hover::after,
+.vitrine .vt-nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+.vitrine .vt-nav[data-open="true"] a[aria-current="page"] {
+  border-bottom-color: transparent;
+}
+.vitrine .vt-btn {
+  border-radius: 6px;
+}
+.vitrine .vt-card,
+.vitrine .vt-pub,
+.vitrine .vt-pt {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.vitrine .vt-btn,
+.vitrine .vt-btn svg {
+  transition-duration: 0.2s;
+}
+.vitrine .vt-partner-logos-loading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+.vitrine .vt-logo-item a {
+  display: grid;
+  min-width: 140px;
+  height: 64px;
+  place-items: center;
+}
+.vitrine .vt-logo-item a:focus-visible {
+  border-radius: 4px;
+}
+.vitrine .vt-public-list > .vt-search {
+  margin-inline: auto;
+  max-width: 36rem;
+}
+.vitrine .vt-public-list > .vt-grid-p {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vitrine .vt-nav a::after {
+    transition: none;
+  }
+}
