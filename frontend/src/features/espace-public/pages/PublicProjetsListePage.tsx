@@ -110,7 +110,7 @@ export function PublicProjetsListePage() {
   const reinitialiser = () => setFiltres({ recherche: VIDE, domaine: TOUS, statut: TOUS })
 
   return (
-    <div>
+    <div className="vt-liste-page">
       <div className="vt-wrap vt-pad-top">
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Projets" }]} />
       </div>
@@ -148,7 +148,7 @@ export function PublicProjetsListePage() {
           </div>
 
           {requete.isLoading && (
-            <div className="vt-grid-p vt-mt">
+            <div className="vt-card-list vt-mt">
               {[...Array(3)].map((_, i) => (
                 <Skeleton key={i} className="h-80 rounded-2xl" />
               ))}
@@ -182,9 +182,9 @@ export function PublicProjetsListePage() {
           )}
 
           {affiches.length > 0 && (
-            <RevealGroup className="vt-grid-p vt-mt" direction="right">
+            <RevealGroup className="vt-card-list vt-mt" direction="right">
               {affiches.map((projet) => (
-                <RevealItem key={projet.id} className="h-full">
+                <RevealItem key={projet.id} className="vt-card-list-item">
                   <CarteProjet projet={projet} lien={`/projets/${projet.id}`} />
                 </RevealItem>
               ))}

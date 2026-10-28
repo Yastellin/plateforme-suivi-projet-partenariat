@@ -30,15 +30,15 @@ export function SectionActualitesUne() {
           direction="right"
         />
         {isLoading ? (
-          <div className="vt-grid-p vt-accueil-card-grid">
+          <div className="vt-accueil-card-grid">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-96 rounded-2xl" />
             ))}
           </div>
         ) : (
-          <RevealGroup className="vt-grid-p vt-accueil-card-grid" direction="right">
+          <RevealGroup className="vt-accueil-card-grid" direction="right">
             {publications.map((publication) => (
-              <RevealItem key={publication.id} className="h-full">
+              <RevealItem key={publication.id} className="vt-card-list-item h-full">
                 <CartePublication
                   publication={publication}
                   lien={`/projets-partenariats/publication/${publication.id}`}

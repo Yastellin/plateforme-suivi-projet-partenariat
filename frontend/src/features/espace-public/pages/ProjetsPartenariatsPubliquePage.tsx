@@ -53,7 +53,7 @@ function Pagination({ meta, onChange }: { meta: MetaPagination | undefined; onCh
 }
 
 function Grille({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
+  return <div className="vt-card-list">{children}</div>
 }
 
 function Chargement() {
@@ -140,9 +140,9 @@ function ListeProjets() {
         />
       ) : (
         <>
-          <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" direction="up">
+          <RevealGroup className="vt-card-list" direction="up">
             {projets.map((projet) => (
-              <RevealItem key={projet.id} className="h-full">
+              <RevealItem key={projet.id} className="vt-card-list-item">
                 <CarteProjet projet={projet} />
               </RevealItem>
             ))}
@@ -189,9 +189,9 @@ function ListePartenaires() {
         />
       ) : (
         <>
-          <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" direction="left">
+          <RevealGroup className="vt-card-list" direction="left">
             {partenaires.map((partenaire) => (
-              <RevealItem key={partenaire.id} className="h-full">
+              <RevealItem key={partenaire.id} className="vt-card-list-item">
                 <CartePartenaire partenaire={partenaire} />
               </RevealItem>
             ))}
@@ -238,9 +238,9 @@ function ListePublications() {
         />
       ) : (
         <>
-          <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" direction="up">
+          <RevealGroup className="vt-card-list" direction="up">
             {publications.map((publication) => (
-              <RevealItem key={publication.id} className="h-full">
+              <RevealItem key={publication.id} className="vt-card-list-item">
                 <CartePublication publication={publication} />
               </RevealItem>
             ))}
@@ -261,7 +261,7 @@ export function ProjetsPartenariatsPubliquePage() {
   }
 
   return (
-    <div className="pb-24">
+    <div className="vt-liste-page pb-24">
       <PageHeaderPublique
         etiquette="Écosystème"
         icone={Briefcase}

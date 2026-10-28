@@ -8,8 +8,11 @@ const donnees = vi.hoisted(() => ({
   accueil: { data: undefined as any, isLoading: false, isError: false },
   partenaires: { data: undefined as any, isLoading: false, isError: false },
   partenariats: { data: [] as any[], isLoading: false, isError: false },
+  publications: { data: { data: [] as any[], meta: { page: 1, limit: 9, total: 0, totalPages: 1 } }, isLoading: false, isError: false },
 }))
 
+vi.mock("@/hooks/useDebounce", () => ({ useDebounce: (valeur: unknown) => valeur }))
+vi.mock("@/lib/ecran", () => ({ useMediaQuery: () => false }))
 vi.mock("@/features/espace-public/api/usePublicAccueil", () => ({
   usePublicAccueil: () => donnees.accueil,
 }))
@@ -20,7 +23,7 @@ vi.mock("@/features/espace-public/api/usePublicProjets", () => ({
   usePublicProjets: () => ({ data: { data: [], meta: { page: 1, limit: 9, total: 0, totalPages: 1 } }, isLoading: false }),
 }))
 vi.mock("@/features/espace-public/api/usePublicPublications", () => ({
-  usePublicPublications: () => ({ data: { data: [], meta: { page: 1, limit: 9, total: 0, totalPages: 1 } }, isLoading: false }),
+  usePublicPublications: () => donnees.publications,
 }))
 vi.mock("@/features/espace-public/api/usePublicEtablissements", () => ({
   usePublicEtablissements: () => ({ data: { data: [] }, isLoading: false }),
@@ -30,6 +33,7 @@ vi.mock("@/features/espace-public/api/usePublicDonneesDetail", () => ({
 }))
 
 import { AccueilPage } from "@/features/espace-public/pages/AccueilPage"
+import { ActualitesPage } from "@/features/espace-public/pages/ActualitesPage"
 import { ProjetsPartenariatsPubliquePage } from "@/features/espace-public/pages/ProjetsPartenariatsPubliquePage"
 
 function creerPublication(index: number) {
@@ -131,6 +135,17 @@ beforeEach(() => {
     isLoading: false,
     isError: false,
   }
+  donnees.publications = {
+    data: {
+      data: [1, 2, 3].map((index) => ({
+        ...creerPublication(index),
+        date_publication: `2026-10-${String(index + 17).padStart(2, "0")}`,
+      })),
+      meta: { page: 1, limit: 100, total: 3, totalPages: 1 },
+    },
+    isLoading: false,
+    isError: false,
+  }
 })
 
 describe("sections de la page d'accueil publique", () => {
@@ -171,6 +186,25 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelectorAll("#actualites .vt-pub")).toHaveLength(3)
     expect(conteneur.querySelectorAll("#projets .vt-pub")).toHaveLength(3)
     expect(conteneur.querySelectorAll("#partenariats .vt-pub")).toHaveLength(3)
+  })
+
+  it("centre trois actualités dans une grille commune en gardant le tri décroissant", () => {
+    const html = renderToStaticMarkup(
+      createElement(MemoryRouter, null, createElement(ActualitesPage)),
+    )
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = html
+    const grille = conteneur.querySelector(".vt-card-list")
+
+    expect(grille?.children).toHaveLength(3)
+    expect(Array.from(grille?.children ?? []).every((carte) => carte.classList.contains("vt-card-list-item"))).toBe(true)
+    expect(Array.from(grille?.querySelectorAll("a[href^='/projets-partenariats/publication/']") ?? [])
+      .map((lien) => lien.getAttribute("href")))
+      .toEqual([
+        "/projets-partenariats/publication/publication-3",
+        "/projets-partenariats/publication/publication-2",
+        "/projets-partenariats/publication/publication-1",
+      ])
   })
 
   it("affiche les onglets publics Projets, Partenariats, Partenaires et Publications", () => {

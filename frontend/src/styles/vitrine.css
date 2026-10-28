@@ -104,6 +104,12 @@
   background: var(--brand-tint);
   border-color: var(--brand);
 }
+.vitrine .vt-btn-voir-tout {
+  width: auto;
+  padding-inline: 16px;
+  border-width: 1px;
+  color: var(--brand-deep);
+}
 .vt-btn-light {
   background: #fff;
   color: var(--brand-deep);
@@ -379,7 +385,7 @@
   max-width: 56ch;
   margin-top: 10px;
 }
-/* Accueil public : en-têtes centrés et grilles de cartes équilibrées. */
+/* En-têtes et cartes centrés sur la page d'accueil comme sur les listes publiques. */
 .vitrine .vt-accueil-section-head {
   flex-direction: column;
   align-items: center;
@@ -402,28 +408,70 @@
   font-size: 14px;
   line-height: 1.45;
 }
+.vitrine .vt-card-list,
 .vitrine .vt-accueil-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 32px;
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
-  align-items: stretch;
 }
+.vitrine .vt-card-list > *,
 .vitrine .vt-accueil-card-grid > * {
+  flex: 0 1 100%;
+  width: 100%;
+  max-width: 24rem;
   min-width: 0;
-  height: 100%;
 }
+.vitrine .vt-card-list .vt-pub,
+.vitrine .vt-card-list .vt-pt,
 .vitrine .vt-accueil-card-grid .vt-pub {
+  width: 100%;
   height: 100%;
   min-height: 26rem;
+}
+.vitrine .vt-card-list .vt-feat {
+  margin-top: 0;
+}
+.vitrine .vt-card-list .vt-feat-lien {
+  display: flex;
+  flex-direction: column;
+}
+.vitrine .vt-card-list .vt-feat-cover {
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+}
+.vitrine .vt-card-list .vt-feat .vt-pub-body {
+  padding: 20px;
+  justify-content: flex-start;
+}
+.vitrine .vt-card-list .vt-feat h2 {
+  margin: 0;
+  font: 700 18px/1.25 var(--font-title);
 }
 .vitrine .vt-logos {
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
 }
-@media (max-width: 767px) {
-  .vitrine .vt-accueil-card-grid {
-    grid-template-columns: minmax(0, 1fr);
+.vitrine .vt-liste-page {
+  padding-top: 16px;
+}
+@media (min-width: 640px) {
+  .vitrine .vt-card-list > *,
+  .vitrine .vt-accueil-card-grid > * {
+    flex-basis: calc(50% - 1rem);
+    width: calc(50% - 1rem);
+  }
+}
+@media (min-width: 1024px) {
+  .vitrine .vt-card-list > *,
+  .vitrine .vt-accueil-card-grid > * {
+    flex-basis: calc(33.333% - 1.5rem);
+    width: calc(33.333% - 1.5rem);
   }
 }
 .vt-eyebrow {

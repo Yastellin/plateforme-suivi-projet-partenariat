@@ -37,7 +37,7 @@ const LIEN_PLEINE_CARTE = { display: "contents", color: "inherit", textDecoratio
 
 export function CartePartenaire({ partenaire, className }: { partenaire: PartenairePublic; className?: string }) {
   return (
-    <article className={`vt-pt ${className ?? ""}`}>
+    <article className={`vt-pt h-full ${className ?? ""}`}>
       {partenaire.logo_url ? (
         <span className="vt-pt-ini">
           <img src={partenaire.logo_url} alt="" loading="lazy" decoding="async" />
@@ -88,7 +88,7 @@ export function CartePartenariat({ partenariat, className }: { partenariat: Part
     : `Depuis ${formaterDate(partenariat.date_debut)}`
 
   return (
-    <article className={`vt-pub ${className ?? ""}`}>
+    <article className={`vt-pub h-full ${className ?? ""}`}>
       <Link to={`/partenariats/${partenariat.id}`} style={LIEN_PLEINE_CARTE}>
         <div className="vt-pub-cover">
           <Illustration type="cotutelle" />
@@ -162,7 +162,7 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
   )
 
   return (
-    <article className={`vt-pub ${className ?? ""}`}>
+    <article className={`vt-pub h-full ${className ?? ""}`}>
       {lienPublication ? (
         <Link to={lienPublication} style={LIEN_PLEINE_CARTE}>
           {contenu}
@@ -182,7 +182,7 @@ export function CartePublication({ publication, className, lien }: { publication
     : photoIllustrative?.legende || publication.titre
 
   return (
-    <article className={`vt-pub ${className ?? ""}`}>
+    <article className={`vt-pub h-full ${className ?? ""}`}>
       <Link to={lien ?? `/actualites/${publication.id}`} style={LIEN_PLEINE_CARTE}>
         <div className="vt-pub-cover">
           {imagePrincipale ? (
