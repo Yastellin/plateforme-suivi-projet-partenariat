@@ -123,6 +123,33 @@
 }
 
 /* En-tete */
+.vitrine .vt-info-top {
+  background: #111827;
+  color: #d1d5db;
+  font-size: 12px;
+}
+.vitrine .vt-info-top > .vt-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 34px;
+}
+.vitrine .vt-info-top-liens {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.vitrine .vt-info-top-liens a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: inherit;
+  text-decoration: none;
+}
+.vitrine .vt-info-top-liens a:hover {
+  color: #fff;
+}
 .vt-top {
   position: sticky;
   top: 0;
@@ -1316,10 +1343,36 @@ select.vt-fld-input {
 .vitrine .vt-top[data-defile="true"] .vt-wrap {
   height: 60px;
 }
+.vitrine .vt-contact-flottant {
+  position: fixed;
+  right: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--brand);
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgba(27, 77, 52, 0.25);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.vitrine .vt-contact-flottant:hover {
+  background: var(--brand-hover);
+  box-shadow: 0 10px 26px rgba(27, 77, 52, 0.3);
+  transform: translateY(-2px);
+}
 .vitrine .vt-totop {
   position: fixed;
   right: 20px;
-  bottom: 20px;
+  bottom: 84px;
   z-index: 45;
   width: 44px;
   height: 44px;
@@ -1345,11 +1398,40 @@ select.vt-fld-input {
   background: var(--brand-tint);
 }
 
+@media (max-width: 767px) {
+  .vitrine .vt-info-top > .vt-wrap {
+    justify-content: center;
+    min-height: 32px;
+  }
+  .vitrine .vt-info-top-nom {
+    display: none;
+  }
+  .vitrine .vt-info-top-liens {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px 14px;
+  }
+}
+@media (max-width: 480px) {
+  .vitrine .vt-info-top {
+    font-size: 11px;
+  }
+  .vitrine .vt-contact-flottant {
+    right: 16px;
+    padding-inline: 16px;
+  }
+  .vitrine .vt-totop {
+    right: 16px;
+    bottom: 84px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .vitrine .vt-fanion,
   .vitrine .vt-top,
   .vitrine .vt-top .vt-wrap,
-  .vitrine .vt-totop {
+  .vitrine .vt-totop,
+  .vitrine .vt-contact-flottant {
     transition: none !important;
   }
 }
