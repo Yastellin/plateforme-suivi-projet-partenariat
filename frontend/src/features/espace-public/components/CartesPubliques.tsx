@@ -98,7 +98,7 @@ export function CartePartenariat({ partenariat, className }: { partenariat: Part
   return (
     <article className={`vt-pub h-full ${className ?? ""}`}>
       <Link to={`/partenariats/${partenariat.id}`} style={LIEN_PLEINE_CARTE}>
-        <div className="vt-pub-cover">
+        <div className="vt-pub-cover card-img-wrapper">
           <Illustration type="cotutelle" />
         </div>
         <div className="vt-pub-body">
@@ -112,13 +112,15 @@ export function CartePartenariat({ partenariat, className }: { partenariat: Part
               ))}
             </ul>
           )}
-          <div className="vt-meta">
-            <span><CalendarDays aria-hidden="true" />{periode}</span>
-            {partenariat.partenaires.length > 0 && (
-              <span><Handshake aria-hidden="true" />{partenariat.partenaires.length} partenaire(s)</span>
-            )}
+          <div className="vt-card-footer">
+            <div className="vt-meta">
+              <span><CalendarDays aria-hidden="true" />{periode}</span>
+              {partenariat.partenaires.length > 0 && (
+                <span><Handshake aria-hidden="true" />{partenariat.partenaires.length} partenaire(s)</span>
+              )}
+            </div>
+            <span className="vt-link">Détail <ArrowRight size={14} aria-hidden="true" /></span>
           </div>
-          <span className="vt-link">Détail <ArrowRight size={14} aria-hidden="true" /></span>
         </div>
       </Link>
     </article>
@@ -132,7 +134,7 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
 
   const contenu = (
     <>
-      <div className="vt-pub-cover">
+      <div className="vt-pub-cover card-img-wrapper">
         <Illustration type="reseau" />
       </div>
       <div className="vt-pub-body">
@@ -150,21 +152,23 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
             {reste > 0 && <li>+{reste}</li>}
           </ul>
         )}
-        <div className="vt-meta">
-          <span>
-            <Landmark aria-hidden="true" />
-            {projet.etablissement ? (projet.etablissement.sigle ?? projet.etablissement.nom) : "Présidence"}
-          </span>
-          <span>
-            <CalendarDays aria-hidden="true" />
-            {formaterPeriode(projet.date_debut, projet.date_fin_prevue)}
-          </span>
+        <div className="vt-card-footer">
+          <div className="vt-meta">
+            <span>
+              <Landmark aria-hidden="true" />
+              {projet.etablissement ? (projet.etablissement.sigle ?? projet.etablissement.nom) : "Présidence"}
+            </span>
+            <span>
+              <CalendarDays aria-hidden="true" />
+              {formaterPeriode(projet.date_debut, projet.date_fin_prevue)}
+            </span>
+          </div>
+          {lienPublication && (
+            <span className="vt-link">
+              {lien ? "Détail" : "Lire la publication"} <ArrowRight size={14} aria-hidden="true" />
+            </span>
+          )}
         </div>
-        {lienPublication && (
-          <span className="vt-link">
-            {lien ? "Détail" : "Lire la publication"} <ArrowRight size={14} aria-hidden="true" />
-          </span>
-        )}
       </div>
     </>
   )
@@ -192,7 +196,7 @@ export function CartePublication({ publication, className, lien }: { publication
   return (
     <article className={`vt-pub h-full ${className ?? ""}`}>
       <Link to={lien ?? `/actualites/${publication.id}`} style={LIEN_PLEINE_CARTE}>
-        <div className="vt-pub-cover">
+        <div className="vt-pub-cover card-img-wrapper">
           {imagePrincipale ? (
             <motion.img
               layoutId={`cover-${publication.id}`}
@@ -212,21 +216,23 @@ export function CartePublication({ publication, className, lien }: { publication
           <span className="vt-badge vt-badge-publication">Actualité</span>
           <h3>{publication.titre}</h3>
           <p>{resumePublication(publication)}</p>
-          <div className="vt-meta">
-            <span>
-              <Landmark aria-hidden="true" />
-              {publication.projet.nom}
-            </span>
-            {publication.date_publication && (
+          <div className="vt-card-footer">
+            <div className="vt-meta">
               <span>
-                <CalendarDays aria-hidden="true" />
-                {formaterDate(publication.date_publication)}
+                <Landmark aria-hidden="true" />
+                {publication.projet.nom}
               </span>
-            )}
+              {publication.date_publication && (
+                <span>
+                  <CalendarDays aria-hidden="true" />
+                  {formaterDate(publication.date_publication)}
+                </span>
+              )}
+            </div>
+            <span className="vt-link">
+              Détail <ArrowRight size={14} aria-hidden="true" />
+            </span>
           </div>
-          <span className="vt-link">
-            Détail <ArrowRight size={14} aria-hidden="true" />
-          </span>
         </div>
       </Link>
     </article>

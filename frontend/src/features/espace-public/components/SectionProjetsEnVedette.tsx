@@ -1,5 +1,5 @@
 // src/features/espace-public/components/SectionProjetsEnVedette.tsx
-// Projets publics de l'accueil : trois cartes, défilement horizontal sur mobile.
+// Projets publics de l'accueil : trois cartes dans une grille responsive.
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { CarteProjet } from "@/features/espace-public/components/CartesPubliques"
