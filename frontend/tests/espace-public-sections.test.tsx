@@ -153,7 +153,7 @@ beforeEach(() => {
 describe("sections de la page d'accueil publique", () => {
   it("respecte l'ordre des quatre sections éditoriales", () => {
     const html = rendreAccueil()
-    const ordre = ["actualites", "partenaires", "projets", "partenariats"].map((id) => html.indexOf(`id="${id}"`))
+    const ordre = ["actualites", "partenariats", "projets", "partenaires"].map((id) => html.indexOf(`id="${id}"`))
 
     expect(ordre.every((position) => position >= 0)).toBe(true)
     expect([...ordre].sort((a, b) => a - b)).toEqual(ordre)
@@ -163,12 +163,12 @@ describe("sections de la page d'accueil publique", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
 
-    const titres = ["Nos Actualités", "Nos Partenaires", "Nos Projets", "Nos Partenariats"]
+    const titres = ["Nos Actualités", "Nos Partenariats", "Nos Projets", "Nos Partenaires"]
     const boutons = [
       "Voir toutes les actualités",
-      "Voir tous les partenaires",
-      "Voir tous les projets",
       "Voir tous les partenariats",
+      "Voir tous les projets",
+      "Voir tous les partenaires",
     ]
     const entetes = Array.from(
       conteneur.querySelectorAll(".vt-accueil-section-head"),
@@ -241,7 +241,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(
       conteneur.querySelector("#projets .vt-accueil-card-grid")?.classList.contains("vt-hscroll"),
     ).toBe(false)
-    const logos = conteneur.querySelector("#partenaires .vt-logos")
+    const logos = conteneur.querySelector("#partenaires .vt-partner-grid")
     const boutonPartenaires = conteneur.querySelector("#partenaires .vt-accueil-section-action")
     expect(logos).not.toBeNull()
     expect(boutonPartenaires).not.toBeNull()

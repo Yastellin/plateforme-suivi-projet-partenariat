@@ -1,7 +1,7 @@
 // Navigation de la vitrine publique (accessible sans authentification).
 import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { ChevronDown, Hexagon, Menu, X } from "lucide-react"
+import { ChevronDown, Menu, X } from "lucide-react"
 
 interface LienNav {
   label: string
@@ -46,10 +46,7 @@ export function TopbarPublique() {
         <Link to="/" className="vt-brandmark" aria-label="Université de Fianarantsoa, accueil">
           <span className="vt-fanion" aria-hidden="true">UF</span>
           <span>
-            <span className="vt-brand-name">
-              <Hexagon className="vt-hex" size={13} aria-hidden="true" />
-              Partenariats UF
-            </span>
+            <span className="vt-brand-name">Partenariats UF</span>
             <span className="vt-brand-sub">Université de Fianarantsoa</span>
           </span>
         </Link>
