@@ -1,5 +1,5 @@
 // src/features/espace-public/components/SectionEtablissements.tsx
-// Etablissements mis en avant sur l'accueil (maquette), donnees de /public/accueil.
+// Etablissements publics affichés sur l'accueil, donnees de /public/accueil.
 import { Link } from "react-router-dom"
 import { ArrowRight, MapPin } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"

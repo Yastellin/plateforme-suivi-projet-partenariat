@@ -1,6 +1,6 @@
 // src/features/espace-public/pages/ActualitesPage.tsx
 // Liste des actualites : publications de la Presidence (API publique uniquement).
-// Recherche, filtre par etablissement, une actualite a la une, grille de 3 colonnes,
+// Recherche, filtre par etablissement, publication recente et grille de 3 colonnes,
 // pagination numerotee sur ordinateur et bouton "Charger plus" sur mobile.
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
@@ -185,7 +185,6 @@ export function ActualitesPage() {
                   )}
                 </div>
                 <div className="vt-pub-body">
-                  <span className="vt-badge vt-badge-info">À la une</span>
                   <h2>{enAvant.titre}</h2>
                   <p>{resumePublication(enAvant)}</p>
                   <div className="vt-meta">

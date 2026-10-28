@@ -142,6 +142,28 @@ describe("sections de la page d'accueil publique", () => {
     expect([...ordre].sort((a, b) => a - b)).toEqual(ordre)
   })
 
+  it("uniformise les titres, sous-titres et boutons des quatre sections", () => {
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = rendreAccueil()
+
+    const titres = ["Actualités", "Partenaires", "Projets", "Partenariats"]
+    const boutons = [
+      "Voir toutes les actualités",
+      "Voir tous les partenaires",
+      "Voir tous les projets",
+      "Voir tous les partenariats",
+    ]
+    const entetes = Array.from(
+      conteneur.querySelectorAll(".vt-accueil-section-head"),
+    )
+
+    expect(entetes).toHaveLength(4)
+    expect(entetes.map((entete) => entete.querySelector("h2")?.textContent)).toEqual(titres)
+    expect(entetes.every((entete) => entete.querySelector("p")?.textContent)).toBe(true)
+    expect(entetes.map((entete) => entete.querySelector("a")?.textContent?.trim())).toEqual(boutons)
+    expect(conteneur.textContent).not.toMatch(/à la une|en vedette|mis en avant/i)
+  })
+
   it("limite actualités, projets et partenariats à trois cartes", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
