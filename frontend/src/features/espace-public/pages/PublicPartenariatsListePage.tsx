@@ -1,5 +1,4 @@
 // src/features/espace-public/pages/PublicPartenariatsListePage.tsx
-import { Handshake } from "lucide-react"
 import { ListePartenariatsPubliques } from "@/features/espace-public/components/ListePartenariatsPubliques"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
@@ -11,9 +10,9 @@ export function PublicPartenariatsListePage() {
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Partenariats" }]} />
       </div>
       <PageHeaderPublique
-        etiquette="Coopérations"
-        icone={Handshake}
-        titre="Nos partenariats"
+        surTitre="COOPÉRATIONS"
+        titre="Nos"
+        titreAccent="Partenariats"
         description="Les relations de coopération publiées entre les établissements de l'Université et leurs partenaires."
       />
       <section className="vt-section" aria-label="Liste des partenariats publiés">

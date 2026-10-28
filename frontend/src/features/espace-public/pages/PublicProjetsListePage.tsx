@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } 
 import { EmptyState } from "@/components/shared/EmptyState"
 import { useDebounce } from "@/hooks/useDebounce"
 import type { ProjetPublic } from "@/types/api"
-import { usePublicProjetsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
+import { usePublicProjets } from "@/features/espace-public/api/usePublicProjets"
 import { CarteProjet } from "@/features/espace-public/components/CartesPubliques"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
@@ -85,8 +85,8 @@ function FiltresProjets({
 }
 
 export function PublicProjetsListePage() {
-  const requete = usePublicProjetsPublies()
-  const projets = useMemo(() => requete.data ?? [], [requete.data])
+  const requete = usePublicProjets({ page: 1, limit: 100 })
+  const projets = useMemo(() => requete.data?.data ?? [], [requete.data])
   const [filtres, setFiltres] = useState<Filtres>({ recherche: VIDE, domaine: TOUS, statut: TOUS })
   const [tiroirOuvert, setTiroirOuvert] = useState(false)
   const rechercheDifferee = useDebounce(filtres.recherche, 250)
@@ -115,9 +115,9 @@ export function PublicProjetsListePage() {
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Projets" }]} />
       </div>
       <PageHeaderPublique
-        etiquette="Projets"
-        icone={FolderKanban}
-        titre="Nos projets"
+        surTitre="DÉVELOPPEMENT RÉGIONAL"
+        titre="Nos"
+        titreAccent="Projets"
         description="Les projets publics de l'université, avec leurs partenaires, leur domaine et leur statut."
       />
 

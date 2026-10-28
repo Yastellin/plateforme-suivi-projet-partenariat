@@ -1,7 +1,8 @@
-// src/components/layout/FooterPublique.tsx
+// Pied de page public : identité, contacts, navigation et liens institutionnels.
+import { Mail, MapPin, Phone } from "lucide-react"
 import { Link } from "react-router-dom"
+import { COORDONNEES_PUBLIQUES } from "@/features/espace-public/lib/coordonneesPubliques"
 
-// Pied de page de la vitrine publique : equipe, navigation et contact.
 export function FooterPublique() {
   return (
     <footer className="vt-footer">
@@ -15,23 +16,40 @@ export function FooterPublique() {
                 <span className="vt-brand-sub">Université de Fianarantsoa</span>
               </span>
             </Link>
-            <p>Le suivi public des partenariats de l'université et de ses établissements.</p>
-          </div>
-          <div>
-            <h4>Navigation</h4>
-            <ul>
-              <li><Link to="/actualites">Actualités</Link></li>
-              <li><Link to="/projets">Projets</Link></li>
-              <li><Link to="/partenaires">Partenaires</Link></li>
-              <li><Link to="/partenariats">Partenariats</Link></li>
-              <li><Link to="/etablissements">Établissements</Link></li>
-              <li><Link to="/a-propos">À propos</Link></li>
+            <p>Université de Fianarantsoa</p>
+            <ul className="vt-footer-contact" aria-label="Coordonnées">
+              <li><MapPin size={15} aria-hidden="true" /><span>{COORDONNEES_PUBLIQUES.adresse}</span></li>
+              <li><Mail size={15} aria-hidden="true" /><a href={`mailto:${COORDONNEES_PUBLIQUES.courriel}`}>{COORDONNEES_PUBLIQUES.courriel}</a></li>
+              <li><Phone size={15} aria-hidden="true" /><a href={`tel:${COORDONNEES_PUBLIQUES.telephoneLien}`}>{COORDONNEES_PUBLIQUES.telephone}</a></li>
             </ul>
           </div>
+
           <div>
-            <h4>Contact</h4>
+            <h4>Liens rapides</h4>
             <ul>
-              <li><Link to="/contact">Formulaire de contact</Link></li>
+              <li><Link to="/actualites">Actualités</Link></li>
+              <li><Link to="/partenariats">Partenariats</Link></li>
+              <li><Link to="/projets">Projets</Link></li>
+              <li><Link to="/partenaires">Partenaires</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4>Institution</h4>
+            <ul>
+              <li><Link to="/a-propos">À propos</Link></li>
+              <li><span className="vt-footer-static-link">Gouvernance</span></li>
+              <li><span className="vt-footer-static-link">Mentions légales</span></li>
+              <li><span className="vt-footer-static-link">Politique de confidentialité</span></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4>Suivez-nous</h4>
+            <ul className="vt-footer-socials" aria-label="Réseaux sociaux">
+              <li><span className="vt-footer-static-link">Facebook</span></li>
+              <li><span className="vt-footer-static-link">LinkedIn</span></li>
+              <li><span className="vt-footer-static-link">YouTube</span></li>
             </ul>
           </div>
         </div>

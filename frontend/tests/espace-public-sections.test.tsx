@@ -30,10 +30,12 @@ vi.mock("@/features/espace-public/api/usePublicEtablissements", () => ({
 }))
 vi.mock("@/features/espace-public/api/usePublicDonneesDetail", () => ({
   usePublicPartenariatsPublies: () => donnees.partenariats,
+  usePublicTousPartenaires: () => ({ data: donnees.partenaires.data?.data ?? [], isLoading: false }),
 }))
 
 import { AccueilPage } from "@/features/espace-public/pages/AccueilPage"
 import { ActualitesPage } from "@/features/espace-public/pages/ActualitesPage"
+import { PublicPartenairesListePage } from "@/features/espace-public/pages/PublicPartenairesListePage"
 import { ProjetsPartenariatsPubliquePage } from "@/features/espace-public/pages/ProjetsPartenariatsPubliquePage"
 
 function creerPublication(index: number) {
@@ -161,7 +163,7 @@ describe("sections de la page d'accueil publique", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
 
-    const titres = ["Actualités", "Partenaires", "Projets", "Partenariats"]
+    const titres = ["Nos Actualités", "Nos Partenaires", "Nos Projets", "Nos Partenariats"]
     const boutons = [
       "Voir toutes les actualités",
       "Voir tous les partenaires",
@@ -244,6 +246,22 @@ describe("sections de la page d'accueil publique", () => {
     expect(logos).not.toBeNull()
     expect(boutonPartenaires).not.toBeNull()
     expect(logos!.compareDocumentPosition(boutonPartenaires!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it("présente les partenaires en grille de logos sans texte visible en l'absence de logo", () => {
+    donnees.partenaires.data.data[1].logo_url = null
+    const html = renderToStaticMarkup(
+      createElement(MemoryRouter, null, createElement(PublicPartenairesListePage)),
+    )
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = html
+    const tuiles = conteneur.querySelectorAll(".vt-logo-tile")
+
+    expect(conteneur.querySelector(".vt-logo-grid")?.children).toHaveLength(4)
+    expect(tuiles).toHaveLength(4)
+    expect(tuiles[1].querySelector("img")).toBeNull()
+    expect(tuiles[1].querySelector("svg")).not.toBeNull()
+    expect(tuiles[1].querySelector(".sr-only")).not.toBeNull()
   })
 
   it("privilégie la couverture, puis la première photo de galerie, avec un repli neutre", () => {

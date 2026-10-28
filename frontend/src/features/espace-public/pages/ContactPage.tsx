@@ -2,6 +2,7 @@
 import { Mail, Phone, MapPin, Clock } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { FormulaireContact } from "@/features/espace-public/components/FormulaireContact"
+import { COORDONNEES_PUBLIQUES } from "@/features/espace-public/lib/coordonneesPubliques"
 
 // Page Contact de la vitrine publique (section 7.4 : "Contact" →
 // formulaire avec validation temps reel → toast).
@@ -43,9 +44,7 @@ export function ContactPage() {
                   Adresse
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Bâtiment administratif, Université de Fianarantsoa
-                  <br />
-                  B.P. 402, Fianarantsoa 301, Madagascar
+                  {COORDONNEES_PUBLIQUES.adresse}
                 </p>
               </div>
             </CardContent>
@@ -61,7 +60,7 @@ export function ContactPage() {
                   Email
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  partenariats@univ-fianar.mg
+                  {COORDONNEES_PUBLIQUES.courriel}
                 </p>
               </div>
             </CardContent>
@@ -77,7 +76,7 @@ export function ContactPage() {
                   Téléphone
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  +261 34 22 330 54
+                  {COORDONNEES_PUBLIQUES.telephone}
                 </p>
               </div>
             </CardContent>

@@ -18,7 +18,9 @@ export function SectionPartenaires() {
       <div className="vt-wrap">
         <EnTeteSection
           idTitre="titre-partenaires"
-          titre="Partenaires"
+          surTitre="RÉSEAU D'EXCELLENCE"
+          titre="Nos"
+          titreAccent="Partenaires"
           sousTitre="Les organisations partenaires de l'Université de Fianarantsoa."
           direction="left"
         />

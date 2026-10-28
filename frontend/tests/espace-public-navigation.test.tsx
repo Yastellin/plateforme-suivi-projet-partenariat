@@ -3,8 +3,11 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { BarreInfoPublique } from "@/components/layout/BarreInfoPublique";
+import { BoutonContactFlottant } from "@/components/layout/BoutonContactFlottant";
 import { FooterPublique } from "@/components/layout/FooterPublique";
 import { TopbarPublique } from "@/components/layout/TopbarPublique";
+import { COORDONNEES_PUBLIQUES } from "@/features/espace-public/lib/coordonneesPubliques";
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -12,9 +15,11 @@ function Harness() {
   const location = useLocation();
   return (
     <>
+      <BarreInfoPublique />
       <TopbarPublique />
       <output data-testid="chemin">{location.pathname}</output>
       <FooterPublique />
+      <BoutonContactFlottant />
     </>
   );
 }
@@ -76,6 +81,31 @@ describe("navigation publique partenaires et partenariats", () => {
     expect(page.querySelector('a[href="/connexion"]')).toBeNull();
     expect(page.querySelector('footer a[href="/connexion"]')).toBeNull();
   });
+
+  it("affiche les coordonnées dans la barre supérieure et le CTA flottant", async () => {
+    const page = await monter("/")
+
+    expect(page.querySelector(".vt-info-top-nom")?.textContent).toBe("Université de Fianarantsoa")
+    expect(page.querySelector(`.vt-info-top a[href="mailto:${COORDONNEES_PUBLIQUES.courriel}"]`)).not.toBeNull()
+    expect(page.querySelector(`.vt-info-top a[href="tel:${COORDONNEES_PUBLIQUES.telephoneLien}"]`)).not.toBeNull()
+    expect(COORDONNEES_PUBLIQUES.courriel).toBe("contact@uf.mg")
+    expect(COORDONNEES_PUBLIQUES.telephone).toBe("+261 34 00 00 00")
+    expect(page.querySelector(".vt-info-facebook")?.textContent).toBe("Facebook")
+    expect(page.querySelector('.vt-contact-flottant[href="/contact"]')?.textContent).toContain("Nous contacter")
+  })
+
+  it("reprend la navigation publique et le pied de page en quatre colonnes", async () => {
+    const page = await monter("/")
+    const nav = page.querySelector(".vt-nav")!
+    const liens = [...nav.querySelectorAll("a")].map((lien) => lien.textContent?.trim())
+
+    expect(liens).toEqual(["Accueil", "Actualités", "Projets", "Partenariats", "Partenaires", "Établissements", "Contact"])
+    expect(nav.querySelectorAll(".vt-nav-chevron")).toHaveLength(2)
+    expect(page.querySelectorAll(".vt-footer-cols > div")).toHaveLength(4)
+    expect(page.querySelector("footer")?.textContent).toContain("BP 1264")
+    expect(page.querySelector("footer")?.textContent).toContain("LinkedIn")
+    expect(page.querySelector("footer")?.textContent).toContain("YouTube")
+  })
 
   it("met à jour la page active et ferme le menu mobile après navigation", async () => {
     const page = await monter("/partenaires");

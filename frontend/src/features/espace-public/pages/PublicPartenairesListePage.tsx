@@ -1,6 +1,7 @@
 // src/features/espace-public/pages/PublicPartenairesListePage.tsx
 import { useState } from "react"
-import { ChevronLeft, ChevronRight, Handshake, Search } from "lucide-react"
+import { Link } from "react-router-dom"
+import { Building2, ChevronLeft, ChevronRight, Handshake, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -8,16 +9,35 @@ import { EmptyState } from "@/components/shared/EmptyState"
 import { useDebounce } from "@/hooks/useDebounce"
 import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPartenaires"
 import { usePublicTousPartenaires } from "@/features/espace-public/api/usePublicDonneesDetail"
-import { CartePartenaire } from "@/features/espace-public/components/CartesPubliques"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import type { PartenairePublic } from "@/types/api"
 
 const TAILLE_PAGE = 12
 const TOUS = "tous"
 
 function uniques(valeurs: string[]): string[] {
   return [...new Set(valeurs.filter(Boolean))].sort((premier, second) => premier.localeCompare(second, "fr"))
+}
+
+function TuileLogoPartenaire({ partenaire }: { partenaire: PartenairePublic }) {
+  return (
+    <Link
+      to={`/partenaires/${partenaire.id}`}
+      className="vt-logo-tile"
+      aria-label={`Voir le partenaire ${partenaire.nom}`}
+    >
+      {partenaire.logo_url ? (
+        <img src={partenaire.logo_url} alt="" loading="lazy" decoding="async" />
+      ) : (
+        <>
+          <Building2 size={34} strokeWidth={1.5} aria-hidden="true" />
+          <span className="sr-only">Logo non disponible : {partenaire.nom}</span>
+        </>
+      )}
+    </Link>
+  )
 }
 
 export function PublicPartenairesListePage() {
@@ -57,9 +77,9 @@ export function PublicPartenairesListePage() {
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Partenaires" }]} />
       </div>
       <PageHeaderPublique
-        etiquette="Partenaires"
-        icone={Handshake}
-        titre="Nos partenaires"
+        surTitre="RÉSEAU D'EXCELLENCE"
+        titre="Nos"
+        titreAccent="Partenaires"
         description="Les entreprises, institutions et universités qui collaborent avec l'Université de Fianarantsoa."
       />
       <section className="vt-section" aria-label="Liste des partenaires">
@@ -93,8 +113,8 @@ export function PublicPartenairesListePage() {
           </div>
 
           {requete.isLoading && (
-            <div className="vt-card-list vt-mt" aria-busy="true" aria-label="Chargement des partenaires">
-              {[...Array(4)].map((_, index) => <Skeleton key={index} className="h-36" />)}
+            <div className="vt-logo-grid vt-mt" aria-busy="true" aria-label="Chargement des partenaires">
+              {[...Array(10)].map((_, index) => <Skeleton key={index} className="aspect-square w-full" />)}
             </div>
           )}
           {requete.isError && (
@@ -115,10 +135,10 @@ export function PublicPartenairesListePage() {
           )}
           {!requete.isLoading && !requete.isError && partenaires.length > 0 && (
             <>
-              <RevealGroup className="vt-card-list vt-mt" direction="left">
+              <RevealGroup className="vt-logo-grid vt-mt" direction="left">
                 {partenaires.map((partenaire) => (
-                  <RevealItem key={partenaire.id} className="vt-card-list-item">
-                    <CartePartenaire partenaire={partenaire} />
+                  <RevealItem key={partenaire.id} className="vt-logo-grid-item">
+                    <TuileLogoPartenaire partenaire={partenaire} />
                   </RevealItem>
                 ))}
               </RevealGroup>

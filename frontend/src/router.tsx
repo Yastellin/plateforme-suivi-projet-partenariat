@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/useAuth"
 import type { RoleUtilisateur } from "@/types/api"
 import { SidebarInterne } from "@/components/layout/SidebarInterne"
 import { TopbarPublique } from "@/components/layout/TopbarPublique"
+import { BarreInfoPublique } from "@/components/layout/BarreInfoPublique"
+import { BoutonContactFlottant } from "@/components/layout/BoutonContactFlottant"
 import "@/styles/vitrine.css"
 import { FooterPublique } from "@/components/layout/FooterPublique"
 import { BoutonHautDePage } from "@/components/layout/BoutonHautDePage"
@@ -145,6 +147,7 @@ function LayoutPublic() {
         <a href="#contenu-principal" className="vt-skip">
           Aller au contenu
         </a>
+        <BarreInfoPublique />
         <TopbarPublique />
         <main id="contenu-principal" className="flex-1" tabIndex={-1}>
           {reduire ? (
@@ -167,6 +170,7 @@ function LayoutPublic() {
         </main>
         <FooterPublique />
         <BoutonHautDePage />
+        <BoutonContactFlottant />
       </div>
     </MotionConfig>
   )

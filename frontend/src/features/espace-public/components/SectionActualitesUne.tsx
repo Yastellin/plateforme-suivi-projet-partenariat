@@ -23,7 +23,9 @@ export function SectionActualitesUne() {
       <div className="vt-wrap">
         <EnTeteSection
           idTitre="titre-actualites"
-          titre="Actualités"
+          surTitre="DERNIÈRES PUBLICATIONS"
+          titre="Nos"
+          titreAccent="Actualités"
           sousTitre="Les dernières publications de la Présidence de l'université."
           direction="right"
         />
