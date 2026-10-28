@@ -1,4 +1,4 @@
-// src/features/espace-public/components/EnTeteSection.tsx
+// En-tête homogène des sections de l'accueil, révélé au défilement.
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Reveal } from "@/features/espace-public/components/Reveal"
@@ -7,6 +7,8 @@ import type { DirectionReveal } from "@/hooks/useRevealOnScroll"
 interface EnTeteSectionProps {
   idTitre: string
   titre: string
+  titreAccent?: string
+  surTitre?: string
   sousTitre?: string
   direction?: DirectionReveal
 }
@@ -17,17 +19,21 @@ interface BoutonVoirToutProps {
   direction?: DirectionReveal
 }
 
-// En-tête homogène des sections de l'accueil, révélé au défilement.
 export function EnTeteSection({
   idTitre,
   titre,
+  titreAccent,
+  surTitre,
   sousTitre,
   direction = "up",
 }: EnTeteSectionProps) {
   return (
     <Reveal className="vt-head vt-accueil-section-head" direction={direction}>
       <div className="vt-accueil-section-copy">
-        <h2 id={idTitre}>{titre}</h2>
+        {surTitre && <span className="vt-section-eyebrow">{surTitre}</span>}
+        <h2 id={idTitre}>
+          {titre}{titreAccent && <> <span className="vt-title-accent">{titreAccent}</span></>}
+        </h2>
         {sousTitre ? <p>{sousTitre}</p> : null}
       </div>
     </Reveal>

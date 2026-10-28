@@ -23,7 +23,9 @@ export function SectionPartenariats() {
       <div className="vt-wrap">
         <EnTeteSection
           idTitre="titre-partenariats"
-          titre="Partenariats"
+          surTitre="COOPÉRATIONS"
+          titre="Nos"
+          titreAccent="Partenariats"
           sousTitre="Les coopérations entre établissements et partenaires."
           direction="left"
         />

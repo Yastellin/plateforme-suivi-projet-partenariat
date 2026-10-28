@@ -1,25 +1,16 @@
-// src/features/espace-public/pages/ActualitesPage.tsx
-// Liste des actualites : publications de la Presidence (API publique uniquement).
-// Recherche, filtre par etablissement, publication recente et grille de 3 colonnes,
-// pagination numerotee sur ordinateur et bouton "Charger plus" sur mobile.
+// Liste des actualités publiques, triées de la plus récente à la plus ancienne.
 import { useMemo, useState } from "react"
-import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
-import { CalendarDays, Landmark, Newspaper, Search } from "lucide-react"
+import { Newspaper, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { useDebounce } from "@/hooks/useDebounce"
 import { useMediaQuery } from "@/lib/ecran"
-import { formaterDate } from "@/lib/format"
-import type { PublicationPublique } from "@/types/api"
 import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
 import { CartePublication } from "@/features/espace-public/components/CartesPubliques"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
-import { Illustration } from "@/features/espace-public/components/Illustrations"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
-import { imagePrincipalePublication, resumePublication } from "@/features/espace-public/lib/publique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
 const TOUS = "tous"
@@ -35,7 +26,6 @@ export function ActualitesPage() {
     [requete.data],
   )
   const mobile = useMediaQuery("(max-width: 639px)")
-
   const [recherche, setRecherche] = useState("")
   const rechercheDifferee = useDebounce(recherche, 250)
   const [etablissement, setEtablissement] = useState(TOUS)
@@ -44,41 +34,37 @@ export function ActualitesPage() {
 
   const etablissements = useMemo(() => {
     const noms = new Map<string, string>()
-    for (const p of publications) {
-      const e = p.projet.etablissement
-      if (e) noms.set(e.id, e.sigle ?? e.nom)
+    for (const publication of publications) {
+      const courant = publication.projet.etablissement
+      if (courant) noms.set(courant.id, courant.sigle ?? courant.nom)
     }
     return [...noms.entries()].sort((a, b) => a[1].localeCompare(b[1], "fr"))
   }, [publications])
 
   const filtrees = useMemo(() => {
     const terme = rechercheDifferee.trim().toLowerCase()
-    return publications.filter((p) => {
-      if (etablissement !== TOUS && p.projet.etablissement?.id !== etablissement) return false
+    return publications.filter((publication) => {
+      if (etablissement !== TOUS && publication.projet.etablissement?.id !== etablissement) return false
       if (!terme) return true
-      return `${p.titre} ${p.description_publique ?? ""} ${p.projet.nom}`.toLowerCase().includes(terme)
+      return `${publication.titre} ${publication.description_publique ?? ""} ${publication.projet.nom}`
+        .toLowerCase()
+        .includes(terme)
     })
   }, [publications, rechercheDifferee, etablissement])
 
-  const enAvant: PublicationPublique | undefined = filtrees[0]
-  const imageEnAvant = enAvant ? imagePrincipalePublication(enAvant) : null
-  const photoEnAvant = enAvant
-    ? [...enAvant.photos].sort((premiere, seconde) => premiere.ordre - seconde.ordre)[0]
-    : undefined
-  const altImageEnAvant = enAvant?.image_couverture_url
-    ? enAvant.titre
-    : photoEnAvant?.legende || enAvant?.titre || ""
-  const reste = filtrees.slice(1)
-  const totalPages = Math.max(1, Math.ceil(reste.length / PAR_PAGE))
+  const totalPages = Math.max(1, Math.ceil(filtrees.length / PAR_PAGE))
   const pageCourante = Math.min(page, totalPages)
-  const grille = mobile ? reste.slice(0, visibles) : reste.slice((pageCourante - 1) * PAR_PAGE, pageCourante * PAR_PAGE)
+  const grille = mobile
+    ? filtrees.slice(0, visibles)
+    : filtrees.slice((pageCourante - 1) * PAR_PAGE, pageCourante * PAR_PAGE)
 
-  const changerRecherche = (valeur: string) => {
+  function changerRecherche(valeur: string) {
     setRecherche(valeur)
     setPage(1)
     setVisibles(PAR_CHARGEMENT)
   }
-  const changerEtablissement = (valeur: string) => {
+
+  function changerEtablissement(valeur: string) {
     setEtablissement(valeur)
     setPage(1)
     setVisibles(PAR_CHARGEMENT)
@@ -90,9 +76,9 @@ export function ActualitesPage() {
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Actualités" }]} />
       </div>
       <PageHeaderPublique
-        etiquette="Publications"
-        icone={Newspaper}
-        titre="Actualités"
+        surTitre="DERNIÈRES PUBLICATIONS"
+        titre="Nos"
+        titreAccent="Actualités"
         description="Les publications de la Présidence de l'université, de la plus récente à la plus ancienne."
       >
         <label htmlFor="recherche-actualites" className="sr-only">
@@ -105,7 +91,7 @@ export function ActualitesPage() {
             type="search"
             placeholder="Rechercher une actualité"
             value={recherche}
-            onChange={(e) => changerRecherche(e.target.value)}
+            onChange={(event) => changerRecherche(event.target.value)}
           />
         </div>
       </PageHeaderPublique>
@@ -138,9 +124,7 @@ export function ActualitesPage() {
 
           {requete.isLoading && (
             <div className="vt-card-list">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-96 rounded-2xl" />
-              ))}
+              {[...Array(3)].map((_, index) => <Skeleton key={index} className="h-96 rounded-md" />)}
             </div>
           )}
 
@@ -149,11 +133,7 @@ export function ActualitesPage() {
               icone={Newspaper}
               titre="Les actualités n'ont pas pu être chargées"
               description="Vérifiez votre connexion puis réessayez."
-              action={
-                <Button variant="outline" onClick={() => requete.refetch()}>
-                  Réessayer
-                </Button>
-              }
+              action={<Button variant="outline" onClick={() => requete.refetch()}>Réessayer</Button>}
             />
           )}
 
@@ -165,53 +145,10 @@ export function ActualitesPage() {
             />
           )}
 
-          {(enAvant || grille.length > 0) && (
+          {!requete.isLoading && !requete.isError && grille.length > 0 && (
             <RevealGroup className="vt-card-list vt-mt" direction="right">
-              {enAvant && (
-                <RevealItem key={enAvant.id} className="vt-card-list-item">
-                  <article className="vt-feat vt-pub h-full">
-                    <Link to={`/projets-partenariats/publication/${enAvant.id}`} className="vt-feat-lien">
-                      <div className="vt-feat-cover vt-pub-cover">
-                        {imageEnAvant ? (
-                          <motion.img
-                            layoutId={`cover-${enAvant.id}`}
-                            src={imageEnAvant}
-                            alt={altImageEnAvant}
-                            className="vt-art-img"
-                            decoding="async"
-                          />
-                        ) : (
-                          <div role="img" aria-label={`Illustration neutre de ${enAvant.titre}`}>
-                            <Illustration type="montagne" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="vt-pub-body">
-                        <h2>{enAvant.titre}</h2>
-                        <p>{resumePublication(enAvant)}</p>
-                        <div className="vt-meta">
-                          <span>
-                            <Landmark aria-hidden="true" />
-                            {enAvant.projet.etablissement?.sigle ?? enAvant.projet.etablissement?.nom ?? "Présidence"}
-                          </span>
-                          {enAvant.date_publication && (
-                            <span>
-                              <CalendarDays aria-hidden="true" />
-                              {formaterDate(enAvant.date_publication)}
-                            </span>
-                          )}
-                        </div>
-                        <span className="vt-link">Lire l'actualité</span>
-                      </div>
-                    </Link>
-                  </article>
-                </RevealItem>
-              )}
               {grille.map((publication) => (
-                <RevealItem
-                  key={publication.id}
-                  className="vt-card-list-item"
-                >
+                <RevealItem key={publication.id} className="vt-card-list-item">
                   <CartePublication
                     publication={publication}
                     lien={`/projets-partenariats/publication/${publication.id}`}
@@ -221,9 +158,9 @@ export function ActualitesPage() {
             </RevealGroup>
           )}
 
-          {mobile && reste.length > visibles && (
+          {mobile && filtrees.length > visibles && (
             <div className="vt-center vt-mt">
-              <Button variant="outline" className="rounded-full" onClick={() => setVisibles((v) => v + PAR_CHARGEMENT)}>
+              <Button variant="outline" className="rounded-md" onClick={() => setVisibles((courant) => courant + PAR_CHARGEMENT)}>
                 Charger plus
               </Button>
             </div>
@@ -234,24 +171,19 @@ export function ActualitesPage() {
               <Button variant="outline" size="sm" disabled={pageCourante <= 1} onClick={() => setPage(pageCourante - 1)}>
                 Précédent
               </Button>
-              {[...Array(totalPages)].map((_, i) => (
+              {[...Array(totalPages)].map((_, index) => (
                 <button
-                  key={i}
+                  key={index}
                   type="button"
                   className="vt-pager-num"
-                  aria-current={pageCourante === i + 1 ? "page" : undefined}
-                  aria-label={`Page ${i + 1}`}
-                  onClick={() => setPage(i + 1)}
+                  aria-current={pageCourante === index + 1 ? "page" : undefined}
+                  aria-label={`Page ${index + 1}`}
+                  onClick={() => setPage(index + 1)}
                 >
-                  {i + 1}
+                  {index + 1}
                 </button>
               ))}
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pageCourante >= totalPages}
-                onClick={() => setPage(pageCourante + 1)}
-              >
+              <Button variant="outline" size="sm" disabled={pageCourante >= totalPages} onClick={() => setPage(pageCourante + 1)}>
                 Suivant
               </Button>
             </nav>

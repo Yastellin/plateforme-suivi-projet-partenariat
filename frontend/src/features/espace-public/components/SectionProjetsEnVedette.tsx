@@ -23,7 +23,9 @@ export function SectionProjetsEnVedette() {
       <div className="vt-wrap">
         <EnTeteSection
           idTitre="titre-projets"
-          titre="Projets"
+          surTitre="DÉVELOPPEMENT RÉGIONAL"
+          titre="Nos"
+          titreAccent="Projets"
           sousTitre="Projets publics et collaborations de l'université."
           direction="right"
         />

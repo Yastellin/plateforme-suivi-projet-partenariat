@@ -44,9 +44,7 @@ export function ContactPage() {
                   Adresse
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Bâtiment administratif, Université de Fianarantsoa
-                  <br />
-                  B.P. 402, Fianarantsoa 301, Madagascar
+                  {COORDONNEES_PUBLIQUES.adresse}
                 </p>
               </div>
             </CardContent>

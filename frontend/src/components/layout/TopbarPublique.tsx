@@ -1,26 +1,25 @@
-// src/components/layout/TopbarPublique.tsx
+// Navigation de la vitrine publique (accessible sans authentification).
 import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { Hexagon, Menu, X } from "lucide-react"
+import { ChevronDown, Hexagon, Menu, X } from "lucide-react"
 
 interface LienNav {
   label: string
   href: string
+  chevron?: boolean
 }
 
-// Navigation de la vitrine publique (accessible sans authentification).
 const LIENS_NAV: LienNav[] = [
   { label: "Accueil", href: "/" },
   { label: "Actualités", href: "/actualites" },
-  { label: "Projets", href: "/projets" },
-  { label: "Partenariats", href: "/partenariats" },
+  { label: "Projets", href: "/projets", chevron: true },
+  { label: "Partenariats", href: "/partenariats", chevron: true },
   { label: "Partenaires", href: "/partenaires" },
   { label: "Établissements", href: "/etablissements" },
-  { label: "À propos", href: "/a-propos" },
   { label: "Contact", href: "/contact" },
 ]
 
-// Un lien est actif sur sa page et sur les pages de detail qui en dependent.
+// Un lien est actif sur sa page et sur les pages de détail qui en dépendent.
 function estActif(lien: LienNav, chemin: string): boolean {
   if (lien.href === "/") return chemin === "/"
   return chemin === lien.href || chemin.startsWith(`${lien.href}/`)
@@ -28,13 +27,12 @@ function estActif(lien: LienNav, chemin: string): boolean {
 
 export function TopbarPublique() {
   const location = useLocation()
-  // Le menu mobile est memorise avec la route ouverte : il se ferme seul a la navigation.
   const cleRoute = `${location.pathname}${location.search}`
   const surAccueil = location.pathname === "/"
   const [menuPour, setMenuPour] = useState<string | null>(null)
   const menuOuvert = menuPour === cleRoute
-  // La barre se réduit et gagne une ombre dès que la page est défilée.
   const [defile, setDefile] = useState(false)
+
   useEffect(() => {
     const surDefilement = () => setDefile(window.scrollY > 8)
     surDefilement()
@@ -75,6 +73,7 @@ export function TopbarPublique() {
               aria-current={estActif(lien, location.pathname) ? "page" : undefined}
             >
               {lien.label}
+              {lien.chevron && <ChevronDown className="vt-nav-chevron" size={13} aria-hidden="true" />}
             </Link>
           ))}
         </nav>

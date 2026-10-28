@@ -16,6 +16,7 @@ export function BarreInfoPublique() {
             <Phone size={13} aria-hidden="true" />
             {COORDONNEES_PUBLIQUES.telephone}
           </a>
+          <span className="vt-info-facebook">Facebook</span>
         </div>
       </div>
     </div>

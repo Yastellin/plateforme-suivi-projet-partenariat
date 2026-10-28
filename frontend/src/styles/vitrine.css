@@ -2,8 +2,6 @@
    Tous les styles sont scopes sous .vitrine : l'espace interne n'est pas affecte.
    Theme clair unique (pas de theme sombre cote public). */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
-
 .vitrine {
   --brand: #367d56;
   --brand-hover: #266141;
@@ -2182,4 +2180,467 @@ select.vt-fld-input {
   .vitrine .vt-nav a::after {
     transition: none;
   }
+}
+
+/* Refonte publique : hiérarchie des pages, grille, pied de page et états accessibles. */
+.vitrine .vt-home-hero {
+  min-height: calc(100svh - 102px);
+  background-image: linear-gradient(90deg, rgb(12 35 25 / 84%) 0%, rgb(12 35 25 / 66%) 57%, rgb(12 35 25 / 38%) 100%), url("/images/connexion-fond.jpg");
+  background-position: center 48%;
+  border-radius: 0;
+}
+.vitrine .vt-home-hero-inner {
+  padding-block: clamp(64px, 9vh, 110px);
+}
+.vitrine .vt-home-hero-content {
+  max-width: 720px;
+}
+.vitrine .vt-home-eyebrow {
+  color: #f4c876;
+  font: 700 13px/1.4 var(--font-body);
+  letter-spacing: .16em;
+}
+.vitrine .vt-home-hero h1 {
+  max-width: 14ch;
+  margin: 0;
+  color: #fff;
+  font: 800 clamp(42px, 6vw, 72px)/1.06 var(--font-title);
+  letter-spacing: -.045em;
+}
+.vitrine .vt-home-hero h1 span {
+  color: #e0a02d;
+}
+.vitrine .vt-home-hero p {
+  max-width: 52ch;
+  margin-top: 22px;
+  color: rgb(255 255 255 / 90%);
+  font-size: clamp(16px, 1.6vw, 19px);
+  line-height: 1.65;
+}
+.vitrine .vt-home-hero .vt-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+.vitrine .vt-home-hero .vt-btn {
+  min-height: 48px;
+  padding-inline: 20px;
+  border-radius: 6px;
+}
+.vitrine .vt-home-hero .vt-btn-outline {
+  border-color: rgb(255 255 255 / 78%);
+  background: transparent;
+  color: #fff;
+}
+.vitrine .vt-home-hero .vt-btn-outline:hover {
+  background: rgb(255 255 255 / 12%);
+}
+.vitrine .vt-home-stats {
+  position: relative;
+  z-index: 2;
+  margin-top: -50px;
+  margin-bottom: 22px;
+  border: 0;
+  background: transparent;
+}
+.vitrine .vt-home-stats-grid {
+  display: grid;
+  max-width: 960px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-inline: auto;
+  padding: 22px 12px;
+  border: 1px solid #e5e8e3;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgb(17 34 24 / 13%);
+}
+.vitrine .vt-home-stat strong {
+  color: var(--brand-deep);
+  font: 700 clamp(27px, 3vw, 36px)/1.1 var(--font-mono);
+}
+.vitrine .vt-home-stat span {
+  color: #545d56;
+  font-size: 13px;
+  font-weight: 500;
+}
+.vitrine .vt-home-stat + .vt-home-stat {
+  border-left: 1px solid #e7e9e6;
+}
+.vitrine .vt-home-section-head,
+.vitrine .vt-accueil-section-head {
+  text-align: center;
+}
+.vitrine .vt-section-eyebrow {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--brand);
+  font: 700 11px/1.4 var(--font-body);
+  letter-spacing: .16em;
+}
+.vitrine .vt-accueil-section-copy h2 {
+  color: #20392b;
+  font: 800 clamp(27px, 3vw, 38px)/1.2 var(--font-title);
+  letter-spacing: -.025em;
+}
+.vitrine .vt-title-accent {
+  color: #d88a16;
+}
+.vitrine .vt-accueil-section-copy > p {
+  margin-top: 10px;
+}
+.vitrine .vt-page-head {
+  border-bottom: 0;
+  background: #fff;
+}
+.vitrine .vt-page-head-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1160px;
+  padding: 54px 24px 44px;
+  text-align: center;
+}
+.vitrine .vt-page-eyebrow {
+  justify-content: center;
+  color: var(--brand);
+  font-size: 11px;
+  letter-spacing: .17em;
+}
+.vitrine .vt-page-head h1 {
+  margin-top: 10px;
+  color: #20392b;
+  font: 800 clamp(32px, 4vw, 46px)/1.16 var(--font-title);
+  letter-spacing: -.03em;
+}
+.vitrine .vt-page-head p {
+  max-width: 62ch;
+  margin-top: 12px;
+  font-size: 15px;
+}
+.vitrine .vt-page-head-action {
+  width: min(100%, 36rem);
+  margin-top: 22px;
+}
+.vitrine .vt-page-head-action .vt-search {
+  width: 100%;
+  margin: 0;
+}
+.vitrine .vt-card-list .vt-pub,
+.vitrine .vt-accueil-card-grid .vt-pub {
+  min-height: 0;
+  border: 1px solid #e3e8e2;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgb(24 42 30 / 5%);
+}
+.vitrine .vt-pub:hover {
+  border-color: #c8d5ca;
+  box-shadow: 0 10px 26px rgb(24 42 30 / 10%);
+  transform: translateY(-2px);
+}
+.vitrine .vt-pub-cover {
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+  background: #edf2eb;
+}
+.vitrine .vt-pub-cover .vt-art-img,
+.vitrine .vt-pub-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.vitrine .vt-pub-body {
+  gap: 11px;
+  padding: 20px;
+}
+.vitrine .vt-pub h3,
+.vitrine .vt-pub-body h2 {
+  color: #23392c;
+  font: 700 18px/1.3 var(--font-title);
+}
+.vitrine .vt-pub-body > p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+.vitrine .vt-badge-category {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.vitrine .vt-domain-recherche {
+  background: #faead7;
+  color: #925008;
+}
+.vitrine .vt-domain-formation {
+  background: #e4f0e7;
+  color: #28613a;
+}
+.vitrine .vt-domain-innovation {
+  background: #e7eef8;
+  color: #365b85;
+}
+.vitrine .vt-domain-default {
+  background: #f2eddf;
+  color: #735a17;
+}
+.vitrine .vt-btn-voir-tout {
+  border-color: #397c53;
+  color: #24613b;
+  font-weight: 600;
+}
+.vitrine .vt-btn-voir-tout:hover {
+  border-color: #24613b;
+  background: #edf4ee;
+}
+.vitrine .vt-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
+}
+.vitrine .vt-logo-grid-item {
+  min-width: 0;
+}
+.vitrine .vt-logo-tile {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #e5e9e5;
+  border-radius: 6px;
+  background: #fff;
+  color: #8c9b8f;
+  box-shadow: 0 2px 8px rgb(24 42 30 / 4%);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease, color .2s ease;
+}
+.vitrine .vt-logo-tile img {
+  display: block;
+  width: 76%;
+  height: 76%;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: .74;
+  transition: filter .2s ease, opacity .2s ease;
+}
+.vitrine .vt-logo-tile:hover,
+.vitrine .vt-logo-tile:focus-visible {
+  border-color: #abc5af;
+  color: var(--brand);
+  box-shadow: 0 8px 20px rgb(24 42 30 / 9%);
+  transform: translateY(-2px);
+}
+.vitrine .vt-logo-tile:hover img,
+.vitrine .vt-logo-tile:focus-visible img {
+  filter: grayscale(0);
+  opacity: 1;
+}
+.vitrine .vt-footer {
+  background: #0e3024;
+  color: #d5e1d8;
+  padding-block: 52px 28px;
+}
+.vitrine .vt-footer-cols {
+  display: grid;
+  grid-template-columns: minmax(250px, 1.5fr) repeat(3, minmax(130px, 1fr));
+  gap: clamp(22px, 3.5vw, 46px);
+}
+.vitrine .vt-footer h4 {
+  margin-bottom: 17px;
+  color: #fff;
+  font: 700 15px/1.3 var(--font-title);
+}
+.vitrine .vt-footer .vt-about-f > p {
+  margin-top: 14px;
+  color: #c2d2c7;
+  font-size: 14px;
+}
+.vitrine .vt-footer .vt-brand-name {
+  color: #fff;
+  font-size: 14px;
+}
+.vitrine .vt-footer .vt-brand-sub {
+  color: #aabdb0;
+}
+.vitrine .vt-footer ul {
+  gap: 11px;
+  font-size: 13.5px;
+}
+.vitrine .vt-footer-contact {
+  margin-top: 16px !important;
+  gap: 10px !important;
+}
+.vitrine .vt-footer-contact li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.5;
+}
+.vitrine .vt-footer-contact svg {
+  flex: none;
+  margin-top: 3px;
+  color: #d5a94d;
+}
+.vitrine .vt-footer-static-link {
+  color: #d2e1d7;
+}
+.vitrine .vt-footer-socials li::before {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 10px 2px 1px;
+  border-radius: 50%;
+  background: #d5a94d;
+  content: "";
+}
+.vitrine .vt-legal {
+  margin-top: 34px;
+  padding-top: 18px;
+  border-color: rgb(255 255 255 / 15%);
+  color: #b6c8bc;
+}
+.vitrine .vt-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.vitrine .vt-nav-chevron {
+  color: #75877a;
+}
+.vitrine .vt-info-top {
+  background: #14221a;
+  color: #e0e7e1;
+}
+.vitrine .vt-info-top-liens {
+  gap: 18px;
+}
+.vitrine .vt-info-facebook {
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.vitrine .vt-contact-flottant {
+  border-radius: 6px;
+  box-shadow: 0 8px 22px rgb(27 77 52 / 24%);
+}
+.vitrine .vt-totop {
+  border-radius: 6px;
+}
+.vitrine .vt-logo-grid .vt-logo-grid-item > div {
+  height: 100%;
+}
+
+@media (max-width: 1023px) {
+  .vitrine .vt-footer-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .vitrine .vt-logo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .vitrine .vt-home-hero {
+    min-height: max(540px, calc(100svh - 134px));
+    background-image: linear-gradient(90deg, rgb(12 35 25 / 83%) 0%, rgb(12 35 25 / 64%) 100%), url("/images/connexion-fond.jpg");
+    background-position: 58% center;
+  }
+  .vitrine .vt-home-hero-inner {
+    padding-block: 68px 92px;
+  }
+  .vitrine .vt-home-hero h1 {
+    max-width: 12ch;
+    font-size: clamp(38px, 9vw, 54px);
+  }
+  .vitrine .vt-home-stats {
+    margin-top: -42px;
+  }
+  .vitrine .vt-home-stats-grid {
+    padding: 17px 4px;
+  }
+  .vitrine .vt-home-stat {
+    padding-inline: 5px;
+  }
+  .vitrine .vt-home-stat span {
+    font-size: 10.5px;
+    line-height: 1.25;
+  }
+  .vitrine .vt-section-eyebrow {
+    font-size: 10px;
+  }
+  .vitrine .vt-page-head-inner {
+    padding: 42px 18px 34px;
+  }
+  .vitrine .vt-logo-grid {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 360px;
+  }
+  .vitrine .vt-logo-grid-item {
+    width: 100%;
+  }
+  .vitrine .vt-footer-cols {
+    grid-template-columns: 1fr;
+  }
+  .vitrine .vt-footer {
+    padding-bottom: 110px;
+  }
+  .vitrine .vt-info-top-liens {
+    gap: 5px 12px;
+  }
+}
+@media (max-width: 420px) {
+  .vitrine .vt-home-hero .vt-cta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .vitrine .vt-home-hero .vt-btn {
+    min-width: 188px;
+  }
+  .vitrine .vt-info-top {
+    font-size: 10.5px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vitrine .vt-pub,
+  .vitrine .vt-logo-tile,
+  .vitrine .vt-logo-tile img,
+  .vitrine .vt-contact-flottant,
+  .vitrine .vt-nav a,
+  .vitrine .vt-nav a::after {
+    transition: none !important;
+  }
+  .vitrine .vt-pub:hover,
+  .vitrine .vt-logo-tile:hover {
+    transform: none;
+  }
+}
+.vitrine .vt-badge-publication {
+  background: #e5efe7;
+  color: #28613a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.vitrine .vt-chip,
+.vitrine .vt-select,
+.vitrine .vt-search input,
+.vitrine .vt-menu-btn,
+.vitrine .vt-pt,
+.vitrine .vt-card,
+.vitrine .vt-pub,
+.vitrine .vt-detail-head-carte,
+.vitrine .vt-detail-cover,
+.vitrine .vt-logo {
+  border-radius: 6px;
+}
+.vitrine .vt-badge,
+.vitrine .vt-avatar,
+.vitrine .vt-pt-ini,
+.vitrine .vt-tag {
+  border-radius: 999px;
 }

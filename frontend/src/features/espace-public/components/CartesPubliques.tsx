@@ -33,6 +33,14 @@ function classeBadgeStatut(statut: StatutProjet): string {
   }
 }
 
+function classeBadgeDomaine(domaine: string): string {
+  const valeur = domaine.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr")
+  if (valeur.includes("recherche")) return "vt-badge vt-badge-category vt-domain-recherche"
+  if (valeur.includes("formation")) return "vt-badge vt-badge-category vt-domain-formation"
+  if (valeur.includes("innovation")) return "vt-badge vt-badge-category vt-domain-innovation"
+  return "vt-badge vt-badge-category vt-domain-default"
+}
+
 const LIEN_PLEINE_CARTE = { display: "contents", color: "inherit", textDecoration: "none" } as const
 
 export function CartePartenaire({ partenaire, className }: { partenaire: PartenairePublic; className?: string }) {
@@ -94,7 +102,7 @@ export function CartePartenariat({ partenariat, className }: { partenariat: Part
           <Illustration type="cotutelle" />
         </div>
         <div className="vt-pub-body">
-          <span className="vt-badge vt-badge-info">{partenariat.domaine}</span>
+          <span className={classeBadgeDomaine(partenariat.domaine)}>{partenariat.domaine}</span>
           <h3>{partenariat.intitule}</h3>
           {partenariat.objet && <p>{partenariat.objet}</p>}
           {partenariat.etablissements.length > 0 && (
@@ -201,7 +209,7 @@ export function CartePublication({ publication, className, lien }: { publication
           )}
         </div>
         <div className="vt-pub-body">
-          <span className="vt-badge vt-badge-info">Actualité</span>
+          <span className="vt-badge vt-badge-publication">Actualité</span>
           <h3>{publication.titre}</h3>
           <p>{resumePublication(publication)}</p>
           <div className="vt-meta">

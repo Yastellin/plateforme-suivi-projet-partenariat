@@ -88,7 +88,23 @@ describe("navigation publique partenaires et partenariats", () => {
     expect(page.querySelector(".vt-info-top-nom")?.textContent).toBe("Université de Fianarantsoa")
     expect(page.querySelector(`.vt-info-top a[href="mailto:${COORDONNEES_PUBLIQUES.courriel}"]`)).not.toBeNull()
     expect(page.querySelector(`.vt-info-top a[href="tel:${COORDONNEES_PUBLIQUES.telephoneLien}"]`)).not.toBeNull()
+    expect(COORDONNEES_PUBLIQUES.courriel).toBe("contact@uf.mg")
+    expect(COORDONNEES_PUBLIQUES.telephone).toBe("+261 34 00 00 00")
+    expect(page.querySelector(".vt-info-facebook")?.textContent).toBe("Facebook")
     expect(page.querySelector('.vt-contact-flottant[href="/contact"]')?.textContent).toContain("Nous contacter")
+  })
+
+  it("reprend la navigation publique et le pied de page en quatre colonnes", async () => {
+    const page = await monter("/")
+    const nav = page.querySelector(".vt-nav")!
+    const liens = [...nav.querySelectorAll("a")].map((lien) => lien.textContent?.trim())
+
+    expect(liens).toEqual(["Accueil", "Actualités", "Projets", "Partenariats", "Partenaires", "Établissements", "Contact"])
+    expect(nav.querySelectorAll(".vt-nav-chevron")).toHaveLength(2)
+    expect(page.querySelectorAll(".vt-footer-cols > div")).toHaveLength(4)
+    expect(page.querySelector("footer")?.textContent).toContain("BP 1264")
+    expect(page.querySelector("footer")?.textContent).toContain("LinkedIn")
+    expect(page.querySelector("footer")?.textContent).toContain("YouTube")
   })
 
   it("met à jour la page active et ferme le menu mobile après navigation", async () => {

@@ -1,37 +1,42 @@
-// src/features/espace-public/components/PageHeaderPublique.tsx
+// En-tête commun et centré des pages de liste publiques.
 import type { ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 
 interface PageHeaderPubliqueProps {
   titre: string
+  titreAccent?: string
   description?: string
   icone?: LucideIcon
   etiquette?: string
+  surTitre?: string
   children?: ReactNode
 }
 
-// En-tete commun des pages de la vitrine publique (style maquette) : fond blanc,
-// filet bas, etiquette, titre et description. La zone d'action (recherche, par
-// exemple) s'affiche sous la description.
 export function PageHeaderPublique({
   titre,
+  titreAccent,
   description,
   icone: Icone,
   etiquette,
+  surTitre,
   children,
 }: PageHeaderPubliqueProps) {
+  const label = surTitre ?? etiquette
+
   return (
     <section className="vt-page-head">
       <div className="vt-page-head-inner">
-        {etiquette && (
-          <span className="vt-eyebrow">
+        {label && (
+          <span className="vt-eyebrow vt-page-eyebrow">
             {Icone && <Icone size={14} aria-hidden="true" />}
-            {etiquette}
+            {label}
           </span>
         )}
-        <h1>{titre}</h1>
+        <h1>
+          {titre}{titreAccent && <> <span className="vt-title-accent">{titreAccent}</span></>}
+        </h1>
         {description && <p>{description}</p>}
-        {children && <div className="mt-8 max-w-md">{children}</div>}
+        {children && <div className="vt-page-head-action">{children}</div>}
       </div>
     </section>
   )
