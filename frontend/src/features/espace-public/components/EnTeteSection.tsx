@@ -1,33 +1,37 @@
 // src/features/espace-public/components/EnTeteSection.tsx
-import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Reveal } from "@/features/espace-public/components/Reveal"
+import type { DirectionReveal } from "@/hooks/useRevealOnScroll"
 
 interface EnTeteSectionProps {
-  etiquette: string
+  idTitre: string
   titre: string
-  description?: string
-  lien?: { to: string; libelle: string }
-  children?: ReactNode
+  sousTitre?: string
+  lienVoirTout: string
+  libelleVoirTout: string
+  direction?: DirectionReveal
 }
 
-// En-tete commun des sections de l'accueil (style maquette) : etiquette,
-// titre, description courte et lien vers la page complete. Apparait au scroll.
-export function EnTeteSection({ etiquette, titre, description, lien }: EnTeteSectionProps) {
+// En-tête homogène des sections de l'accueil, révélé au défilement.
+export function EnTeteSection({
+  idTitre,
+  titre,
+  sousTitre,
+  lienVoirTout,
+  libelleVoirTout,
+  direction = "up",
+}: EnTeteSectionProps) {
   return (
-    <Reveal className="vt-head">
-      <div style={{ maxWidth: 680 }}>
-        <span className="vt-eyebrow">{etiquette}</span>
-        <h2 style={{ marginTop: 8 }}>{titre}</h2>
-        {description && <p style={{ marginTop: 8 }}>{description}</p>}
+    <Reveal className="vt-head vt-accueil-section-head" direction={direction}>
+      <div className="vt-accueil-section-copy">
+        <h2 id={idTitre}>{titre}</h2>
+        {sousTitre ? <p>{sousTitre}</p> : null}
       </div>
-      {lien && (
-        <Link to={lien.to} className="vt-btn vt-btn-ghost">
-          {lien.libelle}
-          <ArrowRight size={14} aria-hidden="true" />
-        </Link>
-      )}
+      <Link to={lienVoirTout} className="vt-btn vt-btn-ghost">
+        {libelleVoirTout}
+        <ArrowRight size={14} aria-hidden="true" />
+      </Link>
     </Reveal>
   )
 }
