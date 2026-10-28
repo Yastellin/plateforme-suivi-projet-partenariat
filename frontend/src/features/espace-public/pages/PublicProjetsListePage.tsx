@@ -15,6 +15,7 @@ import { CarteProjet } from "@/features/espace-public/components/CartesPubliques
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { libelleStatutProjet } from "@/features/espace-public/lib/publique"
+import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
 const TOUS = "tous"
 const VIDE = ""
@@ -181,11 +182,13 @@ export function PublicProjetsListePage() {
           )}
 
           {affiches.length > 0 && (
-            <div className="vt-grid-p vt-mt">
+            <RevealGroup className="vt-grid-p vt-mt" direction="right">
               {affiches.map((projet) => (
-                <CarteProjet key={projet.id} projet={projet} lien={`/projets/${projet.id}`} />
+                <RevealItem key={projet.id} className="h-full">
+                  <CarteProjet projet={projet} lien={`/projets/${projet.id}`} />
+                </RevealItem>
               ))}
-            </div>
+            </RevealGroup>
           )}
         </div>
       </section>

@@ -13,13 +13,15 @@ import { useDebounce } from "@/hooks/useDebounce"
 import type { MetaPagination } from "@/types/api"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { CarteProjet, CartePartenaire, CartePublication } from "@/features/espace-public/components/CartesPubliques"
+import { ListePartenariatsPubliques } from "@/features/espace-public/components/ListePartenariatsPubliques"
 import { usePublicProjets } from "@/features/espace-public/api/usePublicProjets"
 import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPartenaires"
 import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
 import { usePublicEtablissements } from "@/features/espace-public/api/usePublicEtablissements"
+import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
-type Onglet = "projets" | "partenaires" | "publications"
-const ONGLETS: Onglet[] = ["projets", "partenaires", "publications"]
+type Onglet = "projets" | "partenariats" | "partenaires" | "publications"
+const ONGLETS: Onglet[] = ["projets", "partenariats", "partenaires", "publications"]
 const TAILLE_PAGE = 9
 
 function ongletDepuisUrl(valeur: string | null): Onglet {
@@ -138,11 +140,13 @@ function ListeProjets() {
         />
       ) : (
         <>
-          <Grille>
+          <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" direction="up">
             {projets.map((projet) => (
-              <CarteProjet key={projet.id} projet={projet} />
+              <RevealItem key={projet.id} className="h-full">
+                <CarteProjet projet={projet} />
+              </RevealItem>
             ))}
-          </Grille>
+          </RevealGroup>
           <Pagination meta={data?.meta} onChange={setPage} />
         </>
       )}
@@ -185,11 +189,13 @@ function ListePartenaires() {
         />
       ) : (
         <>
-          <Grille>
+          <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" direction="left">
             {partenaires.map((partenaire) => (
-              <CartePartenaire key={partenaire.id} partenaire={partenaire} />
+              <RevealItem key={partenaire.id} className="h-full">
+                <CartePartenaire partenaire={partenaire} />
+              </RevealItem>
             ))}
-          </Grille>
+          </RevealGroup>
           <Pagination meta={data?.meta} onChange={setPage} />
         </>
       )}
@@ -232,11 +238,13 @@ function ListePublications() {
         />
       ) : (
         <>
-          <Grille>
+          <RevealGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" direction="up">
             {publications.map((publication) => (
-              <CartePublication key={publication.id} publication={publication} />
+              <RevealItem key={publication.id} className="h-full">
+                <CartePublication publication={publication} />
+              </RevealItem>
             ))}
-          </Grille>
+          </RevealGroup>
           <Pagination meta={data?.meta} onChange={setPage} />
         </>
       )}
@@ -257,8 +265,8 @@ export function ProjetsPartenariatsPubliquePage() {
       <PageHeaderPublique
         etiquette="Écosystème"
         icone={Briefcase}
-        titre="Projets & partenaires"
-        description="Tous les projets, partenaires et publications de l'Université de Fianarantsoa, réunis au même endroit."
+        titre="Projets, partenariats et partenaires"
+        description="Les projets, relations de coopération, partenaires et publications de l'Université de Fianarantsoa."
       />
 
       <div className="mx-auto mt-12 max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -266,6 +274,9 @@ export function ProjetsPartenariatsPubliquePage() {
           <TabsList className="mx-auto h-auto flex-wrap justify-center gap-2 bg-transparent p-0">
             <TabsTrigger value="projets" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Briefcase size={14} /> Projets
+            </TabsTrigger>
+            <TabsTrigger value="partenariats" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Handshake size={14} /> Partenariats
             </TabsTrigger>
             <TabsTrigger value="partenaires" className="rounded-full border px-5 py-2 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Handshake size={14} /> Partenaires
@@ -277,6 +288,9 @@ export function ProjetsPartenariatsPubliquePage() {
 
           <TabsContent value="projets">
             <ListeProjets />
+          </TabsContent>
+          <TabsContent value="partenariats">
+            <ListePartenariatsPubliques />
           </TabsContent>
           <TabsContent value="partenaires">
             <ListePartenaires />

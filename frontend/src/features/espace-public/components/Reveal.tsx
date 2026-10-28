@@ -1,34 +1,40 @@
 // src/features/espace-public/components/Reveal.tsx
-import type { ReactNode } from "react"
-import { motion, type Variants } from "framer-motion"
+import { createContext, useContext, type ReactNode } from "react"
+import { motion, useReducedMotion, type Variants } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-// Animations d'apparition au scroll de la vitrine publique (framer-motion).
-// Les utilisateurs ayant activé "réduire les animations" sont gérés par
-// <MotionConfig reducedMotion="user"> dans le layout public.
+export type DirectionReveal = "up" | "left" | "right"
 
-const TRANSITION = { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }
+const CONTEXTE_DIRECTION = createContext<DirectionReveal>("up")
+const TRANSITION = { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const }
+const VIEWPORT = { once: true, amount: 0.15 } as const
+const DEPLACEMENT = 24
 
-const variantsConteneur: Variants = {
-  cache: {},
-  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+function variantesElement(direction: DirectionReveal): Variants {
+  const depart = direction === "up"
+    ? { y: DEPLACEMENT }
+    : direction === "left"
+      ? { x: DEPLACEMENT }
+      : { x: -DEPLACEMENT }
+
+  return {
+    cache: { opacity: 0, ...depart },
+    visible: { opacity: 1, x: 0, y: 0, transition: TRANSITION },
+  }
 }
-
-const variantsElement: Variants = {
-  cache: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: TRANSITION },
-}
-
-const VIEWPORT = { once: true, margin: "-60px" } as const
 
 interface RevealProps {
   children: ReactNode
   className?: string
   delai?: number
+  direction?: DirectionReveal
 }
 
-// Élément unique : fondu + glissement à l'entrée dans le viewport.
-export function Reveal({ children, className, delai = 0 }: RevealProps) {
+export function Reveal({ children, className, delai = 0, direction = "up" }: RevealProps) {
+  const reduire = useReducedMotion()
+  if (reduire) return <div className={className}>{children}</div>
+
+  const variantes = variantesElement(direction)
   return (
     <motion.div
       className={className}
@@ -36,8 +42,8 @@ export function Reveal({ children, className, delai = 0 }: RevealProps) {
       whileInView="visible"
       viewport={VIEWPORT}
       variants={{
-        cache: variantsElement.cache,
-        visible: { opacity: 1, y: 0, transition: { ...TRANSITION, delay: delai } },
+        cache: variantes.cache,
+        visible: { ...variantes.visible, transition: { ...TRANSITION, delay: delai } },
       }}
     >
       {children}
@@ -45,24 +51,53 @@ export function Reveal({ children, className, delai = 0 }: RevealProps) {
   )
 }
 
-// Conteneur qui échelonne l'apparition de ses enfants <RevealItem>.
-export function RevealGroup({ children, className }: { children: ReactNode; className?: string }) {
+export function RevealGroup({
+  children,
+  className,
+  direction = "up",
+}: {
+  children: ReactNode
+  className?: string
+  direction?: DirectionReveal
+}) {
+  const reduire = useReducedMotion()
+  if (reduire) {
+    return <div className={className}>{children}</div>
+  }
+
   return (
-    <motion.div
-      className={cn(className)}
-      initial="cache"
-      whileInView="visible"
-      viewport={VIEWPORT}
-      variants={variantsConteneur}
-    >
-      {children}
-    </motion.div>
+    <CONTEXTE_DIRECTION.Provider value={direction}>
+      <motion.div
+        className={cn(className)}
+        initial="cache"
+        whileInView="visible"
+        viewport={VIEWPORT}
+        variants={{
+          cache: {},
+          visible: { transition: { staggerChildren: 0.1, delayChildren: 0.04 } },
+        }}
+      >
+        {children}
+      </motion.div>
+    </CONTEXTE_DIRECTION.Provider>
   )
 }
 
-export function RevealItem({ children, className }: { children: ReactNode; className?: string }) {
+export function RevealItem({
+  children,
+  className,
+  direction,
+}: {
+  children: ReactNode
+  className?: string
+  direction?: DirectionReveal
+}) {
+  const reduire = useReducedMotion()
+  const directionGroupe = useContext(CONTEXTE_DIRECTION)
+  if (reduire) return <div className={className}>{children}</div>
+
   return (
-    <motion.div className={className} variants={variantsElement}>
+    <motion.div className={className} variants={variantesElement(direction ?? directionGroupe)}>
       {children}
     </motion.div>
   )

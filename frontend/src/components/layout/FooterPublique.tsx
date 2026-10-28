@@ -22,6 +22,7 @@ export function FooterPublique() {
             <ul>
               <li><Link to="/actualites">Actualités</Link></li>
               <li><Link to="/projets">Projets</Link></li>
+              <li><Link to="/partenaires">Partenaires</Link></li>
               <li><Link to="/partenariats">Partenariats</Link></li>
               <li><Link to="/etablissements">Établissements</Link></li>
               <li><Link to="/a-propos">À propos</Link></li>

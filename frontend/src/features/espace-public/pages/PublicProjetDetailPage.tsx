@@ -154,7 +154,7 @@ export function PublicProjetDetailPage() {
               <ul className="vt-list">
                 {projet.partenaires.map((p) => (
                   <li key={p.id}>
-                    <Link to={`/partenariats/${p.id}`}>{p.nom}</Link>
+                    <Link to={`/partenaires/${p.id}`}>{p.nom}</Link>
                     <span className="vt-muted"> · {p.pays}</span>
                   </li>
                 ))}

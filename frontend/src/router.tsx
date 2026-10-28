@@ -4,7 +4,7 @@ import { lazy, Suspense, useState, useEffect } from "react"
 import { createBrowserRouter, Navigate, RouterProvider, Outlet, useLocation } from "react-router-dom"
 import type { ReactNode } from "react"
 import { X } from "lucide-react"
-import { AnimatePresence, MotionConfig, motion } from "framer-motion"
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-motion"
 
 import { useAuth } from "@/hooks/useAuth"
 import type { RoleUtilisateur } from "@/types/api"
@@ -56,6 +56,8 @@ const PublicProjetsListePage = lazy(() => import("@/features/espace-public/pages
 const PublicProjetDetailPage = lazy(() => import("@/features/espace-public/pages/PublicProjetDetailPage").then((m) => ({ default: m.PublicProjetDetailPage })))
 const PublicPartenairesListePage = lazy(() => import("@/features/espace-public/pages/PublicPartenairesListePage").then((m) => ({ default: m.PublicPartenairesListePage })))
 const PublicPartenaireDetailPage = lazy(() => import("@/features/espace-public/pages/PublicPartenaireDetailPage").then((m) => ({ default: m.PublicPartenaireDetailPage })))
+const PublicPartenariatsListePage = lazy(() => import("@/features/espace-public/pages/PublicPartenariatsListePage").then((m) => ({ default: m.PublicPartenariatsListePage })))
+const PublicPartenariatDetailPage = lazy(() => import("@/features/espace-public/pages/PublicPartenariatDetailPage").then((m) => ({ default: m.PublicPartenariatDetailPage })))
 const ContactPage = lazy(() => import("@/features/espace-public/pages/ContactPage").then((m) => ({ default: m.ContactPage })))
 const RecherchePage = lazy(() => import("@/features/recherche/pages/RecherchePage").then((m) => ({ default: m.RecherchePage })))
 const SynthesePage = lazy(() => import("@/features/synthese/pages/SynthesePage").then((m) => ({ default: m.SynthesePage })))
@@ -87,6 +89,15 @@ function Charge({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={<ChargementRoute />}>
       <PageTransition>{children}</PageTransition>
+    </Suspense>
+  )
+}
+
+function ChargePublique({ children }: { children: ReactNode }) {
+  const reduire = useReducedMotion()
+  return (
+    <Suspense fallback={<ChargementRoute />}>
+      {reduire ? children : <PageTransition>{children}</PageTransition>}
     </Suspense>
   )
 }
@@ -127,6 +138,7 @@ function RouteProtegee({
 
 function LayoutPublic() {
   const location = useLocation()
+  const reduire = useReducedMotion()
   return (
     <MotionConfig reducedMotion="user">
       <div className="vitrine flex min-h-screen flex-col">
@@ -135,18 +147,23 @@ function LayoutPublic() {
         </a>
         <TopbarPublique />
         <main id="contenu-principal" className="flex-1" tabIndex={-1}>
-          {/* Transition de page : fondu de 400 ms, desactive par MotionConfig si besoin. */}
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            >
+          {reduire ? (
+            <div key={location.pathname}>
               <Outlet />
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          )}
         </main>
         <FooterPublique />
         <BoutonHautDePage />
@@ -223,19 +240,20 @@ const router = createBrowserRouter([
     element: <LayoutPublic />,
     errorElement: <RouteErrorBoundary />,
     children: [
-      { path: "/", element: <Charge><RedirectionAccueil /></Charge> },
-      { path: "/a-propos", element: <Charge><AProposPage /></Charge> },
-      { path: "/etablissements", element: <Charge><EtablissementsPage /></Charge> },
-      { path: "/partenaires", element: <Navigate to="/partenariats" replace /> },
-      { path: "/projets-partenariats", element: <Charge><ProjetsPartenariatsPubliquePage /></Charge> },
-      { path: "/projets-partenariats/publication/:id", element: <Charge><PublicationDetailPage /></Charge> },
-      { path: "/actualites", element: <Charge><ActualitesPage /></Charge> },
-      { path: "/actualites/:id", element: <Charge><PublicationDetailPage /></Charge> },
-      { path: "/projets", element: <Charge><PublicProjetsListePage /></Charge> },
-      { path: "/projets/:id", element: <Charge><PublicProjetDetailPage /></Charge> },
-      { path: "/partenariats", element: <Charge><PublicPartenairesListePage /></Charge> },
-      { path: "/partenariats/:id", element: <Charge><PublicPartenaireDetailPage /></Charge> },
-      { path: "/contact", element: <Charge><ContactPage /></Charge> },
+      { path: "/", element: <ChargePublique><RedirectionAccueil /></ChargePublique> },
+      { path: "/a-propos", element: <ChargePublique><AProposPage /></ChargePublique> },
+      { path: "/etablissements", element: <ChargePublique><EtablissementsPage /></ChargePublique> },
+      { path: "/partenaires", element: <ChargePublique><PublicPartenairesListePage /></ChargePublique> },
+      { path: "/partenaires/:id", element: <ChargePublique><PublicPartenaireDetailPage /></ChargePublique> },
+      { path: "/projets-partenariats", element: <ChargePublique><ProjetsPartenariatsPubliquePage /></ChargePublique> },
+      { path: "/projets-partenariats/publication/:id", element: <ChargePublique><PublicationDetailPage /></ChargePublique> },
+      { path: "/actualites", element: <ChargePublique><ActualitesPage /></ChargePublique> },
+      { path: "/actualites/:id", element: <ChargePublique><PublicationDetailPage /></ChargePublique> },
+      { path: "/projets", element: <ChargePublique><PublicProjetsListePage /></ChargePublique> },
+      { path: "/projets/:id", element: <ChargePublique><PublicProjetDetailPage /></ChargePublique> },
+      { path: "/partenariats", element: <ChargePublique><PublicPartenariatsListePage /></ChargePublique> },
+      { path: "/partenariats/:id", element: <ChargePublique><PublicPartenariatDetailPage /></ChargePublique> },
+      { path: "/contact", element: <ChargePublique><ContactPage /></ChargePublique> },
     ],
   },
   { path: "/connexion", element: <Charge><LoginPage /></Charge>, errorElement: <RouteErrorBoundary /> },

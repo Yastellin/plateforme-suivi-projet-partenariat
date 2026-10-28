@@ -34,8 +34,8 @@ export function PublicPartenaireDetailPage() {
           titre="Partenaire introuvable"
           description="Ce partenaire n'est pas visible publiquement ou n'existe pas."
           action={
-            <Link to="/partenariats" className="vt-btn vt-btn-ghost">
-              <ArrowLeft size={14} aria-hidden="true" /> Retour aux partenariats
+            <Link to="/partenaires" className="vt-btn vt-btn-ghost">
+              <ArrowLeft size={14} aria-hidden="true" /> Retour aux partenaires
             </Link>
           }
         />
@@ -59,7 +59,7 @@ export function PublicPartenaireDetailPage() {
     <div>
       <div className="vt-wrap vt-pad-top">
         <FilAriane
-          etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Partenariats", to: "/partenariats" }, { libelle: partenaire.nom }]}
+          etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Partenaires", to: "/partenaires" }, { libelle: partenaire.nom }]}
         />
       </div>
 

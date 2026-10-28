@@ -15,14 +15,14 @@ export function SectionActualitesUne() {
   return (
     <section className="vt-section" id="actualites" aria-labelledby="titre-actualites">
       <div className="vt-wrap">
-        <Reveal className="vt-head">
+        <Reveal className="vt-head" direction="right">
           <div>
             <span className="vt-eyebrow">Actualités</span>
             <h2 id="titre-actualites">Actualités à la une</h2>
             <p>Les dernières publications de la Présidence de l'université.</p>
           </div>
           <Link to="/actualites" className="vt-btn vt-btn-ghost">
-            Toutes les actualités <ArrowRight size={14} aria-hidden="true" />
+            Voir toutes les actualités <ArrowRight size={14} aria-hidden="true" />
           </Link>
         </Reveal>
         {isLoading ? (
@@ -32,10 +32,10 @@ export function SectionActualitesUne() {
             ))}
           </div>
         ) : (
-          <RevealGroup className="vt-grid-p">
+          <RevealGroup className="vt-grid-p" direction="right">
             {publications.map((publication) => (
               <RevealItem key={publication.id} className="h-full">
-                <CartePublication publication={publication} />
+                <CartePublication publication={publication} lien={`/projets-partenariats/publication/${publication.id}`} />
               </RevealItem>
             ))}
           </RevealGroup>
