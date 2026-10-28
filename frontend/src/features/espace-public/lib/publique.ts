@@ -72,6 +72,17 @@ export function resumePartenaire(partenaire: { description: string | null; pays:
   return `Partenaire de l'Université, présent en ${partenaire.pays}.`
 }
 
+export function imagePrincipalePublication(publication: {
+  image_couverture_url?: string | null
+  photos?: { url_fichier: string; ordre?: number }[]
+}): string | null {
+  if (publication.image_couverture_url) return publication.image_couverture_url
+  const premierePhoto = [...(publication.photos ?? [])].sort(
+    (premiere, seconde) => (premiere.ordre ?? 0) - (seconde.ordre ?? 0),
+  )[0]
+  return premierePhoto?.url_fichier ?? null
+}
+
 export function resumePublication(publication: {
   description_publique: string | null
   projet: { nom: string }

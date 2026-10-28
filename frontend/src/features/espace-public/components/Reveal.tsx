@@ -1,54 +1,86 @@
-// src/features/espace-public/components/Reveal.tsx
-import { createContext, useContext, type ReactNode } from "react"
-import { motion, useReducedMotion, type Variants } from "framer-motion"
-import { cn } from "@/lib/utils"
+import {
+  Children,
+  cloneElement,
+  createContext,
+  isValidElement,
+  useContext,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import {
+  useRevealOnScroll,
+  type DirectionReveal,
+} from "@/hooks/useRevealOnScroll";
 
-export type DirectionReveal = "up" | "left" | "right"
+interface ContexteGroupeReveal {
+  direction: DirectionReveal;
+  visible: boolean;
+  mouvementReduit: boolean;
+  revelerImmediatement: () => void;
+}
 
-const CONTEXTE_DIRECTION = createContext<DirectionReveal>("up")
-const TRANSITION = { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const }
-const VIEWPORT = { once: true, amount: 0.15 } as const
-const DEPLACEMENT = 24
+interface ProprietesRevealItem {
+  children: ReactNode;
+  className?: string;
+  direction?: DirectionReveal;
+  delai?: number;
+}
 
-function variantesElement(direction: DirectionReveal): Variants {
-  const depart = direction === "up"
-    ? { y: DEPLACEMENT }
-    : direction === "left"
-      ? { x: DEPLACEMENT }
-      : { x: -DEPLACEMENT }
+const ContexteGroupe = createContext<ContexteGroupeReveal | null>(null);
+const DISTANCE_DEPART = 24;
 
+function transformationDepart(direction: DirectionReveal): string {
+  if (direction === "up") return `translate3d(0, ${DISTANCE_DEPART}px, 0)`;
+  if (direction === "left") return `translate3d(-${DISTANCE_DEPART}px, 0, 0)`;
+  return `translate3d(${DISTANCE_DEPART}px, 0, 0)`;
+}
+
+function styleReveal(
+  visible: boolean,
+  mouvementReduit: boolean,
+  direction: DirectionReveal,
+  delai: string,
+): CSSProperties {
   return {
-    cache: { opacity: 0, ...depart },
-    visible: { opacity: 1, x: 0, y: 0, transition: TRANSITION },
-  }
+    opacity: visible || mouvementReduit ? 1 : 0,
+    transform:
+      visible || mouvementReduit
+        ? "translate3d(0, 0, 0)"
+        : transformationDepart(direction),
+    transition: mouvementReduit
+      ? "none"
+      : "opacity 450ms ease, transform 450ms ease",
+    transitionDelay: mouvementReduit ? "0ms" : delai,
+    willChange: visible || mouvementReduit ? undefined : "opacity, transform",
+  };
 }
 
-interface RevealProps {
-  children: ReactNode
-  className?: string
-  delai?: number
-  direction?: DirectionReveal
+interface ProprietesReveal {
+  children: ReactNode;
+  className?: string;
+  delai?: number;
+  direction?: DirectionReveal;
 }
 
-export function Reveal({ children, className, delai = 0, direction = "up" }: RevealProps) {
-  const reduire = useReducedMotion()
-  if (reduire) return <div className={className}>{children}</div>
-
-  const variantes = variantesElement(direction)
+export function Reveal({
+  children,
+  className,
+  delai = 0,
+  direction = "up",
+}: ProprietesReveal) {
+  const { ref, visible, mouvementReduit, revelerImmediatement } =
+    useRevealOnScroll(direction);
   return (
-    <motion.div
+    <div
+      ref={ref}
       className={className}
-      initial="cache"
-      whileInView="visible"
-      viewport={VIEWPORT}
-      variants={{
-        cache: variantes.cache,
-        visible: { ...variantes.visible, transition: { ...TRANSITION, delay: delai } },
-      }}
+      style={styleReveal(visible, mouvementReduit, direction, `${delai}s`)}
+      data-reveal-visible={visible}
+      onFocusCapture={revelerImmediatement}
     >
       {children}
-    </motion.div>
-  )
+    </div>
+  );
 }
 
 export function RevealGroup({
@@ -56,49 +88,73 @@ export function RevealGroup({
   className,
   direction = "up",
 }: {
-  children: ReactNode
-  className?: string
-  direction?: DirectionReveal
+  children: ReactNode;
+  className?: string;
+  direction?: DirectionReveal;
 }) {
-  const reduire = useReducedMotion()
-  if (reduire) {
-    return <div className={className}>{children}</div>
-  }
+  const { ref, visible, mouvementReduit, revelerImmediatement } =
+    useRevealOnScroll(direction);
+  const echelonnes = Children.map(children, (enfant, index) => {
+    if (!isValidElement<ProprietesRevealItem>(enfant)) return enfant;
+    return cloneElement(enfant, {
+      delai: enfant.props.delai ?? index * 100,
+    });
+  });
+  const contexte = {
+    direction,
+    visible,
+    mouvementReduit,
+    revelerImmediatement,
+  };
 
   return (
-    <CONTEXTE_DIRECTION.Provider value={direction}>
-      <motion.div
-        className={cn(className)}
-        initial="cache"
-        whileInView="visible"
-        viewport={VIEWPORT}
-        variants={{
-          cache: {},
-          visible: { transition: { staggerChildren: 0.1, delayChildren: 0.04 } },
-        }}
+    <ContexteGroupe.Provider value={contexte}>
+      <div
+        ref={ref}
+        className={className}
+        data-reveal-group=""
+        data-reveal-visible={visible}
+        onFocusCapture={revelerImmediatement}
       >
-        {children}
-      </motion.div>
-    </CONTEXTE_DIRECTION.Provider>
-  )
+        {echelonnes}
+      </div>
+    </ContexteGroupe.Provider>
+  );
 }
 
 export function RevealItem({
   children,
   className,
   direction,
-}: {
-  children: ReactNode
-  className?: string
-  direction?: DirectionReveal
-}) {
-  const reduire = useReducedMotion()
-  const directionGroupe = useContext(CONTEXTE_DIRECTION)
-  if (reduire) return <div className={className}>{children}</div>
+  delai = 0,
+}: ProprietesRevealItem) {
+  const groupe = useContext(ContexteGroupe);
+  const directionEffective = direction ?? groupe?.direction ?? "up";
+  const {
+    ref,
+    visible: visibleLocale,
+    mouvementReduit: mouvementReduitLocal,
+    revelerImmediatement,
+  } = useRevealOnScroll(directionEffective, { enabled: !groupe });
+  const visible = groupe?.visible ?? visibleLocale;
+  const mouvementReduit = groupe?.mouvementReduit ?? mouvementReduitLocal;
+  const delaiCss = groupe ? `${delai}ms` : `${delai}s`;
 
   return (
-    <motion.div className={className} variants={variantesElement(direction ?? directionGroupe)}>
+    <div
+      ref={groupe ? undefined : ref}
+      className={className}
+      style={styleReveal(
+        visible,
+        mouvementReduit,
+        directionEffective,
+        delaiCss,
+      )}
+      data-reveal-item=""
+      data-reveal-visible={visible}
+      onFocusCapture={groupe?.revelerImmediatement ?? revelerImmediatement}
+    >
       {children}
-    </motion.div>
-  )
+    </div>
+  );
 }

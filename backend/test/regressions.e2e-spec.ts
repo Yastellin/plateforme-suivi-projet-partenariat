@@ -451,7 +451,10 @@ describe('Correctifs signales (e2e)', () => {
 
     beforeAll(async () => {
       const [projet] = await ctx.dataSource.query(
-        `SELECT id FROM "Projet" LIMIT 1`,
+        `SELECT projet.id FROM "Projet" projet
+         LEFT JOIN "Publication" publication ON publication.projet_id = projet.id
+         WHERE publication.id IS NULL
+         LIMIT 1`,
       );
 
       const reponse = await request(url())

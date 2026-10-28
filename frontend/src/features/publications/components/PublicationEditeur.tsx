@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { LoaderCircle, Globe } from "lucide-react";
+import { Loader } from "@/components/shared/Loader";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { obtenirInfoStatut } from "@/lib/status-mappings";
 import { GaleriePhotosReordonnable } from "@/features/publications/components/GaleriePhotosReordonnable";
 import { TeleversementPhotos } from "@/features/publications/components/TeleversementPhotos";
 import { PhotosSelection } from "@/features/publications/components/PhotosSelection";
+import { ImageCouvertureEditeur } from "@/features/publications/components/ImageCouvertureEditeur";
 import {
   schemaPublication,
   type PublicationFormValues,
@@ -63,7 +65,7 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
   });
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Chargement...</p>;
+    return <Loader label="Chargement de la publication" pleinePage />;
   }
 
   const onSubmit = async (valeurs: PublicationFormValues) => {
@@ -181,9 +183,30 @@ export function PublicationEditeur({ projetId }: { projetId: string }) {
         </Button>
       </form>
 
+      {publication ? (
+        <ImageCouvertureEditeur publication={publication} projetId={projetId} />
+      ) : (
+        <section
+          className="flex flex-col gap-1"
+          aria-labelledby="titre-image-couverture"
+        >
+          <h3
+            id="titre-image-couverture"
+            className="font-heading text-sm font-semibold"
+          >
+            Image de couverture
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Enregistrez d’abord la publication pour ajouter une couverture.
+          </p>
+        </section>
+      )}
+
       {publication && (
         <div>
-          <h3 className="mb-2 font-heading text-sm font-semibold">Photos</h3>
+          <h3 className="mb-2 font-heading text-sm font-semibold">
+            Photos illustratives
+          </h3>
           <TeleversementPhotos publicationId={publication.id} />
           {publication.photos && publication.photos.length > 0 && (
             <div className="mt-3">

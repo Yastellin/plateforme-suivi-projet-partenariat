@@ -15,6 +15,11 @@ export class PhotoPublicationResponseDto {
   ordre: number;
 }
 
+export class ImageCouverturePublicationResponseDto {
+  @ApiProperty({ nullable: true })
+  image_couverture_url: string | null;
+}
+
 export class PublicationResponseDto {
   @ApiProperty()
   id: string;
@@ -33,6 +38,9 @@ export class PublicationResponseDto {
 
   @ApiProperty({ nullable: true })
   resultats: string | null;
+
+  @ApiProperty({ nullable: true })
+  image_couverture_url: string | null;
 
   @ApiProperty()
   projet_id: string;

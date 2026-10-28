@@ -46,8 +46,14 @@ function creerPublication(index: number) {
       intitule_officiel: null,
       etablissement: { id: "etab-1", nom: "Faculté", sigle: "FLSH", logo_url: null },
     },
-    photo_url: null,
-    photos: [],
+    image_couverture_url: index === 1 ? "/images/couverture-demo.jpg" : null,
+    photo_url: `/images/galerie-${index}.jpg`,
+    photos: index === 3 ? [] : [{
+      id: `photo-${index}`,
+      url_fichier: `/images/galerie-${index}.jpg`,
+      legende: `Légende ${index}`,
+      ordre: 0,
+    }],
   }
 }
 
@@ -158,6 +164,16 @@ describe("sections de la page d'accueil publique", () => {
     const onglets = Array.from(conteneur.querySelectorAll('[role="tab"]')).map((onglet) => onglet.textContent?.trim())
 
     expect(onglets).toEqual(["Projets", "Partenariats", "Partenaires", "Publications"])
+  })
+
+  it("privilégie la couverture, puis la première photo de galerie, avec un repli neutre", () => {
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = rendreAccueil()
+
+    expect(conteneur.querySelector('#actualites img[src="/images/couverture-demo.jpg"]')).not.toBeNull()
+    expect(conteneur.querySelector('#actualites img[src="/images/galerie-1.jpg"]')).toBeNull()
+    expect(conteneur.querySelector('#actualites img[src="/images/galerie-2.jpg"]')).not.toBeNull()
+    expect(conteneur.querySelector('#actualites [role="img"][aria-label="Illustration neutre de Actualité 3"]')).not.toBeNull()
   })
 
   it("relie les CTA et les cartes aux routes canoniques", () => {

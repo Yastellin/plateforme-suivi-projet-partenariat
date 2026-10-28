@@ -19,7 +19,7 @@ import { CartePublication } from "@/features/espace-public/components/CartesPubl
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
-import { resumePublication } from "@/features/espace-public/lib/publique"
+import { imagePrincipalePublication, resumePublication } from "@/features/espace-public/lib/publique"
 import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
 const TOUS = "tous"
@@ -28,7 +28,12 @@ const PAR_CHARGEMENT = 6
 
 export function ActualitesPage() {
   const requete = usePublicPublications({ limit: 100 })
-  const publications = useMemo(() => requete.data?.data ?? [], [requete.data])
+  const publications = useMemo(
+    () => [...(requete.data?.data ?? [])].sort((premiere, seconde) =>
+      (seconde.date_publication ?? "").localeCompare(premiere.date_publication ?? ""),
+    ),
+    [requete.data],
+  )
   const mobile = useMediaQuery("(max-width: 639px)")
 
   const [recherche, setRecherche] = useState("")
@@ -56,6 +61,13 @@ export function ActualitesPage() {
   }, [publications, rechercheDifferee, etablissement])
 
   const enAvant: PublicationPublique | undefined = filtrees[0]
+  const imageEnAvant = enAvant ? imagePrincipalePublication(enAvant) : null
+  const photoEnAvant = enAvant
+    ? [...enAvant.photos].sort((premiere, seconde) => premiere.ordre - seconde.ordre)[0]
+    : undefined
+  const altImageEnAvant = enAvant?.image_couverture_url
+    ? enAvant.titre
+    : photoEnAvant?.legende || enAvant?.titre || ""
   const reste = filtrees.slice(1)
   const totalPages = Math.max(1, Math.ceil(reste.length / PAR_PAGE))
   const pageCourante = Math.min(page, totalPages)
@@ -158,16 +170,18 @@ export function ActualitesPage() {
               <article className="vt-feat vt-pub">
               <Link to={`/projets-partenariats/publication/${enAvant.id}`} className="vt-feat-lien">
                 <div className="vt-feat-cover vt-pub-cover">
-                  {enAvant.photo_url ? (
+                  {imageEnAvant ? (
                     <motion.img
                       layoutId={`cover-${enAvant.id}`}
-                      src={enAvant.photo_url}
-                      alt=""
+                      src={imageEnAvant}
+                      alt={altImageEnAvant}
                       className="vt-art-img"
                       decoding="async"
                     />
                   ) : (
-                    <Illustration type="montagne" />
+                    <div role="img" aria-label={`Illustration neutre de ${enAvant.titre}`}>
+                      <Illustration type="montagne" />
+                    </div>
                   )}
                 </div>
                 <div className="vt-pub-body">

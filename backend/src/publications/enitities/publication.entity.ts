@@ -42,6 +42,9 @@ export class Publication {
   @Column({ type: 'text', nullable: true })
   resultats: string | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  image_couverture_url: string | null;
+
   @Column({ type: 'uuid', unique: true })
   projet_id: string;
 

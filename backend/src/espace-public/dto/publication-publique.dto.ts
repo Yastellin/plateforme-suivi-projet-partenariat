@@ -38,6 +38,10 @@ export class PublicationPubliqueDto {
   projet: ProjetPublicDto;
 
   @ApiProperty({ nullable: true })
+  image_couverture_url: string | null;
+
+  /** Champ historique conservé pour les consommateurs de l'ancienne réponse. */
+  @ApiProperty({ nullable: true })
   photo_url: string | null;
 
   @ApiProperty({ type: [PhotoPubliqueDto] })

@@ -12,6 +12,12 @@ des corrections. A traiter dans des commits de housekeeping dedies.
   TODO aussi present en en-tete du fichier. A remplir et a utiliser dans
   contacts.service.ts + contacts.controller.ts.
 
+## Espace public
+
+- **Image de couverture de démonstration** : le seed utilise temporairement une
+  URL Unsplash pour sa publication publique de démonstration. La remplacer par
+  une image locale institutionnelle avant la soutenance.
+
 ## Frontend
 
 - **`normaliserPrenom()` est morte** dans `frontend/src/lib/normalisation.ts`

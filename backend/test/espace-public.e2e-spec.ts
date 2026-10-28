@@ -276,7 +276,7 @@ describe('Espace public (e2e)', () => {
     expect(accueil.compteurs.nombre_etablissements).toBe(etablissements);
     expect(accueil.compteurs.nombre_publications).toBe(publications);
     expect(accueil.compteurs.nombre_projets_actifs).toBe(projetsEnCours);
-    expect(accueil.compteurs.nombre_publications).toBe(1);
+    expect(accueil.compteurs.nombre_publications).toBe(2);
 
     expect(accueil.dernieres_publications.map((p: any) => p.id)).toContain(
       publicationId,
@@ -294,8 +294,35 @@ describe('Espace public (e2e)', () => {
       .expect(200);
 
     const liste = donnees<any>(reponse.body);
-    expect(liste.meta.total).toBe(1);
+    expect(liste.meta.total).toBe(2);
     expect(liste.data[0].id).toBe(publicationId);
+    const publicationDemo = liste.data.find(
+      (publication: any) =>
+        publication.titre ===
+        'Échanges scientifiques entre universités malgaches',
+    );
+    expect(publicationDemo.projet.nom).toBe(
+      'Programme de recherche en partenariat',
+    );
+    expect(publicationDemo.image_couverture_url).toContain(
+      'images.unsplash.com',
+    );
+    expect(publicationDemo.photos).toMatchObject([
+      { legende: 'Paysage illustrant les échanges de terrain.' },
+    ]);
+    const detailDemo = donnees<any>(
+      (
+        await request(url())
+          .get(`/api/public/publications/${publicationDemo.id}`)
+          .expect(200)
+      ).body,
+    );
+    expect(detailDemo.image_couverture_url).toBe(
+      publicationDemo.image_couverture_url,
+    );
+    expect(detailDemo.photos).toMatchObject([
+      { legende: 'Paysage illustrant les échanges de terrain.' },
+    ]);
     expect(liste.data[0].projet.etablissement.id).toBe(etablissementFdsId);
     expect(liste.data[0].photo_url).toMatch(/^\/uploads\/publications\//);
     expect(liste.data[0].photos[0]).toMatchObject({
@@ -304,6 +331,93 @@ describe('Espace public (e2e)', () => {
     expect(JSON.stringify(liste)).not.toContain(
       'Publication d’un projet non publié',
     );
+  });
+
+  it('couverture : réservée à la Présidence, exposée séparément et supprimable', async () => {
+    const png = Buffer.from(
+      '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c6360000002000154a24f5f0000000049454e44ae426082',
+      'hex',
+    );
+
+    await request(url())
+      .post(`/api/publications/${publicationId}/couverture`)
+      .set(...enteteBearer(etablissementFds))
+      .attach('fichier', png, 'couverture.png')
+      .expect(403);
+
+    const televersement = donnees<any>(
+      (
+        await request(url())
+          .post(`/api/publications/${publicationId}/couverture`)
+          .set(...enteteBearer(presidence))
+          .attach('fichier', png, 'couverture.png')
+          .expect(201)
+      ).body,
+    );
+    expect(televersement.image_couverture_url).toContain(
+      '/uploads/publications/',
+    );
+
+    const remplacement = donnees<any>(
+      (
+        await request(url())
+          .post(`/api/publications/${publicationId}/couverture`)
+          .set(...enteteBearer(presidence))
+          .attach('fichier', png, 'couverture-remplacee.png')
+          .expect(201)
+      ).body,
+    );
+    expect(remplacement.image_couverture_url).not.toBe(
+      televersement.image_couverture_url,
+    );
+
+    const reponseInterne = donnees<any>(
+      (
+        await request(url())
+          .get(`/api/publications/${publicationId}`)
+          .set(...enteteBearer(presidence))
+          .expect(200)
+      ).body,
+    );
+    expect(reponseInterne.image_couverture_url).toBe(
+      remplacement.image_couverture_url,
+    );
+
+    const detail = donnees<any>(
+      (
+        await request(url())
+          .get(`/api/public/publications/${publicationId}`)
+          .expect(200)
+      ).body,
+    );
+    expect(detail.image_couverture_url).toBe(remplacement.image_couverture_url);
+    expect(detail.photo_url).not.toBe(detail.image_couverture_url);
+    expect(detail.photos).toHaveLength(1);
+
+    await request(url())
+      .delete(`/api/publications/${publicationId}/couverture`)
+      .set(...enteteBearer(etablissementFds))
+      .expect(403);
+
+    const suppression = donnees<any>(
+      (
+        await request(url())
+          .delete(`/api/publications/${publicationId}/couverture`)
+          .set(...enteteBearer(presidence))
+          .expect(200)
+      ).body,
+    );
+    expect(suppression.image_couverture_url).toBeNull();
+
+    const apresSuppression = donnees<any>(
+      (
+        await request(url())
+          .get(`/api/public/publications/${publicationId}`)
+          .expect(200)
+      ).body,
+    );
+    expect(apresSuppression.image_couverture_url).toBeNull();
+    expect(apresSuppression.photos).toHaveLength(1);
   });
 
   it('publication publiée rattachée à un projet non publié : introuvable (404)', async () => {
@@ -375,7 +489,11 @@ describe('Espace public (e2e)', () => {
     const reponse = await request(url())
       .get('/api/public/publications')
       .expect(200);
-    expect(donnees<any>(reponse.body).meta.total).toBe(0);
+    const publicationsRestantes = donnees<any>(reponse.body);
+    expect(publicationsRestantes.meta.total).toBe(1);
+    expect(
+      publicationsRestantes.data.map((publication: any) => publication.id),
+    ).not.toContain(publicationId);
     await request(url())
       .get(`/api/public/publications/${publicationId}`)
       .expect(404);

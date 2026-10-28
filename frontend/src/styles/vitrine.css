@@ -924,8 +924,8 @@ select.vt-fld-input {
 
 /* Pied de page */
 .vt-footer {
-  background: #14241b;
-  color: #c8d5cc;
+  background: #123a28;
+  color: #e2ece5;
   padding-block: 56px 36px;
 }
 .vt-footer-cols {
@@ -947,11 +947,18 @@ select.vt-fld-input {
   font-size: 14.5px;
 }
 .vt-footer a {
+  color: #d2e1d7;
   text-decoration: none;
+  transition: color 0.18s ease;
 }
 .vt-footer a:hover {
   text-decoration: underline;
   color: #fff;
+}
+.vitrine .vt-footer a:focus-visible {
+  color: #fff;
+  outline-color: #f4c876;
+  text-decoration: underline;
 }
 .vt-footer .vt-about-f p {
   font-size: 14.5px;
@@ -1778,7 +1785,7 @@ select.vt-fld-input {
   min-height: clamp(400px, 45vw, 570px);
   display: flex;
   align-items: center;
-  background-image: linear-gradient(90deg, rgb(13 39 28 / 78%) 0%, rgb(13 39 28 / 54%) 48%, rgb(13 39 28 / 12%) 100%), url("/images/connexion-fond.jpg");
+  background-image: linear-gradient(90deg, rgb(13 39 28 / 94%) 0%, rgb(13 39 28 / 90%) 62%, rgb(13 39 28 / 64%) 100%), url("/images/connexion-fond.jpg");
   background-position: center 48%;
   background-size: cover;
   color: #fff;
@@ -1880,6 +1887,7 @@ select.vt-fld-input {
 @media (max-width: 620px) {
   .vitrine .vt-home-hero {
     min-height: 440px;
+    background-image: linear-gradient(90deg, rgb(13 39 28 / 94%) 0%, rgb(13 39 28 / 88%) 100%), url("/images/connexion-fond.jpg");
     background-position: 58% center;
   }
   .vitrine .vt-home-hero-inner {
