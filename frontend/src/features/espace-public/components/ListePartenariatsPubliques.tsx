@@ -55,7 +55,7 @@ export function ListePartenariatsPubliques() {
       </div>
 
       {isLoading && (
-        <div className="vt-grid-p vt-mt" aria-busy="true" aria-label="Chargement des partenariats">
+        <div className="vt-card-list vt-mt" aria-busy="true" aria-label="Chargement des partenariats">
           {[...Array(3)].map((_, index) => <Skeleton key={index} className="h-72" />)}
         </div>
       )}
@@ -79,9 +79,9 @@ export function ListePartenariatsPubliques() {
 
       {!isLoading && !isError && visibles.length > 0 && (
         <>
-          <RevealGroup className="vt-grid-p vt-mt" direction="left">
+          <RevealGroup className="vt-card-list vt-mt" direction="left">
             {visibles.map((partenariat) => (
-              <RevealItem key={partenariat.id} className="h-full">
+              <RevealItem key={partenariat.id} className="vt-card-list-item">
                 <CartePartenariat partenariat={partenariat} />
               </RevealItem>
             ))}

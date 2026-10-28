@@ -20,7 +20,7 @@ import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { imagePrincipalePublication, resumePublication } from "@/features/espace-public/lib/publique"
-import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
 const TOUS = "tous"
 const PAR_PAGE = 9
@@ -85,7 +85,7 @@ export function ActualitesPage() {
   }
 
   return (
-    <div>
+    <div className="vt-liste-page">
       <div className="vt-wrap vt-pad-top">
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Actualités" }]} />
       </div>
@@ -137,7 +137,7 @@ export function ActualitesPage() {
           )}
 
           {requete.isLoading && (
-            <div className="vt-grid-p">
+            <div className="vt-card-list">
               {[...Array(3)].map((_, i) => (
                 <Skeleton key={i} className="h-96 rounded-2xl" />
               ))}
@@ -165,51 +165,53 @@ export function ActualitesPage() {
             />
           )}
 
-          {enAvant && (
-            <Reveal direction="right">
-              <article className="vt-feat vt-pub">
-              <Link to={`/projets-partenariats/publication/${enAvant.id}`} className="vt-feat-lien">
-                <div className="vt-feat-cover vt-pub-cover">
-                  {imageEnAvant ? (
-                    <motion.img
-                      layoutId={`cover-${enAvant.id}`}
-                      src={imageEnAvant}
-                      alt={altImageEnAvant}
-                      className="vt-art-img"
-                      decoding="async"
-                    />
-                  ) : (
-                    <div role="img" aria-label={`Illustration neutre de ${enAvant.titre}`}>
-                      <Illustration type="montagne" />
-                    </div>
-                  )}
-                </div>
-                <div className="vt-pub-body">
-                  <h2>{enAvant.titre}</h2>
-                  <p>{resumePublication(enAvant)}</p>
-                  <div className="vt-meta">
-                    <span>
-                      <Landmark aria-hidden="true" />
-                      {enAvant.projet.etablissement?.sigle ?? enAvant.projet.etablissement?.nom ?? "Présidence"}
-                    </span>
-                    {enAvant.date_publication && (
-                      <span>
-                        <CalendarDays aria-hidden="true" />
-                        {formaterDate(enAvant.date_publication)}
-                      </span>
-                    )}
-                  </div>
-                  <span className="vt-link">Lire l'actualité</span>
-                </div>
-              </Link>
-              </article>
-            </Reveal>
-          )}
-
-          {grille.length > 0 && (
-            <RevealGroup className="vt-grid-p vt-mt" direction="right">
+          {(enAvant || grille.length > 0) && (
+            <RevealGroup className="vt-card-list vt-mt" direction="right">
+              {enAvant && (
+                <RevealItem key={enAvant.id} className="vt-card-list-item">
+                  <article className="vt-feat vt-pub h-full">
+                    <Link to={`/projets-partenariats/publication/${enAvant.id}`} className="vt-feat-lien">
+                      <div className="vt-feat-cover vt-pub-cover">
+                        {imageEnAvant ? (
+                          <motion.img
+                            layoutId={`cover-${enAvant.id}`}
+                            src={imageEnAvant}
+                            alt={altImageEnAvant}
+                            className="vt-art-img"
+                            decoding="async"
+                          />
+                        ) : (
+                          <div role="img" aria-label={`Illustration neutre de ${enAvant.titre}`}>
+                            <Illustration type="montagne" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="vt-pub-body">
+                        <h2>{enAvant.titre}</h2>
+                        <p>{resumePublication(enAvant)}</p>
+                        <div className="vt-meta">
+                          <span>
+                            <Landmark aria-hidden="true" />
+                            {enAvant.projet.etablissement?.sigle ?? enAvant.projet.etablissement?.nom ?? "Présidence"}
+                          </span>
+                          {enAvant.date_publication && (
+                            <span>
+                              <CalendarDays aria-hidden="true" />
+                              {formaterDate(enAvant.date_publication)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="vt-link">Lire l'actualité</span>
+                      </div>
+                    </Link>
+                  </article>
+                </RevealItem>
+              )}
               {grille.map((publication) => (
-                <RevealItem key={publication.id} className="h-full">
+                <RevealItem
+                  key={publication.id}
+                  className="vt-card-list-item"
+                >
                   <CartePublication
                     publication={publication}
                     lien={`/projets-partenariats/publication/${publication.id}`}

@@ -28,7 +28,7 @@ export function EnTeteSection({
         <h2 id={idTitre}>{titre}</h2>
         {sousTitre ? <p>{sousTitre}</p> : null}
       </div>
-      <Link to={lienVoirTout} className="vt-btn vt-btn-ghost">
+      <Link to={lienVoirTout} className="vt-btn vt-btn-ghost vt-btn-voir-tout">
         {libelleVoirTout}
         <ArrowRight size={14} aria-hidden="true" />
       </Link>

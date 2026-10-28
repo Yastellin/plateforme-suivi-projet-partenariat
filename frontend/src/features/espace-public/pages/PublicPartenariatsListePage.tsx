@@ -6,7 +6,7 @@ import { PageHeaderPublique } from "@/features/espace-public/components/PageHead
 
 export function PublicPartenariatsListePage() {
   return (
-    <div>
+    <div className="vt-liste-page">
       <div className="vt-wrap vt-pad-top">
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Partenariats" }]} />
       </div>

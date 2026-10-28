@@ -30,15 +30,15 @@ export function SectionProjetsEnVedette() {
           direction="right"
         />
         {isLoading ? (
-          <div className="vt-grid-p vt-accueil-card-grid">
+          <div className="vt-accueil-card-grid">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-80 rounded-2xl" />
             ))}
           </div>
         ) : (
-          <RevealGroup className="vt-grid-p vt-accueil-card-grid" direction="right">
+          <RevealGroup className="vt-accueil-card-grid" direction="right">
             {projets.map((projet) => (
-              <RevealItem key={projet.id} className="h-full">
+              <RevealItem key={projet.id} className="vt-card-list-item h-full">
                 <CarteProjet
                   projet={projet}
                   lien={

@@ -52,7 +52,7 @@ export function PublicPartenairesListePage() {
   }
 
   return (
-    <div>
+    <div className="vt-liste-page">
       <div className="vt-wrap vt-pad-top">
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Partenaires" }]} />
       </div>
@@ -93,7 +93,7 @@ export function PublicPartenairesListePage() {
           </div>
 
           {requete.isLoading && (
-            <div className="vt-grid-4 vt-mt" aria-busy="true" aria-label="Chargement des partenaires">
+            <div className="vt-card-list vt-mt" aria-busy="true" aria-label="Chargement des partenaires">
               {[...Array(4)].map((_, index) => <Skeleton key={index} className="h-36" />)}
             </div>
           )}
@@ -115,9 +115,9 @@ export function PublicPartenairesListePage() {
           )}
           {!requete.isLoading && !requete.isError && partenaires.length > 0 && (
             <>
-              <RevealGroup className="vt-grid-4 vt-mt" direction="left">
+              <RevealGroup className="vt-card-list vt-mt" direction="left">
                 {partenaires.map((partenaire) => (
-                  <RevealItem key={partenaire.id} className="h-full">
+                  <RevealItem key={partenaire.id} className="vt-card-list-item">
                     <CartePartenaire partenaire={partenaire} />
                   </RevealItem>
                 ))}
