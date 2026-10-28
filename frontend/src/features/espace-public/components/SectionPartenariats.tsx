@@ -30,13 +30,13 @@ export function SectionPartenariats() {
           direction="left"
         />
         {isLoading ? (
-          <div className="vt-grid-p">
+          <div className="vt-grid-p vt-accueil-card-grid">
             {[...Array(3)].map((_, index) => (
               <Skeleton key={index} className="h-72" />
             ))}
           </div>
         ) : (
-          <RevealGroup className="vt-grid-p" direction="left">
+          <RevealGroup className="vt-grid-p vt-accueil-card-grid" direction="left">
             {partenariats.map((partenariat) => (
               <RevealItem key={partenariat.id} className="h-full">
                 <CartePartenariat partenariat={partenariat} />

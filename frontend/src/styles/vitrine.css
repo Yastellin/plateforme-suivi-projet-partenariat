@@ -379,21 +379,52 @@
   max-width: 56ch;
   margin-top: 10px;
 }
+/* Accueil public : en-têtes centrés et grilles de cartes équilibrées. */
 .vitrine .vt-accueil-section-head {
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
 }
 .vitrine .vt-accueil-section-head h2 {
   color: var(--brand-deep);
 }
 .vitrine .vt-accueil-section-copy {
-  max-width: 680px;
+  width: 100%;
+  max-width: 42rem;
+  margin-inline: auto;
 }
 .vitrine .vt-accueil-section-head p {
-  max-width: 72ch;
-  margin-top: 8px;
+  max-width: 42rem;
+  margin: 8px auto 0;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.45;
+}
+.vitrine .vt-accueil-card-grid {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  align-items: stretch;
+}
+.vitrine .vt-accueil-card-grid > * {
+  min-width: 0;
+  height: 100%;
+}
+.vitrine .vt-accueil-card-grid .vt-pub {
+  height: 100%;
+  min-height: 26rem;
+}
+.vitrine .vt-logos {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+}
+@media (max-width: 767px) {
+  .vitrine .vt-accueil-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .vt-eyebrow {
   display: inline-flex;

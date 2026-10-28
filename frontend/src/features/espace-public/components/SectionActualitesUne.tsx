@@ -30,13 +30,13 @@ export function SectionActualitesUne() {
           direction="right"
         />
         {isLoading ? (
-          <div className="vt-grid-p">
+          <div className="vt-grid-p vt-accueil-card-grid">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-96 rounded-2xl" />
             ))}
           </div>
         ) : (
-          <RevealGroup className="vt-grid-p" direction="right">
+          <RevealGroup className="vt-grid-p vt-accueil-card-grid" direction="right">
             {publications.map((publication) => (
               <RevealItem key={publication.id} className="h-full">
                 <CartePublication
