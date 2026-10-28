@@ -408,6 +408,11 @@
   font-size: 14px;
   line-height: 1.45;
 }
+.vitrine .vt-accueil-section-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
 .vitrine .vt-card-list,
 .vitrine .vt-accueil-card-grid {
   display: flex;

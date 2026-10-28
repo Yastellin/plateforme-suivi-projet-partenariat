@@ -8,8 +8,12 @@ interface EnTeteSectionProps {
   idTitre: string
   titre: string
   sousTitre?: string
-  lienVoirTout: string
-  libelleVoirTout: string
+  direction?: DirectionReveal
+}
+
+interface BoutonVoirToutProps {
+  lien: string
+  libelle: string
   direction?: DirectionReveal
 }
 
@@ -18,8 +22,6 @@ export function EnTeteSection({
   idTitre,
   titre,
   sousTitre,
-  lienVoirTout,
-  libelleVoirTout,
   direction = "up",
 }: EnTeteSectionProps) {
   return (
@@ -28,8 +30,20 @@ export function EnTeteSection({
         <h2 id={idTitre}>{titre}</h2>
         {sousTitre ? <p>{sousTitre}</p> : null}
       </div>
-      <Link to={lienVoirTout} className="vt-btn vt-btn-ghost vt-btn-voir-tout">
-        {libelleVoirTout}
+    </Reveal>
+  )
+}
+
+// CTA partagé placé sous la grille ou le bandeau de partenaires.
+export function BoutonVoirTout({
+  lien,
+  libelle,
+  direction = "up",
+}: BoutonVoirToutProps) {
+  return (
+    <Reveal className="vt-accueil-section-action" direction={direction}>
+      <Link to={lien} className="vt-btn vt-btn-ghost vt-btn-voir-tout">
+        {libelle}
         <ArrowRight size={14} aria-hidden="true" />
       </Link>
     </Reveal>
