@@ -1,7 +1,7 @@
-// Projets publics de l'accueil présentés sous forme de tableau de bord.
+// Projets publics de l'accueil présentés en cartes chronologiques.
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { CarteProjetDashboard } from "@/features/espace-public/components/CartesPubliques"
+import { CarteProjetTimeCard } from "@/features/espace-public/components/CartesPubliques"
 import {
   RevealGroup,
   RevealItem,
@@ -29,14 +29,14 @@ export function SectionProjetsEnVedette() {
           direction="right"
         />
         {isLoading ? (
-          <div className="vt-project-dashboard-grid" aria-busy="true">
-            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-96 rounded-xl" />)}
+          <div className="vt-projects-list vt-projects-list-home" aria-busy="true">
+            {[...Array(4)].map((_, index) => <Skeleton key={index} className="vt-time-card-skeleton rounded-xl" />)}
           </div>
         ) : (
-          <RevealGroup className="vt-project-dashboard-grid" direction="right">
+          <RevealGroup className="vt-projects-list vt-projects-list-home" direction="right">
             {projets.map((projet) => (
-              <RevealItem key={projet.id} className="vt-project-dashboard-item">
-                <CarteProjetDashboard projet={projet} lien={`/projets/${projet.id}`} />
+              <RevealItem key={projet.id} className="vt-project-time-item">
+                <CarteProjetTimeCard projet={projet} lien={`/projets/${projet.id}`} variante="accueil" />
               </RevealItem>
             ))}
           </RevealGroup>
