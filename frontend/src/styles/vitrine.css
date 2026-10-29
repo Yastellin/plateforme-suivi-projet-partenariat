@@ -5431,42 +5431,9 @@ select.vt-fld-input {
 }
 
 
-/* En-têtes des sections de l’accueil avec CTA circulaire. */
-.vitrine .vt-section-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 40px;
-}
-
-.vitrine .vt-section-header-left {
-  width: auto;
-  max-width: none;
-  flex: 1 1 auto;
-  margin: 0;
-  text-align: left;
-}
-
-.vitrine .vt-section-header-left .vt-section-eyebrow {
-  justify-content: flex-start;
-  margin-bottom: 12px;
-}
-
-.vitrine .vt-section-eyebrow::after {
-  display: none;
-}
-
-.vitrine .vt-section-header-description {
-  width: 100%;
-  max-width: 42rem;
-  flex: 0 0 100%;
-  margin: -8px 0 0;
-  color: var(--text-muted);
-  font-size: .95rem;
-  line-height: 1.5;
-  text-align: left;
+/* Bouton en cercle positionné dans l’en-tête sans déplacer son contenu. */
+.vitrine .vt-accueil-header-with-cta {
+  position: relative;
 }
 
 .vitrine .vt-btn-circle-arrow {
@@ -5483,6 +5450,12 @@ select.vt-fld-input {
   font-weight: 700;
   text-decoration: none;
   transition: color .3s ease, gap .3s ease;
+}
+
+.vitrine .vt-accueil-header-with-cta > .vt-btn-circle-arrow {
+  position: absolute;
+  top: 30px;
+  right: 0;
 }
 
 .vitrine .vt-arrow-circle {
@@ -5519,36 +5492,23 @@ select.vt-fld-input {
   outline-offset: 4px;
 }
 
+@media (max-width: 991px) {
+  .vitrine .vt-accueil-header-with-cta > .vt-btn-circle-arrow {
+    position: static;
+    align-self: flex-end;
+  }
+}
+
 @media (max-width: 767px) {
-  .vitrine .vt-section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .vitrine .vt-section-header-left {
+  .vitrine .vt-accueil-header-with-cta > .vt-btn-circle-arrow {
     width: 100%;
-    flex: 0 1 auto;
-  }
-
-  .vitrine .vt-btn-circle-arrow {
-    width: 100%;
+    align-self: stretch;
     justify-content: space-between;
     margin-bottom: 0;
     padding: 15px;
     border: 1px solid #E5E7EB;
     border-radius: 8px;
     background: #fff;
-  }
-
-  .vitrine .vt-section-header-description {
-    order: 2;
-    flex: 0 1 auto;
-    margin-top: 0;
-  }
-
-  .vitrine .vt-btn-circle-arrow {
-    order: 3;
   }
 }
 

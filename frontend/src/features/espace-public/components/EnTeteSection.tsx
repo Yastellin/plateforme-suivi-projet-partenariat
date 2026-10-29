@@ -26,12 +26,16 @@ export function EnTeteSection({
   direction = "up",
 }: EnTeteSectionProps) {
   return (
-    <Reveal className="vt-section-header" direction={direction}>
-      <div className="vt-section-header-left vt-accueil-section-copy">
+    <Reveal
+      className="vt-head vt-accueil-section-head vt-accueil-header-with-cta"
+      direction={direction}
+    >
+      <div className="vt-accueil-section-copy">
         {surTitre && <span className="vt-section-eyebrow">{surTitre}</span>}
         <h2 id={idTitre}>
           {titre}{titreAccent && <> <span className="vt-title-accent">{titreAccent}</span></>}
         </h2>
+        {sousTitre ? <p>{sousTitre}</p> : null}
       </div>
       <Link to={lienTout} className="vt-btn-circle-arrow">
         {libelleTout}
@@ -39,7 +43,6 @@ export function EnTeteSection({
           <ArrowRight size={20} aria-hidden="true" />
         </span>
       </Link>
-      {sousTitre ? <p className="vt-section-header-description">{sousTitre}</p> : null}
     </Reveal>
   )
 }

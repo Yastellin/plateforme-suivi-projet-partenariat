@@ -263,13 +263,13 @@ describe("sections de la page d'accueil publique", () => {
       "Voir tous les partenaires",
     ]
     const entetes = Array.from(
-      conteneur.querySelectorAll(".vt-section-header"),
+      conteneur.querySelectorAll(".vt-accueil-section-head"),
     )
 
     expect(entetes).toHaveLength(4)
-    expect(entetes.map((entete) => entete.querySelector(".vt-section-header-left h2")?.textContent)).toEqual(titres)
-    expect(entetes.every((entete) => entete.querySelector(".vt-section-header-left .vt-section-eyebrow"))).toBe(true)
-    expect(entetes.every((entete) => entete.querySelector(".vt-section-header-description")?.textContent)).toBe(true)
+    expect(entetes.map((entete) => entete.querySelector(".vt-accueil-section-copy h2")?.textContent)).toEqual(titres)
+    expect(entetes.every((entete) => entete.querySelector(".vt-section-eyebrow"))).toBe(true)
+    expect(entetes.every((entete) => entete.querySelector(".vt-accueil-section-copy > p")?.textContent)).toBe(true)
     expect(
       Array.from(conteneur.querySelectorAll(".vt-btn-circle-arrow"))
         .map((bouton) => bouton.textContent?.trim()),
@@ -368,7 +368,7 @@ describe("sections de la page d'accueil publique", () => {
       ["partenariats", ".vt-timeline"],
       ["partenaires", ".vt-partner-grid"],
     ]) {
-      const entete = conteneur.querySelector(`#${section} .vt-section-header`)
+      const entete = conteneur.querySelector(`#${section} .vt-accueil-section-head`)
       const bouton = entete?.querySelector(".vt-btn-circle-arrow")
       const contenu = conteneur.querySelector(`#${section} ${selecteur}`)
       expect(entete).not.toBeNull()
