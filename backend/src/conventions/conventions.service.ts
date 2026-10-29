@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomUUID } from 'crypto';
 import {
   And,
   DataSource,
@@ -42,6 +43,10 @@ export class ConventionsService {
   ) {}
 
   async create(dto: CreateConventionDto): Promise<ConventionResponseDto> {
+    const reference =
+      dto.reference?.trim() ||
+      `CONV-${new Date().getFullYear()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+
     if (!dto.partenariat_id && !dto.projet_id && !dto.cotutelle_id) {
       throw new BadRequestException(
         'Une convention doit etre associee a un partenariat, un projet ou une cotutelle',
@@ -80,17 +85,17 @@ export class ConventionsService {
       }
 
       const existante = await conventionRepo.findOne({
-        where: { reference: dto.reference },
+        where: { reference },
       });
       if (existante) {
         throw new ConflictException(
-          `Une convention avec la reference "${dto.reference}" existe deja`,
+          `Une convention avec la reference "${reference}" existe deja`,
         );
       }
 
       const creee = await conventionRepo.save(
         conventionRepo.create({
-          reference: dto.reference,
+          reference,
           titre: dto.titre,
           date_signature: dto.date_signature
             ? new Date(dto.date_signature)

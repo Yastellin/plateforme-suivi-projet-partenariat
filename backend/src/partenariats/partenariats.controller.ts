@@ -43,7 +43,7 @@ export class PartenariatsController {
   @ApiOperation({ summary: 'Créer un partenariat' })
   @ApiResponse({ status: 201, type: PartenariatResponseDto })
   create(@CurrentUser() user: any, @Body() dto: CreatePartenariatDto) {
-    let etablissementId: string;
+    let etablissementId: string | null = null;
 
     if (user.role === Role.ETABLISSEMENT) {
       etablissementId = user.etablissement_id;
@@ -57,10 +57,7 @@ export class PartenariatsController {
       dto.etablissements_ids = [etablissementId];
       dto.statut = StatutPartenariat.BROUILLON;
     } else if (user.role === Role.PRESIDENCE) {
-      if (!dto.etablissements_ids || dto.etablissements_ids.length === 0) {
-        throw new BadRequestException('Au moins un établissement est requis.');
-      }
-      etablissementId = dto.etablissements_ids[0]; // Pour le rattachement principal
+      etablissementId = dto.etablissements_ids?.[0] ?? null;
     } else {
       throw new ForbiddenException('Rôle non autorisé pour cette action.');
     }

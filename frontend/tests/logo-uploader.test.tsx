@@ -4,7 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const api = vi.hoisted(() => ({ post: vi.fn() }));
+const api = vi.hoisted(() => ({ post: vi.fn(), delete: vi.fn() }));
 const notifications = vi.hoisted(() => ({
   success: vi.fn(),
   error: vi.fn(),
@@ -31,6 +31,7 @@ beforeEach(() => {
     defaultOptions: { queries: { retry: false } },
   });
   api.post.mockReset();
+  api.delete.mockReset();
   notifications.success.mockReset();
   notifications.error.mockReset();
   creerObjectUrl.mockClear();
@@ -119,5 +120,43 @@ describe("LogoUploader", () => {
     expect(revoquerObjectUrl).toHaveBeenCalledWith(
       "blob:https://partenariats.mg/apercu",
     );
+  });
+
+  it("retire un logo existant après confirmation", async () => {
+    api.delete.mockResolvedValue({ data: { logo_url: null } });
+
+    await act(async () => {
+      racine.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(LogoUploader, {
+            endpoint: "/configuration/logo",
+            logoUrl: "/uploads/logo-presidence.png",
+            nom: "Présidence",
+          }),
+        ),
+      );
+    });
+
+    const boutonRetirer = Array.from(conteneur.querySelectorAll("button")).find(
+      (bouton) => bouton.textContent?.trim() === "Retirer le logo",
+    );
+    expect(boutonRetirer).toBeDefined();
+
+    await act(async () => boutonRetirer?.click());
+    const boutonsDialogue = Array.from(document.body.querySelectorAll("button"));
+    const confirmer = boutonsDialogue.find(
+      (bouton) =>
+        bouton.textContent?.trim() === "Retirer le logo" &&
+        bouton.className.includes("text-white"),
+    );
+    expect(confirmer).toBeDefined();
+
+    await act(async () => confirmer?.click());
+
+    expect(api.delete).toHaveBeenCalledWith("/configuration/logo");
+    expect(notifications.success).toHaveBeenCalledWith("Logo retiré");
+    expect(conteneur.textContent).toContain("Ajouter un logo");
   });
 });

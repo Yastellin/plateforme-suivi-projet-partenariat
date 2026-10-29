@@ -74,7 +74,10 @@ export function PartenariatForm({ partenariat, estPresidence, onSoumettre, enCou
     formState: { errors, isDirty, isValid },
   } = useForm<PartenariatFormValues>({
     resolver: zodResolver(
-      creerSchemaPartenariat(estPresidence, { exigerDateDebutFuture: !partenariat }),
+      creerSchemaPartenariat(
+        estPresidence && (partenariat?.etablissements.length ?? 0) > 0,
+        { exigerDateDebutFuture: !partenariat },
+      ),
     ),
     mode: 'onChange',
     reValidateMode: 'onChange',

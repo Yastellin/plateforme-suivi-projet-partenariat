@@ -312,6 +312,37 @@ export class PartenairesService {
     return this.findOne(id, etablissementId);
   }
 
+  async retirerLogo(
+    id: string,
+    etablissementId?: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ) {
+    const partenaire = await this.findOne(id, etablissementId);
+    if (etablissementId && partenaire.cree_par_role !== Role.ETABLISSEMENT) {
+      throw new ForbiddenException(
+        'Un établissement ne peut modifier que les partenaires qu’il a créés.',
+      );
+    }
+    if (etablissementId && partenaire.soumis_le) {
+      throw new ConflictException(
+        "Le logo d'un partenaire déjà soumis ne peut plus être modifié par l'établissement.",
+      );
+    }
+    if (!partenaire.logo_url) return partenaire;
+
+    await this.partenaireRepo.update(id, { logo_url: null });
+    await this.storage.supprimer(partenaire.logo_url).catch(() => undefined);
+    await this.historique.enregistrer({
+      action: ActionHistorique.MODIFICATION,
+      entite_type: 'Partenaire',
+      entite_id: id,
+      entite_nom: partenaire.nom,
+      utilisateur: utilisateur ?? null,
+      details: 'Retrait du logo',
+    });
+    return this.findOne(id, etablissementId);
+  }
+
   /** Un etablissement soumet son partenaire a la presidence. */
   async soumettre(
     id: string,

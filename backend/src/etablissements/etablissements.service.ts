@@ -80,4 +80,24 @@ export class EtablissementsService {
 
     return this.findOne(id);
   }
+
+  async retirerLogo(
+    id: string,
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<Etablissement> {
+    const etablissement = await this.findOne(id);
+    if (!etablissement.logo_url) return etablissement;
+
+    await this.etablissementRepo.update(id, { logo_url: null });
+    await this.storage.supprimer(etablissement.logo_url).catch(() => undefined);
+    await this.historique.enregistrer({
+      action: ActionHistorique.MODIFICATION,
+      entite_type: 'Etablissement',
+      entite_id: id,
+      entite_nom: etablissement.nom,
+      utilisateur: utilisateur ?? null,
+      details: 'Retrait du logo institutionnel',
+    });
+    return this.findOne(id);
+  }
 }

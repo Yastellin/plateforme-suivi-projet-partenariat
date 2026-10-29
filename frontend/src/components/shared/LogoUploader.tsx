@@ -4,6 +4,7 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import apiClient from "@/lib/api-client";
 import { LogoMedia } from "@/components/shared/ImageMedia";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 interface LogoUploaderProps {
   endpoint: string;
@@ -28,9 +29,10 @@ export function LogoUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [apercu, setApercu] = useState<string | null>(null);
+  const [dialogueRetraitOuvert, setDialogueRetraitOuvert] = useState(false);
   const [logoTeleverse, setLogoTeleverse] = useState<{
     endpoint: string;
-    url: string;
+    url: string | null;
     urlAvantTeleversement: string | null;
   } | null>(null);
 
@@ -71,6 +73,26 @@ export function LogoUploader({
       toast.error(erreur.message);
       setApercu(null);
     },
+  });
+
+  const suppression = useMutation({
+    mutationFn: async () =>
+      (await apiClient.delete<ReponseTeleversementLogo>(endpoint)).data,
+    onSuccess: async (reponse) => {
+      setLogoTeleverse({
+        endpoint,
+        url: reponse.logo_url ?? null,
+        urlAvantTeleversement: logoUrl ?? null,
+      });
+      await Promise.allSettled(
+        queryKeys.map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey }),
+        ),
+      );
+      setDialogueRetraitOuvert(false);
+      toast.success('Logo retiré');
+    },
+    onError: (erreur: Error) => toast.error(erreur.message),
   });
 
   function choisir(fichier?: File) {
@@ -116,7 +138,7 @@ export function LogoUploader({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || suppression.isPending}
             className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--color-brand)] disabled:opacity-60"
           >
             {mutation.isPending ? (
@@ -126,6 +148,16 @@ export function LogoUploader({
             )}
             {logoConfirme ? "Remplacer le logo" : "Ajouter un logo"}
           </button>
+          {logoConfirme ? (
+            <button
+              type="button"
+              onClick={() => setDialogueRetraitOuvert(true)}
+              disabled={mutation.isPending || suppression.isPending}
+              className="ml-2 rounded-[var(--radius-sm)] px-2 py-2 text-xs font-semibold text-[var(--status-expire-fg)] hover:bg-[var(--color-chrome-hover)] disabled:opacity-60"
+            >
+              Retirer le logo
+            </button>
+          ) : null}
           <p
             className="mt-1 text-[11px] text-[var(--color-text-secondary)]"
             data-aide-contextuelle-contenu
@@ -134,6 +166,16 @@ export function LogoUploader({
           </p>
         </div>
       ) : null}
+      <ConfirmDialog
+        ouvert={dialogueRetraitOuvert}
+        onFermer={() => setDialogueRetraitOuvert(false)}
+        onConfirmer={() => suppression.mutate()}
+        titre="Retirer le logo ?"
+        description={`Le logo de ${nom} sera retiré.`}
+        libelleAction="Retirer le logo"
+        enCours={suppression.isPending}
+        destructif
+      />
     </div>
   );
 }

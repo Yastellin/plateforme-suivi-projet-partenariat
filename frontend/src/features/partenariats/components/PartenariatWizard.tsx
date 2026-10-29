@@ -16,10 +16,14 @@ import { LIBELLES_DOMAINE_PARTENARIAT } from '@/lib/status-mappings';
 import { creerSchemaPartenariat, type PartenariatFormValues } from '@/lib/validators/partenariat.schema';
 import { useCreatePartenariat } from '../api/useCreatePartenariat';
 import { PartenariatChampsGeneraux } from './PartenariatChampsGeneraux';
-import { SelectionEtablissements } from './SelectionEtablissements';
 import { SelectionPartenaires } from './SelectionPartenaires';
+import {
+  CLE_BROUILLON_PARTENARIAT_SESSION,
+  lireBrouillonPartenariatSession,
+  type BrouillonPartenariatSession,
+} from '../session-draft';
 
-type CleEtape = 'partenaires' | 'etablissements' | 'informations' | 'recapitulatif';
+type CleEtape = 'partenaires' | 'informations' | 'recapitulatif';
 
 interface Etape {
   cle: CleEtape;
@@ -27,25 +31,12 @@ interface Etape {
   champs: FieldPath<PartenariatFormValues>[];
 }
 
-interface BrouillonWizard {
-  formulaire: PartenariatFormValues;
-  libelles: Record<string, string>;
-  etape: number;
-}
-
-function construireEtapes(estPresidence: boolean): Etape[] {
-  const etapes: Etape[] = [{ cle: 'partenaires', libelle: 'Partenaires', champs: ['partenaires_ids'] }];
-
-  if (estPresidence) {
-    etapes.push({ cle: 'etablissements', libelle: 'Établissements', champs: ['etablissements_ids'] });
-  }
-
-  etapes.push(
+function construireEtapes(): Etape[] {
+  return [
+    { cle: 'partenaires', libelle: 'Partenaires', champs: ['partenaires_ids'] },
     { cle: 'informations', libelle: 'Informations', champs: ['intitule', 'domaine', 'date_debut', 'date_fin', 'objet'] },
     { cle: 'recapitulatif', libelle: 'Récapitulatif', champs: [] },
-  );
-
-  return etapes;
+  ];
 }
 
 function LigneRecapitulatif({ libelle, children }: { libelle: string; children: ReactNode }) {
@@ -78,9 +69,6 @@ function Recapitulatif({
       </LigneRecapitulatif>
       <LigneRecapitulatif libelle="Objet">{valeurs.objet || 'Non renseigné'}</LigneRecapitulatif>
       <LigneRecapitulatif libelle="Partenaires">{noms(valeurs.partenaires_ids)}</LigneRecapitulatif>
-      {valeurs.etablissements_ids.length > 0 ? (
-        <LigneRecapitulatif libelle="Établissements">{noms(valeurs.etablissements_ids)}</LigneRecapitulatif>
-      ) : null}
     </dl>
   );
 }
@@ -91,7 +79,7 @@ export function PartenariatWizard() {
   const estPresidence = utilisateur?.role === 'PRESIDENCE';
   const cheminBase = estPresidence ? '/presidence' : '/etablissement';
 
-  const etapes = construireEtapes(estPresidence);
+  const etapes = construireEtapes();
   const [index, setIndex] = useState(0);
   const [libelles, setLibelles] = useState<Record<string, string>>({});
   const termineRef = useRef(false);
@@ -107,7 +95,7 @@ export function PartenariatWizard() {
     reset,
     formState: { errors, isDirty, isValid },
   } = useForm<PartenariatFormValues>({
-    resolver: zodResolver(creerSchemaPartenariat(estPresidence, { exigerDateDebutFuture: true })),
+    resolver: zodResolver(creerSchemaPartenariat(false, { exigerDateDebutFuture: true })),
     mode: 'onChange',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -130,42 +118,65 @@ export function PartenariatWizard() {
   const etapeValide =
     etape.cle === 'partenaires'
       ? valeurs.partenaires_ids.length > 0
-      : etape.cle === 'etablissements'
-        ? valeurs.etablissements_ids.length > 0
-        : etape.cle === 'informations'
-          ? Boolean(
-              valeurs.intitule.trim() &&
-              valeurs.domaine &&
-              valeurs.date_debut &&
-              valeurs.date_debut >= jourCourant() &&
-              (!valeurs.date_fin || valeurs.date_fin > valeurs.date_debut),
-            )
-          : isValid;
+      : etape.cle === 'informations'
+        ? Boolean(
+            valeurs.intitule.trim() &&
+            valeurs.domaine &&
+            valeurs.date_debut &&
+            valeurs.date_debut >= jourCourant() &&
+            (!valeurs.date_fin || valeurs.date_fin > valeurs.date_debut),
+          )
+        : isValid;
   const { mutate: creer, isPending } = useCreatePartenariat();
 
-  const { effacerBrouillon } = useWizardDraft<BrouillonWizard>({
+  const { effacerBrouillon } = useWizardDraft<BrouillonPartenariatSession>({
     cle: `uf_brouillon_partenariat_${utilisateur?.id ?? 'anonyme'}`,
-    valeurs: { formulaire: valeurs, libelles, etape: index },
+    valeurs: { formulaire: valeurs, libelles, etape: index, version: 2 },
     actif: true,
     onRestaurer: (brouillon) => {
       const contientDesDonnees = brouillon.formulaire.intitule || brouillon.formulaire.partenaires_ids.length > 0;
       if (!contientDesDonnees) {
         return;
       }
-      reset(brouillon.formulaire);
+      reset({ ...brouillon.formulaire, etablissements_ids: [] });
       setLibelles(brouillon.libelles);
-      setIndex(Math.min(brouillon.etape, etapes.length - 1));
+      const ancienneEtape = brouillon.etape;
+      const etapeRestauree = brouillon.version === 2
+        ? ancienneEtape
+        : ancienneEtape <= 1
+          ? 0
+          : ancienneEtape - 1;
+      setIndex(Math.min(etapeRestauree, etapes.length - 1));
       toast.info('Brouillon restauré');
     },
   });
 
-  function mettreAJourSelection(
-    champ: 'partenaires_ids' | 'etablissements_ids',
-    ids: string[],
-    libellesAjoutes: Record<string, string>,
-  ) {
-    setValue(champ, ids, { shouldDirty: true, shouldValidate: true });
+  useEffect(() => {
+    const brouillon = lireBrouillonPartenariatSession();
+    if (!brouillon) return;
+
+    reset({ ...brouillon.formulaire, etablissements_ids: [] });
+    setLibelles(brouillon.libelles ?? {});
+    setIndex(0);
+    window.sessionStorage.removeItem(CLE_BROUILLON_PARTENARIAT_SESSION);
+    toast.info('Brouillon restauré avec le nouveau partenaire');
+  }, [reset]);
+
+  function mettreAJourSelection(ids: string[], libellesAjoutes: Record<string, string>) {
+    setValue('partenaires_ids', ids, { shouldDirty: true, shouldValidate: true });
     setLibelles((precedents) => ({ ...precedents, ...libellesAjoutes }));
+  }
+
+  function continuerVersCreationPartenaire(nomPartenaire: string) {
+    const brouillon: BrouillonPartenariatSession = {
+      formulaire: { ...valeurs, etablissements_ids: [] },
+      libelles,
+      etape: 0,
+      version: 2,
+      nomPartenaire,
+    };
+    window.sessionStorage.setItem(CLE_BROUILLON_PARTENARIAT_SESSION, JSON.stringify(brouillon));
+    navigate(`${cheminBase}/partenaires-partenariats/partenaires/nouveau?retour=wizard-partenariat`);
   }
 
   async function allerEtapeSuivante() {
@@ -205,17 +216,9 @@ export function PartenariatWizard() {
             <SelectionPartenaires
               selection={valeurs.partenaires_ids}
               libelles={libelles}
-              onChange={(ids, ajoutes) => mettreAJourSelection('partenaires_ids', ids, ajoutes)}
+              onChange={mettreAJourSelection}
               erreur={errors.partenaires_ids?.message}
-            />
-          ) : null}
-
-          {etape.cle === 'etablissements' ? (
-            <SelectionEtablissements
-              selection={valeurs.etablissements_ids}
-              libelles={libelles}
-              onChange={(ids, ajoutes) => mettreAJourSelection('etablissements_ids', ids, ajoutes)}
-              erreur={errors.etablissements_ids?.message}
+              onCreerPartenaire={continuerVersCreationPartenaire}
             />
           ) : null}
 
