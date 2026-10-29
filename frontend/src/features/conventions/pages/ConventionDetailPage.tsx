@@ -1,7 +1,7 @@
-﻿// src/features/conventions/pages/ConventionDetailPage.tsx
+// src/features/conventions/pages/ConventionDetailPage.tsx
 
 import { useState } from "react"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { FileText, Archive, Pencil } from "lucide-react"
 import { toast } from "sonner"
 
@@ -13,8 +13,6 @@ import { LIBELLES_STATUT_CONVENTION } from "@/lib/status-mappings"
 import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ConventionForm } from "@/features/conventions/components/ConventionForm"
 import { DocumentDropzone } from "@/features/documents/components/DocumentDropzone"
 import { ListeDocumentsEntite } from "@/features/documents/components/ListeDocumentsEntite"
 import { useConvention } from "@/features/conventions/api/useConvention"
@@ -26,7 +24,7 @@ import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 export function ConventionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const permissions = usePermissions()
-  const [modificationOuverte, setModificationOuverte] = useState(false)
+  const navigate = useNavigate()
   const [archivageOuvert, setArchivageOuvert] = useState(false)
   const { data: convention, isLoading } = useConvention(id)
   useTitreBreadcrumb(convention?.titre)
@@ -60,7 +58,7 @@ export function ConventionDetailPage() {
             {permissions.peutModifier ? (
               <button
                 type="button"
-                onClick={() => setModificationOuverte(true)}
+                onClick={() => navigate(`/presidence/conventions/${convention.id}/modifier`)}
                 className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -141,21 +139,7 @@ export function ConventionDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={modificationOuverte} onOpenChange={setModificationOuverte}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Modifier la convention</DialogTitle>
-          </DialogHeader>
-          <ConventionForm
-            convention={convention}
-            onSucces={() => {
-              setModificationOuverte(false)
-              toast.success("Convention mise à jour")
-            }}
-            onAnnuler={() => setModificationOuverte(false)}
-          />
-        </DialogContent>
-      </Dialog>
+
 
       <DestructiveConfirmDialog
         ouvert={archivageOuvert}

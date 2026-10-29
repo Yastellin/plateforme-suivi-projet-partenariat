@@ -10,6 +10,7 @@ import {
   useSupprimerPhoto,
 } from "@/features/publications/api/usePhotosPublication"
 import { ImageMedia } from "@/components/shared/ImageMedia"
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 import type { PhotoPublication } from "@/types/api"
 
 function trierPhotos(photos: PhotoPublication[]): PhotoPublication[] {
@@ -114,6 +115,12 @@ export function GaleriePhotosReordonnable({
               alt={photo.legende || "Photo de la publication"}
               className="h-20 w-full flex-shrink-0 rounded object-cover sm:h-16 sm:w-20"
               loading="lazy"
+              fallback={(
+                <ImageDefaut
+                  alt=""
+                  className="h-20 w-full flex-shrink-0 rounded object-cover sm:h-16 sm:w-20"
+                />
+              )}
             />
             <label className="min-w-0 flex-1 text-xs font-medium text-muted-foreground">
               Légende facultative

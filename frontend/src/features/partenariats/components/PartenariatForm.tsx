@@ -16,7 +16,8 @@ import { SelectionPartenaires } from './SelectionPartenaires';
 interface PartenariatFormProps {
   partenariat: Partenariat;
   estPresidence: boolean;
-  onSoumettre: (valeurs: PartenariatFormValues) => void;
+  onSoumettre: (valeurs: PartenariatFormValues, apresSucces: () => void) => void;
+  onAnnuler: () => void;
   enCours: boolean;
 }
 
@@ -60,9 +61,10 @@ function Bloc({ titre, children }: { titre: string; children: ReactNode }) {
   );
 }
 
-export function PartenariatForm({ partenariat, estPresidence, onSoumettre, enCours }: PartenariatFormProps) {
+export function PartenariatForm({ partenariat, estPresidence, onSoumettre, onAnnuler, enCours }: PartenariatFormProps) {
   const [libelles, setLibelles] = useState<Record<string, string>>(() => libellesInitiaux(partenariat));
   const premierRendu = useRef(true);
+  const navigationAutorisee = useRef(false);
 
   const {
     register,
@@ -110,8 +112,16 @@ export function PartenariatForm({ partenariat, estPresidence, onSoumettre, enCou
   }
 
   return (
-    <form onSubmit={handleSubmit(onSoumettre)} noValidate className="flex flex-col gap-5">
-      <GardeNavigation doitBloquer={() => isDirty} />
+    <form
+      onSubmit={handleSubmit((valeursSoumises) =>
+        onSoumettre(valeursSoumises, () => {
+          navigationAutorisee.current = true;
+        }),
+      )}
+      noValidate
+      className="flex flex-col gap-5"
+    >
+      <GardeNavigation doitBloquer={() => isDirty && !navigationAutorisee.current} />
 
       <Bloc titre="Informations générales">
         <PartenariatChampsGeneraux register={register} errors={errors} />
@@ -163,14 +173,28 @@ export function PartenariatForm({ partenariat, estPresidence, onSoumettre, enCou
         </Bloc>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={enCours || !isValid}
-        className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
-      >
-        {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-        Enregistrer
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={enCours || !isValid}
+          className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
+        >
+          {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          Enregistrer
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            navigationAutorisee.current = true;
+            reset(valeursInitiales(partenariat, estPresidence));
+            onAnnuler();
+          }}
+          disabled={enCours}
+          className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Annuler
+        </button>
+      </div>
     </form>
   );
 }

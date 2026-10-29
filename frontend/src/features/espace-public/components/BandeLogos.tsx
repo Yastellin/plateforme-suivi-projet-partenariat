@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 
 export function BandeLogos({ partenaires }: { partenaires: PartenairePublic[] }) {
   const logos = partenaires.filter((partenaire) => partenaire.logo_url)
-  if (logos.length === 0) return <p className="vt-muted">Aucun logo partenaire n'est disponible.</p>
+  if (logos.length === 0) return null
 
   const largeurEcran = typeof window === "undefined" ? 1440 : window.innerWidth
   const repetitions = Math.max(1, Math.ceil(largeurEcran / (logos.length * 196)))

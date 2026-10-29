@@ -804,7 +804,6 @@
   display: block;
   max-width: 100%;
 }
-.vt-pt-ini .vt-image-defaut,
 .vt-card-partner-logo img {
   width: 100%;
   height: 100%;
@@ -3459,6 +3458,10 @@ select.vt-fld-input {
   background: var(--surface);
   box-shadow: var(--sh-sm);
 }
+.vitrine .vt-detail-hero-partenaire-sans-logo {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+}
 .vitrine .vt-detail-partner-logo {
   display: grid;
   width: 160px;
@@ -4723,7 +4726,7 @@ select.vt-fld-input {
   text-align: center;
 }
 
-.vitrine .vt-404-illustration {
+.vitrine .vt-404-icon {
   display: flex;
   width: 220px;
   height: 220px;
@@ -4816,7 +4819,7 @@ select.vt-fld-input {
 }
 
 @media (max-width: 768px) {
-  .vitrine .vt-404-illustration {
+  .vitrine .vt-404-icon {
     width: 160px;
     height: 160px;
     margin-bottom: 30px;
@@ -5169,8 +5172,7 @@ select.vt-fld-input {
   place-items: center;
 }
 
-.vitrine .vt-partenaire-logo-image img,
-.vitrine .vt-partenaire-logo-image .vt-image-defaut {
+.vitrine .vt-partenaire-logo-image img {
   display: block;
   width: min(100%, 120px);
   height: 116px;

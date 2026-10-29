@@ -391,7 +391,8 @@ describe("sections de la page d'accueil publique", () => {
 
     expect(conteneur.querySelector(".vt-logo-grid")?.children).toHaveLength(4)
     expect(tuiles).toHaveLength(4)
-    expect(tuiles[1].querySelector('img[src="/images/icone_aucune_image.jpg"]')).not.toBeNull()
+    expect(tuiles[1].querySelector(".vt-partenaire-logo-image")).toBeNull()
+    expect(tuiles[1].querySelector("img")).toBeNull()
     expect(tuiles[1].querySelector("svg")).toBeNull()
     expect(tuiles[1].querySelector("strong")?.textContent).toBe("Partenaire 2")
     expect(tuiles[1].querySelector(".vt-partenaire-pays")?.textContent).toBe("Madagascar")

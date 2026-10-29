@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ImageMedia } from "@/components/shared/ImageMedia";
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut";
 
 const TAILLE_MAX_OCTETS = 5 * 1024 * 1024;
 const NOMBRE_MAX_IMAGES = 20;
@@ -104,6 +105,7 @@ export function PhotosSelection({
                 alt={fichier.name}
                 className="h-28 w-full rounded-md object-cover"
                 resoudre={false}
+                fallback={<ImageDefaut alt="" className="h-28 w-full rounded-md object-cover" />}
               />
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-muted-foreground">

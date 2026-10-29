@@ -44,10 +44,12 @@ export function PublicPartenaireDetailPage() {
       <div className="vt-wrap vt-detail-breadcrumb">
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Partenaires", to: "/partenaires" }, { libelle: partenaire.nom }]} />
       </div>
-      <header className="vt-wrap vt-detail-hero vt-detail-hero-partenaire">
-        <div className="vt-detail-partner-logo">
-          {partenaire.logo_url && <img src={partenaire.logo_url} alt={`Logo de ${partenaire.nom}`} fetchPriority="high" decoding="async" />}
-        </div>
+      <header className={`vt-wrap vt-detail-hero vt-detail-hero-partenaire${partenaire.logo_url ? "" : " vt-detail-hero-partenaire-sans-logo"}`}>
+        {partenaire.logo_url ? (
+          <div className="vt-detail-partner-logo">
+            <img src={partenaire.logo_url} alt={`Logo de ${partenaire.nom}`} fetchPriority="high" decoding="async" />
+          </div>
+        ) : null}
         <div className="vt-detail-hero-content">
           <span className="vt-surtitre">Partenaire</span>
           <div className="vt-detail-meta">

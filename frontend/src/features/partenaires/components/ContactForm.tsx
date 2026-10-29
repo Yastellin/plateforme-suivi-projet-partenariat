@@ -54,13 +54,17 @@ export function ContactForm({ partenaireId, contact, onSucces, onAnnuler }: Cont
   }, [contact, reset])
 
   const onSubmit = (valeurs: ContactFormValues) => {
+    const reinitialiserApresSucces = () => {
+      reset(valeurs)
+      onSucces()
+    }
     if (contact) {
       modification.mutate(
         { id: contact.id, partenaireId, valeurs },
-        { onSuccess: onSucces }
+        { onSuccess: reinitialiserApresSucces }
       )
     } else {
-      creation.mutate({ partenaireId, valeurs }, { onSuccess: onSucces })
+      creation.mutate({ partenaireId, valeurs }, { onSuccess: reinitialiserApresSucces })
     }
   }
 

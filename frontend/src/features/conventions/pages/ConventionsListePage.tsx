@@ -11,15 +11,12 @@ import { FilterChips } from "@/components/shared/FilterChips"
 import { TablePagination } from "@/components/shared/TablePagination"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ConventionForm } from "@/features/conventions/components/ConventionForm"
 import { useConventions } from "@/features/conventions/api/useConventions"
 import { useDebounce } from "@/hooks/useDebounce"
 import { useAuth } from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
 import { LIBELLES_STATUT_CONVENTION } from "@/lib/status-mappings"
 import { formaterDate } from "@/lib/format"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { toast } from "sonner"
 
 const LIMITE_PAR_PAGE = 20
 
@@ -41,8 +38,6 @@ export function ConventionsListePage() {
   const [recherche, setRecherche] = useState("")
   const [statutFiltre, setStatutFiltre] = useState<FiltreStatut>("tous")
   const [page, setPage] = useState(1)
-  const [dialogueOuvert, setDialogueOuvert] = useState(false)
-
   const rechercheDebouncee = useDebounce(recherche, 300)
 
   const role = utilisateur?.role
@@ -67,14 +62,13 @@ export function ConventionsListePage() {
         description={data ? `${data.meta.total} convention${data.meta.total > 1 ? "s" : ""} enregistrée${data.meta.total > 1 ? "s" : ""}` : "Chargement…"}
         actions={
           permissions.peutCreer ? (
-            <button
-              type="button"
-              onClick={() => setDialogueOuvert(true)}
+            <Link
+              to={`${cheminBase}/conventions/nouveau`}
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
             >
               <Plus className="h-3.5 w-3.5" />
               Nouvelle convention
-            </button>
+            </Link>
           ) : null
         }
       />
@@ -118,14 +112,13 @@ export function ConventionsListePage() {
             }
             action={
               !recherche && statutFiltre === 'tous' && permissions.peutCreer ? (
-                <button
-                  type="button"
-                  onClick={() => setDialogueOuvert(true)}
+                <Link
+                  to={`${cheminBase}/conventions/nouveau`}
                   className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Nouvelle convention
-                </button>
+                </Link>
               ) : undefined
             }
           />
@@ -180,23 +173,7 @@ export function ConventionsListePage() {
         )}
       </Panel>
 
-      <Dialog open={dialogueOuvert} onOpenChange={setDialogueOuvert}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Nouvelle convention</DialogTitle>
-            <DialogDescription>
-              Remplissez le formulaire ci-dessous pour créer une nouvelle convention.
-            </DialogDescription>
-          </DialogHeader>
-          <ConventionForm
-            onSucces={() => {
-              setDialogueOuvert(false)
-              toast.success("Convention créée")
-            }}
-            onAnnuler={() => setDialogueOuvert(false)}
-          />
-        </DialogContent>
-      </Dialog>
+
     </div>
   )
 }
