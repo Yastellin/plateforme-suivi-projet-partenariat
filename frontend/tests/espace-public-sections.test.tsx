@@ -7,8 +7,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const donnees = vi.hoisted(() => ({
   accueil: { data: undefined as any, isLoading: false, isError: false },
   partenaires: { data: undefined as any, isLoading: false, isError: false },
-  partenariats: { data: [] as any[], isLoading: false, isError: false },
-  publications: { data: { data: [] as any[], meta: { page: 1, limit: 9, total: 0, totalPages: 1 } }, isLoading: false, isError: false },
+  partenariats: { data: [] as any[], isLoading: false, isError: false, refetch: vi.fn() },
+  projets: { data: { data: [] as any[], meta: { page: 1, limit: 100, total: 0, totalPages: 1 } }, isLoading: false, isError: false, refetch: vi.fn() },
+  publications: { data: { data: [] as any[], meta: { page: 1, limit: 9, total: 0, totalPages: 1 } }, isLoading: false, isError: false, refetch: vi.fn() },
 }))
 
 vi.mock("@/hooks/useDebounce", () => ({ useDebounce: (valeur: unknown) => valeur }))
@@ -20,7 +21,7 @@ vi.mock("@/features/espace-public/api/usePublicPartenaires", () => ({
   usePublicPartenaires: () => donnees.partenaires,
 }))
 vi.mock("@/features/espace-public/api/usePublicProjets", () => ({
-  usePublicProjets: () => ({ data: { data: [], meta: { page: 1, limit: 9, total: 0, totalPages: 1 } }, isLoading: false }),
+  usePublicProjets: () => donnees.projets,
 }))
 vi.mock("@/features/espace-public/api/usePublicPublications", () => ({
   usePublicPublications: () => donnees.publications,
@@ -36,6 +37,8 @@ vi.mock("@/features/espace-public/api/usePublicDonneesDetail", () => ({
 import { AccueilPage } from "@/features/espace-public/pages/AccueilPage"
 import { ActualitesPage } from "@/features/espace-public/pages/ActualitesPage"
 import { PublicPartenairesListePage } from "@/features/espace-public/pages/PublicPartenairesListePage"
+import { PublicPartenariatsListePage } from "@/features/espace-public/pages/PublicPartenariatsListePage"
+import { PublicProjetsListePage } from "@/features/espace-public/pages/PublicProjetsListePage"
 import { ProjetsPartenariatsPubliquePage } from "@/features/espace-public/pages/ProjetsPartenariatsPubliquePage"
 
 function creerPublication(index: number) {
@@ -145,6 +148,13 @@ beforeEach(() => {
     data: Array.from({ length: 4 }, (_, index) => creerPartenariat(index + 1)),
     isLoading: false,
     isError: false,
+    refetch: vi.fn(),
+  }
+  donnees.projets = {
+    data: { data: [], meta: { page: 1, limit: 100, total: 0, totalPages: 1 } },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
   }
   donnees.publications = {
     data: {
@@ -199,38 +209,39 @@ describe("sections de la page d'accueil publique", () => {
     conteneur.innerHTML = rendreAccueil()
 
     expect(conteneur.querySelectorAll("#actualites .vt-pub")).toHaveLength(4)
-    expect(conteneur.querySelectorAll("#projets .vt-pub")).toHaveLength(4)
-    expect(conteneur.querySelectorAll("#partenariats .vt-pub")).toHaveLength(4)
-    for (const section of ["actualites", "projets", "partenariats"]) {
-      const grille = conteneur.querySelector(`#${section} .vt-accueil-card-grid`)
-      expect(grille?.classList.contains("vt-card-grid-4")).toBe(true)
-      expect(grille?.querySelectorAll(".vt-card-featured")).toHaveLength(0)
-    }
+    expect(conteneur.querySelectorAll("#actualites .vt-news-list-content")).toHaveLength(0)
+    expect(conteneur.querySelectorAll("#projets .vt-project-card")).toHaveLength(4)
+    expect(conteneur.querySelectorAll("#partenariats .vt-timeline-card")).toHaveLength(4)
+    expect(conteneur.querySelector("#actualites .vt-accueil-card-grid")?.classList.contains("vt-card-grid-4")).toBe(true)
+    expect(conteneur.querySelector("#projets .vt-project-dashboard-grid")).not.toBeNull()
+    expect(conteneur.querySelector("#partenariats .vt-timeline")).not.toBeNull()
   })
 
-  it("réserve la mise en avant aux sections qui ne contiennent qu'une carte", () => {
+  it("garde la grille des actualités et applique les présentations dédiées à un élément", () => {
     definirNombreElementsAccueil(1)
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
 
-    for (const section of ["actualites", "projets", "partenariats"]) {
-      expect(conteneur.querySelectorAll(`#${section} .vt-card-featured > .vt-pub`)).toHaveLength(1)
-      expect(conteneur.querySelector(`#${section} .vt-accueil-card-grid`)?.classList.contains("vt-card-grid-single")).toBe(true)
-      expect(conteneur.querySelector(`#${section} .vt-card-standard`)).toBeNull()
-    }
+    expect(conteneur.querySelectorAll("#actualites .vt-card-featured > .vt-pub")).toHaveLength(1)
+    expect(conteneur.querySelector("#partenariats .vt-timeline-item")).not.toBeNull()
+    expect(conteneur.querySelectorAll("#partenariats .vt-card-featured")).toHaveLength(0)
+    expect(conteneur.querySelector("#projets .vt-project-dashboard-grid .vt-project-card")).not.toBeNull()
+    expect(conteneur.querySelectorAll("#projets .vt-card-featured")).toHaveLength(0)
+    expect(conteneur.querySelector("#projets")?.textContent).not.toMatch(/avancement|progression|%/i)
   })
 
-  it.each([2, 3])("garde %i cartes en grille standard et les centre selon leur nombre", (nombre) => {
+  it.each([2, 3])("conserve les présentations multi-cartes pour %i éléments", (nombre) => {
     definirNombreElementsAccueil(nombre)
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
 
-    for (const section of ["actualites", "projets", "partenariats"]) {
-      const grille = conteneur.querySelector(`#${section} .vt-accueil-card-grid`)
-      expect(grille?.classList.contains(`vt-card-grid-${nombre}`)).toBe(true)
-      expect(grille?.querySelectorAll(".vt-card-standard")).toHaveLength(nombre)
-      expect(grille?.querySelectorAll(".vt-card-featured")).toHaveLength(0)
-    }
+    const grilleActualites = conteneur.querySelector("#actualites .vt-accueil-card-grid")
+    expect(grilleActualites?.classList.contains(`vt-card-grid-${nombre}`)).toBe(true)
+    expect(grilleActualites?.querySelectorAll(".vt-card-standard")).toHaveLength(nombre)
+    expect(grilleActualites?.querySelectorAll(".vt-card-featured")).toHaveLength(0)
+    expect(conteneur.querySelectorAll("#partenariats .vt-timeline-item")).toHaveLength(nombre)
+    expect(conteneur.querySelectorAll("#projets .vt-project-dashboard-item")).toHaveLength(nombre)
+    expect(conteneur.querySelectorAll("#projets .vt-card-featured")).toHaveLength(0)
   })
 
   it("centre trois actualités dans une grille commune en gardant le tri décroissant", () => {
@@ -239,10 +250,10 @@ describe("sections de la page d'accueil publique", () => {
     )
     const conteneur = document.createElement("div")
     conteneur.innerHTML = html
-    const grille = conteneur.querySelector(".vt-card-list")
+    const grille = conteneur.querySelector(".vt-news-list")
 
     expect(grille?.children).toHaveLength(3)
-    expect(Array.from(grille?.children ?? []).every((carte) => carte.classList.contains("vt-card-list-item"))).toBe(true)
+    expect(Array.from(grille?.children ?? []).every((carte) => carte.classList.contains("vt-news-list-reveal"))).toBe(true)
     expect(Array.from(grille?.querySelectorAll("a[href^='/actualites/']") ?? [])
       .map((lien) => lien.getAttribute("href")))
       .toEqual([
@@ -267,20 +278,22 @@ describe("sections de la page d'accueil publique", () => {
     expect(onglets).toEqual(["Projets", "Partenariats", "Partenaires", "Publications"])
   })
 
-  it("centre les grilles et garde les projets en une colonne sur mobile", () => {
+  it("garde les CTA après les présentations publiques dédiées", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
 
-    for (const section of ["actualites", "projets", "partenariats"]) {
-      const cartes = conteneur.querySelector(`#${section} .vt-accueil-card-grid`)
+    for (const [section, selecteur] of [
+      ["actualites", ".vt-accueil-card-grid"],
+      ["projets", ".vt-project-dashboard-grid"],
+      ["partenariats", ".vt-timeline"],
+    ]) {
+      const cartes = conteneur.querySelector(`#${section} ${selecteur}`)
       const bouton = conteneur.querySelector(`#${section} .vt-accueil-section-action`)
       expect(cartes).not.toBeNull()
       expect(bouton).not.toBeNull()
       expect(cartes!.compareDocumentPosition(bouton!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     }
-    expect(
-      conteneur.querySelector("#projets .vt-accueil-card-grid")?.classList.contains("vt-hscroll"),
-    ).toBe(false)
+    expect(conteneur.querySelector("#projets .vt-project-dashboard-grid")?.classList.contains("vt-hscroll")).toBe(false)
     const logos = conteneur.querySelector("#partenaires .vt-partner-grid")
     const boutonPartenaires = conteneur.querySelector("#partenaires .vt-accueil-section-action")
     expect(logos).not.toBeNull()
@@ -327,6 +340,47 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelectorAll('#actualites a[href^="/actualites/"]')).toHaveLength(4)
     expect(conteneur.querySelectorAll('#projets a[href^="/projets/"]')).toHaveLength(4)
     expect(conteneur.querySelectorAll('#partenariats a[href^="/partenariats/"]')).toHaveLength(4)
+  })
+
+  it("rend la page partenariats en grille avec un bandeau temporel par carte", () => {
+    donnees.partenariats.data[0].date_fin = "2020-12-31"
+    donnees.partenariats.data[1].date_debut = "2027-01-01"
+    const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PublicPartenariatsListePage)))
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = html
+
+    expect(conteneur.querySelectorAll(".vt-partenariats-grid .vt-card-partenariat")).toHaveLength(4)
+    expect(conteneur.querySelectorAll(".vt-partenariats-grid .vt-card-period-bar")).toHaveLength(4)
+    expect(conteneur.querySelector(".vt-card-partenariat[data-periode-calcul='termine']")).not.toBeNull()
+    expect(conteneur.querySelector(".vt-card-partenariat[data-periode-calcul='a-venir']")).not.toBeNull()
+    expect(conteneur.querySelector(".vt-period-note")?.textContent).toContain("ne constituent pas un statut officiel")
+    expect(conteneur.querySelector(".vt-results-count")?.textContent).toContain("4 partenariats sur 4")
+  })
+
+  it("rend les projets publics en cartes dashboard sans avancement", () => {
+    donnees.projets.data.data = [creerProjet(1), creerProjet(2), creerProjet(3)]
+    donnees.projets.data.meta = { page: 1, limit: 100, total: 3, totalPages: 1 }
+    const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PublicProjetsListePage)))
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = html
+
+    expect(conteneur.querySelectorAll(".vt-projects-grid .vt-project-card")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-project-card .vt-project-card-header")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-project-card .vt-project-image")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-progress-container, .vt-progress-bar, .vt-progress-fill")).toHaveLength(0)
+    expect(conteneur.querySelectorAll(".vt-project-card")[0].textContent).not.toMatch(/avancement|progression|%/i)
+  })
+
+  it("rend les actualités en magazine avec articles, widget et archives", () => {
+    const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(ActualitesPage)))
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = html
+
+    expect(conteneur.querySelector(".vt-news-layout")).not.toBeNull()
+    expect(conteneur.querySelectorAll(".vt-news-list-item")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-news-recent-list li")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-news-archive-list li")).toHaveLength(1)
+    expect(conteneur.querySelectorAll(".vt-news-list-item a[href^='/actualites/']")).toHaveLength(3)
   })
 
   it("rend les logos des partenaires cliquables vers leur fiche", () => {

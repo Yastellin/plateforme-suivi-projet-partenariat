@@ -1,24 +1,21 @@
-// src/features/espace-public/pages/PublicProjetsListePage.tsx
-// Liste des projets publies : recherche, filtres Domaine et Statut, grille de cartes.
-// Sur mobile, les filtres sont dans un tiroir du bas (Reinitialiser / Appliquer).
+// Liste publique des projets : filtres dynamiques, tableau de bord et pagination.
 import { useMemo, useState } from "react"
 import { FolderKanban, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { useDebounce } from "@/hooks/useDebounce"
 import type { ProjetPublic } from "@/types/api"
 import { usePublicProjets } from "@/features/espace-public/api/usePublicProjets"
-import { CarteProjet } from "@/features/espace-public/components/CartesPubliques"
+import { CarteProjetDashboard } from "@/features/espace-public/components/CartesPubliques"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { libelleStatutProjet } from "@/features/espace-public/lib/publique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 
 const TOUS = "tous"
-const VIDE = ""
+const PAR_PAGE = 9
 
 interface Filtres {
   recherche: string
@@ -26,60 +23,56 @@ interface Filtres {
   statut: string
 }
 
+function libellerDomaine(domaine: string): string {
+  const valeur = domaine.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr")
+  if (valeur.includes("recherche")) return "Recherche"
+  if (valeur.includes("formation")) return "Formation"
+  if (valeur.includes("innovation")) return "Innovation"
+  return domaine
+}
+
 function FiltresProjets({
   filtres,
   domaines,
   statuts,
   onChange,
-  idPrefixe,
 }: {
   filtres: Filtres
   domaines: string[]
-  statuts: string[]
-  onChange: (f: Filtres) => void
-  idPrefixe: string
+  statuts: ProjetPublic["statut"][]
+  onChange: (filtres: Filtres) => void
 }) {
   return (
-    <div className="vt-filter-bar">
-      <div className="vt-search">
+    <div className="vt-project-filter-bar">
+      <div className="vt-project-filter-groups">
+        <div className="vt-filter-group" role="group" aria-label="Filtrer par domaine">
+          <button type="button" className="vt-filter-pill" aria-pressed={filtres.domaine === TOUS} onClick={() => onChange({ ...filtres, domaine: TOUS })}>Tous</button>
+          {domaines.map((domaine) => (
+            <button key={domaine} type="button" className="vt-filter-pill" aria-pressed={filtres.domaine === domaine} onClick={() => onChange({ ...filtres, domaine })}>
+              {libellerDomaine(domaine)}
+            </button>
+          ))}
+        </div>
+        <div className="vt-filter-group" role="group" aria-label="Filtrer par statut">
+          <button type="button" className="vt-filter-pill" aria-pressed={filtres.statut === TOUS} onClick={() => onChange({ ...filtres, statut: TOUS })}>Tous les statuts</button>
+          {statuts.map((statut) => (
+            <button key={statut} type="button" className="vt-filter-pill" aria-pressed={filtres.statut === statut} onClick={() => onChange({ ...filtres, statut })}>
+              {libelleStatutProjet(statut)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="vt-search vt-project-search">
         <Search size={16} aria-hidden="true" />
-        <label htmlFor={`${idPrefixe}-recherche`} className="sr-only">
-          Rechercher un projet
-        </label>
+        <label htmlFor="recherche-projets" className="sr-only">Rechercher un projet</label>
         <Input
-          id={`${idPrefixe}-recherche`}
+          id="recherche-projets"
           type="search"
           placeholder="Rechercher un projet"
           value={filtres.recherche}
-          onChange={(e) => onChange({ ...filtres, recherche: e.target.value })}
+          onChange={(event) => onChange({ ...filtres, recherche: event.target.value })}
         />
       </div>
-      <label className="vt-select-wrap">
-        <span>Domaine</span>
-        <select
-          className="vt-select"
-          value={filtres.domaine}
-          onChange={(e) => onChange({ ...filtres, domaine: e.target.value })}
-        >
-          <option value={TOUS}>Tous les domaines</option>
-          {domaines.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="vt-select-wrap">
-        <span>Statut</span>
-        <select className="vt-select" value={filtres.statut} onChange={(e) => onChange({ ...filtres, statut: e.target.value })}>
-          <option value={TOUS}>Tous les statuts</option>
-          {statuts.map((s) => (
-            <option key={s} value={s}>
-              {libelleStatutProjet(s as ProjetPublic["statut"])}
-            </option>
-          ))}
-        </select>
-      </label>
     </div>
   )
 }
@@ -87,31 +80,41 @@ function FiltresProjets({
 export function PublicProjetsListePage() {
   const requete = usePublicProjets({ page: 1, limit: 100 })
   const projets = useMemo(() => requete.data?.data ?? [], [requete.data])
-  const [filtres, setFiltres] = useState<Filtres>({ recherche: VIDE, domaine: TOUS, statut: TOUS })
-  const [tiroirOuvert, setTiroirOuvert] = useState(false)
+  const [filtres, setFiltres] = useState<Filtres>({ recherche: "", domaine: TOUS, statut: TOUS })
+  const [page, setPage] = useState(1)
   const rechercheDifferee = useDebounce(filtres.recherche, 250)
 
   const domaines = useMemo(
-    () => [...new Set(projets.map((p) => p.domaine).filter((d): d is string => Boolean(d)))].sort((a, b) => a.localeCompare(b, "fr")),
+    () => [...new Set(projets.map((projet) => projet.domaine).filter((domaine): domaine is string => Boolean(domaine)))].sort((a, b) => a.localeCompare(b, "fr")),
     [projets],
   )
-  const statuts = useMemo(() => [...new Set(projets.map((p) => p.statut))], [projets])
-
+  const statuts = useMemo(() => [...new Set(projets.map((projet) => projet.statut))], [projets])
   const affiches = useMemo(() => {
     const terme = rechercheDifferee.trim().toLowerCase()
-    return projets.filter((p) => {
-      if (filtres.domaine !== TOUS && p.domaine !== filtres.domaine) return false
-      if (filtres.statut !== TOUS && p.statut !== filtres.statut) return false
+    return projets.filter((projet) => {
+      if (filtres.domaine !== TOUS && projet.domaine !== filtres.domaine) return false
+      if (filtres.statut !== TOUS && projet.statut !== filtres.statut) return false
       if (!terme) return true
-      return `${p.nom} ${p.intitule_officiel ?? ""} ${p.domaine ?? ""}`.toLowerCase().includes(terme)
+      return `${projet.nom} ${projet.intitule_officiel ?? ""} ${projet.domaine ?? ""}`.toLowerCase().includes(terme)
     })
   }, [projets, rechercheDifferee, filtres.domaine, filtres.statut])
 
-  const reinitialiser = () => setFiltres({ recherche: VIDE, domaine: TOUS, statut: TOUS })
+  const nombrePages = Math.max(1, Math.ceil(affiches.length / PAR_PAGE))
+  const pageCourante = Math.min(page, nombrePages)
+  const visibles = affiches.slice((pageCourante - 1) * PAR_PAGE, pageCourante * PAR_PAGE)
+
+  function changerFiltres(nouveauxFiltres: Filtres) {
+    setFiltres(nouveauxFiltres)
+    setPage(1)
+  }
+
+  function reinitialiser() {
+    changerFiltres({ recherche: "", domaine: TOUS, statut: TOUS })
+  }
 
   return (
     <div className="vt-liste-page">
-      <div className="vt-wrap vt-pad-top">
+      <div className="vt-wrap vt-pad-top vt-breadcrumb-centre">
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Projets" }]} />
       </div>
       <PageHeaderPublique
@@ -121,74 +124,42 @@ export function PublicProjetsListePage() {
         description="Les projets publics de l'université, avec leurs partenaires, leur domaine et leur statut."
       />
 
-      <section className="vt-section" aria-label="Liste des projets">
+      <section className="vt-section vt-projects-page" aria-label="Liste des projets">
         <div className="vt-wrap">
-          <div className="vt-only-desktop">
-            <FiltresProjets filtres={filtres} domaines={domaines} statuts={statuts} onChange={setFiltres} idPrefixe="bureau" />
+          <div className="vt-filter-bar-sticky">
+            <FiltresProjets filtres={filtres} domaines={domaines} statuts={statuts} onChange={changerFiltres} />
           </div>
-          <div className="vt-only-mobile">
-            <Dialog open={tiroirOuvert} onOpenChange={setTiroirOuvert}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="rounded-full">
-                  Filtres
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="vt-sheet">
-                <DialogTitle>Filtrer les projets</DialogTitle>
-                <DialogDescription>Choisissez un domaine ou un statut, puis appliquez.</DialogDescription>
-                <FiltresProjets filtres={filtres} domaines={domaines} statuts={statuts} onChange={setFiltres} idPrefixe="tiroir" />
-                <div className="vt-sheet-actions">
-                  <Button variant="outline" onClick={reinitialiser}>
-                    Réinitialiser
-                  </Button>
-                  <Button onClick={() => setTiroirOuvert(false)}>Appliquer</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
           {requete.isLoading && (
-            <div className="vt-card-list vt-mt">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-80 rounded-2xl" />
-              ))}
+            <div className="vt-projects-grid vt-mt" aria-busy="true">
+              {[...Array(6)].map((_, index) => <Skeleton key={index} className="h-96 rounded-xl" />)}
             </div>
           )}
-
           {requete.isError && (
-            <EmptyState
-              icone={FolderKanban}
-              titre="Les projets n'ont pas pu être chargés"
-              description="Vérifiez votre connexion puis réessayez."
-              action={
-                <Button variant="outline" onClick={() => requete.refetch()}>
-                  Réessayer
-                </Button>
-              }
-            />
+            <EmptyState icone={FolderKanban} titre="Les projets n'ont pas pu être chargés" description="Vérifiez votre connexion puis réessayez." action={<Button variant="outline" onClick={() => requete.refetch()}>Réessayer</Button>} />
           )}
-
           {!requete.isLoading && !requete.isError && affiches.length === 0 && (
-            <EmptyState
-              icone={Search}
-              titre="Aucun projet trouvé"
-              description="Essayez d'autres mots-clés ou réinitialisez les filtres."
-              action={
-                <Button variant="outline" onClick={reinitialiser}>
-                  Réinitialiser les filtres
-                </Button>
-              }
-            />
+            <EmptyState icone={Search} titre="Aucun projet trouvé" description="Essayez d'autres mots-clés ou réinitialisez les filtres." action={<Button variant="outline" onClick={reinitialiser}>Réinitialiser les filtres</Button>} />
           )}
-
-          {affiches.length > 0 && (
-            <RevealGroup className="vt-card-list vt-mt" direction="right">
-              {affiches.map((projet) => (
-                <RevealItem key={projet.id} className="vt-card-list-item">
-                  <CarteProjet projet={projet} lien={`/projets/${projet.id}`} />
-                </RevealItem>
-              ))}
-            </RevealGroup>
+          {!requete.isLoading && !requete.isError && visibles.length > 0 && (
+            <>
+              <p className="vt-results-count" aria-live="polite">Affichage de {visibles.length} projets sur {affiches.length}</p>
+              <RevealGroup className="vt-projects-grid" direction="right">
+                {visibles.map((projet: ProjetPublic) => (
+                  <RevealItem key={projet.id} className="vt-project-dashboard-item">
+                    <CarteProjetDashboard projet={projet} lien={`/projets/${projet.id}`} />
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+              {nombrePages > 1 && (
+                <nav aria-label="Pagination des projets" className="vt-pager">
+                  <Button variant="outline" size="sm" disabled={pageCourante <= 1} onClick={() => setPage(pageCourante - 1)}>Précédent</Button>
+                  {[...Array(nombrePages)].map((_, index) => (
+                    <button key={index} type="button" className="vt-pager-num" aria-current={pageCourante === index + 1 ? "page" : undefined} aria-label={`Page ${index + 1}`} onClick={() => setPage(index + 1)}>{index + 1}</button>
+                  ))}
+                  <Button variant="outline" size="sm" disabled={pageCourante >= nombrePages} onClick={() => setPage(pageCourante + 1)}>Suivant</Button>
+                </nav>
+              )}
+            </>
           )}
         </div>
       </section>

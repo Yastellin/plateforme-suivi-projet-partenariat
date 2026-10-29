@@ -24,7 +24,7 @@ export function PageHeaderPublique({
   const label = surTitre ?? etiquette
 
   return (
-    <section className="vt-page-head">
+    <section className="vt-page-head vt-page-header">
       <div className="vt-page-head-inner">
         {label && (
           <span className="vt-eyebrow vt-page-eyebrow">

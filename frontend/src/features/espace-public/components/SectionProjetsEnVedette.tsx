@@ -1,8 +1,7 @@
-// src/features/espace-public/components/SectionProjetsEnVedette.tsx
-// Projets publics de l'accueil, en grille ou carte mise en avant selon le nombre.
+// Projets publics de l'accueil présentés sous forme de tableau de bord.
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { CarteMiseEnAvant, CarteProjet, CarteStandard } from "@/features/espace-public/components/CartesPubliques"
+import { CarteProjetDashboard } from "@/features/espace-public/components/CartesPubliques"
 import {
   RevealGroup,
   RevealItem,
@@ -30,27 +29,14 @@ export function SectionProjetsEnVedette() {
           direction="right"
         />
         {isLoading ? (
-          <div className="vt-accueil-card-grid">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-80 rounded-2xl" />
-            ))}
+          <div className="vt-project-dashboard-grid" aria-busy="true">
+            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-96 rounded-xl" />)}
           </div>
         ) : (
-          <RevealGroup
-            className={`vt-accueil-card-grid${projets.length === 1 ? " vt-card-grid-single" : ` vt-card-grid-${projets.length}`}`}
-            direction="right"
-          >
+          <RevealGroup className="vt-project-dashboard-grid" direction="right">
             {projets.map((projet) => (
-              <RevealItem key={projet.id} className="vt-card-list-item h-full">
-                {projets.length === 1 ? (
-                  <CarteMiseEnAvant>
-                    <CarteProjet projet={projet} lien={`/projets/${projet.id}`} />
-                  </CarteMiseEnAvant>
-                ) : (
-                  <CarteStandard>
-                    <CarteProjet projet={projet} lien={`/projets/${projet.id}`} />
-                  </CarteStandard>
-                )}
+              <RevealItem key={projet.id} className="vt-project-dashboard-item">
+                <CarteProjetDashboard projet={projet} lien={`/projets/${projet.id}`} />
               </RevealItem>
             ))}
           </RevealGroup>

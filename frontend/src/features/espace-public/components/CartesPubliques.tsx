@@ -4,13 +4,14 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ArrowRight, CalendarDays, ExternalLink, Globe, Handshake, Landmark, Star } from "lucide-react"
+import { ArrowRight, CalendarDays, ExternalLink, FolderKanban, Globe, Handshake, Landmark, Star } from "lucide-react"
 import { formaterDate } from "@/lib/format"
 import type { PartenairePublic, ProjetPublic, PublicationPublique, StatutProjet } from "@/types/api"
 import type { PartenariatPublic } from "@/features/espace-public/api/usePublicDonneesDetail"
 import {
   formaterPeriode,
   initiales,
+  type PeriodeCalculeePartenariat,
   libelleStatutProjet,
   imagePrincipalePublication,
   teinteDe,
@@ -102,19 +103,57 @@ export function CartePartenaire({ partenaire, className }: { partenaire: Partena
   )
 }
 
-export function CartePartenariat({ partenariat, className }: { partenariat: PartenariatPublic; className?: string }) {
-  const periode = partenariat.date_fin
+function libellePeriodeCalculee(periode: PeriodeCalculeePartenariat): string {
+  switch (periode) {
+    case "a-venir": return "À venir"
+    case "actif": return "En cours"
+    case "termine": return "Terminée"
+    default: return "Indéterminée"
+  }
+}
+
+export function CartePartenariat({
+  partenariat,
+  className,
+  periodeCalculee,
+}: {
+  partenariat: PartenariatPublic
+  className?: string
+  periodeCalculee?: PeriodeCalculeePartenariat
+}) {
+  const libelleDates = partenariat.date_fin
     ? `${formaterDate(partenariat.date_debut)} → ${formaterDate(partenariat.date_fin)}`
     : `Depuis ${formaterDate(partenariat.date_debut)}`
+  const logoPartenaire = partenariat.partenaires.find((partenaire) => partenaire.logo_url)
+  const periodeCategorie = periodeCalculee ?? "indetermine"
+  const periodeTexte = libellePeriodeCalculee(periodeCategorie)
 
   return (
-    <article className={`vt-pub h-full ${className ?? ""}`}>
+    <article
+      className={`vt-pub h-full ${periodeCalculee ? "vt-card-partenariat" : ""} ${className ?? ""}`}
+      data-periode-calcul={periodeCalculee}
+    >
+      {periodeCalculee && <div className={`vt-card-period-bar vt-card-period-${periodeCategorie}`} aria-hidden="true" />}
       <Link to={`/partenariats/${partenariat.id}`} style={LIEN_PLEINE_CARTE}>
-        <div className="vt-pub-cover card-img-wrapper">
-          <Illustration type="cotutelle" />
-        </div>
-        <div className="vt-pub-body">
-          <span className={classeBadgeDomaine(partenariat.domaine)}>{partenariat.domaine}</span>
+        {periodeCalculee ? (
+          <div className="vt-card-top">
+            <span className="vt-card-partner-logo">
+              {logoPartenaire?.logo_url ? (
+                <img src={logoPartenaire.logo_url} alt="" loading="lazy" decoding="async" />
+              ) : <Handshake size={26} aria-hidden="true" />}
+            </span>
+            {partenariat.partenaires.length > 0 && <span className="vt-card-partner-count">{partenariat.partenaires.length} partenaire(s)</span>}
+          </div>
+        ) : (
+          <div className="vt-pub-cover card-img-wrapper">
+            <Illustration type="cotutelle" />
+          </div>
+        )}
+        <div className="vt-pub-body vt-card-body">
+          <div className="vt-card-tags">
+            {periodeCalculee && <span className={`vt-badge-periode vt-badge-periode-${periodeCategorie}`}>Période calculée : {periodeTexte}</span>}
+            <span className={classeBadgeDomaine(partenariat.domaine)}>{partenariat.domaine}</span>
+          </div>
           <h3>{partenariat.intitule}</h3>
           {partenariat.objet && <p>{partenariat.objet}</p>}
           {partenariat.etablissements.length > 0 && (
@@ -126,8 +165,8 @@ export function CartePartenariat({ partenariat, className }: { partenariat: Part
           )}
           <div className="vt-card-footer">
             <div className="vt-meta">
-              <span><CalendarDays aria-hidden="true" />{periode}</span>
-              {partenariat.partenaires.length > 0 && (
+              <span><CalendarDays aria-hidden="true" />{libelleDates}</span>
+              {!periodeCalculee && partenariat.partenaires.length > 0 && (
                 <span><Handshake aria-hidden="true" />{partenariat.partenaires.length} partenaire(s)</span>
               )}
             </div>
@@ -137,6 +176,10 @@ export function CartePartenariat({ partenariat, className }: { partenariat: Part
       </Link>
     </article>
   )
+}
+
+export function CartePartenariatTimeline({ partenariat, className }: { partenariat: PartenariatPublic; className?: string }) {
+  return <CartePartenariat partenariat={partenariat} className={`vt-timeline-card ${className ?? ""}`} />
 }
 
 export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic; className?: string; lien?: string }) {
@@ -194,7 +237,50 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
   )
 }
 
+export function CarteProjetDashboard({
+  projet,
+  className,
+  lien,
+}: {
+  projet: ProjetPublic
+  className?: string
+  lien?: string
+}) {
+  const partenairesAffiches = projet.partenaires.slice(0, 3)
+  const reste = projet.partenaires.length - partenairesAffiches.length
+
+  return (
+    <article className={`vt-project-card vt-project-status-${projet.statut} ${className ?? ""}`} data-statut={projet.statut}>
+      <Link to={lien ?? `/projets/${projet.id}`} className="vt-project-card-link">
+        <header className="vt-project-card-header">
+          <span className="vt-project-icon"><FolderKanban size={25} aria-hidden="true" /></span>
+          <span className={classeBadgeStatut(projet.statut)}>{libelleStatutProjet(projet.statut)}</span>
+        </header>
+        <div className="vt-project-image" aria-hidden="true"><Illustration type="reseau" /></div>
+        <div className="vt-project-content">
+          {projet.domaine && <span className={classeBadgeDomaine(projet.domaine)}>{projet.domaine}</span>}
+          <h3>{projet.nom}</h3>
+          {projet.intitule_officiel && projet.intitule_officiel !== projet.nom && <p className="vt-project-official-title">{projet.intitule_officiel}</p>}
+          {projet.description && <p className="vt-project-description">{projet.description}</p>}
+          {partenairesAffiches.length > 0 && (
+            <ul className="vt-project-partners" aria-label="Partenaires du projet">
+              {partenairesAffiches.map((partenaire) => <li key={partenaire.id}>{partenaire.nom}</li>)}
+              {reste > 0 && <li>+{reste}</li>}
+            </ul>
+          )}
+          {projet.etablissement && <p className="vt-project-establishment"><Landmark size={14} aria-hidden="true" /> {projet.etablissement.sigle ?? projet.etablissement.nom}</p>}
+          <footer className="vt-project-footer">
+            <span><CalendarDays size={14} aria-hidden="true" /> Période : {formaterPeriode(projet.date_debut, projet.date_fin_prevue)}</span>
+            <span className="vt-link">Détails <ArrowRight size={14} aria-hidden="true" /></span>
+          </footer>
+        </div>
+      </Link>
+    </article>
+  )
+}
+
 export function CartePublication({ publication, className, lien }: { publication: PublicationPublique; className?: string; lien?: string }) {
+  const estMagazine = className?.split(/\s+/).includes("vt-news-list-item") ?? false
   const imagePrincipale = imagePrincipalePublication(publication)
   const photoIllustrative = [...publication.photos].sort((a, b) => a.ordre - b.ordre)[0]
   const texteAlternatif = publication.image_couverture_url
@@ -220,12 +306,12 @@ export function CartePublication({ publication, className, lien }: { publication
             </div>
           )}
         </div>
-        <div className="vt-pub-body">
+        <div className={`vt-pub-body${estMagazine ? " vt-news-list-content" : ""}`}>
           <span className="vt-badge vt-badge-publication">Actualité</span>
           <h3>{publication.titre}</h3>
           {publication.description_publique && <p>{publication.description_publique}</p>}
           <div className="vt-card-footer">
-            <div className="vt-meta">
+            <div className={`vt-meta${estMagazine ? " vt-news-meta" : ""}`}>
               <span>
                 <Landmark aria-hidden="true" />
                 {publication.projet.nom}
