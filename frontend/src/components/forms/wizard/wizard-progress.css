@@ -1,0 +1,153 @@
+/* src/components/forms/wizard/wizard-progress.css
+ * Barre d'étapes des assistants (variante « Pulsation Classique »).
+ * Mode clair par défaut ; le mode sombre est piloté par la classe .dark
+ * posée sur <html> (voir useTheme). */
+
+.wizard-etapes {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  padding: 18px 22px;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: #F3F8F5;
+}
+
+.wizard-etape {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wizard-etape__pastille {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 2px solid #C9DCD2;
+  background: transparent;
+  color: #6B8579;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.wizard-etape__libelle {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #6B8579;
+  transition: color 0.3s ease;
+}
+
+/* Étape terminée : pastille pleine avec coche */
+.wizard-etape[data-etat='terminee'] .wizard-etape__pastille {
+  border-color: #047857;
+  background: #047857;
+  color: #FFFFFF;
+  animation: wizard-valide 0.35s ease-out;
+}
+.wizard-etape[data-etat='terminee'] .wizard-etape__libelle {
+  color: #1F3A2F;
+}
+
+/* Étape active : anneau vert, numéro en gras, halo pulsant */
+.wizard-etape[data-etat='active'] .wizard-etape__pastille {
+  border-color: #047857;
+  color: #047857;
+  background: #FFFFFF;
+  animation: wizard-apparition 0.35s ease-out;
+}
+.wizard-etape[data-etat='active'] .wizard-etape__pastille::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid #047857;
+  animation: wizard-onde 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+.wizard-etape[data-etat='active'] .wizard-etape__libelle {
+  font-weight: 700;
+  color: #052E1F;
+}
+
+.wizard-etape[data-etat='a-venir'] .wizard-etape__libelle {
+  color: #9AB0A4;
+  opacity: 0.8;
+}
+
+/* ---------- Mode sombre (photo de référence) ---------- */
+.dark .wizard-etapes {
+  background: #1B1E25;
+  border-color: #2A2F39;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.dark .wizard-etape__pastille {
+  border-color: #3A404B;
+  color: #5B6474;
+}
+.dark .wizard-etape__libelle {
+  color: #5B6474;
+}
+
+.dark .wizard-etape[data-etat='terminee'] .wizard-etape__pastille {
+  border-color: #10B981;
+  background: #10B981;
+  color: #FFFFFF;
+}
+.dark .wizard-etape[data-etat='terminee'] .wizard-etape__libelle {
+  color: #E5ECEA;
+}
+
+.dark .wizard-etape[data-etat='active'] .wizard-etape__pastille {
+  border-color: #10B981;
+  background: #1B1E25;
+  color: #FFFFFF;
+}
+.dark .wizard-etape[data-etat='active'] .wizard-etape__pastille::after {
+  border-color: #10B981;
+}
+.dark .wizard-etape[data-etat='active'] .wizard-etape__libelle {
+  color: #FFFFFF;
+}
+
+.dark .wizard-etape[data-etat='a-venir'] .wizard-etape__libelle {
+  color: #4B5263;
+  opacity: 1;
+}
+
+/* ---------- Animations ---------- */
+@keyframes wizard-onde {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+@keyframes wizard-apparition {
+  from { transform: scale(0.85); }
+  to { transform: scale(1); }
+}
+
+@keyframes wizard-valide {
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wizard-etape__pastille,
+  .wizard-etape__libelle {
+    transition: none;
+  }
+  .wizard-etape__pastille,
+  .wizard-etape__pastille::after {
+    animation: none !important;
+  }
+}
