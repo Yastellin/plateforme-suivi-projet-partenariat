@@ -178,6 +178,29 @@ describe("sections de la page d'accueil publique", () => {
     expect([...ordre].sort((a, b) => a - b)).toEqual(ordre)
   })
 
+  it("affiche les quatre états vides contextualisés à l'accueil", () => {
+    donnees.accueil.data.dernieres_publications = []
+    donnees.accueil.data.projets_a_la_une = []
+    donnees.partenaires.data.data = []
+    donnees.partenariats.data = []
+
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = rendreAccueil()
+    const etatsVides = Array.from(conteneur.querySelectorAll(".vt-empty-state-card"))
+
+    expect(etatsVides).toHaveLength(4)
+    expect(etatsVides.map((etat) => etat.querySelector("h3")?.textContent)).toEqual([
+      "Aucune actualité pour le moment",
+      "Les partenariats seront bientôt en ligne",
+      "Aucun projet publié actuellement",
+      "La liste des partenaires arrive bientôt",
+    ])
+    expect(conteneur.querySelector('#actualites .vt-empty-btn[href="/actualites"]')?.textContent).toBe("Voir les archives")
+    expect(conteneur.querySelector('#partenariats .vt-empty-btn[href="/contact"]')?.textContent).toBe("Devenir partenaire")
+    expect(conteneur.querySelector('#projets .vt-empty-btn[href="/contact"]')?.textContent).toBe("Proposer un projet")
+    expect(conteneur.querySelector('#partenaires .vt-empty-btn[href="/partenariats"]')?.textContent).toBe("Découvrir nos partenariats")
+  })
+
   it("uniformise les titres, sous-titres et boutons des quatre sections", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
@@ -372,6 +395,29 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelectorAll(".vt-project-filter-status-group .vt-filter-pill").length).toBeGreaterThanOrEqual(4)
     expect(Array.from(conteneur.querySelectorAll(".vt-project-filter-status-group .vt-filter-pill")).map((bouton) => bouton.textContent?.trim())).toEqual(["Tous", "En cours", "En attente", "Terminés"])
     expect(conteneur.querySelector(".vt-project-filter-domain-group")).not.toBeNull()
+  })
+
+  it("utilise le même état vide contextualisé dans les pages de liste", () => {
+    donnees.publications.data.data = []
+    let conteneur = document.createElement("div")
+    conteneur.innerHTML = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(ActualitesPage)))
+    expect(conteneur.querySelector(".vt-empty-state-card h3")?.textContent).toBe("Aucune actualité pour le moment")
+    expect(conteneur.querySelector(".vt-empty-state-card .vt-empty-btn")).toBeNull()
+
+    donnees.partenaires.data.data = []
+    conteneur = document.createElement("div")
+    conteneur.innerHTML = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PublicPartenairesListePage)))
+    expect(conteneur.querySelector(".vt-empty-state-card h3")?.textContent).toBe("La liste des partenaires arrive bientôt")
+
+    donnees.projets.data.data = []
+    conteneur = document.createElement("div")
+    conteneur.innerHTML = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PublicProjetsListePage)))
+    expect(conteneur.querySelector(".vt-empty-state-card h3")?.textContent).toBe("Aucun projet publié actuellement")
+
+    donnees.partenariats.data = []
+    conteneur = document.createElement("div")
+    conteneur.innerHTML = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PublicPartenariatsListePage)))
+    expect(conteneur.querySelector(".vt-empty-state-card h3")?.textContent).toBe("Les partenariats seront bientôt en ligne")
   })
 
   it("rend les actualités en magazine avec articles, widget et archives", () => {

@@ -1,4 +1,5 @@
 // Projets publics de l'accueil présentés en cartes chronologiques.
+import { FolderOpen } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { CarteProjetTimeCard } from "@/features/espace-public/components/CartesPubliques"
@@ -7,11 +8,11 @@ import {
   RevealItem,
 } from "@/features/espace-public/components/Reveal"
 import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 export function SectionProjetsEnVedette() {
   const { data, isLoading } = usePublicAccueil()
   const projets = data?.projets_a_la_une?.slice(0, 4) ?? []
-  if (!isLoading && projets.length === 0) return null
 
   return (
     <section
@@ -32,6 +33,14 @@ export function SectionProjetsEnVedette() {
           <div className="vt-projects-list vt-projects-list-home" aria-busy="true">
             {[...Array(4)].map((_, index) => <Skeleton key={index} className="vt-time-card-skeleton rounded-xl" />)}
           </div>
+        ) : projets.length === 0 ? (
+          <EmptyStateSection
+            icone={<FolderOpen aria-hidden="true" />}
+            titre="Aucun projet publié actuellement"
+            description="De nouvelles collaborations sont en cours de finalisation. Les fiches détaillées de nos projets seront disponibles prochainement."
+            actionLibelle="Proposer un projet"
+            actionHref="/contact"
+          />
         ) : (
           <RevealGroup className="vt-projects-list vt-projects-list-home" direction="right">
             {projets.map((projet) => (
@@ -41,7 +50,7 @@ export function SectionProjetsEnVedette() {
             ))}
           </RevealGroup>
         )}
-        <BoutonVoirTout lien="/projets" libelle="Voir tous les projets" direction="right" />
+        {isLoading || projets.length > 0 ? <BoutonVoirTout lien="/projets" libelle="Voir tous les projets" direction="right" /> : null}
       </div>
     </section>
   )

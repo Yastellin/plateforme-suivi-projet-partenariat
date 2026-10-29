@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom"
-import { ArrowLeft, ExternalLink, Globe, Handshake, Star } from "lucide-react"
+import { Building2, ExternalLink, Globe, Handshake, Star } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicProjetsPublies, usePublicPartenariatsPublies, usePublicTousPartenaires } from "@/features/espace-public/api/usePublicDonneesDetail"
@@ -10,6 +10,7 @@ import { CarteProjet, CartePublication } from "@/features/espace-public/componen
 import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 export function PublicPartenaireDetailPage() {
   const { id } = useParams()
@@ -27,7 +28,15 @@ export function PublicPartenaireDetailPage() {
 
   const partenaire = partenairesRequete.data?.find((item) => item.id === id)
   if (!partenaire) {
-    return <div className="vt-wrap vt-section"><EmptyState titre="Partenaire introuvable" description="Ce partenaire n'est pas visible publiquement ou n'existe pas." action={<Link to="/partenaires" className="vt-btn vt-btn-ghost"><ArrowLeft size={14} aria-hidden="true" /> Retour aux partenaires</Link>} /></div>
+    return (
+      <div className="vt-wrap vt-section">
+        <EmptyStateSection
+          icone={<Building2 aria-hidden="true" />}
+          titre="Partenaire introuvable"
+          description="Cet élément n'existe pas ou a été retiré."
+        />
+      </div>
+    )
   }
 
   const projets = (projetsRequete.data ?? []).filter((projet) => projet.partenaires.some((item) => item.id === partenaire.id))

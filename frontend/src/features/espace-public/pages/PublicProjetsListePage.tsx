@@ -1,6 +1,6 @@
 // Liste publique des projets : filtres dynamiques, time-cards et pagination.
 import { useMemo, useState } from "react"
-import { FolderKanban, Search } from "lucide-react"
+import { FolderKanban, FolderOpen, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -13,6 +13,7 @@ import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { libelleStatutProjet } from "@/features/espace-public/lib/publique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 const TOUS = "tous"
 const PAR_PAGE = 9
@@ -120,10 +121,6 @@ export function PublicProjetsListePage() {
     setPage(1)
   }
 
-  function reinitialiser() {
-    changerFiltres({ recherche: "", domaine: TOUS, statut: TOUS })
-  }
-
   return (
     <div className="vt-liste-page">
       <div className="vt-wrap vt-pad-top vt-breadcrumb-centre">
@@ -152,7 +149,13 @@ export function PublicProjetsListePage() {
             <EmptyState icone={FolderKanban} titre="Les projets n'ont pas pu être chargés" description="Vérifiez votre connexion puis réessayez." action={<Button variant="outline" onClick={() => requete.refetch()}>Réessayer</Button>} />
           )}
           {!requete.isLoading && !requete.isError && affiches.length === 0 && (
-            <EmptyState icone={Search} titre="Aucun projet trouvé" description="Essayez d'autres mots-clés ou réinitialisez les filtres." action={<Button variant="outline" onClick={reinitialiser}>Réinitialiser les filtres</Button>} />
+            <EmptyStateSection
+              icone={<FolderOpen aria-hidden="true" />}
+              titre="Aucun projet publié actuellement"
+              description={filtres.recherche.trim() || filtres.domaine !== TOUS || filtres.statut !== TOUS
+                ? "Aucun résultat ne correspond à votre recherche ou aux filtres sélectionnés. Essayez d'autres critères."
+                : "De nouvelles collaborations sont en cours de finalisation. Les fiches détaillées de nos projets seront disponibles prochainement."}
+            />
           )}
           {!requete.isLoading && !requete.isError && visibles.length > 0 && (
             <>

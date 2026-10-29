@@ -14,6 +14,7 @@ import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 import { imagePrincipalePublication } from "@/features/espace-public/lib/publique"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 
 const TOUS = "tous"
@@ -133,7 +134,13 @@ export function ActualitesPage() {
           {requete.isLoading && <div className="vt-news-layout"><div className="vt-news-list">{[...Array(3)].map((_, index) => <Skeleton key={index} className="h-52 rounded-xl" />)}</div></div>}
           {requete.isError && <EmptyState icone={Newspaper} titre="Les actualités n'ont pas pu être chargées" description="Vérifiez votre connexion puis réessayez." action={<Button variant="outline" onClick={() => requete.refetch()}>Réessayer</Button>} />}
           {!requete.isLoading && !requete.isError && filtrees.length === 0 && (
-            <EmptyState icone={Search} titre="Aucune actualité trouvée" description="Essayez d'autres mots-clés ou retirez un filtre." />
+            <EmptyStateSection
+              icone={<Newspaper aria-hidden="true" />}
+              titre="Aucune actualité pour le moment"
+              description={recherche.trim() || etablissement !== TOUS || archive !== TOUS
+                ? "Aucun résultat ne correspond à votre recherche ou aux filtres sélectionnés. Essayez d'autres critères."
+                : "Nous préparons de nouveaux articles et communiqués. Revenez très bientôt pour découvrir les dernières nouvelles de l'université."}
+            />
           )}
           {!requete.isLoading && !requete.isError && articles.length > 0 && (
             <>
