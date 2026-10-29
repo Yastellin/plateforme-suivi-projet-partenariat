@@ -110,6 +110,15 @@ function rendreAccueil() {
   return renderToStaticMarkup(createElement(MemoryRouter, null, createElement(AccueilPage)))
 }
 
+function definirNombreElementsAccueil(nombre: number) {
+  donnees.accueil.data = {
+    ...donnees.accueil.data,
+    dernieres_publications: Array.from({ length: nombre }, (_, index) => creerPublication(index + 1)),
+    projets_a_la_une: Array.from({ length: nombre }, (_, index) => creerProjet(index + 1)),
+  }
+  donnees.partenariats.data = Array.from({ length: nombre }, (_, index) => creerPartenariat(index + 1))
+}
+
 beforeEach(() => {
   donnees.accueil = {
     data: {
@@ -184,13 +193,44 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.textContent).not.toMatch(/à la une|en vedette|mis en avant/i)
   })
 
-  it("limite actualités, projets et partenariats à trois cartes", () => {
+  it("limite actualités, projets et partenariats à quatre cartes maximum", () => {
+    definirNombreElementsAccueil(6)
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
 
-    expect(conteneur.querySelectorAll("#actualites .vt-pub")).toHaveLength(3)
-    expect(conteneur.querySelectorAll("#projets .vt-pub")).toHaveLength(3)
-    expect(conteneur.querySelectorAll("#partenariats .vt-pub")).toHaveLength(3)
+    expect(conteneur.querySelectorAll("#actualites .vt-pub")).toHaveLength(4)
+    expect(conteneur.querySelectorAll("#projets .vt-pub")).toHaveLength(4)
+    expect(conteneur.querySelectorAll("#partenariats .vt-pub")).toHaveLength(4)
+    for (const section of ["actualites", "projets", "partenariats"]) {
+      const grille = conteneur.querySelector(`#${section} .vt-accueil-card-grid`)
+      expect(grille?.classList.contains("vt-card-grid-4")).toBe(true)
+      expect(grille?.querySelectorAll(".vt-card-featured")).toHaveLength(0)
+    }
+  })
+
+  it("réserve la mise en avant aux sections qui ne contiennent qu'une carte", () => {
+    definirNombreElementsAccueil(1)
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = rendreAccueil()
+
+    for (const section of ["actualites", "projets", "partenariats"]) {
+      expect(conteneur.querySelectorAll(`#${section} .vt-card-featured > .vt-pub`)).toHaveLength(1)
+      expect(conteneur.querySelector(`#${section} .vt-accueil-card-grid`)?.classList.contains("vt-card-grid-single")).toBe(true)
+      expect(conteneur.querySelector(`#${section} .vt-card-standard`)).toBeNull()
+    }
+  })
+
+  it.each([2, 3])("garde %i cartes en grille standard et les centre selon leur nombre", (nombre) => {
+    definirNombreElementsAccueil(nombre)
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = rendreAccueil()
+
+    for (const section of ["actualites", "projets", "partenariats"]) {
+      const grille = conteneur.querySelector(`#${section} .vt-accueil-card-grid`)
+      expect(grille?.classList.contains(`vt-card-grid-${nombre}`)).toBe(true)
+      expect(grille?.querySelectorAll(".vt-card-standard")).toHaveLength(nombre)
+      expect(grille?.querySelectorAll(".vt-card-featured")).toHaveLength(0)
+    }
   })
 
   it("centre trois actualités dans une grille commune en gardant le tri décroissant", () => {
@@ -284,9 +324,9 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector('#partenaires a[href="/partenaires"]')?.textContent).toContain("Voir tous les partenaires")
     expect(conteneur.querySelector('#projets a[href="/projets"]')?.textContent).toContain("Voir tous les projets")
     expect(conteneur.querySelector('#partenariats a[href="/partenariats"]')?.textContent).toContain("Voir tous les partenariats")
-    expect(conteneur.querySelectorAll('#actualites a[href^="/actualites/"]')).toHaveLength(3)
-    expect(conteneur.querySelectorAll('#projets a[href^="/projets/"]')).toHaveLength(3)
-    expect(conteneur.querySelectorAll('#partenariats a[href^="/partenariats/"]')).toHaveLength(3)
+    expect(conteneur.querySelectorAll('#actualites a[href^="/actualites/"]')).toHaveLength(4)
+    expect(conteneur.querySelectorAll('#projets a[href^="/projets/"]')).toHaveLength(4)
+    expect(conteneur.querySelectorAll('#partenariats a[href^="/partenariats/"]')).toHaveLength(4)
   })
 
   it("rend les logos des partenaires cliquables vers leur fiche", () => {

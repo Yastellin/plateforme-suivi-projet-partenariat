@@ -1,7 +1,7 @@
 // src/features/espace-public/components/SectionPartenariats.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicPartenariatsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
-import { CartePartenariat } from "@/features/espace-public/components/CartesPubliques"
+import { CarteMiseEnAvant, CartePartenariat, CarteStandard } from "@/features/espace-public/components/CartesPubliques"
 import {
   RevealGroup,
   RevealItem,
@@ -10,7 +10,7 @@ import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/componen
 
 export function SectionPartenariats() {
   const { data, isLoading } = usePublicPartenariatsPublies()
-  const partenariats = data?.slice(0, 3) ?? []
+  const partenariats = data?.slice(0, 4) ?? []
 
   if (!isLoading && partenariats.length === 0) return null
 
@@ -36,10 +36,21 @@ export function SectionPartenariats() {
             ))}
           </div>
         ) : (
-          <RevealGroup className="vt-accueil-card-grid" direction="left">
+          <RevealGroup
+            className={`vt-accueil-card-grid${partenariats.length === 1 ? " vt-card-grid-single" : ` vt-card-grid-${partenariats.length}`}`}
+            direction="left"
+          >
             {partenariats.map((partenariat) => (
               <RevealItem key={partenariat.id} className="vt-card-list-item h-full">
-                <CartePartenariat partenariat={partenariat} />
+                {partenariats.length === 1 ? (
+                  <CarteMiseEnAvant>
+                    <CartePartenariat partenariat={partenariat} />
+                  </CarteMiseEnAvant>
+                ) : (
+                  <CarteStandard>
+                    <CartePartenariat partenariat={partenariat} />
+                  </CarteStandard>
+                )}
               </RevealItem>
             ))}
           </RevealGroup>
