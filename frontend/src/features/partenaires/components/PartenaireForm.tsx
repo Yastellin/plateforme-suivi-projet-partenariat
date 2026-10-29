@@ -1,11 +1,13 @@
 // src/features/partenaires/components/PartenaireForm.tsx
 
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Plus, Save, TriangleAlert, X } from 'lucide-react';
+import { ImagePlus, Loader2, Plus, Save, TriangleAlert, X } from 'lucide-react';
 import { creerSchemaPartenaire, type PartenaireFormValues } from '@/lib/validators/partenaire.schema';
 import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput';
 import { PhoneInputSanitized } from '@/components/forms/inputs/PhoneInputSanitized';
+import { LogoMedia } from '@/components/shared/ImageMedia';
 import { useRechercheDoublon, useRechercheDoublonsPartenaireCoordonnees } from '../api/useRechercheDoublon';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Partenaire } from '@/types/api';
@@ -15,7 +17,7 @@ interface PartenaireFormProps {
   nomInitial?: string;
   peutGererVisibilite?: boolean;
   onAnnuler?: () => void;
-  onSoumettre: (valeurs: PartenaireFormValues) => void;
+  onSoumettre: (valeurs: PartenaireFormValues, logo?: File) => void;
   enCours: boolean;
 }
 
@@ -27,6 +29,18 @@ export function PartenaireForm({
   onSoumettre,
   enCours,
 }: PartenaireFormProps) {
+  const champLogoRef = useRef<HTMLInputElement>(null);
+  const [logoFichier, setLogoFichier] = useState<File | null>(null);
+  const [logoApercu, setLogoApercu] = useState<string | null>(null);
+  const [erreurLogo, setErreurLogo] = useState<string | null>(null);
+
+  useEffect(
+    () => () => {
+      if (logoApercu) URL.revokeObjectURL(logoApercu);
+    },
+    [logoApercu],
+  );
+
   const {
     register,
     handleSubmit,
@@ -91,13 +105,74 @@ export function PartenaireForm({
   const doublonTelephone = listeDoublonsTelephone.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
   const doublonSupplementaire = listeDoublonsSupplementaires.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
 
+  function choisirLogo(fichier?: File) {
+    if (!fichier) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(fichier.type)) {
+      setLogoFichier(null);
+      setLogoApercu(null);
+      setErreurLogo('Choisissez une image JPEG, PNG ou WebP.');
+      return;
+    }
+    if (fichier.size > 2 * 1024 * 1024) {
+      setLogoFichier(null);
+      setLogoApercu(null);
+      setErreurLogo('Le logo ne doit pas dépasser 2 Mo.');
+      return;
+    }
+    setErreurLogo(null);
+    setLogoFichier(fichier);
+    setLogoApercu(URL.createObjectURL(fichier));
+  }
+
   return (
     <form
       onSubmit={handleSubmit((valeurs) => onSoumettre({
         ...valeurs,
         emails: valeurs.emails?.map((item) => item.trim()).filter(Boolean),
         telephones: valeurs.telephones?.map((item) => item.trim()).filter(Boolean),
-      }))} noValidate className="flex flex-col gap-1">
+      }, logoFichier ?? undefined))} noValidate className="flex flex-col gap-1">
+      {!partenaire ? (
+        <div className="mb-2">
+          <p className="mb-2 text-[12.5px] font-medium text-[var(--color-text-secondary)]">
+            Logo du partenaire (facultatif)
+          </p>
+          <div className="flex items-center gap-4">
+            <LogoMedia
+              src={logoApercu}
+              nom={nom || nomInitial || 'Partenaire'}
+              className="h-20 w-20 flex-shrink-0 rounded-lg border border-[var(--color-border)] bg-white object-contain p-1 text-lg"
+            />
+            <div>
+              <input
+                ref={champLogoRef}
+                type="file"
+                className="sr-only"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => {
+                  choisirLogo(event.currentTarget.files?.[0]);
+                  event.currentTarget.value = '';
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => champLogoRef.current?.click()}
+                className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--color-brand)]"
+              >
+                <ImagePlus className="h-4 w-4" />
+                {logoFichier ? 'Remplacer le logo' : 'Ajouter un logo'}
+              </button>
+              <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
+                JPEG, PNG ou WebP — 2 Mo maximum
+              </p>
+              {erreurLogo ? (
+                <p role="alert" className="mt-1 text-xs text-[var(--status-expire-fg)]">
+                  {erreurLogo}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <FloatingLabelInput
           label="Nom"

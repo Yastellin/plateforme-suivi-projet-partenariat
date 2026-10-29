@@ -30,10 +30,14 @@ export function PartenaireCreatePage() {
 
   const cheminBase = estPresidence ? '/presidence' : '/etablissement';
 
-  function onSoumettre(valeurs: PartenaireFormValues) {
-    creer(valeurs, {
-      onSuccess: (partenaire) => {
-        toast.success('Partenaire créé');
+  function onSoumettre(valeurs: PartenaireFormValues, logo?: File) {
+    creer({ valeurs, logo }, {
+      onSuccess: ({ partenaire, logoTeleverse }) => {
+        if (logo && !logoTeleverse) {
+          toast.error('Partenaire créé, mais le logo n’a pas pu être envoyé. Vous pourrez le réessayer depuis sa fiche.');
+        } else {
+          toast.success(logo ? 'Partenaire créé avec son logo' : 'Partenaire créé');
+        }
         navigate(`${cheminBase}/partenaires-partenariats/partenaires/${partenaire.id}`);
       },
       onError: (erreur) => toast.error(erreur.message),

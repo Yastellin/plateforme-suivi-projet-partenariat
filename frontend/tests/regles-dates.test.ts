@@ -208,10 +208,13 @@ describe('convention : regles de dates', () => {
       cotutelle_id: '',
     });
     expect(resultat.success).toBe(false);
-    expect(cheminsEnErreur(resultat)).toContain('partenariat_id');
+    expect(cheminsEnErreur(resultat)).toContain('root');
+    expect(resultat.error?.issues[0]?.message).toBe(
+      'Veuillez sélectionner au moins un lien (partenariat, projet ou cotutelle).',
+    );
   });
 
-  it('accepte les champs optionnels vides avant normalisation', () => {
+  it('accepte un lien métier sélectionné avec les autres champs de lien vides', () => {
     expect(
       schemaConvention.safeParse({
         reference: 'C-1',

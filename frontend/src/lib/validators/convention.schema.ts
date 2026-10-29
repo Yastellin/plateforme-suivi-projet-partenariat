@@ -33,8 +33,8 @@ export function creerSchemaConvention({ exigerDateDebutFuture = false }: Options
     if (!estSelectionne(valeurs.partenariat_id) && !estSelectionne(valeurs.projet_id) && !estSelectionne(valeurs.cotutelle_id)) {
       ctx.addIssue({
         code: "custom",
-        path: ["partenariat_id"],
-        message: "Sélectionnez un partenariat, un projet ou une cotutelle",
+        path: ["root", "liens"],
+        message: "Veuillez sélectionner au moins un lien (partenariat, projet ou cotutelle).",
       })
     }
   })

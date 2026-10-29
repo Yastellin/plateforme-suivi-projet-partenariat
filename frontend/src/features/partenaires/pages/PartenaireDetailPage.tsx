@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Archive, Check, Globe, Send } from "lucide-react";
+import { Archive, Check, Globe, Pencil, Send } from "lucide-react";
 import { usePartenaire } from "../api/usePartenaire";
 import { useUpdatePartenaire } from "../api/useUpdatePartenaire";
 import { useArchiverPartenaire } from "../api/useArchiverPartenaire";
@@ -30,6 +30,7 @@ export function PartenaireDetailPage() {
   const { utilisateur } = useAuth();
   const permissions = usePermissions();
   const [dialogueArchivageOuvert, setDialogueArchivageOuvert] = useState(false);
+  const [editionEnCours, setEditionEnCours] = useState(false);
   const [actionWorkflow, setActionWorkflow] = useState<
     "soumettre" | "rendre-visible" | null
   >(null);
@@ -62,7 +63,10 @@ export function PartenaireDetailPage() {
     mettreAJour(
       { id, valeurs },
       {
-        onSuccess: () => toast.success("Partenaire mis à jour"),
+        onSuccess: () => {
+          toast.success("Partenaire mis à jour");
+          setEditionEnCours(false);
+        },
         onError: (erreur) => toast.error(erreur.message),
       },
     );
@@ -135,6 +139,15 @@ export function PartenaireDetailPage() {
         }
         actions={
           <div className="flex flex-wrap gap-2">
+            {peutModifierPartenaire && !editionEnCours ? (
+              <button
+                type="button"
+                onClick={() => setEditionEnCours(true)}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-brand)] hover:text-[var(--color-text-primary)]"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Modifier
+              </button>
+            ) : null}
             {permissions.peutSoumettre &&
             partenaire.cree_par_role === "ETABLISSEMENT" &&
             !partenaire.soumis_le &&
@@ -200,10 +213,11 @@ export function PartenaireDetailPage() {
         <Panel>
           <PanelHeader titre="Informations" sousTitre="Fiche du partenaire" />
           <PanelBody>
-            {peutModifierPartenaire ? (
+            {peutModifierPartenaire && editionEnCours ? (
               <PartenaireForm
                 partenaire={partenaire}
                 peutGererVisibilite={permissions.estPresidence}
+                onAnnuler={() => setEditionEnCours(false)}
                 onSoumettre={onSoumettre}
                 enCours={enCoursMiseAJour}
               />
