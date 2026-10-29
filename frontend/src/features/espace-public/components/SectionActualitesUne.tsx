@@ -41,7 +41,7 @@ export function SectionActualitesUne() {
             icone={<Newspaper aria-hidden="true" />}
             titre="Aucune actualité pour le moment"
             description="Nous préparons de nouveaux articles et communiqués. Revenez très bientôt pour découvrir les dernières nouvelles de l'université."
-            actionLibelle="Voir les archives"
+            actionLibelle="Voir les actualités"
             actionHref="/actualites"
           />
         ) : (

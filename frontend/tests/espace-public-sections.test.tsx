@@ -195,10 +195,24 @@ describe("sections de la page d'accueil publique", () => {
       "Aucun projet publié actuellement",
       "La liste des partenaires arrive bientôt",
     ])
-    expect(conteneur.querySelector('#actualites .vt-empty-btn[href="/actualites"]')?.textContent).toBe("Voir les archives")
+    expect(conteneur.querySelector('#actualites .vt-empty-btn[href="/actualites"]')?.textContent).toBe("Voir les actualités")
     expect(conteneur.querySelector('#partenariats .vt-empty-btn[href="/contact"]')?.textContent).toBe("Devenir partenaire")
     expect(conteneur.querySelector('#projets .vt-empty-btn[href="/contact"]')?.textContent).toBe("Proposer un projet")
     expect(conteneur.querySelector('#partenaires .vt-empty-btn[href="/partenariats"]')?.textContent).toBe("Découvrir nos partenariats")
+  })
+
+  it("affiche exactement les quatre compteurs publics dans l'ordre demandé", () => {
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = rendreAccueil()
+
+    expect(Array.from(conteneur.querySelectorAll(".vt-home-stat > span")).map((item) => item.textContent)).toEqual([
+      "Établissements",
+      "Partenaires",
+      "Projets",
+      "Pays partenaires",
+    ])
+    expect(conteneur.querySelectorAll(".vt-home-stat")).toHaveLength(4)
+    expect(conteneur.querySelector(".vt-home-stats")?.textContent).not.toMatch(/publication|convention|document/i)
   })
 
   it("uniformise les titres, sous-titres et boutons des quatre sections", () => {
@@ -364,19 +378,17 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelectorAll('#partenariats a[href^="/partenariats/"]')).toHaveLength(4)
   })
 
-  it("rend la page partenariats en grille avec un bandeau temporel par carte", () => {
+  it("rend les fiches de partenariats sans dates ni périodes internes", () => {
     donnees.partenariats.data[0].date_fin = "2020-12-31"
     donnees.partenariats.data[1].date_debut = "2027-01-01"
     const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PublicPartenariatsListePage)))
     const conteneur = document.createElement("div")
     conteneur.innerHTML = html
 
-    expect(conteneur.querySelectorAll(".vt-partenariats-grid .vt-card-partenariat")).toHaveLength(4)
-    expect(conteneur.querySelectorAll(".vt-partenariats-grid .vt-card-period-bar")).toHaveLength(4)
-    expect(conteneur.querySelector(".vt-card-partenariat[data-periode-calcul='termine']")).not.toBeNull()
-    expect(conteneur.querySelector(".vt-card-partenariat[data-periode-calcul='a-venir']")).not.toBeNull()
-    expect(conteneur.querySelector(".vt-period-note")?.textContent).toContain("ne constituent pas un statut officiel")
-    expect(conteneur.querySelector(".vt-results-count")?.textContent).toContain("4 partenariats sur 4")
+    expect(conteneur.querySelectorAll(".vt-partenariats-grid .vt-pub")).toHaveLength(4)
+    expect(conteneur.querySelector(".vt-period-note")).toBeNull()
+    expect(conteneur.querySelector(".vt-results-count")?.textContent).toBe("4 résultats trouvés")
+    expect(conteneur.textContent).not.toMatch(/Période calculée|Depuis 2020|2027/i)
   })
 
   it("rend la liste publique en time-cards responsives sans avancement", () => {
@@ -387,14 +399,15 @@ describe("sections de la page d'accueil publique", () => {
     conteneur.innerHTML = html
 
     expect(conteneur.querySelectorAll(".vt-projects-list-page .vt-time-card-list")).toHaveLength(3)
-    expect(conteneur.querySelectorAll(".vt-time-card-list .vt-time-date-block")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-time-card-list .vt-time-date-block")).toHaveLength(0)
     expect(conteneur.querySelectorAll(".vt-time-card-list .vt-card-action")).toHaveLength(3)
-    expect(conteneur.querySelector(".vt-time-card-list .year")?.textContent).toBe("2026")
-    expect(conteneur.querySelectorAll(".vt-time-card-list")[0].textContent).not.toMatch(/avancement|progression|%/i)
+    expect(conteneur.querySelectorAll(".vt-time-card-list .vt-time-meta")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-time-card-list")[0].textContent).not.toMatch(/avancement|progression|%|2026|En cours/i)
+    expect(conteneur.querySelector(".vt-results-count")?.textContent).toBe("3 résultats trouvés")
     expect(conteneur.querySelector(".vt-main-container")).not.toBeNull()
-    expect(conteneur.querySelectorAll(".vt-project-filter-status-group .vt-filter-pill").length).toBeGreaterThanOrEqual(4)
-    expect(Array.from(conteneur.querySelectorAll(".vt-project-filter-status-group .vt-filter-pill")).map((bouton) => bouton.textContent?.trim())).toEqual(["Tous", "En cours", "En attente", "Terminés"])
+    expect(conteneur.querySelector(".vt-project-filter-status-group")).toBeNull()
     expect(conteneur.querySelector(".vt-project-filter-domain-group")).not.toBeNull()
+    expect(conteneur.querySelector(".vt-project-filter-establishment-group")).not.toBeNull()
   })
 
   it("utilise le même état vide contextualisé dans les pages de liste", () => {
@@ -420,7 +433,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector(".vt-empty-state-card h3")?.textContent).toBe("Les partenariats seront bientôt en ligne")
   })
 
-  it("rend les actualités en magazine avec articles, widget et archives", () => {
+  it("rend les actualités en magazine avec articles sans archives internes", () => {
     const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(ActualitesPage)))
     const conteneur = document.createElement("div")
     conteneur.innerHTML = html
@@ -428,7 +441,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector(".vt-news-layout")).not.toBeNull()
     expect(conteneur.querySelectorAll(".vt-news-list-item")).toHaveLength(3)
     expect(conteneur.querySelectorAll(".vt-news-recent-list li")).toHaveLength(3)
-    expect(conteneur.querySelectorAll(".vt-news-archive-list li")).toHaveLength(1)
+    expect(conteneur.querySelector(".vt-news-archive-list")).toBeNull()
     expect(conteneur.querySelectorAll(".vt-news-list-item a[href^='/actualites/']")).toHaveLength(3)
   })
 

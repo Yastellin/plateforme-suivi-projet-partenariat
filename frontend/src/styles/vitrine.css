@@ -2651,7 +2651,9 @@ select.vt-fld-input {
     margin-top: -42px;
   }
   .vitrine .vt-home-stats-grid {
-    padding: 17px 4px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 8px;
+    padding: 20px 12px;
   }
   .vitrine .vt-home-stat {
     padding-inline: 5px;
@@ -2934,14 +2936,14 @@ select.vt-fld-input {
   padding: 0;
 }
 .vitrine .vt-home-stats-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
-  justify-content: space-around;
   gap: 24px;
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  padding: 35px 10%;
+  padding: 35px 7%;
   border: 0;
   border-bottom: 4px solid var(--primary-green);
   border-radius: 10px;
@@ -2949,7 +2951,7 @@ select.vt-fld-input {
   box-shadow: var(--shadow-md);
 }
 .vitrine .vt-home-stat {
-  flex: 1;
+  min-width: 0;
   padding: 0 12px;
 }
 .vitrine .vt-home-stat + .vt-home-stat {
@@ -3481,13 +3483,13 @@ select.vt-fld-input {
     width: 90%;
   }
   .vitrine .vt-home-stats-grid {
-    flex-direction: column;
-    gap: 20px;
-    padding: 30px 10%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 8px;
+    padding: 24px 6%;
   }
   .vitrine .vt-home-stat {
     width: 100%;
-    flex: 0 0 auto;
+    padding: 0 4px;
   }
   .vitrine .vt-section {
     padding: 50px 5%;

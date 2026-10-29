@@ -8,9 +8,10 @@ export function HeroAccueil() {
   const { data, isLoading } = usePublicAccueil()
   const compteurs = data?.compteurs
   const statistiques = [
-    { valeur: compteurs?.nombre_partenaires, libelle: "Partenaire" },
-    { valeur: compteurs?.nombre_pays_partenaires, libelle: "Pays représenté" },
-    { valeur: compteurs?.nombre_projets_actifs, libelle: "Projet publié" },
+    { valeur: compteurs?.nombre_etablissements, libelle: "Établissements" },
+    { valeur: compteurs?.nombre_partenaires, libelle: "Partenaires" },
+    { valeur: compteurs?.nombre_projets_actifs, libelle: "Projets" },
+    { valeur: compteurs?.nombre_pays_partenaires, libelle: "Pays partenaires" },
   ]
 
   return (

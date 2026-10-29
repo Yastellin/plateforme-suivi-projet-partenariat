@@ -42,21 +42,18 @@ function TuileLogoPartenaire({ partenaire }: { partenaire: PartenairePublic }) {
 export function PublicPartenairesListePage() {
   const [recherche, setRecherche] = useState("")
   const [pays, setPays] = useState(TOUS)
-  const [type, setType] = useState(TOUS)
   const [page, setPage] = useState(1)
   const rechercheDifferee = useDebounce(recherche, 250)
   const optionsRequete = usePublicTousPartenaires()
   const requete = usePublicPartenaires({
     recherche: rechercheDifferee || undefined,
     pays: pays === TOUS ? undefined : pays,
-    type: type === TOUS ? undefined : type,
     page,
     limit: TAILLE_PAGE,
   })
   const partenaires = requete.data?.data ?? []
   const tousLesPartenaires = optionsRequete.data ?? []
   const paysDisponibles = uniques(tousLesPartenaires.map((partenaire) => partenaire.pays))
-  const typesDisponibles = uniques(tousLesPartenaires.map((partenaire) => partenaire.type))
 
   function changerRecherche(valeur: string) {
     setRecherche(valeur)
@@ -95,13 +92,6 @@ export function PublicPartenairesListePage() {
                 {paysDisponibles.map((valeur) => <option key={valeur} value={valeur}>{valeur}</option>)}
               </select>
             </label>
-            <label className="vt-select-wrap">
-              <span>Type</span>
-              <select className="vt-select" value={type} onChange={(event) => { setType(event.target.value); setPage(1) }}>
-                <option value={TOUS}>Tous les types</option>
-                {typesDisponibles.map((valeur) => <option key={valeur} value={valeur}>{valeur}</option>)}
-              </select>
-            </label>
           </div>
 
           {requete.isLoading && (
@@ -121,9 +111,9 @@ export function PublicPartenairesListePage() {
             <EmptyStateSection
               icone={<Building2 aria-hidden="true" />}
               titre="La liste des partenaires arrive bientôt"
-              description={recherche.trim() || pays !== TOUS || type !== TOUS
+              description={recherche.trim() || pays !== TOUS
                 ? "Aucun résultat ne correspond à votre recherche ou aux filtres sélectionnés. Essayez d'autres critères."
-                : "Notre équipe met actuellement à jour les logos et les fiches de nos organisations partenaires pour vous offrir une expérience optimale."}
+                : "Découvrez les organisations et institutions qui collaborent avec l’Université de Fianarantsoa."}
             />
           )}
           {!requete.isLoading && !requete.isError && partenaires.length > 0 && (

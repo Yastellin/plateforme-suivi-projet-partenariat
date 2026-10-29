@@ -1,6 +1,6 @@
 // Liste magazine des actualités publiques, triées de la plus récente à la plus ancienne.
 import { useMemo, useState } from "react"
-import { Archive, CalendarDays, Newspaper, Search } from "lucide-react"
+import { Newspaper, Search } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,10 +21,6 @@ const TOUS = "tous"
 const PAR_PAGE = 9
 const PAR_CHARGEMENT = 6
 
-function libellerArchive(mois: string): string {
-  return new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" })
-    .format(new Date(`${mois}-01T12:00:00`))
-}
 
 export function ActualitesPage() {
   const requete = usePublicPublications({ limit: 100 })
@@ -38,7 +34,6 @@ export function ActualitesPage() {
   const [recherche, setRecherche] = useState("")
   const rechercheDifferee = useDebounce(recherche, 250)
   const [etablissement, setEtablissement] = useState(TOUS)
-  const [archive, setArchive] = useState(TOUS)
   const [page, setPage] = useState(1)
   const [visibles, setVisibles] = useState(PAR_CHARGEMENT)
 
@@ -50,28 +45,17 @@ export function ActualitesPage() {
     }
     return [...noms.entries()].sort((a, b) => a[1].localeCompare(b[1], "fr"))
   }, [publications])
-  const archives = useMemo(() => {
-    const comptes = new Map<string, number>()
-    for (const publication of publications) {
-      const mois = publication.date_publication?.slice(0, 7)
-      if (mois && /^\d{4}-\d{2}$/.test(mois)) comptes.set(mois, (comptes.get(mois) ?? 0) + 1)
-    }
-    return [...comptes.entries()].sort((a, b) => b[0].localeCompare(a[0]))
-      .slice(0, 12)
-      .map(([mois, compte]) => ({ mois, compte, libelle: libellerArchive(mois) }))
-  }, [publications])
 
   const filtrees = useMemo(() => {
     const terme = rechercheDifferee.trim().toLowerCase()
     return publications.filter((publication) => {
       if (etablissement !== TOUS && publication.projet.etablissement?.id !== etablissement) return false
-      if (archive !== TOUS && !publication.date_publication?.startsWith(archive)) return false
       if (!terme) return true
       return `${publication.titre} ${publication.description_publique ?? ""} ${publication.projet.nom}`
         .toLowerCase()
         .includes(terme)
     })
-  }, [publications, rechercheDifferee, etablissement, archive])
+  }, [publications, rechercheDifferee, etablissement])
 
   const totalPages = Math.max(1, Math.ceil(filtrees.length / PAR_PAGE))
   const pageCourante = Math.min(page, totalPages)
@@ -91,11 +75,6 @@ export function ActualitesPage() {
     setVisibles(PAR_CHARGEMENT)
   }
 
-  function changerArchive(valeur: string) {
-    setArchive(valeur)
-    setPage(1)
-    setVisibles(PAR_CHARGEMENT)
-  }
 
   const plusRecentes = publications.slice(0, 3)
 
@@ -137,14 +116,14 @@ export function ActualitesPage() {
             <EmptyStateSection
               icone={<Newspaper aria-hidden="true" />}
               titre="Aucune actualité pour le moment"
-              description={recherche.trim() || etablissement !== TOUS || archive !== TOUS
+              description={recherche.trim() || etablissement !== TOUS
                 ? "Aucun résultat ne correspond à votre recherche ou aux filtres sélectionnés. Essayez d'autres critères."
                 : "Nous préparons de nouveaux articles et communiqués. Revenez très bientôt pour découvrir les dernières nouvelles de l'université."}
             />
           )}
           {!requete.isLoading && !requete.isError && articles.length > 0 && (
             <>
-              <p className="vt-results-count" aria-live="polite">Affichage de {articles.length} actualités sur {filtrees.length}</p>
+              <p className="vt-results-count" aria-live="polite">{filtrees.length} résultats trouvés</p>
               <div className="vt-news-layout">
                 <main className="vt-news-main" aria-label="Actualités">
                   <RevealGroup className="vt-news-list" direction="right">
@@ -155,7 +134,7 @@ export function ActualitesPage() {
                     ))}
                   </RevealGroup>
                 </main>
-                <aside className="vt-news-sidebar" aria-label="Autres actualités et archives">
+                <aside className="vt-news-sidebar" aria-label="Actualités récentes">
                   <section className="vt-news-widget">
                     <h2>Actualités récentes</h2>
                     <ul className="vt-news-recent-list">
@@ -172,18 +151,6 @@ export function ActualitesPage() {
                           </li>
                         )
                       })}
-                    </ul>
-                  </section>
-                  <section className="vt-news-widget">
-                    <h2><Archive size={18} aria-hidden="true" /> Archives</h2>
-                    <ul className="vt-news-archive-list">
-                      {archives.map(({ mois, compte, libelle }) => (
-                        <li key={mois}>
-                          <button type="button" aria-pressed={archive === mois} onClick={() => changerArchive(archive === mois ? TOUS : mois)}>
-                            <span><CalendarDays size={14} aria-hidden="true" /> {libelle}</span><span>({compte})</span>
-                          </button>
-                        </li>
-                      ))}
                     </ul>
                   </section>
                 </aside>

@@ -4,7 +4,6 @@ import { ArrowLeft, CalendarDays, Landmark, Newspaper } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { ImageMedia } from "@/components/shared/ImageMedia"
 import { SkeletonPage } from "@/components/shared/SkeletonPage"
-import { formaterDate } from "@/lib/format"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 import { usePublicPublicationDetail } from "@/features/espace-public/api/usePublicPublications"
 import { BadgeCategorie } from "@/features/espace-public/components/BadgeCategorie"
@@ -78,7 +77,7 @@ export function PublicationDetailPage() {
               <BadgeCategorie>{publication.projet.etablissement.sigle ?? publication.projet.etablissement.nom}</BadgeCategorie>
             )}
             {publication.date_publication && (
-              <span><CalendarDays size={15} aria-hidden="true" /> Publié le {formaterDate(publication.date_publication)}</span>
+              <span><CalendarDays size={15} aria-hidden="true" /> Publié le {new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric" }).format(new Date(`${publication.date_publication.slice(0, 10)}T12:00:00`))}</span>
             )}
           </div>
         </div>

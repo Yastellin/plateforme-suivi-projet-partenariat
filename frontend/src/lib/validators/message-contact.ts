@@ -1,8 +1,8 @@
 // src/lib/validators/message-contact.ts
 //
-// Regles de saisie du formulaire de contact public. Elles reprennent
-// exactement celles de CreateMessageContactDto (backend) : le serveur reste
-// la reference, ces controles evitent un aller-retour inutile a l'utilisateur.
+// Règles de saisie du formulaire public. Les champs obligatoires et leurs
+// contraintes suivent CreateMessageContactDto ; le sujet reste facultatif côté
+// formulaire et reçoit une valeur de repli avant son envoi au serveur.
 //
 // Deux niveaux :
 //  - filtrerSaisie : pendant la frappe, les caracteres interdits n'entrent
@@ -25,7 +25,6 @@ export interface ValeursContact {
   telephone: string
   sujet: string
   message: string
-  etablissement_id: string
 }
 
 export type ChampContact = keyof ValeursContact
@@ -37,7 +36,6 @@ export const VALEURS_CONTACT_VIDES: ValeursContact = {
   telephone: "",
   sujet: "",
   message: "",
-  etablissement_id: "",
 }
 
 // Memes expressions que backend/src/messages-contact/dto/regles-saisie.ts
@@ -68,8 +66,6 @@ export function filtrerSaisie(champ: ChampContact, valeur: string): string {
       // Detection volontaire des caracteres de controle invisibles.
       // oxlint-disable-next-line no-control-regex
       return valeur.replace(/[<>]/g, "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
-    case "etablissement_id":
-      return valeur
   }
 }
 
@@ -100,6 +96,7 @@ export function validerChampContact(champ: ChampContact, valeur: string): string
     }
     case "sujet":
     case "message": {
+      if (champ === "sujet" && v.length === 0) return undefined
       const min = champ === "sujet" ? LIMITES_CONTACT.sujet.min : LIMITES_CONTACT.message.min
       const max = champ === "sujet" ? LIMITES_CONTACT.sujet.max : LIMITES_CONTACT.message.max
       const libelle = champ === "sujet" ? "Le sujet" : "Le message"
@@ -112,8 +109,6 @@ export function validerChampContact(champ: ChampContact, valeur: string): string
       if (!REGLE_CONTENU_REEL.test(v)) return `${libelle} doit contenir au moins 3 lettres ou chiffres.`
       return undefined
     }
-    case "etablissement_id":
-      return undefined
   }
 }
 

@@ -9,12 +9,10 @@ import { useDebounce } from "@/hooks/useDebounce"
 import { usePublicPartenariatsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
 import { CartePartenariat } from "@/features/espace-public/components/CartesPubliques"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
-import { periodeCalculeePartenariat, type PeriodeCalculeePartenariat } from "@/features/espace-public/lib/publique"
 import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 const PAR_PAGE = 9
 const TOUS = "tous"
-type FiltrePeriode = "tous" | "actif" | "termine" | "a-venir"
 
 function normaliser(texte: string): string {
   return texte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr")
@@ -28,22 +26,11 @@ function libellerDomaine(domaine: string): string {
   return domaine
 }
 
-const LIBELLES_PERIODE: Record<FiltrePeriode, string> = {
-  tous: "Toutes les périodes",
-  actif: "En cours",
-  termine: "Terminées",
-  "a-venir": "À venir",
-}
-
-function correspondPeriode(periode: PeriodeCalculeePartenariat, filtre: FiltrePeriode): boolean {
-  return filtre === TOUS || periode === filtre
-}
 
 export function ListePartenariatsPubliques() {
   const { data = [], isLoading, isError, refetch } = usePublicPartenariatsPublies()
   const [recherche, setRecherche] = useState("")
   const [domaine, setDomaine] = useState(TOUS)
-  const [periode, setPeriode] = useState<FiltrePeriode>(TOUS)
   const [page, setPage] = useState(1)
   const rechercheDifferee = useDebounce(recherche, 250)
   const domaines = useMemo(() => [...new Set(data.map((item) => item.domaine).filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr")), [data])
@@ -51,9 +38,7 @@ export function ListePartenariatsPubliques() {
   const filtres = useMemo(() => {
     const terme = normaliser(rechercheDifferee.trim())
     return data.filter((partenariat) => {
-      const periodeCourante = periodeCalculeePartenariat(partenariat.date_debut, partenariat.date_fin)
       if (domaine !== TOUS && partenariat.domaine !== domaine) return false
-      if (!correspondPeriode(periodeCourante, periode)) return false
       if (!terme) return true
       const texte = [
         partenariat.intitule,
@@ -64,7 +49,7 @@ export function ListePartenariatsPubliques() {
       ].join(" ")
       return normaliser(texte).includes(terme)
     })
-  }, [data, rechercheDifferee, domaine, periode])
+  }, [data, rechercheDifferee, domaine])
 
   const nombrePages = Math.max(1, Math.ceil(filtres.length / PAR_PAGE))
   const pageCourante = Math.min(page, nombrePages)
@@ -85,11 +70,7 @@ export function ListePartenariatsPubliques() {
                 <button key={valeur} type="button" className="vt-filter-pill" aria-pressed={domaine === valeur} onClick={() => { setDomaine(valeur); reinitialiserPage() }}>{libellerDomaine(valeur)}</button>
               ))}
             </div>
-            <div className="vt-filter-group vt-filter-group-period" role="group" aria-label="Filtrer par période calculée à partir des dates">
-              {(Object.keys(LIBELLES_PERIODE) as FiltrePeriode[]).map((valeur) => (
-                <button key={valeur} type="button" className="vt-filter-pill" aria-pressed={periode === valeur} onClick={() => { setPeriode(valeur); reinitialiserPage() }}>{LIBELLES_PERIODE[valeur]}</button>
-              ))}
-            </div>
+
           </div>
           <div className="vt-search vt-partnership-search">
             <Search size={16} aria-hidden="true" />
@@ -98,7 +79,6 @@ export function ListePartenariatsPubliques() {
           </div>
         </div>
       </div>
-      <p className="vt-period-note">Les périodes affichées sont calculées à partir des dates publiques et ne constituent pas un statut officiel du partenariat.</p>
 
       {isLoading && (
         <div className="vt-partenariats-grid vt-mt" aria-busy="true" aria-label="Chargement des partenariats">
@@ -112,18 +92,18 @@ export function ListePartenariatsPubliques() {
         <EmptyStateSection
           icone={<FileText aria-hidden="true" />}
           titre="Les partenariats seront bientôt en ligne"
-          description={recherche.trim() || domaine !== TOUS || periode !== TOUS
+          description={recherche.trim() || domaine !== TOUS
             ? "Aucun résultat ne correspond à votre recherche ou aux filtres sélectionnés. Essayez d'autres critères."
-            : "Nous finalisons actuellement les accords et les détails des coopérations en cours. Cette section sera mise à jour très prochainement."}
+            : "Découvrez les coopérations entre les établissements et leurs partenaires."}
         />
       )}
       {!isLoading && !isError && visibles.length > 0 && (
         <>
-          <p className="vt-results-count" aria-live="polite">Affichage de {visibles.length} partenariats sur {filtres.length}</p>
+          <p className="vt-results-count" aria-live="polite">{filtres.length} résultats trouvés</p>
           <RevealGroup className="vt-partenariats-grid" direction="left">
             {visibles.map((partenariat) => (
               <RevealItem key={partenariat.id} className="vt-partenariat-grid-item">
-                <CartePartenariat partenariat={partenariat} periodeCalculee={periodeCalculeePartenariat(partenariat.date_debut, partenariat.date_fin)} />
+                <CartePartenariat partenariat={partenariat} />
               </RevealItem>
             ))}
           </RevealGroup>

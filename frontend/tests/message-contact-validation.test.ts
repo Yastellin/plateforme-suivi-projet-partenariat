@@ -13,7 +13,6 @@ const valeursValides: ValeursContact = {
   telephone: "+261 34 22 330 54",
   sujet: "Demande de partenariat",
   message: "Bonjour, je souhaite échanger au sujet d'un partenariat.",
-  etablissement_id: "",
 }
 
 describe("validerContact", () => {
@@ -27,7 +26,7 @@ describe("validerContact", () => {
 
   it("signale tous les champs obligatoires vides", () => {
     const erreurs = validerContact(VALEURS_CONTACT_VIDES)
-    expect(Object.keys(erreurs).sort()).toEqual(["email", "message", "nom", "sujet"])
+    expect(Object.keys(erreurs).sort()).toEqual(["email", "message", "nom"])
   })
 })
 
@@ -60,7 +59,8 @@ describe("validerChampContact", () => {
     expect(validerChampContact("telephone", "+261 34 22 330 54")).toBeUndefined()
   })
 
-  it("exige un sujet d'au moins 3 caractères", () => {
+  it("accepte un sujet facultatif et valide les sujets renseignés", () => {
+    expect(validerChampContact("sujet", "")).toBeUndefined()
     expect(validerChampContact("sujet", "ab")).toBeDefined()
     expect(validerChampContact("sujet", "abc")).toBeUndefined()
   })

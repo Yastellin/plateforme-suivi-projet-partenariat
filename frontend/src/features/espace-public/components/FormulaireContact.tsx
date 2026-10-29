@@ -2,10 +2,9 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { AlertCircle, Building2, CheckCircle2, Copy, Loader2, Mail, MessageSquare, Phone, Send, Tag, User } from "lucide-react"
+import { AlertCircle, CheckCircle2, Copy, Loader2, Mail, MessageSquare, Phone, Send, Tag, User } from "lucide-react"
 import apiClient from "@/lib/api-client"
 import { cn } from "@/lib/utils"
-import { usePublicEtablissements } from "@/features/espace-public/api/usePublicEtablissements"
 import {
   LIMITES_CONTACT,
   VALEURS_CONTACT_VIDES,
@@ -30,9 +29,6 @@ export function FormulaireContact() {
   const [tentativeEnvoi, setTentativeEnvoi] = useState(false)
   const [confirmation, setConfirmation] = useState<ConfirmationEnvoi | null>(null)
 
-  const { data: etablissementsData } = usePublicEtablissements({ limit: 100 })
-  const etablissements = etablissementsData?.data ?? []
-
   // Erreurs recalculees a chaque frappe, affichees des que le champ a ete touche.
   const erreurs = useMemo(() => validerContact(valeurs), [valeurs])
   const erreurAffichee = (champ: ChampContact) =>
@@ -46,9 +42,9 @@ export function FormulaireContact() {
         nom: donnees.nom.trim(),
         email: donnees.email.trim(),
         telephone: donnees.telephone.trim() || undefined,
-        sujet: donnees.sujet.trim(),
+        sujet: donnees.sujet.trim() || "Message depuis le formulaire de contact",
         message: donnees.message.trim(),
-        etablissement_id: donnees.etablissement_id || undefined,
+        etablissement_id: null,
       })
       return reponse.data
     },
@@ -61,9 +57,9 @@ export function FormulaireContact() {
         description: `Référence : ${donnees.reference}`,
       })
     },
-    onError: (erreur: Error) => {
+    onError: () => {
       toast.error("Envoi impossible", {
-        description: erreur.message || "Une erreur est survenue. Veuillez réessayer.",
+        description: "Nous n’avons pas pu envoyer votre message. Veuillez réessayer.",
       })
     },
   })
@@ -111,7 +107,7 @@ export function FormulaireContact() {
           <h3 style={{ fontSize: 18 }}>Message bien reçu</h3>
         </div>
         <p>
-          Votre message a été transmis à l'équipe concernée. Conservez cette référence pour toute relance :
+          Votre message a été transmis à la Présidence. Conservez cette référence pour toute relance :
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
           <code
@@ -213,36 +209,13 @@ export function FormulaireContact() {
             aria-invalid={!!erreurAffichee("telephone")}
           />
         </Champ>
-
-        <Champ
-          id="contact-destinataire"
-          label="Destinataire"
-          icone={<Building2 size={18} className="vt-fld-ico" aria-hidden="true" />}
-          aide="Par défaut : la Présidence"
-        >
-          <select
-            id="contact-destinataire"
-            className="vt-fld-input"
-            value={valeurs.etablissement_id}
-            onChange={(e) => modifier("etablissement_id", e.target.value)}
-          >
-            <option value="">Présidence de l'Université</option>
-            {etablissements.map((etab) => (
-              <option key={etab.id} value={etab.id}>
-                {etab.nom}
-                {etab.sigle ? ` (${etab.sigle})` : ""}
-              </option>
-            ))}
-          </select>
-        </Champ>
       </div>
 
       <Champ
         id="contact-sujet"
-        label="Sujet"
+        label="Sujet (facultatif)"
         icone={<Tag size={18} className="vt-fld-ico" aria-hidden="true" />}
-        requis
-        aide="Pas de caractères < ou >"
+        aide="Facultatif. Pas de caractères < ou >"
         erreur={erreurAffichee("sujet")}
         valide={champValide("sujet")}
         compteur={`${compteurSujet}/${LIMITES_CONTACT.sujet.max}`}

@@ -114,7 +114,7 @@ export function AProposPage() {
           L'Université de Fianarantsoa en chiffres
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Des chiffres mis à jour en temps réel à partir de la plateforme.
+          Des repères sur les établissements, les partenaires et les projets de l’université.
         </p>
         <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-5">
           {isLoading || !compteurs
