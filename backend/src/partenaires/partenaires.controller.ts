@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Patch,
   Body,
   Param,
@@ -221,6 +222,21 @@ export class PartenairesController {
     return this.partenairesService.televerserLogo(
       id,
       fichier,
+      etablissementId,
+      { id: user.id, email: user.email, role: user.role },
+    );
+  }
+
+  @Delete(':id/logo')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Retirer le logo d’un partenaire' })
+  @ApiResponse({ status: 200, type: PartenaireResponseDto })
+  retirerLogo(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    const etablissementId =
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined;
+    return this.partenairesService.retirerLogo(
+      id,
       etablissementId,
       { id: user.id, email: user.email, role: user.role },
     );

@@ -196,8 +196,14 @@ describe('convention : regles de dates', () => {
     expect(schemaConvention.safeParse(valeurs({ date_debut: HIER, date_fin: DANS_UN_AN })).success).toBe(true);
   });
 
-  it('exige une reference et un titre', () => {
-    expect(schemaConvention.safeParse({ reference: '', titre: 'C', statut: 'BROUILLON' }).success).toBe(false);
+  it('n’exige pas de référence, qui est générée par le serveur', () => {
+    expect(
+      schemaConvention.safeParse({
+        titre: 'Convention',
+        statut: 'BROUILLON',
+        partenariat_id: 'partenariat-1',
+      }).success,
+    ).toBe(true);
   });
 
   it('exige au moins un rattachement métier', () => {

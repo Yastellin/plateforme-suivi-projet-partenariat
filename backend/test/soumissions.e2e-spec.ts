@@ -166,6 +166,28 @@ describe('Soumissions établissement et publication Présidence (e2e)', () => {
     await ctx.fermer();
   });
 
+  it('permet à la Présidence de créer un partenariat sans établissement associé', async () => {
+    const partenariat = donnees<any>(
+      (
+        await request(serveur())
+          .post('/api/partenariats')
+          .set(...enteteBearer(presidence))
+          .send({
+            intitule: `Partenariat transversal ${suffixe()}`,
+            domaine: 'RECHERCHE',
+            date_debut: dateDans(20),
+            partenaires_ids: [partenaireIndividuel.id],
+          })
+          .expect(201)
+      ).body,
+    );
+
+    expect(partenariat.etablissements).toEqual([]);
+    expect(partenariat.partenaires.map((item: any) => item.id)).toContain(
+      partenaireIndividuel.id,
+    );
+  });
+
   it('autorise la création des référentiels du wizard par un établissement', async () => {
     const nom = suffixe();
     await request(serveur())

@@ -78,4 +78,24 @@ export class ConfigurationService {
 
     return this.getConfiguration();
   }
+
+  async retirerLogoPresidence(
+    utilisateur?: ContexteUtilisateur | null,
+  ): Promise<Configuration> {
+    const configuration = await this.getConfiguration();
+    const ancienLogo = configuration.logo_url;
+    if (!ancienLogo) return configuration;
+
+    await this.configurationRepo.update(configuration.id, { logo_url: null });
+    await this.storage.supprimer(ancienLogo).catch(() => undefined);
+    await this.historique.enregistrer({
+      action: ActionHistorique.MODIFICATION,
+      entite_type: 'Configuration',
+      entite_id: configuration.id,
+      entite_nom: 'Presidence',
+      utilisateur: utilisateur ?? null,
+      details: 'Retrait du logo de la Présidence',
+    });
+    return this.getConfiguration();
+  }
 }

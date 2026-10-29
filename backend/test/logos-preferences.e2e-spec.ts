@@ -124,6 +124,12 @@ describe('Logos et préférences (e2e)', () => {
       .get(`/api${configuration.logo_url}`)
       .expect('Content-Type', /image\/png/)
       .expect(200);
+
+    const retrait = await request(ctx.app.getHttpServer())
+      .delete('/api/configuration/logo')
+      .set(...enteteBearer(presidence))
+      .expect(200);
+    expect(donnees<any>(retrait.body).logo_url).toBeNull();
   });
 
   it('le logo partenaire est renvoyé, persisté puis publiquement accessible', async () => {
@@ -201,6 +207,12 @@ describe('Logos et préférences (e2e)', () => {
       .get(`/api${partenaire.logo_url}`)
       .expect('Content-Type', /image\/png/)
       .expect(200);
+
+    const retrait = await request(ctx.app.getHttpServer())
+      .delete(`/api/partenaires/${partenaireId}/logo`)
+      .set(...enteteBearer(presidence))
+      .expect(200);
+    expect(donnees<any>(retrait.body).logo_url).toBeNull();
   });
 
   it("réserve le logo à l'établissement et le propage dans les réponses qui le référencent", async () => {
@@ -211,6 +223,11 @@ describe('Logos et préférences (e2e)', () => {
         filename: 'logo-interdit-presidence.png',
         contentType: 'image/png',
       })
+      .expect(403);
+
+    await request(ctx.app.getHttpServer())
+      .delete(`/api/etablissements/${etablissementId}/logo`)
+      .set(...enteteBearer(presidence))
       .expect(403);
 
     const reponse = await request(ctx.app.getHttpServer())
@@ -286,5 +303,11 @@ describe('Logos et préférences (e2e)', () => {
         (item: any) => item.id === projet.id,
       ).etablissement.logo_url,
     ).toBe(etablissement.logo_url);
+
+    const retrait = await request(ctx.app.getHttpServer())
+      .delete(`/api/etablissements/${etablissementId}/logo`)
+      .set(...enteteBearer(compteEtablissement))
+      .expect(200);
+    expect(donnees<any>(retrait.body).logo_url).toBeNull();
   });
 });

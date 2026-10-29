@@ -67,6 +67,20 @@ describe('Conventions (e2e)', () => {
       expect(convention.partenariat.libelle).not.toBe(partenariatId);
     });
 
+    it('génère une référence lorsque le champ est omis', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .post('/api/conventions')
+        .set(...enteteBearer(presidence))
+        .send({
+          titre: 'Convention à référence automatique',
+          partenariat_id: partenariatId,
+        })
+        .expect(201);
+
+      const convention = donnees<any>(reponse.body);
+      expect(convention.reference).toMatch(/^CONV-\d{4}-[0-9A-F]{8}$/);
+    });
+
     it('refuse une reference en doublon (409)', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .post('/api/conventions')

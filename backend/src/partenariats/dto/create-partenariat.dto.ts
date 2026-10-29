@@ -89,13 +89,14 @@ export class CreatePartenariatDto {
   @IsString()
   perspectives_recommandations?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: [String],
     example: ['8e94f369-9ba5-4742-b213-5c97c8b08d5f'],
   })
+  @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })
-  etablissements_ids: string[];
+  etablissements_ids?: string[];
 
   @ApiProperty({
     type: [String],

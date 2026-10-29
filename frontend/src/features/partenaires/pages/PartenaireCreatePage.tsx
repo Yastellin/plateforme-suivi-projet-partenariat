@@ -1,7 +1,7 @@
 // src/features/partenaires/pages/PartenaireCreatePage.tsx
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { TriangleAlert } from 'lucide-react';
 import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput';
@@ -13,12 +13,24 @@ import { useAuth } from '@/hooks/useAuth';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Panel, PanelBody } from '@/components/shared/Panel';
 import type { PartenaireFormValues } from '@/lib/validators/partenaire.schema';
+import {
+  CLE_BROUILLON_PARTENARIAT_SESSION,
+  lireBrouillonPartenariatSession,
+  type BrouillonPartenariatSession,
+} from '@/features/partenariats/session-draft';
+import type { PartenariatFormValues } from '@/lib/validators/partenariat.schema';
 
 export function PartenaireCreatePage() {
   const navigate = useNavigate();
+  const [parametresRecherche] = useSearchParams();
+  const retourWizard = parametresRecherche.get('retour') === 'wizard-partenariat';
+  const nomDepuisUrl = parametresRecherche.get('nom')?.trim() ?? '';
   const { utilisateur } = useAuth();
-  const [nomRecherche, setNomRecherche] = useState('');
-  const [etapeFormulaire, setEtapeFormulaire] = useState(false);
+  const [nomRecherche, setNomRecherche] = useState(() => {
+    if (nomDepuisUrl) return nomDepuisUrl;
+    return retourWizard ? lireBrouillonPartenariatSession()?.nomPartenaire ?? '' : '';
+  });
+  const [etapeFormulaire, setEtapeFormulaire] = useState(retourWizard);
 
   const estPresidence = utilisateur?.role === 'PRESIDENCE';
   const nomDifferee = useDebounce(nomRecherche, 400);
@@ -37,6 +49,36 @@ export function PartenaireCreatePage() {
           toast.error('Partenaire créé, mais le logo n’a pas pu être envoyé. Vous pourrez le réessayer depuis sa fiche.');
         } else {
           toast.success(logo ? 'Partenaire créé avec son logo' : 'Partenaire créé');
+        }
+        if (retourWizard) {
+          const brouillonActuel = lireBrouillonPartenariatSession();
+          const formulaireParDefaut: PartenariatFormValues = {
+            intitule: '',
+            objet: '',
+            domaine: 'AUTRE',
+            date_debut: '',
+            date_fin: '',
+            partenaires_ids: [],
+            etablissements_ids: [],
+          };
+          const formulaire = brouillonActuel?.formulaire ?? formulaireParDefaut;
+          const brouillonActualise: BrouillonPartenariatSession = {
+            formulaire: {
+              ...formulaire,
+              partenaires_ids: Array.from(new Set([...formulaire.partenaires_ids, partenaire.id])),
+              etablissements_ids: [],
+            },
+            libelles: { ...brouillonActuel?.libelles, [partenaire.id]: partenaire.nom },
+            etape: 0,
+            version: 2,
+            nomPartenaire: partenaire.nom,
+          };
+          window.sessionStorage.setItem(
+            CLE_BROUILLON_PARTENARIAT_SESSION,
+            JSON.stringify(brouillonActualise),
+          );
+          navigate(`${cheminBase}/partenaires-partenariats/partenariats/nouveau`);
+          return;
         }
         navigate(`${cheminBase}/partenaires-partenariats/partenaires/${partenaire.id}`);
       },
@@ -103,7 +145,11 @@ export function PartenaireCreatePage() {
             <PartenaireForm
               nomInitial={nomRecherche}
               peutGererVisibilite={estPresidence}
-              onAnnuler={() => navigate(`${cheminBase}/partenaires-partenariats/partenaires`)}
+              onAnnuler={() => navigate(
+                retourWizard
+                  ? `${cheminBase}/partenaires-partenariats/partenariats/nouveau`
+                  : `${cheminBase}/partenaires-partenariats/partenaires`,
+              )}
               onSoumettre={onSoumettre}
               enCours={isPending}
             />

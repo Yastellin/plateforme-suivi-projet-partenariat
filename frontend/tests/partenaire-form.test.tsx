@@ -68,4 +68,48 @@ describe('formulaire de partenaire', () => {
     expect(onAnnuler).toHaveBeenCalledOnce();
     expect(onSoumettre).not.toHaveBeenCalled();
   });
+
+  it('permet d’annuler la sélection d’un logo avant l’enregistrement', async () => {
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn(() => 'blob:logo-selectionne'),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    });
+
+    await act(async () => {
+      racine.render(
+        createElement(PartenaireForm, {
+          onSoumettre: vi.fn(),
+          enCours: false,
+        }),
+      );
+    });
+
+    const champLogo = conteneur.querySelector<HTMLInputElement>('input[type="file"]');
+    expect(champLogo).not.toBeNull();
+    await act(async () => {
+      Object.defineProperty(champLogo, 'files', {
+        configurable: true,
+        value: [new File(['logo'], 'logo.png', { type: 'image/png' })],
+      });
+      champLogo?.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    expect(conteneur.querySelector('img')?.getAttribute('src')).toBe('blob:logo-selectionne');
+    const boutonRetirer = Array.from(conteneur.querySelectorAll('button')).find(
+      (bouton) => bouton.textContent?.includes('Retirer'),
+    );
+    expect(boutonRetirer).toBeDefined();
+    await act(async () => boutonRetirer?.click());
+
+    expect(conteneur.querySelector('img')?.getAttribute('src')).not.toBe('blob:logo-selectionne');
+    expect(
+      Array.from(conteneur.querySelectorAll('button')).some((bouton) =>
+        bouton.textContent?.includes('Retirer'),
+      ),
+    ).toBe(false);
+  });
 });

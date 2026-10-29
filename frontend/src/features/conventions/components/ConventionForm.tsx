@@ -74,7 +74,6 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
-      reference: convention?.reference ?? "",
       titre: convention?.titre ?? "",
       date_signature: convention?.date_signature?.slice(0, 10) ?? "",
       date_debut: convention?.date_debut?.slice(0, 10) ?? "",
@@ -119,17 +118,10 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="reference" requis>Reference</Label>
-          <Input id="reference" className="font-mono" aria-invalid={!!errors.reference} {...register("reference")} />
-          {errors.reference && <p className="text-sm text-destructive">{errors.reference.message}</p>}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="titre" requis>Titre</Label>
-          <Input id="titre" aria-invalid={!!errors.titre} {...register("titre")} />
-          {errors.titre && <p className="text-sm text-destructive">{errors.titre.message}</p>}
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="titre" requis>Titre</Label>
+        <Input id="titre" aria-invalid={!!errors.titre} {...register("titre")} />
+        {errors.titre && <p className="text-sm text-destructive">{errors.titre.message}</p>}
       </div>
 
       <div className="flex flex-col gap-1.5">

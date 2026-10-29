@@ -105,6 +105,13 @@ export function PartenaireForm({
   const doublonTelephone = listeDoublonsTelephone.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
   const doublonSupplementaire = listeDoublonsSupplementaires.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
 
+  function retirerLogoSelectionne() {
+    setLogoFichier(null);
+    setLogoApercu(null);
+    setErreurLogo(null);
+    if (champLogoRef.current) champLogoRef.current.value = '';
+  }
+
   function choisirLogo(fichier?: File) {
     if (!fichier) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(fichier.type)) {
@@ -161,6 +168,15 @@ export function PartenaireForm({
                 <ImagePlus className="h-4 w-4" />
                 {logoFichier ? 'Remplacer le logo' : 'Ajouter un logo'}
               </button>
+              {logoFichier ? (
+                <button
+                  type="button"
+                  onClick={retirerLogoSelectionne}
+                  className="ml-2 inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-2 text-xs font-semibold text-[var(--status-expire-fg)] hover:bg-[var(--color-chrome-hover)]"
+                >
+                  <X className="h-3.5 w-3.5" /> Retirer
+                </button>
+              ) : null}
               <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
                 JPEG, PNG ou WebP — 2 Mo maximum
               </p>

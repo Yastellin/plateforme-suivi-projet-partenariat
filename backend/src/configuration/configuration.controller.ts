@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   UploadedFile,
   UseInterceptors,
   BadRequestException,
@@ -73,6 +74,24 @@ export class ConfigurationController {
         email: user.email,
         role: user.role,
       })
+      .then((c) => ({
+        id: c.id,
+        cle: c.cle,
+        valeur: c.valeur,
+        logo_url: c.logo_url,
+        created_at: c.created_at,
+        updated_at: c.updated_at,
+      }));
+  }
+
+  @Delete('logo')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE)
+  @ApiOperation({ summary: 'Retirer le logo de la Présidence' })
+  @ApiResponse({ status: 200, type: ConfigurationResponseDto })
+  retirerLogoPresidence(@CurrentUser() user: any): Promise<ConfigurationResponseDto> {
+    return this.configurationService
+      .retirerLogoPresidence({ id: user.id, email: user.email, role: user.role })
       .then((c) => ({
         id: c.id,
         cle: c.cle,

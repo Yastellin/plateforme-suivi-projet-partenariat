@@ -45,10 +45,11 @@ export class PartenariatsService {
   ) {}
 
   async create(
-    etablissementId: string,
+    etablissementId: string | null,
     dto: CreatePartenariatDto,
     utilisateur?: ContexteUtilisateur | null,
   ): Promise<PartenariatResponseDto> {
+    const etablissementsIds = [...new Set(dto.etablissements_ids ?? [])];
     const partenariatCree = await this.partenariatRepo.manager.transaction(
       async (manager) => {
         const etablissementRepo = manager.getRepository(Etablissement);
@@ -57,15 +58,17 @@ export class PartenariatsService {
         const peRepo = manager.getRepository(PartenariatEtablissement);
         const ppRepo = manager.getRepository(PartenariatPartenaire);
 
-        const etablissement = await etablissementRepo.findOneBy({
-          id: etablissementId,
-        });
-        if (!etablissement) {
-          throw new NotFoundException('Établissement non trouvé');
+        if (etablissementId) {
+          const etablissement = await etablissementRepo.findOneBy({
+            id: etablissementId,
+          });
+          if (!etablissement) {
+            throw new NotFoundException('Établissement non trouvé');
+          }
         }
 
         const etablissements = new Map<string, Etablissement>();
-        for (const etabId of [...new Set(dto.etablissements_ids)]) {
+        for (const etabId of etablissementsIds) {
           const etab = await etablissementRepo.findOneBy({ id: etabId });
           if (!etab) {
             throw new NotFoundException(`Établissement ${etabId} non trouvé`);
@@ -109,7 +112,7 @@ export class PartenariatsService {
         await partenariatRepo.save(partenariat);
 
         partenariat.etablissements = await peRepo.save(
-          [...new Set(dto.etablissements_ids)].map((id) =>
+          etablissementsIds.map((id) =>
             peRepo.create({
               partenariat_id: partenariat.id,
               etablissement_id: id,

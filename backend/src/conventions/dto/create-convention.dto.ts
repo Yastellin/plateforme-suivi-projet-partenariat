@@ -14,10 +14,11 @@ import {
 } from '../../common/validators/dates.validator';
 
 export class CreateConventionDto {
-  @ApiProperty({ example: 'CONV-2026-001' })
+  @ApiPropertyOptional({ example: 'CONV-2026-001' })
+  @IsOptional()
   @IsString()
   @MinLength(3)
-  reference: string;
+  reference?: string;
 
   @ApiProperty({
     example: 'Convention de partenariat FDS - Université de Toliara',

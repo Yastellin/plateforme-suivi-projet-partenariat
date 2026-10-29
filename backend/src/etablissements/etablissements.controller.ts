@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Param,
   ParseUUIDPipe,
   UploadedFile,
@@ -75,6 +76,24 @@ export class EtablissementsController {
       );
     }
     return this.etablissementsService.televerserLogo(id, fichier, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+  }
+
+  @Delete(':id/logo')
+  @HttpCode(200)
+  @Roles(Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Retirer le logo de son établissement' })
+  @ApiResponse({ status: 200, type: EtablissementResponseDto })
+  retirerLogo(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    if (user.etablissement_id !== id) {
+      throw new ForbiddenException(
+        'Vous ne pouvez retirer que le logo de votre établissement.',
+      );
+    }
+    return this.etablissementsService.retirerLogo(id, {
       id: user.id,
       email: user.email,
       role: user.role,
