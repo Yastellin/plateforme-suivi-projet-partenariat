@@ -152,6 +152,10 @@ function ScrollToTopPublic() {
 function LayoutPublic() {
   const location = useLocation()
   const reduire = useReducedMotion()
+  const cheminPublic = location.pathname.replace(/\/+$/, "") || "/"
+  // Les pages de liste définissent leur propre zone principale de résultats.
+  const pageDeListe = ["/actualites", "/projets", "/partenariats", "/partenaires"].includes(cheminPublic)
+  const ConteneurPrincipal = pageDeListe ? "div" : "main"
   return (
     <MotionConfig reducedMotion="user">
       <div className="vitrine flex min-h-screen flex-col">
@@ -161,7 +165,7 @@ function LayoutPublic() {
         </a>
         <BarreInfoPublique />
         <TopbarPublique />
-        <main id="contenu-principal" className="flex-1" tabIndex={-1}>
+        <ConteneurPrincipal id="contenu-principal" className="flex-1" tabIndex={-1}>
           {reduire ? (
             <div key={location.pathname}>
               <Outlet />
@@ -179,7 +183,7 @@ function LayoutPublic() {
               </motion.div>
             </AnimatePresence>
           )}
-        </main>
+        </ConteneurPrincipal>
         <FooterPublique />
         <BoutonHautDePage />
         <BoutonContactFlottant />

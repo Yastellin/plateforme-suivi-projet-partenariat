@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { createElement } from "react"
+import type { ComponentType } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -40,6 +41,13 @@ import { PublicPartenairesListePage } from "@/features/espace-public/pages/Publi
 import { PublicPartenariatsListePage } from "@/features/espace-public/pages/PublicPartenariatsListePage"
 import { PublicProjetsListePage } from "@/features/espace-public/pages/PublicProjetsListePage"
 import { ProjetsPartenariatsPubliquePage } from "@/features/espace-public/pages/ProjetsPartenariatsPubliquePage"
+
+const PAGES_LISTES_PUBLIQUES: [string, ComponentType][] = [
+  ["Actualités", ActualitesPage],
+  ["Projets", PublicProjetsListePage],
+  ["Partenariats", PublicPartenariatsListePage],
+  ["Partenaires", PublicPartenairesListePage],
+]
 
 function creerPublication(index: number) {
   return {
@@ -170,6 +178,24 @@ beforeEach(() => {
 })
 
 describe("sections de la page d'accueil publique", () => {
+  it.each(PAGES_LISTES_PUBLIQUES)("applique l'enveloppe blanche et la zone de résultats à %s", (_nom, Page) => {
+    const html = renderToStaticMarkup(
+      createElement(MemoryRouter, null, createElement(Page)),
+    )
+    const conteneur = document.createElement("div")
+    conteneur.innerHTML = html
+    const zoneBlanche = conteneur.querySelector(".vt-top-section")
+    const zoneResultats = conteneur.querySelector(".vt-content-area")
+
+    expect(zoneBlanche?.querySelector(".vt-breadcrumb nav")?.getAttribute("aria-label")).toBe("Fil d'Ariane")
+    expect(zoneBlanche?.querySelector(".vt-subtitle")?.textContent).toBeTruthy()
+    expect(zoneBlanche?.querySelector("h1.vt-page-title")?.textContent).toBeTruthy()
+    expect(zoneBlanche?.querySelector(".vt-page-desc")?.textContent).toBeTruthy()
+    expect(zoneBlanche?.querySelector(".vt-search-wrapper")).not.toBeNull()
+    expect(zoneResultats?.querySelector(".vt-results-count")?.textContent).toMatch(/^\d+ résultats trouvés$/)
+    expect(html).not.toMatch(/Affichage de \d+ sur \d+/i)
+  })
+
   it("respecte l'ordre des quatre sections éditoriales", () => {
     const html = rendreAccueil()
     const ordre = ["actualites", "partenariats", "projets", "partenaires"].map((id) => html.indexOf(`id="${id}"`))
@@ -201,18 +227,29 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector('#partenaires .vt-empty-btn[href="/partenariats"]')?.textContent).toBe("Découvrir nos partenariats")
   })
 
-  it("affiche exactement les quatre compteurs publics dans l'ordre demandé", () => {
+  it("affiche exactement les quatre compteurs publics dans la grille asymétrique", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
+    const section = conteneur.querySelector(".vt-asymmetric-stats-section")
 
-    expect(Array.from(conteneur.querySelectorAll(".vt-home-stat > span")).map((item) => item.textContent)).toEqual([
-      "Établissements",
-      "Partenaires",
-      "Projets",
-      "Pays partenaires",
+    expect(section?.querySelector(".vt-stat-big-main .num")?.textContent).toBe("3")
+    expect(section?.querySelector(".vt-stat-big-main .lbl")?.textContent).toBe("Établissements partenaires")
+    expect(Array.from(section?.querySelectorAll(".vt-stat-small-card .lbl") ?? []).map((item) => item.textContent)).toEqual([
+      "Partenaire",
+      "Projet",
+      "Pays partenaire",
     ])
-    expect(conteneur.querySelectorAll(".vt-home-stat")).toHaveLength(4)
-    expect(conteneur.querySelector(".vt-home-stats")?.textContent).not.toMatch(/publication|convention|document/i)
+    expect(Array.from(section?.querySelectorAll(".vt-stat-small-card .num") ?? []).map((item) => item.textContent)).toEqual([
+      "4",
+      "4",
+      "2",
+    ])
+    expect(section?.querySelectorAll(".vt-stat-small-card")).toHaveLength(3)
+    expect(section?.querySelector(".vt-stat-big-main .sub")?.textContent).toBe(
+      "Des collaborations académiques solides avec des institutions de premier plan.",
+    )
+    expect(section?.querySelector(".vt-stat-big-main svg")).not.toBeNull()
+    expect(section?.textContent).not.toMatch(/publication|projet publié|convention|document|domaine/i)
   })
 
   it("uniformise les titres, sous-titres et boutons des quatre sections", () => {
@@ -338,7 +375,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(logos!.compareDocumentPosition(boutonPartenaires!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it("présente les partenaires en grille de logos sans texte visible en l'absence de logo", () => {
+  it("présente les partenaires en grille de logos avec leur nom et leur pays", () => {
     donnees.partenaires.data.data[1].logo_url = null
     const html = renderToStaticMarkup(
       createElement(MemoryRouter, null, createElement(PublicPartenairesListePage)),
@@ -351,6 +388,8 @@ describe("sections de la page d'accueil publique", () => {
     expect(tuiles).toHaveLength(4)
     expect(tuiles[1].querySelector('img[src="/images/icone_aucune_image.jpg"]')).not.toBeNull()
     expect(tuiles[1].querySelector("svg")).toBeNull()
+    expect(tuiles[1].querySelector("strong")?.textContent).toBe("Partenaire 2")
+    expect(tuiles[1].querySelector(".vt-partenaire-pays")?.textContent).toBe("Madagascar")
   })
 
   it("privilégie la couverture, puis la première photo de galerie, avec un repli neutre", () => {
@@ -404,10 +443,10 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelectorAll(".vt-time-card-list .vt-time-meta")).toHaveLength(3)
     expect(conteneur.querySelectorAll(".vt-time-card-list")[0].textContent).not.toMatch(/avancement|progression|%|2026|En cours/i)
     expect(conteneur.querySelector(".vt-results-count")?.textContent).toBe("3 résultats trouvés")
-    expect(conteneur.querySelector(".vt-main-container")).not.toBeNull()
-    expect(conteneur.querySelector(".vt-project-filter-status-group")).toBeNull()
+    expect(conteneur.querySelector(".vt-content-area")).not.toBeNull()
+    expect(conteneur.querySelector(".vt-project-filter-status-group")).not.toBeNull()
     expect(conteneur.querySelector(".vt-project-filter-domain-group")).not.toBeNull()
-    expect(conteneur.querySelector(".vt-project-filter-establishment-group")).not.toBeNull()
+    expect(conteneur.querySelector(".vt-project-filter-establishment-group")).toBeNull()
   })
 
   it("utilise le même état vide contextualisé dans les pages de liste", () => {
@@ -425,7 +464,7 @@ describe("sections de la page d'accueil publique", () => {
     donnees.projets.data.data = []
     conteneur = document.createElement("div")
     conteneur.innerHTML = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PublicProjetsListePage)))
-    expect(conteneur.querySelector(".vt-empty-state-card h3")?.textContent).toBe("Aucun projet publié actuellement")
+    expect(conteneur.querySelector(".vt-empty-state-card h3")?.textContent).toBe("Aucun projet public pour le moment")
 
     donnees.partenariats.data = []
     conteneur = document.createElement("div")
