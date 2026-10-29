@@ -35,6 +35,24 @@ export function TableauDeBordPresidence() {
 
       <CompteursGlobaux compteurs={compteurs} chargement={chargementCompteurs} />
 
+      {/* Ligne 1 : deux cartes de meme largeur et meme hauteur */}
+      <div className="mb-[22px] grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+        <Panel className="h-full">
+          <PanelHeader titre="Projets par statut" sousTitre="Répartition de tous les projets selon leur statut" />
+          <PanelBody>
+            <RepartitionProjetsParStatut projetsParStatut={compteurs?.projets_par_statut} chargement={chargementCompteurs} />
+          </PanelBody>
+        </Panel>
+
+        <Panel className="h-full">
+          <PanelHeader titre="Répartition des conventions" sousTitre="Par statut" />
+          <PanelBody>
+            <GraphiqueStatuts compteurs={compteurs} chargement={chargementCompteurs} />
+          </PanelBody>
+        </Panel>
+      </div>
+
+      {/* Ligne 2 : conventions a traiter (large) et activite mensuelle */}
       <div className="mb-[22px] grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Panel>
           <PanelHeader
@@ -52,28 +70,12 @@ export function TableauDeBordPresidence() {
           <ConventionsPrioritaires />
         </Panel>
 
-        <div className="flex flex-col gap-4">
-          <Panel>
-            <PanelHeader titre="Activité mensuelle" sousTitre="Conventions signées vs projets soumis" />
-            <PanelBody>
-              <ActiviteMensuelle />
-            </PanelBody>
-          </Panel>
-
-          <Panel>
-            <PanelHeader titre="Répartition des conventions" sousTitre="Par statut" />
-            <PanelBody>
-              <GraphiqueStatuts compteurs={compteurs} chargement={chargementCompteurs} />
-            </PanelBody>
-          </Panel>
-
-          <Panel>
-            <PanelHeader titre="Projets par statut" sousTitre="Répartition de tous les projets selon leur statut" />
-            <PanelBody>
-              <RepartitionProjetsParStatut projetsParStatut={compteurs?.projets_par_statut} chargement={chargementCompteurs} />
-            </PanelBody>
-          </Panel>
-        </div>
+        <Panel>
+          <PanelHeader titre="Activité mensuelle" sousTitre="Conventions signées vs projets soumis" />
+          <PanelBody>
+            <ActiviteMensuelle />
+          </PanelBody>
+        </Panel>
       </div>
 
       <BandeauEtat compteurs={compteurs} chargement={chargementCompteurs} />
