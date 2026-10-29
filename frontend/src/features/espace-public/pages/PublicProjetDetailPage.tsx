@@ -1,17 +1,25 @@
-// src/features/espace-public/pages/PublicProjetDetailPage.tsx
-// Detail d'un projet public : presentation, galerie et actualites liees, informations
-// et partenaires associes. Toutes les donnees viennent de l'API publique.
 import { Link, useParams } from "react-router-dom"
 import { ArrowLeft, CalendarDays, Handshake, Landmark } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/shared/EmptyState"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formaterDate } from "@/lib/format"
 import { usePublicProjetsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
 import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
+import { libelleStatutProjet } from "@/features/espace-public/lib/publique"
+import { BadgeCategorie, type VarianteBadgeCategorie } from "@/features/espace-public/components/BadgeCategorie"
+import { CarteLaterale } from "@/features/espace-public/components/CarteLaterale"
 import { CartePublication } from "@/features/espace-public/components/CartesPubliques"
+import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
-import { formaterPeriode, libelleStatutProjet, resumeProjet } from "@/features/espace-public/lib/publique"
+import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
+
+function varianteStatut(statut: string): VarianteBadgeCategorie {
+  if (statut === "EN_COURS") return "en-cours"
+  if (statut === "TERMINE") return "termine"
+  if (statut === "EN_ATTENTE") return "avenir"
+  return "neutre"
+}
 
 export function PublicProjetDetailPage() {
   const { id } = useParams()
@@ -19,150 +27,93 @@ export function PublicProjetDetailPage() {
   const publicationsRequete = usePublicPublications({ limit: 100 })
 
   if (projetsRequete.isLoading) {
-    return (
-      <div className="vt-wrap vt-pad-top">
-        <Skeleton className="h-96 rounded-2xl" />
-      </div>
-    )
+    return <div className="vt-wrap vt-section" aria-busy="true"><Skeleton className="h-96 rounded-2xl" /></div>
   }
-
-  const projet = projetsRequete.data?.find((p) => p.id === id)
-  if (!projet) {
+  if (projetsRequete.isError) {
     return (
       <div className="vt-wrap vt-section">
-        <EmptyState
-          icone={Landmark}
-          titre="Projet introuvable"
-          description="Ce projet n'est pas publié ou n'existe pas."
-          action={
-            <Link to="/projets" className="vt-btn vt-btn-ghost">
-              <ArrowLeft size={14} aria-hidden="true" /> Retour aux projets
-            </Link>
-          }
-        />
+        <EmptyState icone={Landmark} titre="Le projet n'a pas pu être chargé" description="Vérifiez votre connexion puis réessayez." action={<button type="button" className="vt-btn vt-btn-ghost" onClick={() => projetsRequete.refetch()}>Réessayer</button>} />
       </div>
     )
   }
 
-  const actualites = (publicationsRequete.data?.data ?? []).filter((p) => p.projet_id === projet.id)
-  const publication = actualites[0]
-  const galerie = publication?.photos ?? []
+  const projet = projetsRequete.data?.find((item) => item.id === id)
+  if (!projet) {
+    return <div className="vt-wrap vt-section"><EmptyState icone={Landmark} titre="Projet introuvable" description="Ce projet n'est pas publié ou n'existe pas." action={<Link to="/projets" className="vt-btn vt-btn-ghost"><ArrowLeft size={14} aria-hidden="true" /> Retour aux projets</Link>} /></div>
+  }
+
+  const actualites = (publicationsRequete.data?.data ?? [])
+    .filter((publication) => publication.projet_id === projet.id)
+    .sort((a, b) => (b.date_publication ?? "").localeCompare(a.date_publication ?? ""))
+  const photos = actualites.flatMap((publication) => publication.photos ?? [])
+    .sort((a, b) => a.ordre - b.ordre)
+  const actualiteCouverture = actualites.find((publication) => publication.image_couverture_url || publication.photo_url)
 
   return (
-    <div>
-      <div className="vt-wrap vt-pad-top">
+    <div className="vt-detail-page">
+      <div className="vt-wrap vt-detail-breadcrumb">
         <FilAriane etapes={[{ libelle: "Accueil", to: "/" }, { libelle: "Projets", to: "/projets" }, { libelle: projet.nom }]} />
       </div>
-
-      <section className="vt-wrap vt-detail-head">
-        <div className="vt-pub-cover vt-detail-cover">
-          {publication?.photo_url ? (
-            <img src={publication.photo_url} alt="" className="vt-art-img" decoding="async" />
-          ) : (
-            <Illustration type="reseau" />
-          )}
+      <header className="vt-wrap vt-detail-hero vt-detail-hero-projet">
+        <div className="vt-detail-hero-image">
+          {actualiteCouverture?.image_couverture_url || actualiteCouverture?.photo_url ? (
+            <img src={actualiteCouverture.image_couverture_url ?? actualiteCouverture.photo_url ?? ""} alt="" fetchPriority="high" decoding="async" />
+          ) : <Illustration type="reseau" />}
         </div>
-        <div>
-          <div className="vt-badges">
-            <span className="vt-badge">{libelleStatutProjet(projet.statut)}</span>
-            {projet.domaine && <span className="vt-badge vt-badge-info">{projet.domaine}</span>}
+        <div className="vt-detail-hero-content">
+          <span className="vt-surtitre">Projet</span>
+          <div className="vt-detail-meta">
+            <BadgeCategorie variante={varianteStatut(projet.statut)}>{libelleStatutProjet(projet.statut)}</BadgeCategorie>
+            {projet.domaine && <BadgeCategorie variante="innovation">{projet.domaine}</BadgeCategorie>}
           </div>
           <h1>{projet.nom}</h1>
-          {projet.intitule_officiel && projet.intitule_officiel !== projet.nom && (
-            <p className="vt-muted">{projet.intitule_officiel}</p>
-          )}
-          <p className="vt-lead">{resumeProjet(projet)}</p>
+          {projet.intitule_officiel && projet.intitule_officiel !== projet.nom && <p className="vt-detail-intro">{projet.intitule_officiel}</p>}
         </div>
-      </section>
+      </header>
 
-      <section className="vt-wrap vt-detail-grid">
-        <div className="vt-detail-main">
-          <div className="vt-panel">
-            <h2>Présentation</h2>
-            <p>{projet.description ?? resumeProjet(projet)}</p>
-          </div>
-
-          {galerie.length > 0 && (
-            <div className="vt-panel">
-              <h2>Galerie</h2>
-              <div className="vt-galerie">
-                {galerie.map((photo) => (
-                  <figure key={photo.id}>
-                    <img src={photo.url_fichier} alt={photo.legende ?? projet.nom} loading="lazy" decoding="async" />
-                    {photo.legende && <figcaption>{photo.legende}</figcaption>}
-                  </figure>
-                ))}
-              </div>
+      <DetailLayout
+        className="vt-detail-projet-layout"
+        labelSidebar="Informations sur le projet"
+        sidebar={(
+          <>
+            <CarteLaterale titre="Informations clés" variante="information" icone={CalendarDays}>
+              <dl className="vt-detail-facts">
+                <div><dt>Statut</dt><dd>{libelleStatutProjet(projet.statut)}</dd></div>
+                <div><dt>Type</dt><dd>{projet.type}</dd></div>
+                {projet.domaine && <div><dt>Domaine</dt><dd>{projet.domaine}</dd></div>}
+                <div><dt>Date de début</dt><dd>{formaterDate(projet.date_debut)}</dd></div>
+                <div><dt>Fin prévue</dt><dd>{formaterDate(projet.date_fin_prevue)}</dd></div>
+                {projet.etablissement && <div><dt>Établissement porteur</dt><dd>{projet.etablissement.nom}</dd></div>}
+              </dl>
+            </CarteLaterale>
+            {projet.partenaires.length > 0 && (
+              <CarteLaterale titre="Partenaires associés" icone={Handshake}>
+                <ul className="vt-detail-link-list">
+                  {projet.partenaires.map((partenaire) => <li key={partenaire.id}><Link to={`/partenaires/${partenaire.id}`}>{partenaire.nom}</Link><span>{partenaire.pays}</span></li>)}
+                </ul>
+              </CarteLaterale>
+            )}
+            <PartageSocial />
+          </>
+        )}
+      >
+        {projet.description && <section className="vt-detail-section"><h2>Présentation</h2><p className="vt-detail-prose">{projet.description}</p></section>}
+        {photos.length > 0 && (
+          <section className="vt-detail-section">
+            <h2>Galerie photos</h2>
+            <div className="vt-detail-galerie">
+              {photos.map((photo) => <figure key={photo.id}><img className="vt-detail-gallery-image" src={photo.url_fichier} alt={photo.legende || projet.nom} loading="lazy" decoding="async" />{photo.legende && <figcaption>{photo.legende}</figcaption>}</figure>)}
             </div>
-          )}
-
-          {actualites.length > 0 && (
-            <div className="vt-panel">
-              <h2>Actualités liées</h2>
-              <div className="vt-grid-p">
-                {actualites.map((p) => (
-                  <CartePublication key={p.id} publication={p} />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <aside className="vt-detail-side">
-          <div className="vt-panel">
-            <h2>Informations</h2>
-            <dl className="vt-facts">
-              <div>
-                <dt>Statut</dt>
-                <dd>{libelleStatutProjet(projet.statut)}</dd>
-              </div>
-              {projet.domaine && (
-                <div>
-                  <dt>Domaine</dt>
-                  <dd>{projet.domaine}</dd>
-                </div>
-              )}
-              <div>
-                <dt>Type</dt>
-                <dd>{projet.type}</dd>
-              </div>
-              <div>
-                <dt>Établissement porteur</dt>
-                <dd>{projet.etablissement?.nom ?? "Présidence"}</dd>
-              </div>
-              <div>
-                <dt>Période</dt>
-                <dd>
-                  <CalendarDays size={14} aria-hidden="true" />{" "}
-                  {formaterPeriode(projet.date_debut, projet.date_fin_prevue)}
-                </dd>
-              </div>
-              {publication?.date_publication && (
-                <div>
-                  <dt>Publié le</dt>
-                  <dd>{formaterDate(publication.date_publication)}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
-
-          {projet.partenaires.length > 0 && (
-            <div className="vt-panel">
-              <h2>
-                <Handshake size={18} aria-hidden="true" /> Partenaires associés
-              </h2>
-              <ul className="vt-list">
-                {projet.partenaires.map((p) => (
-                  <li key={p.id}>
-                    <Link to={`/partenaires/${p.id}`}>{p.nom}</Link>
-                    <span className="vt-muted"> · {p.pays}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </aside>
-      </section>
+          </section>
+        )}
+        {actualites.length > 0 && (
+          <section className="vt-detail-section">
+            <h2>Actualités liées</h2>
+            <div className="vt-detail-actualites">{actualites.map((publication) => <CartePublication key={publication.id} publication={publication} />)}</div>
+          </section>
+        )}
+        {!projet.description && photos.length === 0 && actualites.length === 0 && <section className="vt-detail-section"><p className="vt-muted">Aucun contenu complémentaire n'est publié pour ce projet.</p></section>}
+      </DetailLayout>
     </div>
   )
 }

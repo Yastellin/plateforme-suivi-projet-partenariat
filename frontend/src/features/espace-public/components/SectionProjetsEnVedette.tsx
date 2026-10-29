@@ -41,11 +41,7 @@ export function SectionProjetsEnVedette() {
               <RevealItem key={projet.id} className="vt-card-list-item h-full">
                 <CarteProjet
                   projet={projet}
-                  lien={
-                    projet.publication_id
-                      ? `/projets-partenariats/publication/${projet.publication_id}`
-                      : `/projets/${projet.id}`
-                  }
+                  lien={`/projets/${projet.id}`}
                 />
               </RevealItem>
             ))}

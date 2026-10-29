@@ -11,9 +11,6 @@ import {
   formaterPeriode,
   initiales,
   libelleStatutProjet,
-  resumePartenaire,
-  resumeProjet,
-  resumePublication,
   imagePrincipalePublication,
   teinteDe,
 } from "@/features/espace-public/lib/publique"
@@ -72,7 +69,7 @@ export function CartePartenaire({ partenaire, className }: { partenaire: Partena
         <small>
           {partenaire.type} · {partenaire.pays}
         </small>
-        <p className="vt-pt-desc">{resumePartenaire(partenaire)}</p>
+        {partenaire.description && <p className="vt-pt-desc">{partenaire.description}</p>}
         {partenaire.site_web && (
           <a
             href={partenaire.site_web}
@@ -130,7 +127,7 @@ export function CartePartenariat({ partenariat, className }: { partenariat: Part
 export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic; className?: string; lien?: string }) {
   const partenairesAffiches = projet.partenaires.slice(0, 3)
   const reste = projet.partenaires.length - partenairesAffiches.length
-  const lienPublication = lien ?? (projet.publication_id ? `/actualites/${projet.publication_id}` : null)
+  const lienDestination = lien ?? `/projets/${projet.id}`
 
   const contenu = (
     <>
@@ -143,7 +140,7 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
         {projet.intitule_officiel && projet.intitule_officiel !== projet.nom && (
           <p className="vt-muted" style={{ fontSize: 13 }}>{projet.intitule_officiel}</p>
         )}
-        <p>{resumeProjet(projet)}</p>
+        {projet.description && <p>{projet.description}</p>}
         {partenairesAffiches.length > 0 && (
           <ul className="vt-tags" aria-label="Partenaires du projet">
             {partenairesAffiches.map((p) => (
@@ -154,20 +151,20 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
         )}
         <div className="vt-card-footer">
           <div className="vt-meta">
-            <span>
-              <Landmark aria-hidden="true" />
-              {projet.etablissement ? (projet.etablissement.sigle ?? projet.etablissement.nom) : "Présidence"}
-            </span>
+            {projet.etablissement && (
+              <span>
+                <Landmark aria-hidden="true" />
+                {projet.etablissement.sigle ?? projet.etablissement.nom}
+              </span>
+            )}
             <span>
               <CalendarDays aria-hidden="true" />
               {formaterPeriode(projet.date_debut, projet.date_fin_prevue)}
             </span>
           </div>
-          {lienPublication && (
-            <span className="vt-link">
-              {lien ? "Détail" : "Lire la publication"} <ArrowRight size={14} aria-hidden="true" />
-            </span>
-          )}
+          <span className="vt-link">
+            Détail <ArrowRight size={14} aria-hidden="true" />
+          </span>
         </div>
       </div>
     </>
@@ -175,13 +172,9 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
 
   return (
     <article className={`vt-pub h-full ${className ?? ""}`}>
-      {lienPublication ? (
-        <Link to={lienPublication} style={LIEN_PLEINE_CARTE}>
-          {contenu}
-        </Link>
-      ) : (
-        contenu
-      )}
+      <Link to={lienDestination} style={LIEN_PLEINE_CARTE}>
+        {contenu}
+      </Link>
     </article>
   )
 }
@@ -215,7 +208,7 @@ export function CartePublication({ publication, className, lien }: { publication
         <div className="vt-pub-body">
           <span className="vt-badge vt-badge-publication">Actualité</span>
           <h3>{publication.titre}</h3>
-          <p>{resumePublication(publication)}</p>
+          {publication.description_publique && <p>{publication.description_publique}</p>}
           <div className="vt-card-footer">
             <div className="vt-meta">
               <span>
