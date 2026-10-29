@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom"
-import { Building2, ExternalLink, Globe, Handshake, Star } from "lucide-react"
+import { Building2, ExternalLink, Globe, Handshake } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicProjetsPublies, usePublicPartenariatsPublies, usePublicTousPartenaires } from "@/features/espace-public/api/usePublicDonneesDetail"
@@ -61,7 +61,6 @@ export function PublicPartenaireDetailPage() {
           <div className="vt-detail-meta">
             <BadgeCategorie>{partenaire.type}</BadgeCategorie>
             <BadgeCategorie>{partenaire.pays}</BadgeCategorie>
-            {partenaire.est_strategique && <span className="vt-badge-strategique"><Star size={14} aria-hidden="true" /> Partenaire stratégique</span>}
           </div>
           <h1>{partenaire.nom}</h1>
         </div>

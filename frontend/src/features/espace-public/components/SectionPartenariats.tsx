@@ -36,7 +36,7 @@ export function SectionPartenariats() {
           <EmptyStateSection
             icone={<FileText aria-hidden="true" />}
             titre="Les partenariats seront bientôt en ligne"
-            description="Nous finalisons actuellement les accords et les détails des coopérations en cours. Cette section sera mise à jour très prochainement."
+            description="Découvrez les coopérations entre les établissements et leurs partenaires."
             actionLibelle="Devenir partenaire"
             actionHref="/contact"
           />

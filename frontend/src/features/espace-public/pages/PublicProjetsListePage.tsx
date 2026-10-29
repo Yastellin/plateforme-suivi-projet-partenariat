@@ -6,27 +6,20 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { useDebounce } from "@/hooks/useDebounce"
-import type { ProjetPublic } from "@/types/api"
 import { usePublicProjets } from "@/features/espace-public/api/usePublicProjets"
 import { CarteProjetTimeCard } from "@/features/espace-public/components/CartesPubliques"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
-import { libelleStatutProjet } from "@/features/espace-public/lib/publique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 const TOUS = "tous"
 const PAR_PAGE = 9
-const STATUTS_PRIORITAIRES: ProjetPublic["statut"][] = ["EN_COURS", "EN_ATTENTE", "TERMINE"]
 
 interface Filtres {
   recherche: string
   domaine: string
-  statut: string
-}
-
-function libellerStatutFiltre(statut: ProjetPublic["statut"]): string {
-  return statut === "TERMINE" ? "Terminés" : libelleStatutProjet(statut)
+  etablissement: string
 }
 
 function libellerDomaine(domaine: string): string {
@@ -40,30 +33,30 @@ function libellerDomaine(domaine: string): string {
 function FiltresProjets({
   filtres,
   domaines,
-  statuts,
+  etablissements,
   onChange,
 }: {
   filtres: Filtres
   domaines: string[]
-  statuts: ProjetPublic["statut"][]
+  etablissements: { id: string; nom: string; sigle?: string | null }[]
   onChange: (filtres: Filtres) => void
 }) {
   return (
     <div className="vt-filter-bar vt-project-filter-bar">
       <div className="vt-project-filter-groups">
-        <div className="vt-filter-group vt-project-filter-status-group" role="group" aria-label="Filtrer par statut">
-          <button type="button" className="vt-filter-pill" aria-pressed={filtres.statut === TOUS} onClick={() => onChange({ ...filtres, statut: TOUS })}>Tous</button>
-          {statuts.map((statut) => (
-            <button key={statut} type="button" className="vt-filter-pill" aria-pressed={filtres.statut === statut} onClick={() => onChange({ ...filtres, statut })}>
-              {libellerStatutFiltre(statut)}
-            </button>
-          ))}
-        </div>
         <div className="vt-filter-group vt-project-filter-domain-group" role="group" aria-label="Filtrer par domaine">
           <button type="button" className="vt-filter-pill" aria-pressed={filtres.domaine === TOUS} onClick={() => onChange({ ...filtres, domaine: TOUS })}>Tous les domaines</button>
           {domaines.map((domaine) => (
             <button key={domaine} type="button" className="vt-filter-pill" aria-pressed={filtres.domaine === domaine} onClick={() => onChange({ ...filtres, domaine })}>
               {libellerDomaine(domaine)}
+            </button>
+          ))}
+        </div>
+        <div className="vt-filter-group vt-project-filter-establishment-group" role="group" aria-label="Filtrer par établissement">
+          <button type="button" className="vt-filter-pill" aria-pressed={!filtres.etablissement} onClick={() => onChange({ ...filtres, etablissement: "" })}>Tous les établissements</button>
+          {etablissements.map((etablissement) => (
+            <button key={etablissement.id} type="button" className="vt-filter-pill" aria-pressed={filtres.etablissement === etablissement.id} onClick={() => onChange({ ...filtres, etablissement: etablissement.id })}>
+              {etablissement.sigle ?? etablissement.nom}
             </button>
           ))}
         </div>
@@ -86,7 +79,7 @@ function FiltresProjets({
 export function PublicProjetsListePage() {
   const requete = usePublicProjets({ page: 1, limit: 100 })
   const projets = useMemo(() => requete.data?.data ?? [], [requete.data])
-  const [filtres, setFiltres] = useState<Filtres>({ recherche: "", domaine: TOUS, statut: TOUS })
+  const [filtres, setFiltres] = useState<Filtres>({ recherche: "", domaine: TOUS, etablissement: "" })
   const [page, setPage] = useState(1)
   const rechercheDifferee = useDebounce(filtres.recherche, 250)
 
@@ -94,23 +87,16 @@ export function PublicProjetsListePage() {
     () => [...new Set(projets.map((projet) => projet.domaine).filter((domaine): domaine is string => Boolean(domaine)))].sort((a, b) => a.localeCompare(b, "fr")),
     [projets],
   )
-  const statuts = useMemo(() => {
-    const disponibles = new Set(projets.map((projet) => projet.statut))
-    const principaux = [...STATUTS_PRIORITAIRES]
-    const autres = [...disponibles]
-      .filter((statut) => !principaux.includes(statut))
-      .sort((premier, second) => libelleStatutProjet(premier).localeCompare(libelleStatutProjet(second), "fr"))
-    return [...principaux, ...autres]
-  }, [projets])
+
   const affiches = useMemo(() => {
     const terme = rechercheDifferee.trim().toLowerCase()
     return projets.filter((projet) => {
       if (filtres.domaine !== TOUS && projet.domaine !== filtres.domaine) return false
-      if (filtres.statut !== TOUS && projet.statut !== filtres.statut) return false
+      if (filtres.etablissement && projet.etablissement?.id !== filtres.etablissement) return false
       if (!terme) return true
       return `${projet.nom} ${projet.intitule_officiel ?? ""} ${projet.domaine ?? ""}`.toLowerCase().includes(terme)
     })
-  }, [projets, rechercheDifferee, filtres.domaine, filtres.statut])
+  }, [projets, rechercheDifferee, filtres.domaine, filtres.etablissement])
 
   const nombrePages = Math.max(1, Math.ceil(affiches.length / PAR_PAGE))
   const pageCourante = Math.min(page, nombrePages)
@@ -130,13 +116,13 @@ export function PublicProjetsListePage() {
         surTitre="DÉVELOPPEMENT RÉGIONAL"
         titre="Tous nos"
         titreAccent="Projets"
-        description="Les projets publics de l'université, avec leurs partenaires, leur domaine et leur statut."
+        description="Les projets publics de l'université, avec leurs partenaires, leur domaine et leurs établissements."
       />
 
       <section className="vt-section vt-projects-page" aria-label="Liste des projets">
         <div className="vt-filter-bar-sticky vt-project-filter-sticky">
           <div className="vt-project-filter-container">
-            <FiltresProjets filtres={filtres} domaines={domaines} statuts={statuts} onChange={changerFiltres} />
+            <FiltresProjets filtres={filtres} domaines={domaines} etablissements={projets.flatMap((projet) => projet.etablissement ? [projet.etablissement] : []).filter((etablissement, index, items) => items.findIndex((item) => item.id === etablissement.id) === index)} onChange={changerFiltres} />
           </div>
         </div>
         <div className="vt-main-container">
@@ -152,14 +138,14 @@ export function PublicProjetsListePage() {
             <EmptyStateSection
               icone={<FolderOpen aria-hidden="true" />}
               titre="Aucun projet publié actuellement"
-              description={filtres.recherche.trim() || filtres.domaine !== TOUS || filtres.statut !== TOUS
+              description={filtres.recherche.trim() || filtres.domaine !== TOUS || Boolean(filtres.etablissement)
                 ? "Aucun résultat ne correspond à votre recherche ou aux filtres sélectionnés. Essayez d'autres critères."
                 : "De nouvelles collaborations sont en cours de finalisation. Les fiches détaillées de nos projets seront disponibles prochainement."}
             />
           )}
           {!requete.isLoading && !requete.isError && visibles.length > 0 && (
             <>
-              <p className="vt-results-count" aria-live="polite">Affichage de {visibles.length} projets sur {affiches.length}</p>
+              <p className="vt-results-count" aria-live="polite">{affiches.length} résultats trouvés</p>
               <RevealGroup className="vt-projects-list vt-projects-list-page" direction="right">
                 {visibles.map((projet) => (
                   <RevealItem key={projet.id} className="vt-project-time-item">

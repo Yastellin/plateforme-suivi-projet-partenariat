@@ -1,8 +1,7 @@
 import { Link, useParams } from "react-router-dom"
-import { CalendarDays, FileText, Handshake, Landmark } from "lucide-react"
+import { FileText, Handshake, Landmark } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formaterDate } from "@/lib/format"
 import { usePublicPartenariatsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
 import { BadgeCategorie } from "@/features/espace-public/components/BadgeCategorie"
 import { CarteLaterale } from "@/features/espace-public/components/CarteLaterale"
@@ -59,12 +58,6 @@ export function PublicPartenariatDetailPage() {
         labelSidebar="Informations sur le partenariat"
         sidebar={(
           <>
-            <CarteLaterale titre="Période" variante="information" icone={CalendarDays}>
-              <dl className="vt-detail-facts">
-                <div><dt>Début</dt><dd>{formaterDate(partenariat.date_debut)}</dd></div>
-                {partenariat.date_fin && <div><dt>Fin</dt><dd>{formaterDate(partenariat.date_fin)}</dd></div>}
-              </dl>
-            </CarteLaterale>
             <CarteLaterale titre="Partenaires associés" icone={Handshake}>
               {partenariat.partenaires.length > 0 ? (
                 <ul className="vt-detail-link-list">

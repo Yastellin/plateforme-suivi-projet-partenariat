@@ -138,12 +138,23 @@ function RouteProtegee({
   return <>{children}</>
 }
 
+function ScrollToTopPublic() {
+  const location = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" })
+  }, [location.pathname, location.search, location.hash])
+
+  return null
+}
+
 function LayoutPublic() {
   const location = useLocation()
   const reduire = useReducedMotion()
   return (
     <MotionConfig reducedMotion="user">
       <div className="vitrine flex min-h-screen flex-col">
+        <ScrollToTopPublic />
         <a href="#contenu-principal" className="vt-skip">
           Aller au contenu
         </a>

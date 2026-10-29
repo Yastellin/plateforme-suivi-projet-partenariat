@@ -1,12 +1,10 @@
 import { Link, useParams } from "react-router-dom"
-import { CalendarDays, FolderOpen, Handshake, Landmark } from "lucide-react"
+import { FolderOpen, Handshake, Landmark } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formaterDate } from "@/lib/format"
 import { usePublicProjetsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
 import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
-import { libelleStatutProjet } from "@/features/espace-public/lib/publique"
-import { BadgeCategorie, type VarianteBadgeCategorie } from "@/features/espace-public/components/BadgeCategorie"
+import { BadgeCategorie } from "@/features/espace-public/components/BadgeCategorie"
 import { CarteLaterale } from "@/features/espace-public/components/CarteLaterale"
 import { CartePublication } from "@/features/espace-public/components/CartesPubliques"
 import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
@@ -14,13 +12,6 @@ import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
 import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
-
-function varianteStatut(statut: string): VarianteBadgeCategorie {
-  if (statut === "EN_COURS") return "en-cours"
-  if (statut === "TERMINE") return "termine"
-  if (statut === "EN_ATTENTE") return "avenir"
-  return "neutre"
-}
 
 export function PublicProjetDetailPage() {
   const { id } = useParams()
@@ -71,10 +62,7 @@ export function PublicProjetDetailPage() {
         </div>
         <div className="vt-detail-hero-content">
           <span className="vt-surtitre">Projet</span>
-          <div className="vt-detail-meta">
-            <BadgeCategorie variante={varianteStatut(projet.statut)}>{libelleStatutProjet(projet.statut)}</BadgeCategorie>
-            {projet.domaine && <BadgeCategorie variante="innovation">{projet.domaine}</BadgeCategorie>}
-          </div>
+          {projet.domaine && <div className="vt-detail-meta"><BadgeCategorie variante="innovation">{projet.domaine}</BadgeCategorie></div>}
           <h1>{projet.nom}</h1>
           {projet.intitule_officiel && projet.intitule_officiel !== projet.nom && <p className="vt-detail-intro">{projet.intitule_officiel}</p>}
         </div>
@@ -85,13 +73,9 @@ export function PublicProjetDetailPage() {
         labelSidebar="Informations sur le projet"
         sidebar={(
           <>
-            <CarteLaterale titre="Informations clés" variante="information" icone={CalendarDays}>
+            <CarteLaterale titre="Informations clés" variante="information" icone={Landmark}>
               <dl className="vt-detail-facts">
-                <div><dt>Statut</dt><dd>{libelleStatutProjet(projet.statut)}</dd></div>
-                <div><dt>Type</dt><dd>{projet.type}</dd></div>
                 {projet.domaine && <div><dt>Domaine</dt><dd>{projet.domaine}</dd></div>}
-                <div><dt>Date de début</dt><dd>{formaterDate(projet.date_debut)}</dd></div>
-                <div><dt>Fin prévue</dt><dd>{formaterDate(projet.date_fin_prevue)}</dd></div>
                 {projet.etablissement && <div><dt>Établissement porteur</dt><dd>{projet.etablissement.nom}</dd></div>}
               </dl>
             </CarteLaterale>
