@@ -144,7 +144,7 @@ export function SidebarInterne() {
         {!reduit ? (
           <div className="min-w-0 leading-tight">
             <strong className="block truncate text-base font-bold text-white">Projets &amp; Partenariats</strong>
-            <span className="block text-[11px] uppercase tracking-wider text-[#6b7280]">Dashboard</span>
+            <span className="block text-[11px] uppercase tracking-wider text-[#6b7280]">Tableau de bord</span>
           </div>
         ) : null}
       </div>
