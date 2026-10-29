@@ -67,7 +67,7 @@ export function NotificationItem({ notification }: { notification: Notification 
         <p className={cn("text-sm", !notification.est_lue && "font-medium")}>
           {notification.titre}
         </p>
-        <p className="text-xs text-muted-foreground">{notification.message}</p>
+        <p className="whitespace-pre-line text-xs text-muted-foreground">{notification.message}</p>
         <p className="font-mono text-xs text-muted-foreground">
           {new Date(notification.date_creation).toLocaleString("fr-FR")}
         </p>

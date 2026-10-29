@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
 import type { RoleUtilisateur } from '@/types/api';
 import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
+import { MessagesNonLusBadge } from '@/features/messages-contact/components/MessagesNonLusBadge';
 import { useEtablissement } from '@/features/etablissements/api/useEtablissement';
 
 const CLE_REPLI = 'uf_sidebar_reduit';
@@ -220,9 +221,12 @@ export function SidebarInterne() {
                     <>
                       <span className="flex-1 truncate">{item.libelle}</span>
                       {item.cle === 'notifications' ? <NotificationBadge /> : null}
+                      {item.cle === 'messages' ? <MessagesNonLusBadge /> : null}
                     </>
                   ) : item.cle === 'notifications' ? (
                     <NotificationBadge className="absolute -right-1 -top-1" />
+                  ) : item.cle === 'messages' ? (
+                    <MessagesNonLusBadge className="absolute -right-1 -top-1" />
                   ) : null}
                 </Link>
               );
