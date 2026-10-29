@@ -23,6 +23,7 @@ import {
   ConventionsParStatutDto,
   RepartitionConventionsDto,
 } from './dto/tableau-de-bord-response.dto';
+import { ActiviteMensuellePointDto } from './dto/activite-mensuelle-response.dto';
 import {
   EcheancierResponseDto,
   EcheanceConventionDto,
@@ -70,6 +71,74 @@ export class TableauDeBordService {
       ]);
 
     return { compteurs, projets_par_statut, conventions_par_statut, perimetre };
+  }
+
+  /**
+   * Activite des 6 derniers mois : conventions signees (date_signature) et
+   * projets soumis (soumis_le), par mois UTC. Meme perimetre que le reste du tableau de bord.
+   */
+  async getActiviteMensuelle(
+    role: Role,
+    etablissementId?: string | null,
+  ): Promise<ActiviteMensuellePointDto[]> {
+    const estGlobal = role === Role.PRESIDENCE || role === Role.DECIDEUR;
+    const filtreEtab = !estGlobal && etablissementId ? etablissementId : undefined;
+
+    const maintenant = new Date();
+    const annee = maintenant.getUTCFullYear();
+    const moisCourant = maintenant.getUTCMonth();
+    const mois: string[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(Date.UTC(annee, moisCourant - i, 1));
+      mois.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`);
+    }
+    const debut = new Date(Date.UTC(annee, moisCourant - 5, 1));
+
+    const points = new Map<string, ActiviteMensuellePointDto>(
+      mois.map((m) => [m, { mois: m, conventions_signees: 0, projets_soumis: 0 }]),
+    );
+    const cleMois = (date: Date | string) => {
+      const d = new Date(date);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+    };
+
+    const requeteConventions = this.conventionRepo
+      .createQueryBuilder('c')
+      .select('c.date_signature', 'date')
+      .where('c.archive = false')
+      .andWhere('c.date_signature >= :debut', { debut });
+    if (filtreEtab) {
+      requeteConventions
+        .innerJoin('c.projet', 'p')
+        .andWhere('p.etablissement_id = :etablissementId', { etablissementId: filtreEtab });
+    }
+
+    const requeteProjets = this.projetRepo
+      .createQueryBuilder('p')
+      .select('p.soumis_le', 'date')
+      .where('p.archive = false')
+      .andWhere('p.soumis_le >= :debut', { debut });
+    if (filtreEtab) {
+      requeteProjets.andWhere('p.etablissement_id = :etablissementId', {
+        etablissementId: filtreEtab,
+      });
+    }
+
+    const [conventions, projets] = await Promise.all([
+      requeteConventions.getRawMany<{ date: Date }>(),
+      requeteProjets.getRawMany<{ date: Date }>(),
+    ]);
+
+    for (const ligne of conventions) {
+      const point = points.get(cleMois(ligne.date));
+      if (point) point.conventions_signees += 1;
+    }
+    for (const ligne of projets) {
+      const point = points.get(cleMois(ligne.date));
+      if (point) point.projets_soumis += 1;
+    }
+
+    return mois.map((m) => points.get(m)!);
   }
 
   private async getCompteurs(

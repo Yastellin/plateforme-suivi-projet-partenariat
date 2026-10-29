@@ -1,3 +1,4 @@
+import { ActiviteMensuellePointDto } from './dto/activite-mensuelle-response.dto';
 import { Controller, Get } from '@nestjs/common';
 import {
   ApiTags,
@@ -29,6 +30,14 @@ export class TableauDeBordController {
       user.role,
       user.etablissement_id,
     );
+  }
+
+  @Get('activite-mensuelle')
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT, Role.DECIDEUR)
+  @ApiOperation({ summary: 'Activite mensuelle des 6 derniers mois (conventions signees, projets soumis)' })
+  @ApiResponse({ status: 200, type: [ActiviteMensuellePointDto] })
+  getActiviteMensuelle(@CurrentUser() user: any): Promise<ActiviteMensuellePointDto[]> {
+    return this.tableauDeBordService.getActiviteMensuelle(user.role, user.etablissement_id);
   }
 
   @Get('echeancier')
