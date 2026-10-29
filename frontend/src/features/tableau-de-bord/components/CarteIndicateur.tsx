@@ -7,11 +7,12 @@ import { cn } from '@/lib/utils';
 export type ThemeIndicateur = 'emerald' | 'blue' | 'violet' | 'amber';
 
 // Classes complètes (et non construites) pour que Tailwind les détecte.
-const THEMES: Record<ThemeIndicateur, { bordure: string; icone: string }> = {
-  emerald: { bordure: 'border-emerald-200', icone: 'bg-emerald-100 text-emerald-600' },
-  blue: { bordure: 'border-blue-200', icone: 'bg-blue-100 text-blue-600' },
-  violet: { bordure: 'border-violet-200', icone: 'bg-violet-100 text-violet-600' },
-  amber: { bordure: 'border-amber-200', icone: 'bg-amber-100 text-amber-600' },
+// Les classes kpi-* ne s'appliquent qu'en mode sombre (voir design-tokens-uf.css)
+const THEMES: Record<ThemeIndicateur, { bordure: string; icone: string; carte: string; iconeSombre: string }> = {
+  emerald: { bordure: 'border-emerald-200', icone: 'bg-emerald-100 text-emerald-600', carte: 'kpi-carte-emerald', iconeSombre: 'kpi-icone-emerald' },
+  blue: { bordure: 'border-blue-200', icone: 'bg-blue-100 text-blue-600', carte: 'kpi-carte-blue', iconeSombre: 'kpi-icone-blue' },
+  violet: { bordure: 'border-violet-200', icone: 'bg-violet-100 text-violet-600', carte: 'kpi-carte-violet', iconeSombre: 'kpi-icone-violet' },
+  amber: { bordure: 'border-amber-200', icone: 'bg-amber-100 text-amber-600', carte: 'kpi-carte-amber', iconeSombre: 'kpi-icone-amber' },
 };
 
 interface CarteIndicateurProps {
@@ -34,19 +35,20 @@ export function CarteIndicateur({ titre, valeur, icone, theme, lien, pied }: Car
       className={cn(
         'rounded-2xl border bg-white p-6 transition-shadow duration-200 hover:shadow-md',
         classes.bordure,
+        classes.carte,
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-sm font-medium text-slate-600">{titre}</h3>
+        <h3 className="kpi-titre text-sm font-medium text-slate-600">{titre}</h3>
         <span
           aria-hidden="true"
-          className={cn('grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl', classes.icone)}
+          className={cn('grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl', classes.icone, classes.iconeSombre)}
         >
           {icone}
         </span>
       </div>
 
-      <p className="mt-4 text-4xl font-bold tracking-tight text-slate-900">{valeur}</p>
+      <p className="kpi-valeur mt-4 text-4xl font-bold tracking-tight text-slate-900">{valeur}</p>
 
       <div className="mt-3 text-sm">
         {lien ? (
@@ -54,7 +56,7 @@ export function CarteIndicateur({ titre, valeur, icone, theme, lien, pied }: Car
             {lien.libelle}
           </Link>
         ) : (
-          <span className="text-slate-500">{pied}</span>
+          <span className="kpi-pied text-slate-500">{pied}</span>
         )}
       </div>
     </article>

@@ -51,9 +51,9 @@ function InfobulleStatut({ active, payload }: InfobulleProps) {
   const segment = payload?.[0]?.payload;
   if (!active || !segment) return null;
   return (
-    <div className="rounded-lg border border-slate-100 bg-white px-3 py-2 text-sm shadow-md">
-      <div className="font-semibold text-slate-800">{segment.libelle}</div>
-      <div className="text-slate-500">
+    <div className="infobulle-sombre rounded-lg border border-slate-100 bg-white px-3 py-2 text-sm shadow-md">
+      <div className="texte-fort-sombre font-semibold text-slate-800">{segment.libelle}</div>
+      <div className="texte-doux-sombre text-slate-500">
         {segment.valeur} projet{segment.valeur > 1 ? 's' : ''} · {segment.pourcentage}%
       </div>
     </div>
@@ -108,8 +108,8 @@ export function RepartitionProjetsParStatut({ projetsParStatut, chargement }: Re
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-slate-800">{totalProjets}</span>
-          <span className="text-xs text-slate-400">projets</span>
+          <span className="texte-fort-sombre text-2xl font-bold text-slate-800">{totalProjets}</span>
+          <span className="texte-doux-sombre text-xs text-slate-400">projets</span>
         </div>
       </div>
 
@@ -122,9 +122,9 @@ export function RepartitionProjetsParStatut({ projetsParStatut, chargement }: Re
                 className="h-3 w-3 flex-shrink-0 rounded-full"
                 style={{ backgroundColor: segment.couleur }}
               />
-              <span className="truncate font-medium text-slate-600">{segment.libelle}</span>
+              <span className="texte-moyen-sombre truncate font-medium text-slate-600">{segment.libelle}</span>
             </span>
-            <span className="font-mono font-medium text-slate-500">{segment.pourcentage}%</span>
+            <span className="texte-doux-sombre font-mono font-medium text-slate-500">{segment.pourcentage}%</span>
           </li>
         ))}
       </ul>
