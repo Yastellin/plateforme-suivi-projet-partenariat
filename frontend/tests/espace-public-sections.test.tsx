@@ -263,16 +263,23 @@ describe("sections de la page d'accueil publique", () => {
       "Voir tous les partenaires",
     ]
     const entetes = Array.from(
-      conteneur.querySelectorAll(".vt-accueil-section-head"),
+      conteneur.querySelectorAll(".vt-section-header"),
     )
 
     expect(entetes).toHaveLength(4)
-    expect(entetes.map((entete) => entete.querySelector("h2")?.textContent)).toEqual(titres)
-    expect(entetes.every((entete) => entete.querySelector("p")?.textContent)).toBe(true)
+    expect(entetes.map((entete) => entete.querySelector(".vt-section-header-left h2")?.textContent)).toEqual(titres)
+    expect(entetes.every((entete) => entete.querySelector(".vt-section-header-left .vt-section-eyebrow"))).toBe(true)
+    expect(entetes.every((entete) => entete.querySelector(".vt-section-header-description")?.textContent)).toBe(true)
     expect(
-      Array.from(conteneur.querySelectorAll(".vt-accueil-section-action a"))
+      Array.from(conteneur.querySelectorAll(".vt-btn-circle-arrow"))
         .map((bouton) => bouton.textContent?.trim()),
     ).toEqual(boutons)
+    expect(
+      Array.from(conteneur.querySelectorAll(".vt-btn-circle-arrow"))
+        .map((bouton) => (bouton as HTMLAnchorElement).getAttribute("href")),
+    ).toEqual(["/actualites", "/partenariats", "/projets", "/partenaires"])
+    expect(entetes.every((entete) => entete.querySelector(".vt-arrow-circle svg[aria-hidden='true']"))).toBe(true)
+    expect(conteneur.querySelector(".vt-accueil-section-action, .vt-btn-voir-tout")).toBeNull()
     expect(conteneur.textContent).not.toMatch(/à la une|en vedette|mis en avant/i)
   })
 
@@ -351,7 +358,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(onglets).toEqual(["Projets", "Partenariats", "Partenaires", "Publications"])
   })
 
-  it("garde les CTA après les présentations publiques dédiées", () => {
+  it("place les CTA circulaires dans l’en-tête avant le contenu des sections", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
 
@@ -359,19 +366,18 @@ describe("sections de la page d'accueil publique", () => {
       ["actualites", ".vt-accueil-card-grid"],
       ["projets", ".vt-projects-list-home"],
       ["partenariats", ".vt-timeline"],
+      ["partenaires", ".vt-partner-grid"],
     ]) {
-      const cartes = conteneur.querySelector(`#${section} ${selecteur}`)
-      const bouton = conteneur.querySelector(`#${section} .vt-accueil-section-action`)
-      expect(cartes).not.toBeNull()
+      const entete = conteneur.querySelector(`#${section} .vt-section-header`)
+      const bouton = entete?.querySelector(".vt-btn-circle-arrow")
+      const contenu = conteneur.querySelector(`#${section} ${selecteur}`)
+      expect(entete).not.toBeNull()
       expect(bouton).not.toBeNull()
-      expect(cartes!.compareDocumentPosition(bouton!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(contenu).not.toBeNull()
+      expect(entete!.compareDocumentPosition(contenu!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     }
+    expect(conteneur.querySelector(".vt-accueil-section-action, .vt-btn-voir-tout")).toBeNull()
     expect(conteneur.querySelector("#projets .vt-projects-list-home")?.classList.contains("vt-hscroll")).toBe(false)
-    const logos = conteneur.querySelector("#partenaires .vt-partner-grid")
-    const boutonPartenaires = conteneur.querySelector("#partenaires .vt-accueil-section-action")
-    expect(logos).not.toBeNull()
-    expect(boutonPartenaires).not.toBeNull()
-    expect(logos!.compareDocumentPosition(boutonPartenaires!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it("présente les partenaires en grille de logos avec leur nom et leur pays", () => {

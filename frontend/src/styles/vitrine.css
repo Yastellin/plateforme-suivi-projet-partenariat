@@ -114,12 +114,6 @@
   background: var(--brand-tint);
   border-color: var(--brand);
 }
-.vitrine .vt-btn-voir-tout {
-  width: auto;
-  padding-inline: 16px;
-  border-width: 1px;
-  color: var(--brand-deep);
-}
 .vt-btn-light {
   background: #fff;
   color: var(--brand-deep);
@@ -444,11 +438,6 @@
   color: var(--muted);
   font-size: 14px;
   line-height: 1.45;
-}
-.vitrine .vt-accueil-section-action {
-  display: flex;
-  justify-content: center;
-  margin-top: 32px;
 }
 .vitrine .vt-card-list,
 .vitrine .vt-accueil-card-grid {
@@ -2415,15 +2404,6 @@ select.vt-fld-input {
   background: #f2eddf;
   color: #735a17;
 }
-.vitrine .vt-btn-voir-tout {
-  border-color: #397c53;
-  color: #24613b;
-  font-weight: 600;
-}
-.vitrine .vt-btn-voir-tout:hover {
-  border-color: #24613b;
-  background: #edf4ee;
-}
 .vitrine .vt-logo-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3070,23 +3050,6 @@ select.vt-fld-input {
   gap: 10px;
   color: var(--primary-green-hover);
   text-decoration: none;
-}
-.vitrine .vt-accueil-section-action {
-  margin-top: 40px;
-  text-align: center;
-}
-.vitrine .vt-btn-voir-tout {
-  padding: 12px 30px;
-  border: 2px solid var(--primary-green);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--primary-green);
-  font-weight: 600;
-}
-.vitrine .vt-btn-voir-tout:hover {
-  border-color: var(--primary-green);
-  background: var(--primary-green);
-  color: var(--white);
 }
 .vitrine .vt-partner-grid {
   display: grid;
@@ -5464,5 +5427,139 @@ select.vt-fld-input {
   .vitrine .vt-timeline-stat:hover .vt-timeline-number {
     transform: none;
     box-shadow: none;
+  }
+}
+
+
+/* En-têtes des sections de l’accueil avec CTA circulaire. */
+.vitrine .vt-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.vitrine .vt-section-header-left {
+  width: auto;
+  max-width: none;
+  flex: 1 1 auto;
+  margin: 0;
+  text-align: left;
+}
+
+.vitrine .vt-section-header-left .vt-section-eyebrow {
+  justify-content: flex-start;
+  margin-bottom: 12px;
+}
+
+.vitrine .vt-section-eyebrow::after {
+  display: none;
+}
+
+.vitrine .vt-section-header-description {
+  width: 100%;
+  max-width: 42rem;
+  flex: 0 0 100%;
+  margin: -8px 0 0;
+  color: var(--text-muted);
+  font-size: .95rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.vitrine .vt-btn-circle-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 5px;
+  padding: 0 0 5px;
+  border: none;
+  background: transparent;
+  color: #1F2937;
+  cursor: pointer;
+  font-size: .95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color .3s ease, gap .3s ease;
+}
+
+.vitrine .vt-arrow-circle {
+  display: flex;
+  width: 45px;
+  height: 45px;
+  flex: 0 0 45px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #E5E7EB;
+  border-radius: 50%;
+  background: #fff;
+  color: #2F7D5D;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+  transition: background .3s ease, color .3s ease, border-color .3s ease, transform .3s ease, box-shadow .3s ease;
+}
+
+.vitrine .vt-btn-circle-arrow:hover {
+  color: #2F7D5D;
+  text-decoration: none;
+}
+
+.vitrine .vt-btn-circle-arrow:hover .vt-arrow-circle {
+  transform: translateX(5px);
+  border-color: #2F7D5D;
+  background: #2F7D5D;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(47, 125, 93, .3);
+}
+
+.vitrine .vt-btn-circle-arrow:focus-visible {
+  border-radius: 8px;
+  outline: 3px solid rgb(47 125 93 / 35%);
+  outline-offset: 4px;
+}
+
+@media (max-width: 767px) {
+  .vitrine .vt-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .vitrine .vt-section-header-left {
+    width: 100%;
+    flex: 0 1 auto;
+  }
+
+  .vitrine .vt-btn-circle-arrow {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 0;
+    padding: 15px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .vitrine .vt-section-header-description {
+    order: 2;
+    flex: 0 1 auto;
+    margin-top: 0;
+  }
+
+  .vitrine .vt-btn-circle-arrow {
+    order: 3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vitrine .vt-btn-circle-arrow,
+  .vitrine .vt-arrow-circle {
+    transition: none;
+  }
+
+  .vitrine .vt-btn-circle-arrow:hover .vt-arrow-circle {
+    transform: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
   }
 }

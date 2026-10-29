@@ -8,7 +8,7 @@ import {
   RevealGroup,
   RevealItem,
 } from "@/features/espace-public/components/Reveal"
-import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 export function SectionActualitesUne() {
@@ -28,6 +28,8 @@ export function SectionActualitesUne() {
           titre="Nos"
           titreAccent="Actualités"
           sousTitre="Les dernières publications de la Présidence de l'université."
+          lienTout="/actualites"
+          libelleTout="Voir toutes les actualités"
           direction="right"
         />
         {isLoading ? (
@@ -64,7 +66,6 @@ export function SectionActualitesUne() {
             ))}
           </RevealGroup>
         )}
-        {publications.length > 0 && <BoutonVoirTout lien="/actualites" libelle="Voir toutes les actualités" direction="right" />}
       </div>
     </section>
   )

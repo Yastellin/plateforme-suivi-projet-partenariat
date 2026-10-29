@@ -10,12 +10,8 @@ interface EnTeteSectionProps {
   titreAccent?: string
   surTitre?: string
   sousTitre?: string
-  direction?: DirectionReveal
-}
-
-interface BoutonVoirToutProps {
-  lien: string
-  libelle: string
+  lienTout: string
+  libelleTout: string
   direction?: DirectionReveal
 }
 
@@ -25,33 +21,25 @@ export function EnTeteSection({
   titreAccent,
   surTitre,
   sousTitre,
+  lienTout,
+  libelleTout,
   direction = "up",
 }: EnTeteSectionProps) {
   return (
-    <Reveal className="vt-head vt-accueil-section-head" direction={direction}>
-      <div className="vt-accueil-section-copy">
+    <Reveal className="vt-section-header" direction={direction}>
+      <div className="vt-section-header-left vt-accueil-section-copy">
         {surTitre && <span className="vt-section-eyebrow">{surTitre}</span>}
         <h2 id={idTitre}>
           {titre}{titreAccent && <> <span className="vt-title-accent">{titreAccent}</span></>}
         </h2>
-        {sousTitre ? <p>{sousTitre}</p> : null}
       </div>
-    </Reveal>
-  )
-}
-
-// CTA partagé placé sous la grille ou le bandeau de partenaires.
-export function BoutonVoirTout({
-  lien,
-  libelle,
-  direction = "up",
-}: BoutonVoirToutProps) {
-  return (
-    <Reveal className="vt-accueil-section-action" direction={direction}>
-      <Link to={lien} className="vt-btn vt-btn-ghost vt-btn-voir-tout">
-        {libelle}
-        <ArrowRight size={14} aria-hidden="true" />
+      <Link to={lienTout} className="vt-btn-circle-arrow">
+        {libelleTout}
+        <span className="vt-arrow-circle" aria-hidden="true">
+          <ArrowRight size={20} aria-hidden="true" />
+        </span>
       </Link>
+      {sousTitre ? <p className="vt-section-header-description">{sousTitre}</p> : null}
     </Reveal>
   )
 }

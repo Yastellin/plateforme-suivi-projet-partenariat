@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Link } from "react-router-dom"
 import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPartenaires"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
-import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
 import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 export function SectionPartenaires() {
@@ -24,6 +24,8 @@ export function SectionPartenaires() {
           titre="Nos"
           titreAccent="Partenaires"
           sousTitre="Les organisations partenaires de l'Université de Fianarantsoa."
+          lienTout="/partenaires"
+          libelleTout="Voir tous les partenaires"
           direction="left"
         />
         {isLoading ? (
@@ -55,7 +57,6 @@ export function SectionPartenaires() {
             actionHref="/partenariats"
           />
         )}
-        {isLoading || partenaires.length > 0 ? <BoutonVoirTout lien="/partenaires" libelle="Voir tous les partenaires" direction="left" /> : null}
       </div>
     </section>
   )
