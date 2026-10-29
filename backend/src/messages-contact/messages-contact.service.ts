@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
+import { Notification } from '../notifications/entities/notification.entity';
 import { parsePhoneNumberWithError } from 'libphonenumber-js';
 import { MessageContact } from './entities/message-contact.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
@@ -159,6 +160,28 @@ export class MessagesContactService {
       await this.messageRepo.save(message);
     }
     return this.versReponse(message);
+  }
+
+  /**
+   * Supprime un message et les notifications qui s'y rattachent (meme transaction).
+   * Meme perimetre que la lecture : un etablissement ne supprime que ses messages.
+   */
+  async supprimer(id: string, user: UtilisateurConnecte) {
+    const perimetre = this.perimetre(user);
+    const message = perimetre
+      ? await this.messageRepo.findOne({ where: { id, ...perimetre } })
+      : null;
+    if (!message) {
+      throw new NotFoundException('Message introuvable.');
+    }
+    await this.messageRepo.manager.transaction(async (manager) => {
+      await manager.delete(Notification, {
+        reference_type: 'MessageContact',
+        reference_id: message.id,
+      });
+      await manager.delete(MessageContact, { id: message.id });
+    });
+    return { id: message.id, supprime: true };
   }
 
   private versReponse(m: MessageContact) {
