@@ -48,7 +48,7 @@ export function TopbarPublique() {
             alt="Logo de l'Université de Fianarantsoa"
           />
           <span>
-            <span className="vt-brand-name">Partenariats UF</span>
+            <span className="vt-brand-name">Projets & Partenariats UF</span>
             <span className="vt-brand-sub">Université de Fianarantsoa</span>
           </span>
         </Link>
