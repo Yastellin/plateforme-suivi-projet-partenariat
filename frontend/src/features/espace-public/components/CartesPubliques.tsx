@@ -4,7 +4,7 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ArrowRight, CalendarDays, ExternalLink, FolderKanban, Globe, Handshake, Landmark, Star } from "lucide-react"
+import { ArrowRight, CalendarDays, ExternalLink, Globe, Handshake, Landmark, Star } from "lucide-react"
 import { formaterDate } from "@/lib/format"
 import type { PartenairePublic, ProjetPublic, PublicationPublique, StatutProjet } from "@/types/api"
 import type { PartenariatPublic } from "@/features/espace-public/api/usePublicDonneesDetail"
@@ -237,45 +237,88 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
   )
 }
 
-export function CarteProjetDashboard({
+function classeBlocDateProjet(statut: StatutProjet): string {
+  switch (statut) {
+    case "EN_ATTENTE": return "status-warning"
+    case "TERMINE": return "status-blue"
+    case "SUSPENDU":
+    case "EXPIRE":
+    case "BROUILLON": return "status-gray"
+    default: return ""
+  }
+}
+
+function classeTagDomaine(domaine: string): string {
+  const valeur = domaine.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr")
+  if (valeur.includes("recherche")) return "vt-time-tag vt-time-tag-recherche"
+  if (valeur.includes("formation")) return "vt-time-tag vt-time-tag-formation"
+  if (valeur.includes("infrastructure")) return "vt-time-tag vt-time-tag-infrastructure"
+  return "vt-time-tag vt-time-tag-default"
+}
+
+function libellerDomaineTimeCard(domaine: string): string {
+  const valeur = domaine.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr")
+  if (valeur.includes("recherche")) return "Recherche"
+  if (valeur.includes("formation")) return "Formation"
+  if (valeur.includes("innovation")) return "Innovation"
+  if (valeur.includes("infrastructure")) return "Infrastructure"
+  return domaine.replaceAll("_", " ")
+}
+
+export function CarteProjetTimeCard({
   projet,
   className,
   lien,
+  variante = "accueil",
 }: {
   projet: ProjetPublic
   className?: string
   lien?: string
+  variante?: "accueil" | "liste"
 }) {
   const partenairesAffiches = projet.partenaires.slice(0, 3)
   const reste = projet.partenaires.length - partenairesAffiches.length
+  const annee = /^\d{4}/.exec(projet.date_debut)?.[0] ?? "—"
+  const varianteCSS = variante === "accueil" ? "home" : "list"
 
   return (
-    <article className={`vt-project-card vt-project-status-${projet.statut} ${className ?? ""}`} data-statut={projet.statut}>
-      <Link to={lien ?? `/projets/${projet.id}`} className="vt-project-card-link">
-        <header className="vt-project-card-header">
-          <span className="vt-project-icon"><FolderKanban size={25} aria-hidden="true" /></span>
-          <span className={classeBadgeStatut(projet.statut)}>{libelleStatutProjet(projet.statut)}</span>
-        </header>
-        <div className="vt-project-image" aria-hidden="true"><Illustration type="reseau" /></div>
-        <div className="vt-project-content">
-          {projet.domaine && <span className={classeBadgeDomaine(projet.domaine)}>{projet.domaine}</span>}
+    <Link
+      to={lien ?? `/projets/${projet.id}`}
+      className={`vt-time-card vt-time-card-${varianteCSS} ${className ?? ""}`}
+      data-statut={projet.statut}
+    >
+      <div className={`vt-time-date-block ${classeBlocDateProjet(projet.statut)}`}>
+        <span className="year">{annee}</span>
+        <span className="status">{libelleStatutProjet(projet.statut)}</span>
+      </div>
+      <div className="vt-time-main">
+        <div className="vt-time-content">
+          {projet.domaine && (
+            <div className="vt-time-tags">
+              <span className={classeTagDomaine(projet.domaine)}>{libellerDomaineTimeCard(projet.domaine)}</span>
+            </div>
+          )}
           <h3>{projet.nom}</h3>
-          {projet.intitule_officiel && projet.intitule_officiel !== projet.nom && <p className="vt-project-official-title">{projet.intitule_officiel}</p>}
-          {projet.description && <p className="vt-project-description">{projet.description}</p>}
+          {projet.intitule_officiel && projet.intitule_officiel !== projet.nom && (
+            <p className="vt-time-official-title">{projet.intitule_officiel}</p>
+          )}
+          {projet.description && <p className="vt-time-description">{projet.description}</p>}
           {partenairesAffiches.length > 0 && (
-            <ul className="vt-project-partners" aria-label="Partenaires du projet">
+            <ul className="vt-time-partners" aria-label="Partenaires du projet">
               {partenairesAffiches.map((partenaire) => <li key={partenaire.id}>{partenaire.nom}</li>)}
               {reste > 0 && <li>+{reste}</li>}
             </ul>
           )}
-          {projet.etablissement && <p className="vt-project-establishment"><Landmark size={14} aria-hidden="true" /> {projet.etablissement.sigle ?? projet.etablissement.nom}</p>}
-          <footer className="vt-project-footer">
-            <span><CalendarDays size={14} aria-hidden="true" /> Période : {formaterPeriode(projet.date_debut, projet.date_fin_prevue)}</span>
-            <span className="vt-link">Détails <ArrowRight size={14} aria-hidden="true" /></span>
-          </footer>
+          <div className="vt-time-meta">
+            {projet.etablissement && (
+              <span><Landmark aria-hidden="true" />{projet.etablissement.sigle ?? projet.etablissement.nom}</span>
+            )}
+            <span><CalendarDays aria-hidden="true" />{formaterPeriode(projet.date_debut, projet.date_fin_prevue)}</span>
+          </div>
         </div>
-      </Link>
-    </article>
+        {variante === "liste" && <span className="vt-card-action" aria-hidden="true"><ArrowRight size={20} /></span>}
+      </div>
+    </Link>
   )
 }
 

@@ -210,10 +210,10 @@ describe("sections de la page d'accueil publique", () => {
 
     expect(conteneur.querySelectorAll("#actualites .vt-pub")).toHaveLength(4)
     expect(conteneur.querySelectorAll("#actualites .vt-news-list-content")).toHaveLength(0)
-    expect(conteneur.querySelectorAll("#projets .vt-project-card")).toHaveLength(4)
+    expect(conteneur.querySelectorAll("#projets .vt-time-card")).toHaveLength(4)
     expect(conteneur.querySelectorAll("#partenariats .vt-timeline-card")).toHaveLength(4)
     expect(conteneur.querySelector("#actualites .vt-accueil-card-grid")?.classList.contains("vt-card-grid-4")).toBe(true)
-    expect(conteneur.querySelector("#projets .vt-project-dashboard-grid")).not.toBeNull()
+    expect(conteneur.querySelector("#projets .vt-projects-list-home")).not.toBeNull()
     expect(conteneur.querySelector("#partenariats .vt-timeline")).not.toBeNull()
   })
 
@@ -225,7 +225,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelectorAll("#actualites .vt-card-featured > .vt-pub")).toHaveLength(1)
     expect(conteneur.querySelector("#partenariats .vt-timeline-item")).not.toBeNull()
     expect(conteneur.querySelectorAll("#partenariats .vt-card-featured")).toHaveLength(0)
-    expect(conteneur.querySelector("#projets .vt-project-dashboard-grid .vt-project-card")).not.toBeNull()
+    expect(conteneur.querySelector("#projets .vt-projects-list-home .vt-time-card-home")).not.toBeNull()
     expect(conteneur.querySelectorAll("#projets .vt-card-featured")).toHaveLength(0)
     expect(conteneur.querySelector("#projets")?.textContent).not.toMatch(/avancement|progression|%/i)
   })
@@ -240,7 +240,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(grilleActualites?.querySelectorAll(".vt-card-standard")).toHaveLength(nombre)
     expect(grilleActualites?.querySelectorAll(".vt-card-featured")).toHaveLength(0)
     expect(conteneur.querySelectorAll("#partenariats .vt-timeline-item")).toHaveLength(nombre)
-    expect(conteneur.querySelectorAll("#projets .vt-project-dashboard-item")).toHaveLength(nombre)
+    expect(conteneur.querySelectorAll("#projets .vt-project-time-item")).toHaveLength(nombre)
     expect(conteneur.querySelectorAll("#projets .vt-card-featured")).toHaveLength(0)
   })
 
@@ -284,7 +284,7 @@ describe("sections de la page d'accueil publique", () => {
 
     for (const [section, selecteur] of [
       ["actualites", ".vt-accueil-card-grid"],
-      ["projets", ".vt-project-dashboard-grid"],
+      ["projets", ".vt-projects-list-home"],
       ["partenariats", ".vt-timeline"],
     ]) {
       const cartes = conteneur.querySelector(`#${section} ${selecteur}`)
@@ -293,7 +293,7 @@ describe("sections de la page d'accueil publique", () => {
       expect(bouton).not.toBeNull()
       expect(cartes!.compareDocumentPosition(bouton!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     }
-    expect(conteneur.querySelector("#projets .vt-project-dashboard-grid")?.classList.contains("vt-hscroll")).toBe(false)
+    expect(conteneur.querySelector("#projets .vt-projects-list-home")?.classList.contains("vt-hscroll")).toBe(false)
     const logos = conteneur.querySelector("#partenaires .vt-partner-grid")
     const boutonPartenaires = conteneur.querySelector("#partenaires .vt-accueil-section-action")
     expect(logos).not.toBeNull()
@@ -357,18 +357,22 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector(".vt-results-count")?.textContent).toContain("4 partenariats sur 4")
   })
 
-  it("rend les projets publics en cartes dashboard sans avancement", () => {
+  it("rend la liste publique en time-cards responsives sans avancement", () => {
     donnees.projets.data.data = [creerProjet(1), creerProjet(2), creerProjet(3)]
     donnees.projets.data.meta = { page: 1, limit: 100, total: 3, totalPages: 1 }
     const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(PublicProjetsListePage)))
     const conteneur = document.createElement("div")
     conteneur.innerHTML = html
 
-    expect(conteneur.querySelectorAll(".vt-projects-grid .vt-project-card")).toHaveLength(3)
-    expect(conteneur.querySelectorAll(".vt-project-card .vt-project-card-header")).toHaveLength(3)
-    expect(conteneur.querySelectorAll(".vt-project-card .vt-project-image")).toHaveLength(3)
-    expect(conteneur.querySelectorAll(".vt-progress-container, .vt-progress-bar, .vt-progress-fill")).toHaveLength(0)
-    expect(conteneur.querySelectorAll(".vt-project-card")[0].textContent).not.toMatch(/avancement|progression|%/i)
+    expect(conteneur.querySelectorAll(".vt-projects-list-page .vt-time-card-list")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-time-card-list .vt-time-date-block")).toHaveLength(3)
+    expect(conteneur.querySelectorAll(".vt-time-card-list .vt-card-action")).toHaveLength(3)
+    expect(conteneur.querySelector(".vt-time-card-list .year")?.textContent).toBe("2026")
+    expect(conteneur.querySelectorAll(".vt-time-card-list")[0].textContent).not.toMatch(/avancement|progression|%/i)
+    expect(conteneur.querySelector(".vt-main-container")).not.toBeNull()
+    expect(conteneur.querySelectorAll(".vt-project-filter-status-group .vt-filter-pill").length).toBeGreaterThanOrEqual(4)
+    expect(Array.from(conteneur.querySelectorAll(".vt-project-filter-status-group .vt-filter-pill")).map((bouton) => bouton.textContent?.trim())).toEqual(["Tous", "En cours", "En attente", "Terminés"])
+    expect(conteneur.querySelector(".vt-project-filter-domain-group")).not.toBeNull()
   })
 
   it("rend les actualités en magazine avec articles, widget et archives", () => {

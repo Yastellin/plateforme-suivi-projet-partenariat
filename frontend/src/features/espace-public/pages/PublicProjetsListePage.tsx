@@ -1,4 +1,4 @@
-// Liste publique des projets : filtres dynamiques, tableau de bord et pagination.
+// Liste publique des projets : filtres dynamiques, time-cards et pagination.
 import { useMemo, useState } from "react"
 import { FolderKanban, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/shared/EmptyState"
 import { useDebounce } from "@/hooks/useDebounce"
 import type { ProjetPublic } from "@/types/api"
 import { usePublicProjets } from "@/features/espace-public/api/usePublicProjets"
-import { CarteProjetDashboard } from "@/features/espace-public/components/CartesPubliques"
+import { CarteProjetTimeCard } from "@/features/espace-public/components/CartesPubliques"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { libelleStatutProjet } from "@/features/espace-public/lib/publique"
@@ -16,11 +16,16 @@ import { RevealGroup, RevealItem } from "@/features/espace-public/components/Rev
 
 const TOUS = "tous"
 const PAR_PAGE = 9
+const STATUTS_PRIORITAIRES: ProjetPublic["statut"][] = ["EN_COURS", "EN_ATTENTE", "TERMINE"]
 
 interface Filtres {
   recherche: string
   domaine: string
   statut: string
+}
+
+function libellerStatutFiltre(statut: ProjetPublic["statut"]): string {
+  return statut === "TERMINE" ? "Terminés" : libelleStatutProjet(statut)
 }
 
 function libellerDomaine(domaine: string): string {
@@ -43,21 +48,21 @@ function FiltresProjets({
   onChange: (filtres: Filtres) => void
 }) {
   return (
-    <div className="vt-project-filter-bar">
+    <div className="vt-filter-bar vt-project-filter-bar">
       <div className="vt-project-filter-groups">
-        <div className="vt-filter-group" role="group" aria-label="Filtrer par domaine">
-          <button type="button" className="vt-filter-pill" aria-pressed={filtres.domaine === TOUS} onClick={() => onChange({ ...filtres, domaine: TOUS })}>Tous</button>
-          {domaines.map((domaine) => (
-            <button key={domaine} type="button" className="vt-filter-pill" aria-pressed={filtres.domaine === domaine} onClick={() => onChange({ ...filtres, domaine })}>
-              {libellerDomaine(domaine)}
+        <div className="vt-filter-group vt-project-filter-status-group" role="group" aria-label="Filtrer par statut">
+          <button type="button" className="vt-filter-pill" aria-pressed={filtres.statut === TOUS} onClick={() => onChange({ ...filtres, statut: TOUS })}>Tous</button>
+          {statuts.map((statut) => (
+            <button key={statut} type="button" className="vt-filter-pill" aria-pressed={filtres.statut === statut} onClick={() => onChange({ ...filtres, statut })}>
+              {libellerStatutFiltre(statut)}
             </button>
           ))}
         </div>
-        <div className="vt-filter-group" role="group" aria-label="Filtrer par statut">
-          <button type="button" className="vt-filter-pill" aria-pressed={filtres.statut === TOUS} onClick={() => onChange({ ...filtres, statut: TOUS })}>Tous les statuts</button>
-          {statuts.map((statut) => (
-            <button key={statut} type="button" className="vt-filter-pill" aria-pressed={filtres.statut === statut} onClick={() => onChange({ ...filtres, statut })}>
-              {libelleStatutProjet(statut)}
+        <div className="vt-filter-group vt-project-filter-domain-group" role="group" aria-label="Filtrer par domaine">
+          <button type="button" className="vt-filter-pill" aria-pressed={filtres.domaine === TOUS} onClick={() => onChange({ ...filtres, domaine: TOUS })}>Tous les domaines</button>
+          {domaines.map((domaine) => (
+            <button key={domaine} type="button" className="vt-filter-pill" aria-pressed={filtres.domaine === domaine} onClick={() => onChange({ ...filtres, domaine })}>
+              {libellerDomaine(domaine)}
             </button>
           ))}
         </div>
@@ -88,7 +93,14 @@ export function PublicProjetsListePage() {
     () => [...new Set(projets.map((projet) => projet.domaine).filter((domaine): domaine is string => Boolean(domaine)))].sort((a, b) => a.localeCompare(b, "fr")),
     [projets],
   )
-  const statuts = useMemo(() => [...new Set(projets.map((projet) => projet.statut))], [projets])
+  const statuts = useMemo(() => {
+    const disponibles = new Set(projets.map((projet) => projet.statut))
+    const principaux = [...STATUTS_PRIORITAIRES]
+    const autres = [...disponibles]
+      .filter((statut) => !principaux.includes(statut))
+      .sort((premier, second) => libelleStatutProjet(premier).localeCompare(libelleStatutProjet(second), "fr"))
+    return [...principaux, ...autres]
+  }, [projets])
   const affiches = useMemo(() => {
     const terme = rechercheDifferee.trim().toLowerCase()
     return projets.filter((projet) => {
@@ -119,19 +131,21 @@ export function PublicProjetsListePage() {
       </div>
       <PageHeaderPublique
         surTitre="DÉVELOPPEMENT RÉGIONAL"
-        titre="Nos"
+        titre="Tous nos"
         titreAccent="Projets"
         description="Les projets publics de l'université, avec leurs partenaires, leur domaine et leur statut."
       />
 
       <section className="vt-section vt-projects-page" aria-label="Liste des projets">
-        <div className="vt-wrap">
-          <div className="vt-filter-bar-sticky">
+        <div className="vt-filter-bar-sticky vt-project-filter-sticky">
+          <div className="vt-project-filter-container">
             <FiltresProjets filtres={filtres} domaines={domaines} statuts={statuts} onChange={changerFiltres} />
           </div>
+        </div>
+        <div className="vt-main-container">
           {requete.isLoading && (
-            <div className="vt-projects-grid vt-mt" aria-busy="true">
-              {[...Array(6)].map((_, index) => <Skeleton key={index} className="h-96 rounded-xl" />)}
+            <div className="vt-projects-list vt-projects-list-page" aria-busy="true" aria-label="Chargement des projets">
+              {[...Array(4)].map((_, index) => <Skeleton key={index} className="vt-time-card-skeleton rounded-xl" />)}
             </div>
           )}
           {requete.isError && (
@@ -143,10 +157,10 @@ export function PublicProjetsListePage() {
           {!requete.isLoading && !requete.isError && visibles.length > 0 && (
             <>
               <p className="vt-results-count" aria-live="polite">Affichage de {visibles.length} projets sur {affiches.length}</p>
-              <RevealGroup className="vt-projects-grid" direction="right">
-                {visibles.map((projet: ProjetPublic) => (
-                  <RevealItem key={projet.id} className="vt-project-dashboard-item">
-                    <CarteProjetDashboard projet={projet} lien={`/projets/${projet.id}`} />
+              <RevealGroup className="vt-projects-list vt-projects-list-page" direction="right">
+                {visibles.map((projet) => (
+                  <RevealItem key={projet.id} className="vt-project-time-item">
+                    <CarteProjetTimeCard projet={projet} lien={`/projets/${projet.id}`} variante="liste" />
                   </RevealItem>
                 ))}
               </RevealGroup>
