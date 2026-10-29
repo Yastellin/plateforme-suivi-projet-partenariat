@@ -52,22 +52,22 @@
 }
 
 .dark {
-  --color-surface: #0A2419;
-  --color-page-bg: #041710;
+  --color-surface: #111816;
+  --color-page-bg: #0A0F0D;
 
-  --color-chrome-bg: #0F2318;
-  --color-chrome-hover: #163020;
-  --color-chrome-border: #1B3A2C;
+  --color-chrome-bg: #0D1312;
+  --color-chrome-hover: #17201D;
+  --color-chrome-border: #1C2724;
 
-  --color-text-primary: #F0FDF6;
-  --color-text-secondary: #8FA89B;
-  --color-border: #1B3A2C;
+  --color-text-primary: #F3F6F5;
+  --color-text-secondary: #8A9994;
+  --color-border: #1F2B28;
 
   --color-brand: #34D399;
   --color-brand-hover: #10B981;
   --color-brand-text: #052E1F;
   --color-brand-deep: #10B981;
-  --color-active-zone: #103A28;
+  --color-active-zone: #1A2B26;
   --color-brand-moment: #FFD24D;
 
   --status-brouillon-bg: #142A20; --status-brouillon-fg: #8FA89B;
@@ -86,3 +86,24 @@
   --shadow-sm: 0 1px 3px rgba(0,0,0,.35);
   --shadow-md: 0 4px 14px rgba(0,0,0,.50);
 }
+
+/* ============ Mode sombre : cartes KPI, anneau et textes (mode sombre uniquement) ============ */
+.dark .kpi-carte-emerald { background: linear-gradient(135deg, #0F2A21 0%, #111816 75%); border-color: #1F5A44; }
+.dark .kpi-carte-blue    { background: linear-gradient(135deg, #0E2233 0%, #111816 75%); border-color: #1E4A66; }
+.dark .kpi-carte-violet  { background: linear-gradient(135deg, #1A1830 0%, #111816 75%); border-color: #3A2F66; }
+.dark .kpi-carte-amber   { background: linear-gradient(135deg, #2A2210 0%, #111816 75%); border-color: #5A4A1C; }
+
+.dark .kpi-icone-emerald { background: #173D2E; color: #34D399; }
+.dark .kpi-icone-blue    { background: #173A52; color: #60A5FA; }
+.dark .kpi-icone-violet  { background: #2C2550; color: #A78BFA; }
+.dark .kpi-icone-amber   { background: #3D3217; color: #FBBF24; }
+
+.dark .kpi-titre  { color: #C9D6D1; }
+.dark .kpi-valeur { color: #F3F6F5; }
+.dark .kpi-pied   { color: #8A9994; }
+
+.dark .texte-fort-sombre  { color: #F3F6F5; }
+.dark .texte-moyen-sombre { color: #C9D6D1; }
+.dark .texte-doux-sombre  { color: #8A9994; }
+.dark .infobulle-sombre   { background: #17201D; border-color: #1F2B28; }
+
