@@ -35,8 +35,8 @@ import { useDeleteSite } from "@/features/referentiels/api/useDeleteSite"
 interface TableauReferentielProps {
   donnees: { id: string; nom: string }[] | undefined
   isLoading: boolean
-  onCreer: (nom: string, extra?: string) => void
-  onModifier: (id: string, nom: string, extra?: string) => void
+  onCreer: (nom: string, extra?: string) => Promise<void>
+  onModifier: (id: string, nom: string, extra?: string) => Promise<void>
   onSupprimer: (id: string) => void
   champExtra?: { label: string; key: string; get: (el: { id: string; nom: string }) => string }
 }
@@ -55,6 +55,7 @@ function TableauReferentiel({
   const [suppressionId, setSuppressionId] = useState<string | null>(null)
   const [nomForm, setNomForm] = useState("")
   const [extraForm, setExtraForm] = useState("")
+  const [soumissionEnCours, setSoumissionEnCours] = useState(false)
 
   const rechercheDebouncee = useDebounce(recherche, 300)
 
@@ -76,14 +77,25 @@ function TableauReferentiel({
     setDialogueOuvert(true)
   }
 
-  function gererSoumission() {
-    if (!nomForm.trim()) return
-    if (elementSelectionne) {
-      onModifier(elementSelectionne.id, nomForm.trim(), extraForm.trim())
-    } else {
-      onCreer(nomForm.trim(), extraForm.trim())
+  async function gererSoumission() {
+    if (!nomForm.trim() || soumissionEnCours) return
+    setSoumissionEnCours(true)
+    try {
+      if (elementSelectionne) {
+        await onModifier(elementSelectionne.id, nomForm.trim(), extraForm.trim())
+        toast.success("Élément modifié")
+      } else {
+        await onCreer(nomForm.trim(), extraForm.trim())
+        toast.success("Élément créé")
+      }
+      setNomForm("")
+      setExtraForm("")
+      setDialogueOuvert(false)
+    } catch (erreur) {
+      toast.error(erreur instanceof Error ? erreur.message : "Une erreur est survenue.")
+    } finally {
+      setSoumissionEnCours(false)
     }
-    setDialogueOuvert(false)
   }
 
   return (
@@ -178,21 +190,22 @@ function TableauReferentiel({
                 <Input id="extra-ref" value={extraForm} onChange={(e) => setExtraForm(e.target.value)} placeholder={champExtra.label} />
               </div>
             )}
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDialogueOuvert(false)}
-                className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold hover:bg-[var(--color-chrome-hover)]"
-              >
-                Annuler
-              </button>
+            <div className="flex flex-wrap justify-end gap-2">
               <button
                 type="button"
                 onClick={gererSoumission}
-                disabled={!nomForm.trim()}
+                disabled={!nomForm.trim() || soumissionEnCours}
                 className="rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {elementSelectionne ? "Enregistrer" : "Créer"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDialogueOuvert(false)}
+                disabled={soumissionEnCours}
+                className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Annuler
               </button>
             </div>
           </div>
@@ -236,13 +249,10 @@ function TableauReferentiel({
       <TableauReferentiel
         donnees={donneesFormatees}
         isLoading={isLoading}
-        onCreer={(nom, extra) => createPorteur.mutate({ nom, institution_rattachement: extra })}
-        onModifier={(id, nom, extra) =>
-          updatePorteur.mutate(
-            { id, donnees: { nom, institution_rattachement: extra } },
-            { onSuccess: () => toast.success("Porteur modifié") },
-          )
-        }
+        onCreer={async (nom, extra) => { await createPorteur.mutateAsync({ nom, institution_rattachement: extra }) }}
+        onModifier={async (id, nom, extra) => {
+          await updatePorteur.mutateAsync({ id, donnees: { nom, institution_rattachement: extra } })
+        }}
         onSupprimer={(id) => deletePorteur.mutate(id)}
         champExtra={{
           label: "Institution",
@@ -263,8 +273,8 @@ function BailleursTab() {
     <TableauReferentiel
       donnees={data}
       isLoading={isLoading}
-      onCreer={(nom, extra) => createBailleur.mutate({ nom, description: extra })}
-      onModifier={(id, nom, extra) => updateBailleur.mutate({ id, donnees: { nom, description: extra } }, { onSuccess: () => toast.success("Bailleur modifié") })}
+      onCreer={async (nom, extra) => { await createBailleur.mutateAsync({ nom, description: extra }) }}
+      onModifier={async (id, nom, extra) => { await updateBailleur.mutateAsync({ id, donnees: { nom, description: extra } }) }}
       onSupprimer={(id) => deleteBailleur.mutate(id)}
       champExtra={{ label: "Description", key: "description", get: (el) => String((el as Record<string, unknown>).description ?? "") }}
     />
@@ -281,8 +291,8 @@ function BeneficiairesTab() {
     <TableauReferentiel
       donnees={data}
       isLoading={isLoading}
-      onCreer={(nom, extra) => createBeneficiaire.mutate({ nom, categorie: extra })}
-      onModifier={(id, nom, extra) => updateBeneficiaire.mutate({ id, donnees: { nom, categorie: extra } }, { onSuccess: () => toast.success("Bénéficiaire modifié") })}
+      onCreer={async (nom, extra) => { await createBeneficiaire.mutateAsync({ nom, categorie: extra }) }}
+      onModifier={async (id, nom, extra) => { await updateBeneficiaire.mutateAsync({ id, donnees: { nom, categorie: extra } }) }}
       onSupprimer={(id) => deleteBeneficiaire.mutate(id)}
       champExtra={{ label: "Catégorie", key: "categorie", get: (el) => String((el as Record<string, unknown>).categorie ?? "") }}
     />
@@ -299,8 +309,8 @@ function SitesTab() {
     <TableauReferentiel
       donnees={data}
       isLoading={isLoading}
-      onCreer={(nom, extra) => createSite.mutate({ nom, description: extra })}
-      onModifier={(id, nom, extra) => updateSite.mutate({ id, donnees: { nom, description: extra } }, { onSuccess: () => toast.success("Site modifié") })}
+      onCreer={async (nom, extra) => { await createSite.mutateAsync({ nom, description: extra }) }}
+      onModifier={async (id, nom, extra) => { await updateSite.mutateAsync({ id, donnees: { nom, description: extra } }) }}
       onSupprimer={(id) => deleteSite.mutate(id)}
       champExtra={{ label: "Description", key: "description", get: (el) => String((el as Record<string, unknown>).description ?? "") }}
     />

@@ -21,6 +21,8 @@ import { SelectionBailleurs } from "@/features/projets/components/SelectionBaill
 import { SelectionBeneficiaires } from "@/features/projets/components/SelectionBeneficiaires";
 import { SelectionSites } from "@/features/projets/components/SelectionSites";
 import { useCreateProjet } from "@/features/projets/api/useCreateProjet";
+import { DocumentDropzone, type DocumentEnAttente } from "@/features/documents/components/DocumentDropzone";
+import { useUploadDocument } from "@/features/documents/api/useUploadDocument";
 import { useEtablissements } from "@/features/etablissements/api/useEtablissements";
 import { useWizardDraft } from "@/components/forms/wizard/useWizardDraft";
 import {
@@ -59,7 +61,9 @@ const ETAPES = [
 // (section 5). Etapes numerotees, barre de progression, recapitulatif.
 export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const [etapeActive, setEtapeActive] = useState(0);
+  const [documentEnAttente, setDocumentEnAttente] = useState<DocumentEnAttente | null>(null);
   const creation = useCreateProjet();
+  const uploadDocument = useUploadDocument();
   const { utilisateur } = useAuth();
   const estPresidence = utilisateur?.role === "PRESIDENCE";
   const aujourdHui = jourCourant();
@@ -185,9 +189,20 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
 
   function onSubmit(valeurs: ProjetFormValues) {
     creation.mutate(valeurs, {
-      onSuccess: (projet) => {
+      onSuccess: async (projet) => {
         effacerBrouillon();
         toast.success("Projet créé avec succès !");
+        if (documentEnAttente && estPresidence) {
+          try {
+            await uploadDocument.mutateAsync({
+              fichier: documentEnAttente.fichier,
+              type: documentEnAttente.type,
+              projet_id: projet.id,
+            });
+          } catch {
+            toast.error("Le projet est créé, mais le document n’a pas pu être téléversé.");
+          }
+        }
         onSucces(projet);
       },
       onError: (erreur) => {
@@ -199,7 +214,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const contenuEtapes = [
     // Etape 1 : Informations generales
     <div key="info" className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="nom">
             Nom du projet <span className="text-destructive">*</span>
@@ -224,7 +239,7 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="type">
             Type <span className="text-destructive">*</span>
@@ -254,11 +269,25 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
           />
         </div>
       </div>
+
+      <div className="flex flex-col gap-2 rounded-md border border-border p-4">
+        <Label>Document facultatif</Label>
+        {estPresidence ? (
+          <DocumentDropzone
+            modePreparation
+            onDocumentPret={setDocumentEnAttente}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Les documents officiels des projets sont gérés par la Présidence.
+          </p>
+        )}
+      </div>
     </div>,
 
     // Etape 2 : Dates et statut
     <div key="dates" className="flex flex-col gap-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_debut">
             Date de début <span className="text-destructive">*</span>
@@ -522,19 +551,20 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
         <div className="flex gap-2">
           <Button
             type="button"
-            variant="outline"
-            onClick={onAnnuler}
-            disabled={creation.isPending}
+            onClick={suivant}
+            disabled={creation.isPending || uploadDocument.isPending}
           >
-            Annuler
+            {(creation.isPending || uploadDocument.isPending) && <LoaderCircle className="animate-spin" />}
+            {derniereEtape ? "Créer le projet" : "Suivant"}
           </Button>
           <Button
             type="button"
-            onClick={suivant}
-            disabled={creation.isPending}
+            variant="outline"
+            onClick={onAnnuler}
+            disabled={creation.isPending || uploadDocument.isPending}
+            className="border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)]"
           >
-            {creation.isPending && <LoaderCircle className="animate-spin" />}
-            {derniereEtape ? "Créer le projet" : "Suivant"}
+            Annuler
           </Button>
         </div>
       </div>

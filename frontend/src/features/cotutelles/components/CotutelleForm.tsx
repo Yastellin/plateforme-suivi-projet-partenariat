@@ -33,6 +33,7 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
     register,
     control,
     handleSubmit,
+    reset,
     watch,
     trigger,
     formState: { errors, isValid },
@@ -63,10 +64,30 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
   }, [dateDebut, dateSoutenance, trigger])
 
   const onSubmit = (valeurs: CotutelleFormValues) => {
+    const reinitialiserApresSucces = (cotutelleEnregistree: CotutelleThese) => {
+      reset(valeurs)
+      onSucces(cotutelleEnregistree)
+    }
     if (cotutelle) {
-      modification.mutate(valeurs, { onSuccess: onSucces })
+      modification.mutate(valeurs, { onSuccess: reinitialiserApresSucces })
     } else {
-      creation.mutate(valeurs, { onSuccess: onSucces })
+      creation.mutate(valeurs, {
+        onSuccess: (cotutelleCreee) => {
+          reset({
+            nom_doctorant: "",
+            specialite: "",
+            directeur_these_local: "",
+            directeur_these_partenaire: "",
+            type: "COTUTELLE",
+            date_debut: "",
+            date_prevue_soutenance: "",
+            financement_bourse: "",
+            etablissement_id: "",
+            partenaire_id: "",
+          })
+          onSucces(cotutelleCreee)
+        },
+      })
     }
   }
 
@@ -146,13 +167,19 @@ export function CotutelleForm({ cotutelle, onSucces, onAnnuler }: CotutelleFormP
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>
-          Annuler
-        </Button>
+      <div className="flex flex-wrap justify-end gap-2">
         <Button type="submit" disabled={enCours || !isValid}>
           {enCours && <LoaderCircle className="animate-spin" />}
           {cotutelle ? "Enregistrer les modifications" : "Creer la cotutelle"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onAnnuler}
+          disabled={enCours}
+          className="border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)]"
+        >
+          Annuler
         </Button>
       </div>
     </form>

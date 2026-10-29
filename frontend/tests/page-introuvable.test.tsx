@@ -17,7 +17,7 @@ describe("PageIntrouvable", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = html
 
-    expect(conteneur.querySelector(".vt-page-introuvable .vt-404-illustration svg")).not.toBeNull()
+    expect(conteneur.querySelector(".vt-page-introuvable .vt-404-icon svg")).not.toBeNull()
     expect(conteneur.querySelector(".vt-404-card h1")?.textContent).toBe("Oups, cette page est introuvable")
     expect(conteneur.querySelector(".vt-404-btn[href='/']")?.textContent).toContain("Retour à l'accueil")
     expect(Array.from(conteneur.querySelectorAll(".vt-404-liens a")).map((lien) => lien.getAttribute("href"))).toEqual([

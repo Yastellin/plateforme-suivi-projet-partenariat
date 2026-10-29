@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom"
 import { Handshake, Landmark } from "lucide-react"
+import { ImageMedia } from "@/components/shared/ImageMedia"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicProjetsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
@@ -9,7 +10,7 @@ import { CarteLaterale } from "@/features/espace-public/components/CarteLaterale
 import { CartePublication } from "@/features/espace-public/components/CartesPubliques"
 import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
-import { Illustration } from "@/features/espace-public/components/Illustrations"
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
 import { PageIntrouvable } from "@/features/espace-public/components/PageIntrouvable"
 
@@ -50,7 +51,7 @@ export function PublicProjetDetailPage() {
         <div className="vt-detail-hero-image">
           {actualiteCouverture?.image_couverture_url || actualiteCouverture?.photo_url ? (
             <img src={actualiteCouverture.image_couverture_url ?? actualiteCouverture.photo_url ?? ""} alt="" fetchPriority="high" decoding="async" />
-          ) : <Illustration type="reseau" />}
+          ) : <ImageDefaut alt="" className="vt-image-defaut" />}
         </div>
         <div className="vt-detail-hero-content">
           <span className="vt-surtitre">Projet</span>
@@ -87,7 +88,18 @@ export function PublicProjetDetailPage() {
           <section className="vt-detail-section">
             <h2>Galerie photos</h2>
             <div className="vt-detail-galerie">
-              {photos.map((photo) => <figure key={photo.id}><img className="vt-detail-gallery-image" src={photo.url_fichier} alt={photo.legende || projet.nom} loading="lazy" decoding="async" />{photo.legende && <figcaption>{photo.legende}</figcaption>}</figure>)}
+              {photos.map((photo) => (
+                <figure key={photo.id}>
+                  <ImageMedia
+                    className="vt-detail-gallery-image"
+                    src={photo.url_fichier}
+                    alt={photo.legende || projet.nom}
+                    loading="lazy"
+                    fallback={<ImageDefaut alt="" className="vt-detail-gallery-image vt-image-defaut" />}
+                  />
+                  {photo.legende && <figcaption>{photo.legende}</figcaption>}
+                </figure>
+              ))}
             </div>
           </section>
         )}

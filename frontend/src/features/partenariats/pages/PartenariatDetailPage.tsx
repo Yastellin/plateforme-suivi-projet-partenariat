@@ -53,14 +53,18 @@ export function PartenariatDetailPage() {
       ? "/etablissement"
       : "/decideur";
 
-  function onSoumettre(valeurs: PartenariatFormValues) {
+  function onSoumettre(valeurs: PartenariatFormValues, apresSucces: () => void) {
     if (!id) {
       return;
     }
     mettreAJour(
       { id, valeurs },
       {
-        onSuccess: () => toast.success("Partenariat mis à jour"),
+        onSuccess: () => {
+          toast.success("Partenariat mis à jour");
+          apresSucces();
+          navigate(`${cheminBase}/partenaires-partenariats/partenariats`);
+        },
         onError: (erreur) => toast.error(erreur.message),
       },
     );
@@ -183,6 +187,7 @@ export function PartenariatDetailPage() {
               partenariat={partenariat}
               estPresidence={estPresidence}
               onSoumettre={onSoumettre}
+              onAnnuler={() => navigate(`${cheminBase}/partenaires-partenariats/partenariats`)}
               enCours={enCoursMiseAJour}
             />
           </PanelBody>

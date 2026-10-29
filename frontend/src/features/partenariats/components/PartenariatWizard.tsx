@@ -188,11 +188,11 @@ export function PartenariatWizard() {
 
   function creerPartenariat(valeursFormulaire: PartenariatFormValues) {
     creer(valeursFormulaire, {
-      onSuccess: (partenariat) => {
+      onSuccess: () => {
         effacerBrouillon();
         termineRef.current = true;
         toast.success('Partenariat créé en brouillon');
-        navigate(`${cheminBase}/partenaires-partenariats/partenariats/${partenariat.id}`);
+        navigate(`${cheminBase}/partenaires-partenariats/partenariats`);
       },
       onError: (erreur) => toast.error(erreur.message),
     });
@@ -202,6 +202,12 @@ export function PartenariatWizard() {
     toast.error('Certaines informations sont incomplètes', {
       description: 'Revenez aux étapes précédentes pour les compléter.',
     });
+  }
+
+  function annulerCreation() {
+    termineRef.current = true;
+    effacerBrouillon();
+    navigate(`${cheminBase}/partenaires-partenariats/partenariats`);
   }
 
   return (
@@ -239,27 +245,37 @@ export function PartenariatWizard() {
               Précédent
             </button>
 
-            {estDerniereEtape ? (
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {estDerniereEtape ? (
+                <button
+                  type="button"
+                  onClick={handleSubmit(creerPartenariat, signalerFormulaireIncomplet)}
+                  disabled={isPending || !isValid}
+                  className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
+                >
+                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Créer le partenariat
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={allerEtapeSuivante}
+                  disabled={isPending || !etapeValide}
+                  className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Suivant
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              )}
               <button
                 type="button"
-                onClick={handleSubmit(creerPartenariat, signalerFormulaireIncomplet)}
-                disabled={isPending || !isValid}
-                className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:opacity-70"
+                onClick={annulerCreation}
+                disabled={isPending}
+                className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Créer le partenariat
+                Annuler
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={allerEtapeSuivante}
-                disabled={isPending || !etapeValide}
-                className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Suivant
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            )}
+            </div>
           </div>
         </form>
       </div>

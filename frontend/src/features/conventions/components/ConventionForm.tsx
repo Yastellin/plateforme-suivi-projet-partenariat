@@ -1,8 +1,9 @@
 // src/features/conventions/components/ConventionForm.tsx
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +16,8 @@ import { useUpdateConvention } from "@/features/conventions/api/useUpdateConvent
 import { usePartenariats } from "@/features/partenariats/api/usePartenariats"
 import { useProjets } from "@/features/projets/api/useProjets"
 import { useCotutelles } from "@/features/cotutelles/api/useCotutelles"
+import { DocumentDropzone, type DocumentEnAttente } from "@/features/documents/components/DocumentDropzone"
+import { useUploadDocument } from "@/features/documents/api/useUploadDocument"
 import type { Convention } from "@/types/api"
 
 interface ConventionFormProps {
@@ -37,9 +40,11 @@ const STATUTS = [
 const VALEUR_AUCUN = "__aucun__"
 
 export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFormProps) {
+  const [documentEnAttente, setDocumentEnAttente] = useState<DocumentEnAttente | null>(null)
   const creation = useCreateConvention()
   const modification = useUpdateConvention(convention?.id ?? "")
-  const enCours = creation.isPending || modification.isPending
+  const uploadDocument = useUploadDocument()
+  const enCours = creation.isPending || modification.isPending || uploadDocument.isPending
 
   // Note : un select simple convient jusqu'a ~50 elements. Si le nombre de
   // partenariats, projets ou cotutelles dépasse ce seuil, migrer vers un combobox avec
@@ -68,7 +73,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     handleSubmit,
     watch,
     trigger,
-    formState: { errors, isValid, submitCount },
+    formState: { errors, submitCount },
   } = useForm<ConventionFormValues>({
     resolver: zodResolver(creerSchemaConvention({ exigerDateDebutFuture: !convention })),
     mode: "onChange",
@@ -88,17 +93,10 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
 
   const dateDebut = watch("date_debut")
   const dateFin = watch("date_fin")
-  const partenariatId = watch("partenariat_id")
-  const projetId = watch("projet_id")
-  const cotutelleId = watch("cotutelle_id")
 
   useEffect(() => {
     if (dateDebut && dateFin) void trigger(["date_debut", "date_fin"])
   }, [dateDebut, dateFin, trigger])
-
-  const lienSelectionne = [partenariatId, projetId, cotutelleId].some(
-    (valeur) => Boolean(valeur && valeur !== VALEUR_AUCUN),
-  )
 
   const onSubmit = (valeurs: ConventionFormValues) => {
     // Conversion explicite de la sentinelle "Aucun" en "" (puis null via
@@ -109,10 +107,28 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
       projet_id: valeurs.projet_id === VALEUR_AUCUN ? "" : valeurs.projet_id,
       cotutelle_id: valeurs.cotutelle_id === VALEUR_AUCUN ? "" : valeurs.cotutelle_id,
     }
+    const optionsMutation = {
+      onSuccess: async (conventionEnregistree: Convention) => {
+        toast.success(convention ? "Convention mise à jour" : "Convention créée")
+        if (!convention && documentEnAttente) {
+          try {
+            await uploadDocument.mutateAsync({
+              fichier: documentEnAttente.fichier,
+              type: documentEnAttente.type,
+              convention_id: conventionEnregistree.id,
+            })
+          } catch {
+            toast.error("La convention est créée, mais le document n’a pas pu être téléversé.")
+          }
+        }
+        onSucces(conventionEnregistree)
+      },
+      onError: (erreur: Error) => toast.error(erreur.message),
+    }
     if (convention) {
-      modification.mutate(valeursEnvoyees, { onSuccess: onSucces })
+      modification.mutate(valeursEnvoyees, optionsMutation)
     } else {
-      creation.mutate(valeursEnvoyees, { onSuccess: onSucces })
+      creation.mutate(valeursEnvoyees, optionsMutation)
     }
   }
 
@@ -129,7 +145,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         <Textarea id="description" {...register("description")} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_signature">Date de signature</Label>
           <Input id="date_signature" type="date" {...register("date_signature")} />
@@ -170,8 +186,11 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         aria-label="Liens de la convention"
         aria-describedby={submitCount > 0 && errors.root?.liens ? "erreur-liens-convention" : undefined}
       >
+        <p className="text-sm text-muted-foreground">
+          Associez cette convention à au moins un partenariat, un projet ou une cotutelle.
+        </p>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="partenariat_id">Partenariat lie (optionnel)</Label>
+          <Label htmlFor="partenariat_id">Partenariat lié (optionnel)</Label>
           <Controller
             control={control}
             name="partenariat_id"
@@ -258,11 +277,26 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         ) : null}
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>Annuler</Button>
-        <Button type="submit" disabled={enCours || (!isValid && lienSelectionne)}>
+      {!convention ? (
+        <div className="flex flex-col gap-2 rounded-md border border-border p-4">
+          <Label>Document facultatif</Label>
+          <DocumentDropzone modePreparation onDocumentPret={setDocumentEnAttente} />
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button type="submit" disabled={enCours}>
           {enCours && <LoaderCircle className="animate-spin" />}
-          {convention ? "Enregistrer les modifications" : "Creer la convention"}
+          {convention ? "Enregistrer les modifications" : "Créer la convention"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onAnnuler}
+          disabled={enCours}
+          className="border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)]"
+        >
+          Annuler
         </Button>
       </div>
     </form>

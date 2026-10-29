@@ -6,7 +6,7 @@ import { validerDates } from "./regles-dates"
 
 const schemaConventionBase = z.object({
   reference: z.string().optional(),
-  titre: z.string().min(2, "Le titre doit contenir au moins 2 caractères"),
+  titre: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
   date_signature: z.string().optional(),
   date_debut: z.string().optional(),
   date_fin: z.string().optional(),

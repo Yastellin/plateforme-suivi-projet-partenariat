@@ -37,6 +37,8 @@ const PartenaireCreatePage = lazy(() => import("@/features/partenaires/pages/Par
 const PartenaireDetailPage = lazy(() => import("@/features/partenaires/pages/PartenaireDetailPage").then((m) => ({ default: m.PartenaireDetailPage })))
 const ConventionsListePage = lazy(() => import("@/features/conventions/pages/ConventionsListePage").then((m) => ({ default: m.ConventionsListePage })))
 const ConventionDetailPage = lazy(() => import("@/features/conventions/pages/ConventionDetailPage").then((m) => ({ default: m.ConventionDetailPage })))
+const ConventionCreatePage = lazy(() => import("@/features/conventions/pages/ConventionCreatePage").then((m) => ({ default: m.ConventionCreatePage })))
+const ConventionEditPage = lazy(() => import("@/features/conventions/pages/ConventionEditPage").then((m) => ({ default: m.ConventionEditPage })))
 const ProjetsListePage = lazy(() => import("@/features/projets/pages/ProjetsListePage").then((m) => ({ default: m.ProjetsListePage })))
 const ProjetDetailPage = lazy(() => import("@/features/projets/pages/ProjetDetailPage").then((m) => ({ default: m.ProjetDetailPage })))
 const CotutellesListePage = lazy(() => import("@/features/cotutelles/pages/CotutellesListePage").then((m) => ({ default: m.CotutellesListePage })))
@@ -287,6 +289,8 @@ const router = createBrowserRouter([
     children: [
       { path: "/presidence", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><TableauDeBordPresidence /></Charge></RouteProtegee> },
       { path: "/presidence/conventions", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ConventionsListePage /></Charge></RouteProtegee> },
+      { path: "/presidence/conventions/nouveau", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ConventionCreatePage /></Charge></RouteProtegee> },
+      { path: "/presidence/conventions/:id/modifier", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ConventionEditPage /></Charge></RouteProtegee> },
       { path: "/presidence/conventions/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ConventionDetailPage /></Charge></RouteProtegee> },
       { path: "/presidence/referentiels", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ReferentielsPage /></Charge></RouteProtegee> },
       { path: "/presidence/etablissements", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><EtablissementsListePage /></Charge></RouteProtegee> },

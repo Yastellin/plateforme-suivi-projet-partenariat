@@ -32,6 +32,10 @@ vi.mock('@/features/etablissements/api/useEtablissements', () => ({
   useEtablissements: () => ({ data: { data: [] } }),
 }));
 
+vi.mock('@/features/documents/api/useUploadDocument', () => ({
+  useUploadDocument: () => ({ isPending: false, mutate: vi.fn(), mutateAsync: vi.fn() }),
+}));
+
 vi.mock('@/components/forms/wizard/useWizardDraft', () => ({
   useWizardDraft: () => ({ effacerBrouillon: etat.effacerBrouillon }),
 }));

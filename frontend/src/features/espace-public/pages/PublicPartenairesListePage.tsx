@@ -11,7 +11,6 @@ import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPart
 import { usePublicTousPartenaires } from "@/features/espace-public/api/usePublicDonneesDetail"
 import { PageListePublique } from "@/features/espace-public/components/PageListePublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
-import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 import type { PartenairePublic } from "@/types/api"
 
@@ -34,13 +33,11 @@ function TuileLogoPartenaire({ partenaire }: { partenaire: PartenairePublic }) {
       className="vt-logo-tile vt-partenaire-logo"
       aria-label={`Voir le partenaire ${partenaire.nom}, ${partenaire.pays}`}
     >
-      <span className="vt-partenaire-logo-image">
-        {partenaire.logo_url ? (
+      {partenaire.logo_url ? (
+        <span className="vt-partenaire-logo-image">
           <img src={partenaire.logo_url} alt="" loading="lazy" decoding="async" />
-        ) : (
-          <ImageDefaut alt="" className="vt-image-defaut" />
-        )}
-      </span>
+        </span>
+      ) : null}
       <strong>{partenaire.nom}</strong>
       <span className="vt-partenaire-pays">{partenaire.pays}</span>
     </Link>

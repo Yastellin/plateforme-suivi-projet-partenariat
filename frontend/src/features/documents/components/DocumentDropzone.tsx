@@ -15,11 +15,18 @@ import { Button } from "@/components/ui/button";
 import { useUploadDocument } from "@/features/documents/api/useUploadDocument";
 import type { TypeDocument } from "@/types/api";
 
+export interface DocumentEnAttente {
+  fichier: File;
+  type: TypeDocument;
+}
+
 interface DocumentDropzoneProps {
   projetId?: string;
   conventionId?: string;
   cotutelleId?: string;
   partenariatId?: string;
+  modePreparation?: boolean;
+  onDocumentPret?: (document: DocumentEnAttente | null) => void;
 }
 
 const TYPES: { value: TypeDocument; label: string }[] = [
@@ -34,6 +41,8 @@ export function DocumentDropzone({
   conventionId,
   cotutelleId,
   partenariatId,
+  modePreparation = false,
+  onDocumentPret,
 }: DocumentDropzoneProps) {
   const [fichierSelectionne, setFichierSelectionne] = useState<File | null>(
     null,
@@ -44,13 +53,16 @@ export function DocumentDropzone({
   const upload = useUploadDocument(setProgression);
 
   const onDrop = useCallback((fichiersAcceptes: File[]) => {
-    if (fichiersAcceptes[0]) {
-      setFichierSelectionne(fichiersAcceptes[0]);
-    }
-  }, []);
+    const fichier = fichiersAcceptes[0];
+    if (!fichier) return;
+    setFichierSelectionne(fichier);
+    onDocumentPret?.({ fichier, type });
+  }, [onDocumentPret, type]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
+    noClick: Boolean(fichierSelectionne),
+    noKeyboard: Boolean(fichierSelectionne),
     onDropRejected: (rejets) => {
       const tailleDepassee = rejets.some((rejet) =>
         rejet.errors.some((erreur) => erreur.code === "file-too-large"),
@@ -71,8 +83,20 @@ export function DocumentDropzone({
     },
   });
 
+  function retirerSelection() {
+    setFichierSelectionne(null);
+    onDocumentPret?.(null);
+  }
+
+  function changerType(nouveauType: TypeDocument) {
+    setType(nouveauType);
+    if (fichierSelectionne) {
+      onDocumentPret?.({ fichier: fichierSelectionne, type: nouveauType });
+    }
+  }
+
   const handleEnvoyer = () => {
-    if (!fichierSelectionne) return;
+    if (modePreparation || !fichierSelectionne) return;
 
     upload.mutate(
       {
@@ -86,7 +110,7 @@ export function DocumentDropzone({
       {
         onSuccess: () => {
           toast.success("Document televerse avec succes");
-          setFichierSelectionne(null);
+          retirerSelection();
           setProgression(0);
         },
         onError: (erreur) => toast.error(erreur.message),
@@ -118,17 +142,20 @@ export function DocumentDropzone({
                 {fichierSelectionne.name}
               </span>
             </div>
-            <button
-              onClick={() => setFichierSelectionne(null)}
-              disabled={upload.isPending}
-            >
-              <X size={16} className="text-muted-foreground" />
-            </button>
+            <div className="flex items-center gap-2">
+              <input {...getInputProps({ className: "sr-only" })} />
+              <Button type="button" variant="outline" size="sm" onClick={open} disabled={upload.isPending}>
+                Remplacer
+              </Button>
+              <Button type="button" variant="ghost" size="icon-sm" aria-label="Retirer le document sélectionné" onClick={retirerSelection} disabled={upload.isPending}>
+                <X size={16} className="text-muted-foreground" />
+              </Button>
+            </div>
           </div>
 
           <Select
             value={type}
-            onValueChange={(v) => setType(v as TypeDocument)}
+            onValueChange={(v) => changerType(v as TypeDocument)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -151,9 +178,15 @@ export function DocumentDropzone({
             </div>
           )}
 
-          <Button onClick={handleEnvoyer} disabled={upload.isPending}>
-            {upload.isPending ? `Envoi... ${progression}%` : "Televerser"}
-          </Button>
+          {modePreparation ? (
+            <p className="text-sm text-muted-foreground">
+              Ce document sera téléversé après la création de l’entité.
+            </p>
+          ) : (
+            <Button type="button" onClick={handleEnvoyer} disabled={upload.isPending}>
+              {upload.isPending ? `Envoi... ${progression}%` : "Téléverser"}
+            </Button>
+          )}
         </div>
       )}
     </div>

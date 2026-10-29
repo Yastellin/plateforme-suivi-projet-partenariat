@@ -3,6 +3,7 @@ import { isAxiosError } from "axios"
 import { ArrowLeft, CalendarDays, Landmark, Newspaper } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { ImageMedia } from "@/components/shared/ImageMedia"
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 import { SkeletonPage } from "@/components/shared/SkeletonPage"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 import { usePublicPublicationDetail } from "@/features/espace-public/api/usePublicPublications"
@@ -10,7 +11,6 @@ import { BadgeCategorie } from "@/features/espace-public/components/BadgeCategor
 import { CarteLaterale } from "@/features/espace-public/components/CarteLaterale"
 import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
-import { Illustration } from "@/features/espace-public/components/Illustrations"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
 import { PageIntrouvable } from "@/features/espace-public/components/PageIntrouvable"
 
@@ -58,7 +58,7 @@ export function PublicationDetailPage() {
           {publication.image_couverture_url ? (
             <img src={publication.image_couverture_url} alt="" fetchPriority="high" decoding="async" />
           ) : (
-            <Illustration type="montagne" />
+            <ImageDefaut alt="" className="vt-image-defaut" />
           )}
         </div>
         <div className="vt-detail-hero-content">
@@ -109,7 +109,12 @@ export function PublicationDetailPage() {
             <div className="vt-detail-galerie">
               {photos.map((photo) => (
                 <figure key={photo.id}>
-                  <ImageMedia src={photo.url_fichier} alt={photo.legende || publication.titre} className="vt-detail-gallery-image" />
+                  <ImageMedia
+                    src={photo.url_fichier}
+                    alt={photo.legende || publication.titre}
+                    className="vt-detail-gallery-image"
+                    fallback={<ImageDefaut alt="" className="vt-detail-gallery-image vt-image-defaut" />}
+                  />
                   {photo.legende && <figcaption>{photo.legende}</figcaption>}
                 </figure>
               ))}

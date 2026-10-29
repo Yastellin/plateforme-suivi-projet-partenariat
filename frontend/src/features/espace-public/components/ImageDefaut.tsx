@@ -1,19 +1,17 @@
-// Image institutionnelle utilisée lorsqu'aucune image propre à l'entité n'est disponible.
+// Image institutionnelle utilisée lorsqu'une couverture attendue est absente.
 interface ImageDefautProps {
   alt?: string
   className?: string
 }
 
-export function ImageDefaut({
-  alt = "Image indisponible",
-  className = "",
-}: ImageDefautProps) {
+export function ImageDefaut({ alt = "", className = "" }: ImageDefautProps) {
   return (
     <img
       src="/images/icone_aucune_image.jpg"
       alt={alt}
       className={className}
       loading="lazy"
+      decoding="async"
     />
   )
 }

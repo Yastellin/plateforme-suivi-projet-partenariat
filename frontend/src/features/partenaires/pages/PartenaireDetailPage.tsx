@@ -65,7 +65,7 @@ export function PartenaireDetailPage() {
       {
         onSuccess: () => {
           toast.success("Partenaire mis à jour");
-          setEditionEnCours(false);
+          navigate(`${cheminBase}/partenaires-partenariats/partenaires`);
         },
         onError: (erreur) => toast.error(erreur.message),
       },
@@ -217,7 +217,7 @@ export function PartenaireDetailPage() {
               <PartenaireForm
                 partenaire={partenaire}
                 peutGererVisibilite={permissions.estPresidence}
-                onAnnuler={() => setEditionEnCours(false)}
+                onAnnuler={() => navigate(`${cheminBase}/partenaires-partenariats/partenaires`)}
                 onSoumettre={onSoumettre}
                 enCours={enCoursMiseAJour}
               />

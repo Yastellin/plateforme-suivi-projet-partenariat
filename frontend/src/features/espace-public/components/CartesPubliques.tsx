@@ -41,11 +41,7 @@ export function CartePartenaire({ partenaire, className }: { partenaire: Partena
         <span className="vt-pt-ini">
           <img src={partenaire.logo_url} alt="" loading="lazy" decoding="async" />
         </span>
-      ) : (
-        <span className="vt-pt-ini">
-          <ImageDefaut alt="" className="vt-image-defaut" />
-        </span>
-      )}
+      ) : null}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <b>
@@ -87,14 +83,16 @@ export function CartePartenariat({
   return (
     <article className={`vt-pub h-full ${className ?? ""}`}>
       <Link to={`/partenariats/${partenariat.id}`} style={LIEN_PLEINE_CARTE}>
-        <div className="vt-card-top">
-          <span className="vt-card-partner-logo">
+        {(logoPartenaire || partenariat.partenaires.length > 0) && (
+          <div className="vt-card-top">
             {logoPartenaire?.logo_url ? (
-              <img src={logoPartenaire.logo_url} alt="" loading="lazy" decoding="async" />
-            ) : <ImageDefaut alt="" className="vt-image-defaut" />}
-          </span>
-          {partenariat.partenaires.length > 0 && <span className="vt-card-partner-count">{partenariat.partenaires.length} partenaire(s)</span>}
-        </div>
+              <span className="vt-card-partner-logo">
+                <img src={logoPartenaire.logo_url} alt="" loading="lazy" decoding="async" />
+              </span>
+            ) : null}
+            {partenariat.partenaires.length > 0 && <span className="vt-card-partner-count">{partenariat.partenaires.length} partenaire(s)</span>}
+          </div>
+        )}
         <div className="vt-pub-body vt-card-body">
           <div className="vt-card-tags">
             <span className={classeBadgeDomaine(partenariat.domaine)}>{partenariat.domaine}</span>

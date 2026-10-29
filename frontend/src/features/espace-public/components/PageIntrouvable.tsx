@@ -14,7 +14,7 @@ export function PageIntrouvable({
   return (
     <div className="vt-page-introuvable">
       <div className="vt-404-card">
-        <div className="vt-404-illustration" aria-hidden="true">
+        <div className="vt-404-icon" aria-hidden="true">
           <Search size={100} strokeWidth={1.5} />
         </div>
         <h1>{titre}</h1>

@@ -5,7 +5,6 @@ import { ArrowRight, MapPin } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
-import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 
 export function SectionEtablissements() {
   const { data, isLoading } = usePublicAccueil()
@@ -38,12 +37,8 @@ export function SectionEtablissements() {
                         <span className="vt-mono">
                           <img src={etab.logo_url} alt="" loading="lazy" decoding="async" />
                         </span>
-                      ) : (
-                        <span className="vt-mono">
-                          <ImageDefaut alt="" className="vt-image-defaut" />
-                        </span>
-                      )}
-                      <div style={{ minWidth: 0 }}>
+                      ) : null}
+                      <div style={{ minWidth: 0, flex: 1 }}>
                         <h3>{etab.nom}</h3>
                         {etab.sigle && (
                           <div className="vt-place">

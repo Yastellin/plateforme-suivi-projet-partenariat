@@ -42,6 +42,14 @@ export function PartenaireCreatePage() {
 
   const cheminBase = estPresidence ? '/presidence' : '/etablissement';
 
+  function annulerCreation() {
+    navigate(
+      retourWizard
+        ? `${cheminBase}/partenaires-partenariats/partenariats/nouveau`
+        : `${cheminBase}/partenaires-partenariats/partenaires`,
+    );
+  }
+
   function onSoumettre(valeurs: PartenaireFormValues, logo?: File) {
     creer({ valeurs, logo }, {
       onSuccess: ({ partenaire, logoTeleverse }) => {
@@ -80,7 +88,7 @@ export function PartenaireCreatePage() {
           navigate(`${cheminBase}/partenaires-partenariats/partenariats/nouveau`);
           return;
         }
-        navigate(`${cheminBase}/partenaires-partenariats/partenaires/${partenaire.id}`);
+        navigate(`${cheminBase}/partenaires-partenariats/partenaires`);
       },
       onError: (erreur) => toast.error(erreur.message),
     });
@@ -132,24 +140,29 @@ export function PartenaireCreatePage() {
                 </div>
               ) : null}
 
-              <button
-                type="button"
-                disabled={nomRecherche.trim().length === 0}
-                onClick={() => setEtapeFormulaire(true)}
-                className="rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Continuer
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  disabled={nomRecherche.trim().length === 0}
+                  onClick={() => setEtapeFormulaire(true)}
+                  className="rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Continuer
+                </button>
+                <button
+                  type="button"
+                  onClick={annulerCreation}
+                  className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-chrome-hover)]"
+                >
+                  Annuler
+                </button>
+              </div>
             </div>
           ) : (
             <PartenaireForm
               nomInitial={nomRecherche}
               peutGererVisibilite={estPresidence}
-              onAnnuler={() => navigate(
-                retourWizard
-                  ? `${cheminBase}/partenaires-partenariats/partenariats/nouveau`
-                  : `${cheminBase}/partenaires-partenariats/partenaires`,
-              )}
+              onAnnuler={annulerCreation}
               onSoumettre={onSoumettre}
               enCours={isPending}
             />

@@ -22,7 +22,7 @@ afterEach(async () => {
 });
 
 describe("ImageMedia", () => {
-  it("essaie le chemin historique avant de remplacer une image cassée par les initiales", async () => {
+  it("essaie le chemin historique puis retire un logo indisponible", async () => {
     await act(async () => {
       racine.render(
         createElement(LogoMedia, {
@@ -51,11 +51,7 @@ describe("ImageMedia", () => {
     });
 
     expect(conteneur.querySelector("img")).toBeNull();
-    expect(conteneur.textContent).toContain("UT");
-    expect(
-      conteneur.querySelector(
-        '[aria-label="Logo de Université de Toliara indisponible"]',
-      ),
-    ).not.toBeNull();
+    expect(conteneur.textContent).toBe("");
+    expect(conteneur.querySelector('[role="img"]')).toBeNull();
   });
 });
