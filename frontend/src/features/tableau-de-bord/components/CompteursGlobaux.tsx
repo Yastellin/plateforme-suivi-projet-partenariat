@@ -1,10 +1,11 @@
-﻿// src/features/tableau-de-bord/components/CompteursGlobaux.tsx
+// src/features/tableau-de-bord/components/CompteursGlobaux.tsx
 
-import { Users, FolderKanban, FileCheck2, ClockAlert } from 'lucide-react';
+import { Check, Clock, FolderKanban, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { KpiCard } from '@/components/shared/KpiCard';
-import { KpiGrid } from '@/components/shared/KpiGrid';
+import { useAuth } from '@/hooks/useAuth';
+import { cheminTableauDeBord } from '@/router';
 import type { CompteursTableauDeBord } from '@/types/api';
+import { CarteIndicateur } from './CarteIndicateur';
 
 interface CompteursGlobauxProps {
   compteurs: CompteursTableauDeBord | undefined;
@@ -12,42 +13,58 @@ interface CompteursGlobauxProps {
 }
 
 export function CompteursGlobaux({ compteurs, chargement }: CompteursGlobauxProps) {
+  const { utilisateur } = useAuth();
+
   if (chargement || !compteurs) {
     return (
-      <KpiGrid>
+      <div className="mb-[22px] grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[0, 1, 2, 3].map((cle) => (
-          <Skeleton key={cle} className="h-[120px] rounded-[var(--radius)]" />
+          <Skeleton key={cle} className="h-[164px] rounded-2xl" />
         ))}
-      </KpiGrid>
+      </div>
     );
   }
 
-  const signees = (compteurs as { conventions_signees?: number }).conventions_signees
-    ?? ((compteurs.repartition_conventions?.SIGNEE ?? 0) + (compteurs.repartition_conventions?.ACTIVE ?? 0));
+  const base = utilisateur ? cheminTableauDeBord(utilisateur.role) : '';
+
+  const partenairesActifs = compteurs.partenaires_actifs ?? compteurs.partenaires ?? 0;
+  const projetsEnCours = compteurs.projets_en_cours ?? compteurs.projets ?? 0;
+  const signees =
+    (compteurs as { conventions_signees?: number }).conventions_signees ??
+    (compteurs.repartition_conventions?.SIGNEE ?? 0) + (compteurs.repartition_conventions?.ACTIVE ?? 0);
+  const enAttenteSignature = compteurs.repartition_conventions?.EN_ATTENTE_SIGNATURE ?? 0;
+  const echeancesProches = compteurs.conventions_a_echeance ?? 0;
 
   return (
-    <KpiGrid>
-      <KpiCard
-        icone={<Users className="h-4 w-4" />}
-        libelle="Partenaires actifs"
-        valeur={compteurs.partenaires_actifs ?? compteurs.partenaires ?? 0}
+    <div className="mb-[22px] grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <CarteIndicateur
+        titre="Partenaires actifs"
+        valeur={partenairesActifs}
+        icone={<Users className="h-[18px] w-[18px]" />}
+        theme="emerald"
+        lien={{ libelle: 'Voir la liste', chemin: `${base}/partenaires-partenariats/partenaires` }}
       />
-      <KpiCard
-        icone={<FolderKanban className="h-4 w-4" />}
-        libelle="Projets en cours"
-        valeur={compteurs.projets_en_cours ?? compteurs.projets ?? 0}
+      <CarteIndicateur
+        titre="Projets en cours"
+        valeur={projetsEnCours}
+        icone={<FolderKanban className="h-[18px] w-[18px]" />}
+        theme="blue"
+        lien={{ libelle: 'Voir les projets', chemin: `${base}/projets` }}
       />
-      <KpiCard
-        icone={<FileCheck2 className="h-4 w-4" />}
-        libelle="Conventions signées"
+      <CarteIndicateur
+        titre="Conventions signées"
         valeur={signees}
+        icone={<Check className="h-[18px] w-[18px]" />}
+        theme="violet"
+        pied={`${enAttenteSignature} en attente de signature`}
       />
-      <KpiCard
-        icone={<ClockAlert className="h-4 w-4" />}
-        libelle="Conventions à échéance"
-        valeur={compteurs.conventions_a_echeance ?? 0}
-        critique
+      <CarteIndicateur
+        titre="Échéances proches"
+        valeur={echeancesProches}
+        icone={<Clock className="h-[18px] w-[18px]" />}
+        theme="amber"
+        pied={echeancesProches === 0 ? 'Aucune sous 30 jours' : `${echeancesProches} sous 30 jours`}
       />
-    </KpiGrid>
+    </div>
   );
 }

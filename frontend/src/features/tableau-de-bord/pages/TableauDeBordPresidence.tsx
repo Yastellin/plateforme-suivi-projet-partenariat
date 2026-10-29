@@ -5,6 +5,7 @@ import { Download } from 'lucide-react';
 import { useTableauDeBord } from '../api/useTableauDeBord';
 import { CompteursGlobaux } from '../components/CompteursGlobaux';
 import { GraphiqueStatuts } from '../components/GraphiqueStatuts';
+import { RepartitionProjetsParStatut } from '../components/RepartitionProjetsParStatut';
 import { ActiviteMensuelle } from '../components/ActiviteMensuelle';
 import { ConventionsPrioritaires } from '../components/ConventionsPrioritaires';
 import { BandeauEtat } from '../components/BandeauEtat';
@@ -63,6 +64,13 @@ export function TableauDeBordPresidence() {
             <PanelHeader titre="Répartition des conventions" sousTitre="Par statut" />
             <PanelBody>
               <GraphiqueStatuts compteurs={compteurs} chargement={chargementCompteurs} />
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader titre="Projets par statut" sousTitre="Répartition de tous les projets selon leur statut" />
+            <PanelBody>
+              <RepartitionProjetsParStatut projetsParStatut={compteurs?.projets_par_statut} chargement={chargementCompteurs} />
             </PanelBody>
           </Panel>
         </div>
