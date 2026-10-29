@@ -1,6 +1,7 @@
 // src/features/espace-public/components/CartesPubliques.tsx
-// Cartes de la vitrine (maquette) : partenaires, projets, publications.
-// Les textes de repli viennent de lib/publique.ts et ne contiennent aucune promesse inventee.
+// Cartes de la vitrine publique : partenaires, projets, publications et variantes de mise en page.
+// Les aperçus utilisent uniquement les contenus publics disponibles.
+import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { ArrowRight, CalendarDays, ExternalLink, Globe, Handshake, Landmark, Star } from "lucide-react"
@@ -39,6 +40,20 @@ function classeBadgeDomaine(domaine: string): string {
 }
 
 const LIEN_PLEINE_CARTE = { display: "contents", color: "inherit", textDecoration: "none" } as const
+
+interface VarianteCarteProps {
+  children: ReactNode
+  className?: string
+}
+
+// Enveloppes de présentation communes, sans modifier le contenu des cartes.
+export function CarteStandard({ children, className = "" }: VarianteCarteProps) {
+  return <div className={`vt-card-standard ${className}`}>{children}</div>
+}
+
+export function CarteMiseEnAvant({ children, className = "" }: VarianteCarteProps) {
+  return <div className={`vt-card-featured ${className}`}>{children}</div>
+}
 
 export function CartePartenaire({ partenaire, className }: { partenaire: PartenairePublic; className?: string }) {
   return (

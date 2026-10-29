@@ -1,8 +1,8 @@
 // src/features/espace-public/components/SectionProjetsEnVedette.tsx
-// Projets publics de l'accueil : trois cartes dans une grille responsive.
+// Projets publics de l'accueil, en grille ou carte mise en avant selon le nombre.
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { CarteProjet } from "@/features/espace-public/components/CartesPubliques"
+import { CarteMiseEnAvant, CarteProjet, CarteStandard } from "@/features/espace-public/components/CartesPubliques"
 import {
   RevealGroup,
   RevealItem,
@@ -11,7 +11,7 @@ import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/componen
 
 export function SectionProjetsEnVedette() {
   const { data, isLoading } = usePublicAccueil()
-  const projets = data?.projets_a_la_une?.slice(0, 3) ?? []
+  const projets = data?.projets_a_la_une?.slice(0, 4) ?? []
   if (!isLoading && projets.length === 0) return null
 
   return (
@@ -36,13 +36,21 @@ export function SectionProjetsEnVedette() {
             ))}
           </div>
         ) : (
-          <RevealGroup className="vt-accueil-card-grid" direction="right">
+          <RevealGroup
+            className={`vt-accueil-card-grid${projets.length === 1 ? " vt-card-grid-single" : ` vt-card-grid-${projets.length}`}`}
+            direction="right"
+          >
             {projets.map((projet) => (
               <RevealItem key={projet.id} className="vt-card-list-item h-full">
-                <CarteProjet
-                  projet={projet}
-                  lien={`/projets/${projet.id}`}
-                />
+                {projets.length === 1 ? (
+                  <CarteMiseEnAvant>
+                    <CarteProjet projet={projet} lien={`/projets/${projet.id}`} />
+                  </CarteMiseEnAvant>
+                ) : (
+                  <CarteStandard>
+                    <CarteProjet projet={projet} lien={`/projets/${projet.id}`} />
+                  </CarteStandard>
+                )}
               </RevealItem>
             ))}
           </RevealGroup>
