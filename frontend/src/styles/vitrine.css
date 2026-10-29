@@ -3308,6 +3308,15 @@ select.vt-fld-input {
   transform: translateY(-5px) scale(1.02);
 }
 
+.vitrine .vt-fanion-logo {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+}
+
 @media (max-width: 1024px) {
   .vitrine .vt-home-hero h1 {
     font-size: 3rem;

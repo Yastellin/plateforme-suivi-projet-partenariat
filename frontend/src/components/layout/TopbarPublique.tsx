@@ -19,7 +19,6 @@ const LIENS_NAV: LienNav[] = [
   { label: "Contact", href: "/contact" },
 ]
 
-// Un lien est actif sur sa page et sur les pages de détail qui en dépendent.
 function estActif(lien: LienNav, chemin: string): boolean {
   if (lien.href === "/") return chemin === "/"
   return chemin === lien.href || chemin.startsWith(`${lien.href}/`)
@@ -44,7 +43,11 @@ export function TopbarPublique() {
     <header className="vt-top" data-defile={defile} data-transparent={surAccueil && !defile}>
       <div className="vt-wrap">
         <Link to="/" className="vt-brandmark" aria-label="Université de Fianarantsoa, accueil">
-          <span className="vt-fanion" aria-hidden="true">UF</span>
+          <img
+            className="vt-fanion-logo"
+            src="/images/universit_de_fianarantsoa_logo.jpg"
+            alt="Logo de l'Université de Fianarantsoa"
+          />
           <span>
             <span className="vt-brand-name">Partenariats UF</span>
             <span className="vt-brand-sub">Université de Fianarantsoa</span>
