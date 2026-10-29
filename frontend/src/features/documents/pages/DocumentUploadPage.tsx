@@ -74,8 +74,8 @@ export function DocumentUploadPage() {
   return (
     <div>
       <PageHeader
-        titre="Téléverser un document"
-        description="Ajoutez un document PDF ou Word et rattachez-le à l'entité concernée."
+        titre="Téléverser des documents"
+        description="Ajoutez plusieurs documents PDF, DOC ou DOCX et rattachez-les à l'entité concernée."
         actions={
           <button
             type="button"

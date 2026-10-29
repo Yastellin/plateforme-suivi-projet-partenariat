@@ -181,8 +181,12 @@ describe('convention : regles de dates', () => {
     expect(creation.safeParse(valeurs({ date_debut: AUJOURDHUI, date_fin: DANS_UN_AN })).success).toBe(true);
   });
 
-  it('refuse une date de fin anterieure ou egale a la date de debut', () => {
-    const resultat = creation.safeParse(valeurs({ date_debut: DANS_UN_AN, date_fin: DANS_UN_AN }));
+  it('accepte une date de fin egale a la date de debut', () => {
+    expect(creation.safeParse(valeurs({ date_debut: DANS_UN_AN, date_fin: DANS_UN_AN })).success).toBe(true);
+  });
+
+  it('refuse une date de fin anterieure a la date de debut', () => {
+    const resultat = creation.safeParse(valeurs({ date_debut: DANS_UN_AN, date_fin: DEMAIN }));
 
     expect(resultat.success).toBe(false);
     expect(cheminsEnErreur(resultat)).toContain('date_fin');
