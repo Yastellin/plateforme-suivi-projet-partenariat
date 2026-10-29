@@ -201,18 +201,29 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector('#partenaires .vt-empty-btn[href="/partenariats"]')?.textContent).toBe("Découvrir nos partenariats")
   })
 
-  it("affiche exactement les quatre compteurs publics dans l'ordre demandé", () => {
+  it("affiche exactement les quatre compteurs publics dans la grille asymétrique", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
+    const section = conteneur.querySelector(".vt-asymmetric-stats-section")
 
-    expect(Array.from(conteneur.querySelectorAll(".vt-home-stat > span")).map((item) => item.textContent)).toEqual([
-      "Établissements",
-      "Partenaires",
-      "Projets",
-      "Pays partenaires",
+    expect(section?.querySelector(".vt-stat-big-main .num")?.textContent).toBe("3")
+    expect(section?.querySelector(".vt-stat-big-main .lbl")?.textContent).toBe("Établissements partenaires")
+    expect(Array.from(section?.querySelectorAll(".vt-stat-small-card .lbl") ?? []).map((item) => item.textContent)).toEqual([
+      "Partenaire",
+      "Projet",
+      "Pays partenaire",
     ])
-    expect(conteneur.querySelectorAll(".vt-home-stat")).toHaveLength(4)
-    expect(conteneur.querySelector(".vt-home-stats")?.textContent).not.toMatch(/publication|convention|document/i)
+    expect(Array.from(section?.querySelectorAll(".vt-stat-small-card .num") ?? []).map((item) => item.textContent)).toEqual([
+      "4",
+      "4",
+      "2",
+    ])
+    expect(section?.querySelectorAll(".vt-stat-small-card")).toHaveLength(3)
+    expect(section?.querySelector(".vt-stat-big-main .sub")?.textContent).toBe(
+      "Des collaborations académiques solides avec des institutions de premier plan.",
+    )
+    expect(section?.querySelector(".vt-stat-big-main svg")).not.toBeNull()
+    expect(section?.textContent).not.toMatch(/publication|projet publié|convention|document|domaine/i)
   })
 
   it("uniformise les titres, sous-titres et boutons des quatre sections", () => {
