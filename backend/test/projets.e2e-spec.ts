@@ -149,12 +149,6 @@ describe('Projets (e2e)', () => {
       expect(tableau.compteurs.projets_en_cours).toBe(
         tableau.projets_par_statut.EN_COURS,
       );
-      // La repartition par domaine couvre exactement les projets en cours
-      const totalDomaines = tableau.projets_par_domaine.reduce(
-        (somme: number, ligne: { nombre: number }) => somme + ligne.nombre,
-        0,
-      );
-      expect(totalDomaines).toBe(tableau.compteurs.projets_en_cours);
     });
 
     it('ne montre pas a un etablissement les projets d un autre', async () => {

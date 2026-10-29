@@ -22,7 +22,6 @@ import {
   ProjetsParStatutDto,
   ConventionsParStatutDto,
   RepartitionConventionsDto,
-  ProjetParDomaineDto,
 } from './dto/tableau-de-bord-response.dto';
 import {
   EcheancierResponseDto,
@@ -63,21 +62,14 @@ export class TableauDeBordService {
     const filtreEtab =
       !estGlobal && etablissementId ? etablissementId : undefined;
 
-    const [compteurs, projets_par_statut, conventions_par_statut, projets_par_domaine] =
+    const [compteurs, projets_par_statut, conventions_par_statut] =
       await Promise.all([
         this.getCompteurs(filtreEtab),
         this.getProjetsParStatut(filtreEtab),
         this.getConventionsParStatut(filtreEtab),
-        this.getProjetsEnCoursParDomaine(filtreEtab),
       ]);
 
-    return {
-      compteurs,
-      projets_par_statut,
-      conventions_par_statut,
-      projets_par_domaine,
-      perimetre,
-    };
+    return { compteurs, projets_par_statut, conventions_par_statut, perimetre };
   }
 
   private async getCompteurs(
@@ -228,31 +220,6 @@ export class TableauDeBordService {
     }
 
     return result;
-  }
-
-  // Projets en cours regroupés par domaine (texte libre ; vide = « Non renseigné »).
-  private async getProjetsEnCoursParDomaine(
-    etablissementId?: string,
-  ): Promise<ProjetParDomaineDto[]> {
-    const domaineNormalise = "COALESCE(NULLIF(TRIM(p.domaine), ''), 'Non renseigné')";
-    const query = this.projetRepo
-      .createQueryBuilder('p')
-      .select(domaineNormalise, 'domaine')
-      .addSelect('COUNT(*)', 'count')
-      .where('p.archive = false')
-      .andWhere('p.statut = :statut', { statut: StatutProjet.EN_COURS });
-    if (etablissementId) {
-      query.andWhere('p.etablissement_id = :etablissementId', {
-        etablissementId,
-      });
-    }
-    const lignes = await query
-      .groupBy(domaineNormalise)
-      .getRawMany<{ domaine: string; count: string }>();
-
-    return lignes
-      .map((ligne) => ({ domaine: ligne.domaine, nombre: Number(ligne.count) }))
-      .sort((a, b) => b.nombre - a.nombre || a.domaine.localeCompare(b.domaine, 'fr'));
   }
 
   private async getProjetsParStatut(
