@@ -1,7 +1,7 @@
 // src/features/espace-public/pages/PublicPartenairesListePage.tsx
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { ChevronLeft, ChevronRight, Handshake, Search } from "lucide-react"
+import { Building2, ChevronLeft, ChevronRight, Handshake, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -13,6 +13,7 @@ import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 import type { PartenairePublic } from "@/types/api"
 
 const TAILLE_PAGE = 12
@@ -56,13 +57,6 @@ export function PublicPartenairesListePage() {
   const tousLesPartenaires = optionsRequete.data ?? []
   const paysDisponibles = uniques(tousLesPartenaires.map((partenaire) => partenaire.pays))
   const typesDisponibles = uniques(tousLesPartenaires.map((partenaire) => partenaire.type))
-
-  function reinitialiser() {
-    setRecherche("")
-    setPays(TOUS)
-    setType(TOUS)
-    setPage(1)
-  }
 
   function changerRecherche(valeur: string) {
     setRecherche(valeur)
@@ -124,11 +118,12 @@ export function PublicPartenairesListePage() {
             />
           )}
           {!requete.isLoading && !requete.isError && partenaires.length === 0 && (
-            <EmptyState
-              icone={Search}
-              titre="Aucun partenaire trouvé"
-              description="Essayez d'autres mots-clés ou réinitialisez les filtres."
-              action={<Button variant="outline" onClick={reinitialiser}>Réinitialiser les filtres</Button>}
+            <EmptyStateSection
+              icone={<Building2 aria-hidden="true" />}
+              titre="La liste des partenaires arrive bientôt"
+              description={recherche.trim() || pays !== TOUS || type !== TOUS
+                ? "Aucun résultat ne correspond à votre recherche ou aux filtres sélectionnés. Essayez d'autres critères."
+                : "Notre équipe met actuellement à jour les logos et les fiches de nos organisations partenaires pour vous offrir une expérience optimale."}
             />
           )}
           {!requete.isLoading && !requete.isError && partenaires.length > 0 && (

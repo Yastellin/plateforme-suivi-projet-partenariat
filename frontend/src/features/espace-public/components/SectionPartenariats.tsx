@@ -1,3 +1,4 @@
+import { FileText } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicPartenariatsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
 import { CartePartenariatTimeline } from "@/features/espace-public/components/CartesPubliques"
@@ -6,12 +7,11 @@ import {
   RevealItem,
 } from "@/features/espace-public/components/Reveal"
 import { BoutonVoirTout, EnTeteSection } from "@/features/espace-public/components/EnTeteSection"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 export function SectionPartenariats() {
   const { data, isLoading } = usePublicPartenariatsPublies()
   const partenariats = data?.slice(0, 4) ?? []
-
-  if (!isLoading && partenariats.length === 0) return null
 
   return (
     <section
@@ -32,6 +32,14 @@ export function SectionPartenariats() {
           <div className="vt-timeline" aria-busy="true">
             {[...Array(3)].map((_, index) => <Skeleton key={index} className="h-40 rounded-xl" />)}
           </div>
+        ) : partenariats.length === 0 ? (
+          <EmptyStateSection
+            icone={<FileText aria-hidden="true" />}
+            titre="Les partenariats seront bientôt en ligne"
+            description="Nous finalisons actuellement les accords et les détails des coopérations en cours. Cette section sera mise à jour très prochainement."
+            actionLibelle="Devenir partenaire"
+            actionHref="/contact"
+          />
         ) : (
           <RevealGroup className="vt-timeline" direction="left">
             {partenariats.map((partenariat) => (
@@ -42,7 +50,7 @@ export function SectionPartenariats() {
             ))}
           </RevealGroup>
         )}
-        <BoutonVoirTout lien="/partenariats" libelle="Voir tous les partenariats" direction="left" />
+        {isLoading || partenariats.length > 0 ? <BoutonVoirTout lien="/partenariats" libelle="Voir tous les partenariats" direction="left" /> : null}
       </div>
     </section>
   )

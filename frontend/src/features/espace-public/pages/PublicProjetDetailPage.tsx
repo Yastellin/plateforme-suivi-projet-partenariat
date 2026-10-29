@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom"
-import { ArrowLeft, CalendarDays, Handshake, Landmark } from "lucide-react"
+import { CalendarDays, FolderOpen, Handshake, Landmark } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formaterDate } from "@/lib/format"
@@ -13,6 +13,7 @@ import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 function varianteStatut(statut: string): VarianteBadgeCategorie {
   if (statut === "EN_COURS") return "en-cours"
@@ -39,7 +40,15 @@ export function PublicProjetDetailPage() {
 
   const projet = projetsRequete.data?.find((item) => item.id === id)
   if (!projet) {
-    return <div className="vt-wrap vt-section"><EmptyState icone={Landmark} titre="Projet introuvable" description="Ce projet n'est pas publié ou n'existe pas." action={<Link to="/projets" className="vt-btn vt-btn-ghost"><ArrowLeft size={14} aria-hidden="true" /> Retour aux projets</Link>} /></div>
+    return (
+      <div className="vt-wrap vt-section">
+        <EmptyStateSection
+          icone={<FolderOpen aria-hidden="true" />}
+          titre="Projet introuvable"
+          description="Cet élément n'existe pas ou a été retiré."
+        />
+      </div>
+    )
   }
 
   const actualites = (publicationsRequete.data?.data ?? [])

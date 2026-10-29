@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom"
+import { isAxiosError } from "axios"
 import { ArrowLeft, CalendarDays, Landmark, Newspaper } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { ImageMedia } from "@/components/shared/ImageMedia"
@@ -11,6 +12,7 @@ import { CarteLaterale } from "@/features/espace-public/components/CarteLaterale
 import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
 
 export function PublicationDetailPage() {
@@ -23,14 +25,26 @@ export function PublicationDetailPage() {
     return <SkeletonPage cartes={0} avecHero label="Chargement de l'actualité" />
   }
 
-  if (requete.isError || !publication) {
+  const erreur404 = requete.isError && isAxiosError(requete.error) && requete.error.response?.status === 404
+  if (requete.isError && !erreur404) {
     return (
       <div className="vt-wrap vt-section">
         <EmptyState
           icone={Newspaper}
-          titre="Actualité introuvable"
-          description="Cette actualité n'existe pas ou n'est plus disponible."
+          titre="L'actualité n'a pas pu être chargée"
+          description="Vérifiez votre connexion puis réessayez."
           action={<Link to="/actualites" className="vt-btn vt-btn-ghost"><ArrowLeft size={14} aria-hidden="true" /> Retour aux actualités</Link>}
+        />
+      </div>
+    )
+  }
+  if (!publication) {
+    return (
+      <div className="vt-wrap vt-section">
+        <EmptyStateSection
+          icone={<Newspaper aria-hidden="true" />}
+          titre="Actualité introuvable"
+          description="Cet élément n'existe pas ou a été retiré."
         />
       </div>
     )

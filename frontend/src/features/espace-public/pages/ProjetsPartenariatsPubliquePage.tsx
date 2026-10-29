@@ -3,12 +3,11 @@
 // et publications de l'Universite (onglets, recherche et pagination).
 import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Briefcase, Handshake, Newspaper, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { Briefcase, Building2, FolderOpen, Handshake, Newspaper, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { EmptyState } from "@/components/shared/EmptyState"
 import { useDebounce } from "@/hooks/useDebounce"
 import type { MetaPagination } from "@/types/api"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
@@ -19,6 +18,7 @@ import { usePublicPartenaires } from "@/features/espace-public/api/usePublicPart
 import { usePublicPublications } from "@/features/espace-public/api/usePublicPublications"
 import { usePublicEtablissements } from "@/features/espace-public/api/usePublicEtablissements"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 type Onglet = "projets" | "partenariats" | "partenaires" | "publications"
 const ONGLETS: Onglet[] = ["projets", "partenariats", "partenaires", "publications"]
@@ -129,14 +129,12 @@ function ListeProjets() {
       {isLoading ? (
         <Chargement />
       ) : projets.length === 0 ? (
-        <EmptyState
-          icone={Briefcase}
-          titre={recherche.trim() || etablissementId ? "Aucun projet trouvé" : "Aucun projet pour le moment"}
-          description={
-            recherche.trim() || etablissementId
-              ? "Essayez d'autres termes ou retirez le filtre d'établissement."
-              : "Les projets de l'Université apparaîtront ici dès leur publication."
-          }
+        <EmptyStateSection
+          icone={<FolderOpen aria-hidden="true" />}
+          titre="Aucun projet publié actuellement"
+          description={recherche.trim() || etablissementId
+            ? "Aucun résultat ne correspond à votre recherche ou au filtre d'établissement. Essayez d'autres critères."
+            : "De nouvelles collaborations sont en cours de finalisation. Les fiches détaillées de nos projets seront disponibles prochainement."}
         />
       ) : (
         <>
@@ -178,14 +176,12 @@ function ListePartenaires() {
       {isLoading ? (
         <Chargement />
       ) : partenaires.length === 0 ? (
-        <EmptyState
-          icone={Handshake}
-          titre={recherche.trim() ? "Aucun partenaire trouvé" : "Aucun partenaire pour le moment"}
-          description={
-            recherche.trim()
-              ? "Essayez avec le nom du partenaire, son pays ou son type."
-              : "Les partenaires visibles de l'Université apparaîtront ici."
-          }
+        <EmptyStateSection
+          icone={<Building2 aria-hidden="true" />}
+          titre="La liste des partenaires arrive bientôt"
+          description={recherche.trim()
+            ? "Aucun résultat ne correspond à votre recherche. Essayez avec le nom du partenaire, son pays ou son type."
+            : "Notre équipe met actuellement à jour les logos et les fiches de nos organisations partenaires pour vous offrir une expérience optimale."}
         />
       ) : (
         <>
@@ -227,14 +223,12 @@ function ListePublications() {
       {isLoading ? (
         <Chargement />
       ) : publications.length === 0 ? (
-        <EmptyState
-          icone={Newspaper}
-          titre={recherche.trim() ? "Aucune publication trouvée" : "Aucune publication pour le moment"}
-          description={
-            recherche.trim()
-              ? "Essayez avec un mot du titre ou le nom d'un projet."
-              : "Les actualités publiées par la Présidence apparaîtront ici."
-          }
+        <EmptyStateSection
+          icone={<Newspaper aria-hidden="true" />}
+          titre="Aucune actualité pour le moment"
+          description={recherche.trim()
+            ? "Aucun résultat ne correspond à votre recherche. Essayez avec un mot du titre ou le nom d'un projet."
+            : "Nous préparons de nouveaux articles et communiqués. Revenez très bientôt pour découvrir les dernières nouvelles de l'université."}
         />
       ) : (
         <>

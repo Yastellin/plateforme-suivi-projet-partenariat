@@ -1,6 +1,6 @@
 // Liste publique des partenariats avec filtres, cartes et pagination.
 import { useMemo, useState } from "react"
-import { ChevronLeft, ChevronRight, Handshake, Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, FileText, Handshake, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -10,6 +10,7 @@ import { usePublicPartenariatsPublies } from "@/features/espace-public/api/usePu
 import { CartePartenariat } from "@/features/espace-public/components/CartesPubliques"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 import { periodeCalculeePartenariat, type PeriodeCalculeePartenariat } from "@/features/espace-public/lib/publique"
+import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 
 const PAR_PAGE = 9
 const TOUS = "tous"
@@ -108,7 +109,13 @@ export function ListePartenariatsPubliques() {
         <EmptyState icone={Handshake} titre="Les partenariats n'ont pas pu être chargés" description="Vérifiez votre connexion puis réessayez." action={<Button variant="outline" onClick={() => refetch()}>Réessayer</Button>} />
       )}
       {!isLoading && !isError && filtres.length === 0 && (
-        <EmptyState icone={Handshake} titre={recherche.trim() || domaine !== TOUS || periode !== TOUS ? "Aucun partenariat trouvé" : "Aucun partenariat publié"} description="Essayez d'autres critères ou réinitialisez les filtres." />
+        <EmptyStateSection
+          icone={<FileText aria-hidden="true" />}
+          titre="Les partenariats seront bientôt en ligne"
+          description={recherche.trim() || domaine !== TOUS || periode !== TOUS
+            ? "Aucun résultat ne correspond à votre recherche ou aux filtres sélectionnés. Essayez d'autres critères."
+            : "Nous finalisons actuellement les accords et les détails des coopérations en cours. Cette section sera mise à jour très prochainement."}
+        />
       )}
       {!isLoading && !isError && visibles.length > 0 && (
         <>
