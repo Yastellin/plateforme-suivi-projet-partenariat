@@ -2,7 +2,7 @@
 
 import { z } from "zod"
 
-import { validerDates } from "./regles-dates"
+import { jourDe, validerDates } from "./regles-dates"
 
 const schemaConventionBase = z.object({
   reference: z.string().optional(),
@@ -26,9 +26,15 @@ export function creerSchemaConvention({ exigerDateDebutFuture = false }: Options
   return schemaConventionBase.superRefine((valeurs, ctx) => {
     validerDates(ctx, {
       dateDebut: valeurs.date_debut,
-      dateFin: valeurs.date_fin,
       exigerDateDebutFuture,
     })
+    if (valeurs.date_debut && valeurs.date_fin && jourDe(valeurs.date_fin) < jourDe(valeurs.date_debut)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["date_fin"],
+        message: "La date de fin doit être postérieure ou égale à la date de début.",
+      })
+    }
     const estSelectionne = (valeur?: string) => Boolean(valeur && valeur !== "__aucun__")
     if (!estSelectionne(valeurs.partenariat_id) && !estSelectionne(valeurs.projet_id) && !estSelectionne(valeurs.cotutelle_id)) {
       ctx.addIssue({

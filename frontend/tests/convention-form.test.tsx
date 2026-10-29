@@ -155,4 +155,36 @@ describe("formulaire de convention", () => {
       projet_id: "projet-test",
     })
   })
+
+  it("affiche un avertissement non bloquant si la signature est postérieure au début", async () => {
+    await act(async () => {
+      racine.render(
+        createElement(ConventionForm, {
+          onSucces: vi.fn(),
+          onAnnuler: vi.fn(),
+        }),
+      )
+    })
+
+    const definirValeur = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!
+    const dateSignature = conteneur.querySelector<HTMLInputElement>("#date_signature")!
+    const dateDebut = conteneur.querySelector<HTMLInputElement>("#date_debut")!
+
+    await act(async () => {
+      definirValeur.call(dateDebut, "2030-04-10")
+      dateDebut.dispatchEvent(new Event("input", { bubbles: true }))
+      definirValeur.call(dateSignature, "2030-04-11")
+      dateSignature.dispatchEvent(new Event("input", { bubbles: true }))
+    })
+
+    const avertissement = conteneur.querySelector('[role="status"]')
+    expect(avertissement?.textContent).toContain(
+      "Attention : la date de début est antérieure à la date de signature.",
+    )
+    expect(avertissement?.className).toContain("status-attente")
+    expect(dateDebut.getAttribute("aria-invalid")).not.toBe("true")
+  })
 })

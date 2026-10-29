@@ -61,7 +61,7 @@ const ETAPES = [
 // (section 5). Etapes numerotees, barre de progression, recapitulatif.
 export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
   const [etapeActive, setEtapeActive] = useState(0);
-  const [documentEnAttente, setDocumentEnAttente] = useState<DocumentEnAttente | null>(null);
+  const [documentsEnAttente, setDocumentsEnAttente] = useState<DocumentEnAttente[]>([]);
   const creation = useCreateProjet();
   const uploadDocument = useUploadDocument();
   const { utilisateur } = useAuth();
@@ -191,17 +191,23 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
     creation.mutate(valeurs, {
       onSuccess: async (projet) => {
         effacerBrouillon();
-        toast.success("Projet créé avec succès !");
-        if (documentEnAttente && estPresidence) {
-          try {
-            await uploadDocument.mutateAsync({
-              fichier: documentEnAttente.fichier,
-              type: documentEnAttente.type,
-              projet_id: projet.id,
-            });
-          } catch {
-            toast.error("Le projet est créé, mais le document n’a pas pu être téléversé.");
+        const documentsEnErreur: DocumentEnAttente[] = [];
+        if (estPresidence) {
+          for (const document of documentsEnAttente) {
+            try {
+              await uploadDocument.mutateAsync({
+                fichier: document.fichier,
+                type: document.type,
+                projet_id: projet.id,
+              });
+            } catch {
+              documentsEnErreur.push(document);
+            }
           }
+        }
+        toast.success("Projet créé avec succès !");
+        if (documentsEnErreur.length > 0) {
+          toast.error(`${documentsEnErreur.length} document${documentsEnErreur.length > 1 ? "s n’ont" : " n’a"} pas pu être téléversé${documentsEnErreur.length > 1 ? "s" : ""}. Vous pourrez réessayer depuis la fiche du projet.`);
         }
         onSucces(projet);
       },
@@ -271,11 +277,11 @@ export function ProjetWizard({ onSucces, onAnnuler }: ProjetWizardProps) {
       </div>
 
       <div className="flex flex-col gap-2 rounded-md border border-border p-4">
-        <Label>Document facultatif</Label>
+        <Label>Documents facultatifs</Label>
         {estPresidence ? (
           <DocumentDropzone
             modePreparation
-            onDocumentPret={setDocumentEnAttente}
+            onDocumentPret={setDocumentsEnAttente}
           />
         ) : (
           <p className="text-sm text-muted-foreground">

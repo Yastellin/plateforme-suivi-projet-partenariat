@@ -2,6 +2,7 @@ import { validateSync } from 'class-validator';
 import {
   EstDateNonPassee,
   EstPosterieurA,
+  EstPosterieurOuEgalA,
   jourCourant,
 } from './dates.validator';
 
@@ -27,6 +28,16 @@ class EcheanceSeuleDto {
 
   @EstPosterieurA('date_debut', {
     message: 'La date de fin doit être postérieure à la date de début.',
+  })
+  date_fin?: string;
+}
+
+class PeriodeInclusiveDto {
+  date_debut?: string;
+
+  @EstPosterieurOuEgalA('date_debut', {
+    message:
+      'La date de fin doit être postérieure ou égale à la date de début.',
   })
   date_fin?: string;
 }
@@ -65,6 +76,26 @@ describe('EstDateNonPassee', () => {
   it('compare des jours, pas des heures', () => {
     const aujourdhuiTard = `${jourCourant()}T23:59:59.000Z`;
     expect(erreurs({ date_debut: aujourdhuiTard })).toEqual([]);
+  });
+});
+
+describe('EstPosterieurOuEgalA', () => {
+  function erreursInclusives(dateDebut: string, dateFin: string) {
+    const dto = Object.assign(new PeriodeInclusiveDto(), {
+      date_debut: dateDebut,
+      date_fin: dateFin,
+    });
+    return validateSync(dto).map((erreur) => erreur.property);
+  }
+
+  it('accepte une date de fin egale a la date de debut', () => {
+    expect(erreursInclusives(jourDecale(10), jourDecale(10))).toEqual([]);
+  });
+
+  it('refuse une date de fin anterieure a la date de debut', () => {
+    expect(erreursInclusives(jourDecale(10), jourDecale(9))).toContain(
+      'date_fin',
+    );
   });
 });
 

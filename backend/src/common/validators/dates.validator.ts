@@ -70,18 +70,24 @@ export class EstPosterieurAConstraint implements ValidatorConstraintInterface {
   validate(valeur: unknown, arguments_: ValidationArguments): boolean {
     if (typeof valeur !== 'string' || valeur.trim() === '') return true;
 
-    const [champReference] = arguments_.constraints as [string];
+    const [champReference, egaliteAutorisee = false] =
+      arguments_.constraints as [string, boolean?];
     const reference = (arguments_.object as Record<string, unknown>)[
       champReference
     ];
     if (typeof reference !== 'string' || reference.trim() === '') return true;
 
-    return jourDe(valeur) > jourDe(reference);
+    return egaliteAutorisee
+      ? jourDe(valeur) >= jourDe(reference)
+      : jourDe(valeur) > jourDe(reference);
   }
 
   defaultMessage(arguments_: ValidationArguments): string {
-    const [champReference] = arguments_.constraints as [string];
-    return `La date saisie doit être postérieure au champ ${champReference}.`;
+    const [champReference, egaliteAutorisee = false] =
+      arguments_.constraints as [string, boolean?];
+    return egaliteAutorisee
+      ? `La date saisie doit être postérieure ou égale au champ ${champReference}.`
+      : `La date saisie doit être postérieure au champ ${champReference}.`;
   }
 }
 
@@ -100,6 +106,23 @@ export function EstPosterieurA(
       target: objet.constructor,
       propertyName: propriete.toString(),
       constraints: [champReference],
+      options,
+      validator: EstPosterieurAConstraint,
+    });
+  };
+}
+
+/** Autorise une date égale à la date de référence. */
+export function EstPosterieurOuEgalA(
+  champReference: string,
+  options?: ValidationOptions,
+): PropertyDecorator {
+  return (objet: object, propriete: string | symbol) => {
+    registerDecorator({
+      name: 'estPosterieurOuEgalA',
+      target: objet.constructor,
+      propertyName: propriete.toString(),
+      constraints: [champReference, true],
       options,
       validator: EstPosterieurAConstraint,
     });

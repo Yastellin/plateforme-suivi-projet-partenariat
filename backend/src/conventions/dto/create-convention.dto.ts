@@ -10,7 +10,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StatutConvention } from '../../common/enums/statut-convention.enum';
 import {
   EstDateNonPassee,
-  EstPosterieurA,
+  EstPosterieurOuEgalA,
 } from '../../common/validators/dates.validator';
 
 export class CreateConventionDto {
@@ -23,8 +23,8 @@ export class CreateConventionDto {
   @ApiProperty({
     example: 'Convention de partenariat FDS - Université de Toliara',
   })
-  @IsString()
-  @MinLength(3)
+  @IsString({ message: 'Le titre doit être du texte.' })
+  @MinLength(3, { message: 'Le titre doit contenir au moins 3 caractères.' })
   titre: string;
 
   @ApiPropertyOptional({ example: '2026-01-15T00:00:00.000Z' })
@@ -41,8 +41,9 @@ export class CreateConventionDto {
   @ApiPropertyOptional({ example: '2029-01-31T00:00:00.000Z' })
   @IsOptional()
   @IsDateString()
-  @EstPosterieurA('date_debut', {
-    message: 'La date de fin doit être postérieure à la date de début.',
+  @EstPosterieurOuEgalA('date_debut', {
+    message:
+      'La date de fin doit être postérieure ou égale à la date de début.',
   })
   date_fin?: string;
 

@@ -60,8 +60,12 @@ export class DocumentsService {
 
     await this.verifierParent(parent);
 
+    const nomFichier = this.nettoyerNomFichier(
+      dto.nom_fichier || fichier.originalname,
+    );
     const rattachement = {
       type: dto.type,
+      nom_fichier: nomFichier,
       projet_id: parent.cle === 'projet_id' ? parent.valeur : IsNull(),
       convention_id: parent.cle === 'convention_id' ? parent.valeur : IsNull(),
       cotutelle_id: parent.cle === 'cotutelle_id' ? parent.valeur : IsNull(),
@@ -69,9 +73,8 @@ export class DocumentsService {
         parent.cle === 'partenariat_id' ? parent.valeur : IsNull(),
     };
 
-    // Le numéro repart de la dernière version connue, même lorsque toutes les
-    // versions ont été archivées manuellement. La version active (qui peut
-    // avoir été restaurée et ne pas être la plus récente) est ensuite archivée.
+    // Les documents d'un même type sont indépendants lorsque leur nom diffère.
+    // Un nouveau fichier portant le même nom crée une nouvelle version.
     const [derniereVersion, ancienneVersionActive] = await Promise.all([
       this.documentRepo.findOne({
         where: rattachement,
@@ -101,9 +104,7 @@ export class DocumentsService {
     const urlFichier = await this.storage.enregistrer(fichier, dossier);
 
     const document = this.documentRepo.create({
-      nom_fichier: this.nettoyerNomFichier(
-        dto.nom_fichier || fichier.originalname,
-      ),
+      nom_fichier: nomFichier,
       url_fichier: urlFichier,
       type: dto.type,
       version: nouvelleVersion,
@@ -191,6 +192,7 @@ export class DocumentsService {
     const versions = await this.documentRepo.find({
       where: {
         type: document.type,
+        nom_fichier: document.nom_fichier,
         projet_id: document.projet_id ?? IsNull(),
         convention_id: document.convention_id ?? IsNull(),
         cotutelle_id: document.cotutelle_id ?? IsNull(),

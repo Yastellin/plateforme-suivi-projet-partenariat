@@ -29,10 +29,10 @@ interface ConventionFormProps {
 const STATUTS = [
   { value: "BROUILLON", label: "Brouillon" },
   { value: "EN_ATTENTE_SIGNATURE", label: "En attente de signature" },
-  { value: "SIGNEE", label: "Signee" },
+  { value: "SIGNEE", label: "Signée" },
   { value: "ACTIVE", label: "Active" },
   { value: "SUSPENDUE", label: "Suspendue" },
-  { value: "EXPIREE", label: "Expiree" },
+  { value: "EXPIREE", label: "Expirée" },
 ]
 
 // Valeur sentinelle pour l'option "Aucun" : Radix Select interdit value="".
@@ -40,7 +40,7 @@ const STATUTS = [
 const VALEUR_AUCUN = "__aucun__"
 
 export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFormProps) {
-  const [documentEnAttente, setDocumentEnAttente] = useState<DocumentEnAttente | null>(null)
+  const [documentsEnAttente, setDocumentsEnAttente] = useState<DocumentEnAttente[]>([])
   const creation = useCreateConvention()
   const modification = useUpdateConvention(convention?.id ?? "")
   const uploadDocument = useUploadDocument()
@@ -91,6 +91,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     },
   })
 
+  const dateSignature = watch("date_signature")
   const dateDebut = watch("date_debut")
   const dateFin = watch("date_fin")
 
@@ -109,17 +110,25 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     }
     const optionsMutation = {
       onSuccess: async (conventionEnregistree: Convention) => {
-        toast.success(convention ? "Convention mise à jour" : "Convention créée")
-        if (!convention && documentEnAttente) {
-          try {
-            await uploadDocument.mutateAsync({
-              fichier: documentEnAttente.fichier,
-              type: documentEnAttente.type,
-              convention_id: conventionEnregistree.id,
-            })
-          } catch {
-            toast.error("La convention est créée, mais le document n’a pas pu être téléversé.")
+        if (!convention) {
+          const documentsEnErreur: DocumentEnAttente[] = []
+          for (const document of documentsEnAttente) {
+            try {
+              await uploadDocument.mutateAsync({
+                fichier: document.fichier,
+                type: document.type,
+                convention_id: conventionEnregistree.id,
+              })
+            } catch {
+              documentsEnErreur.push(document)
+            }
           }
+          toast.success("Convention créée")
+          if (documentsEnErreur.length > 0) {
+            toast.error(`${documentsEnErreur.length} document${documentsEnErreur.length > 1 ? "s n’ont" : " n’a"} pas pu être téléversé${documentsEnErreur.length > 1 ? "s" : ""}. Vous pourrez réessayer depuis la fiche de la convention.`)
+          }
+        } else {
+          toast.success("Convention mise à jour")
         }
         onSucces(conventionEnregistree)
       },
@@ -151,9 +160,14 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
           <Input id="date_signature" type="date" {...register("date_signature")} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="date_debut">Date de debut</Label>
+          <Label htmlFor="date_debut">Date de début</Label>
           <Input id="date_debut" type="date" aria-invalid={!!errors.date_debut} {...register("date_debut")} />
           {errors.date_debut && <p className="text-sm text-destructive">{errors.date_debut.message}</p>}
+          {dateSignature && dateDebut && dateSignature > dateDebut ? (
+            <p role="status" className="rounded-[var(--radius-sm)] border border-[var(--status-attente-fg)]/30 bg-[var(--status-attente-bg)] px-3 py-2 text-sm text-[var(--status-attente-fg)]">
+              Attention : la date de début est antérieure à la date de signature. Vérifiez qu’une prise d’effet rétroactive est bien prévue.
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date_fin">Date de fin</Label>
@@ -201,7 +215,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
                 disabled={partenariatsEnChargement}
               >
                 <SelectTrigger id="partenariat_id">
-                  <SelectValue placeholder="Selectionner un partenariat" />
+                  <SelectValue placeholder="Sélectionner un partenariat" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={VALEUR_AUCUN}>Aucun</SelectItem>
@@ -217,7 +231,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="projet_id">Projet lie (optionnel)</Label>
+          <Label htmlFor="projet_id">Projet lié (optionnel)</Label>
           <Controller
             control={control}
             name="projet_id"
@@ -228,7 +242,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
                 disabled={projetsEnChargement}
               >
                 <SelectTrigger id="projet_id">
-                  <SelectValue placeholder="Selectionner un projet" />
+                  <SelectValue placeholder="Sélectionner un projet" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={VALEUR_AUCUN}>Aucun</SelectItem>
@@ -279,8 +293,8 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
 
       {!convention ? (
         <div className="flex flex-col gap-2 rounded-md border border-border p-4">
-          <Label>Document facultatif</Label>
-          <DocumentDropzone modePreparation onDocumentPret={setDocumentEnAttente} />
+          <Label>Documents facultatifs</Label>
+          <DocumentDropzone modePreparation onDocumentPret={setDocumentsEnAttente} />
         </div>
       ) : null}
 

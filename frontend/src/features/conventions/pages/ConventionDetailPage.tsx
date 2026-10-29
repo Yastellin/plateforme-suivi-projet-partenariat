@@ -125,7 +125,7 @@ export function ConventionDetailPage() {
 
         <TabsContent value="documents" className="mt-4 flex flex-col gap-4">
           <Panel>
-            <PanelHeader titre="Téléverser un document" sousTitre="Ajoutez un fichier lié à cette convention" />
+            <PanelHeader titre="Téléverser des documents" sousTitre="Ajoutez plusieurs fichiers liés à cette convention" />
             <PanelBody>
               <DocumentDropzone conventionId={convention.id} />
             </PanelBody>
