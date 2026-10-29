@@ -12,6 +12,13 @@ import {
 } from "@/features/projets/api/useDemandeModificationProjet"
 import { REFERENCE_DEMANDE_MODIFICATION_PROJET } from "@/features/projets/lib/demande-modification-projet"
 import type { Notification, PrioriteNotification } from "@/types/api"
+import {
+  analyserMessageContact,
+  TYPE_REFERENCE_MESSAGE_CONTACT,
+} from "@/features/notifications/lib/message-contact"
+
+const formaterDateNotification = (valeur: string) =>
+  new Date(valeur).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" })
 
 const COULEUR_PRIORITE: Record<PrioriteNotification, string> = {
   BASSE: "border-l-muted-foreground",
@@ -25,6 +32,12 @@ export function NotificationItem({ notification }: { notification: Notification 
   const traiter = useTraiterDemandeModificationProjet()
   const [decision, setDecision] =
     useState<DecisionDemandeModification | null>(null)
+
+  // Notification de message de contact : on affiche les champs et le corps séparément
+  const contenu =
+    notification.reference_type === TYPE_REFERENCE_MESSAGE_CONTACT
+      ? analyserMessageContact(notification.message)
+      : null
 
   const estDemandeModification =
     utilisateur?.role === "PRESIDENCE" &&
@@ -52,7 +65,7 @@ export function NotificationItem({ notification }: { notification: Notification 
   return (
     <article
       className={cn(
-        "border-l-4 transition-colors",
+        "min-w-0 border-l-4 transition-colors",
         COULEUR_PRIORITE[notification.priorite],
         notification.est_lue ? "bg-transparent" : "bg-accent",
       )}
@@ -62,15 +75,52 @@ export function NotificationItem({ notification }: { notification: Notification 
         onClick={() =>
           !notification.est_lue && marquerLue.mutate(notification.id)
         }
-        className="block w-full p-3 text-left"
+        className="block w-full min-w-0 px-4 py-3.5 text-left"
       >
-        <p className={cn("text-sm", !notification.est_lue && "font-medium")}>
-          {notification.titre}
-        </p>
-        <p className="whitespace-pre-line text-xs text-muted-foreground">{notification.message}</p>
-        <p className="font-mono text-xs text-muted-foreground">
-          {new Date(notification.date_creation).toLocaleString("fr-FR")}
-        </p>
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <p
+            className={cn(
+              "min-w-0 break-words text-[14px] leading-5 text-foreground",
+              !notification.est_lue ? "font-semibold" : "font-medium",
+            )}
+          >
+            {notification.titre}
+          </p>
+          {!notification.est_lue ? (
+            <span aria-label="Non lue" className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
+          ) : null}
+        </div>
+
+        {contenu ? (
+          <div className="mt-2 flex min-w-0 flex-col gap-2">
+            <dl className="flex min-w-0 flex-col gap-1 text-[13px] leading-5">
+              {contenu.champs.map((champ) => (
+                <div key={champ.libelle} className="flex min-w-0 gap-2">
+                  <dt className="w-[78px] flex-shrink-0 text-muted-foreground">{champ.libelle}</dt>
+                  <dd className="min-w-0 break-words font-medium text-foreground [overflow-wrap:anywhere]">
+                    {champ.valeur}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {contenu.corps ? (
+              <blockquote className="min-w-0 break-words whitespace-pre-wrap rounded-lg border-l-2 border-primary/60 bg-muted/50 px-3 py-2 text-[13px] leading-6 text-foreground [overflow-wrap:anywhere] line-clamp-6">
+                {contenu.corps}
+              </blockquote>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-1.5 whitespace-pre-wrap break-words text-[13px] leading-5 text-muted-foreground [overflow-wrap:anywhere] line-clamp-4">
+            {notification.message}
+          </p>
+        )}
+
+        <time
+          dateTime={notification.date_creation}
+          className="mt-2 block text-xs text-muted-foreground"
+        >
+          {formaterDateNotification(notification.date_creation)}
+        </time>
       </button>
 
       {estDemandeModification ? (
