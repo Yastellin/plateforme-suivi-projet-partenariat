@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom"
-import { FolderOpen, Handshake, Landmark } from "lucide-react"
+import { Handshake, Landmark } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicProjetsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
@@ -11,7 +11,7 @@ import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
-import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
+import { PageIntrouvable } from "@/features/espace-public/components/PageIntrouvable"
 
 export function PublicProjetDetailPage() {
   const { id } = useParams()
@@ -31,15 +31,7 @@ export function PublicProjetDetailPage() {
 
   const projet = projetsRequete.data?.find((item) => item.id === id)
   if (!projet) {
-    return (
-      <div className="vt-wrap vt-section">
-        <EmptyStateSection
-          icone={<FolderOpen aria-hidden="true" />}
-          titre="Projet introuvable"
-          description="Cet élément n'existe pas ou a été retiré."
-        />
-      </div>
-    )
+    return <PageIntrouvable titre="Projet introuvable" description="Ce projet n'existe pas ou a été retiré." />
   }
 
   const actualites = (publicationsRequete.data?.data ?? [])

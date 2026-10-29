@@ -24,6 +24,7 @@ import { NotFoundPage } from "@/components/shared/NotFoundPage"
 import { PageTransition } from "@/components/shared/PageTransition"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TitreBreadcrumbProvider } from "@/contexts/TitreBreadcrumbContext"
+import { PageIntrouvable } from "@/features/espace-public/components/PageIntrouvable"
 
 const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage").then((m) => ({ default: m.LoginPage })))
 const MotDePasseOubliePage = lazy(() => import("@/features/auth/pages/MotDePasseOubliePage").then((m) => ({ default: m.MotDePasseOubliePage })))
@@ -269,6 +270,8 @@ const router = createBrowserRouter([
       { path: "/partenariats", element: <ChargePublique><PublicPartenariatsListePage /></ChargePublique> },
       { path: "/partenariats/:id", element: <ChargePublique><PublicPartenariatDetailPage /></ChargePublique> },
       { path: "/contact", element: <ChargePublique><ContactPage /></ChargePublique> },
+      // Les chemins publics sans correspondance affichent la page 404 de la vitrine.
+      { path: "*", element: <ChargePublique><PageIntrouvable /></ChargePublique> },
     ],
   },
   { path: "/connexion", element: <Charge><LoginPage /></Charge>, errorElement: <RouteErrorBoundary /> },
@@ -357,6 +360,10 @@ const router = createBrowserRouter([
       { path: "/etablissement/partenaires-partenariats/partenariats/:id", element: <RouteProtegee rolesAutorises={["ETABLISSEMENT"]}><Charge><PartenariatDetailPage /></Charge></RouteProtegee> },
     ],
   },
+  // Les URL inconnues des espaces internes gardent leur page 404 dédiée.
+  { path: "/presidence/*", element: <NotFoundPage /> },
+  { path: "/etablissement/*", element: <NotFoundPage /> },
+  { path: "/decideur/*", element: <NotFoundPage /> },
   { path: "*", element: <NotFoundPage /> },
 ])
 

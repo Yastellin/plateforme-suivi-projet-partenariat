@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom"
-import { FileText, Handshake, Landmark } from "lucide-react"
+import { Handshake, Landmark } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicPartenariatsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
@@ -8,7 +8,7 @@ import { CarteLaterale } from "@/features/espace-public/components/CarteLaterale
 import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
-import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
+import { PageIntrouvable } from "@/features/espace-public/components/PageIntrouvable"
 
 export function PublicPartenariatDetailPage() {
   const { id } = useParams()
@@ -28,15 +28,7 @@ export function PublicPartenariatDetailPage() {
 
   const partenariat = requete.data?.find((item) => item.id === id)
   if (!partenariat) {
-    return (
-      <div className="vt-wrap vt-section">
-        <EmptyStateSection
-          icone={<FileText aria-hidden="true" />}
-          titre="Partenariat introuvable"
-          description="Cet élément n'existe pas ou a été retiré."
-        />
-      </div>
-    )
+    return <PageIntrouvable titre="Partenariat introuvable" description="Ce partenariat n'existe pas ou a été retiré." />
   }
 
   return (
