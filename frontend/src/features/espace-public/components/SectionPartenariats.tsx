@@ -1,7 +1,6 @@
-// src/features/espace-public/components/SectionPartenariats.tsx
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicPartenariatsPublies } from "@/features/espace-public/api/usePublicDonneesDetail"
-import { CarteMiseEnAvant, CartePartenariat, CarteStandard } from "@/features/espace-public/components/CartesPubliques"
+import { CartePartenariatTimeline } from "@/features/espace-public/components/CartesPubliques"
 import {
   RevealGroup,
   RevealItem,
@@ -30,27 +29,15 @@ export function SectionPartenariats() {
           direction="left"
         />
         {isLoading ? (
-          <div className="vt-accueil-card-grid">
-            {[...Array(3)].map((_, index) => (
-              <Skeleton key={index} className="h-72" />
-            ))}
+          <div className="vt-timeline" aria-busy="true">
+            {[...Array(3)].map((_, index) => <Skeleton key={index} className="h-40 rounded-xl" />)}
           </div>
         ) : (
-          <RevealGroup
-            className={`vt-accueil-card-grid${partenariats.length === 1 ? " vt-card-grid-single" : ` vt-card-grid-${partenariats.length}`}`}
-            direction="left"
-          >
+          <RevealGroup className="vt-timeline" direction="left">
             {partenariats.map((partenariat) => (
-              <RevealItem key={partenariat.id} className="vt-card-list-item h-full">
-                {partenariats.length === 1 ? (
-                  <CarteMiseEnAvant>
-                    <CartePartenariat partenariat={partenariat} />
-                  </CarteMiseEnAvant>
-                ) : (
-                  <CarteStandard>
-                    <CartePartenariat partenariat={partenariat} />
-                  </CarteStandard>
-                )}
+              <RevealItem key={partenariat.id} className="vt-timeline-item">
+                <span className="vt-timeline-point" aria-hidden="true" />
+                <CartePartenariatTimeline partenariat={partenariat} />
               </RevealItem>
             ))}
           </RevealGroup>

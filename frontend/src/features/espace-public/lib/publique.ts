@@ -43,6 +43,29 @@ export function formaterPeriode(debut: string, fin: string): string {
   return `${formaterDate(debut)} → ${formaterDate(fin)}`
 }
 
+export type PeriodeCalculeePartenariat = "a-venir" | "actif" | "termine" | "indetermine"
+
+// Déduit une période temporelle des seules dates publiques, sans inventer un statut métier.
+export function periodeCalculeePartenariat(
+  debut: string,
+  fin: string | null,
+  reference = new Date(),
+): PeriodeCalculeePartenariat {
+  const dateJour = (valeur: string): number => {
+    const [annee, mois, jour] = valeur.slice(0, 10).split("-").map(Number)
+    if (!annee || !mois || !jour) return Number.NaN
+    return new Date(annee, mois - 1, jour).getTime()
+  }
+  const jourCourant = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate()).getTime()
+  const jourDebut = dateJour(debut)
+  if (Number.isNaN(jourDebut)) return "indetermine"
+  if (jourDebut > jourCourant) return "a-venir"
+  if (!fin) return "actif"
+  const jourFin = dateJour(fin)
+  if (Number.isNaN(jourFin)) return "indetermine"
+  return jourFin < jourCourant ? "termine" : "actif"
+}
+
 export function initiales(nom: string): string {
   return nom
     .split(/\s+/)
