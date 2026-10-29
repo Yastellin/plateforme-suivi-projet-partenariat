@@ -227,29 +227,28 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector('#partenaires .vt-empty-btn[href="/partenariats"]')?.textContent).toBe("Découvrir nos partenariats")
   })
 
-  it("affiche exactement les quatre compteurs publics dans la grille asymétrique", () => {
+  it("affiche les quatre compteurs publics sur la ligne de temps", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
-    const section = conteneur.querySelector(".vt-asymmetric-stats-section")
+    const section = conteneur.querySelector(".vt-horizontal-timeline")
 
-    expect(section?.querySelector(".vt-stat-big-main .num")?.textContent).toBe("3")
-    expect(section?.querySelector(".vt-stat-big-main .lbl")?.textContent).toBe("Établissements partenaires")
-    expect(Array.from(section?.querySelectorAll(".vt-stat-small-card .lbl") ?? []).map((item) => item.textContent)).toEqual([
-      "Partenaire",
-      "Projet",
-      "Pays partenaire",
-    ])
-    expect(Array.from(section?.querySelectorAll(".vt-stat-small-card .num") ?? []).map((item) => item.textContent)).toEqual([
+    expect(Array.from(section?.querySelectorAll(".vt-timeline-number") ?? []).map((item) => item.textContent)).toEqual([
+      "3",
       "4",
       "4",
       "2",
     ])
-    expect(section?.querySelectorAll(".vt-stat-small-card")).toHaveLength(3)
-    expect(section?.querySelector(".vt-stat-big-main .sub")?.textContent).toBe(
-      "Des collaborations académiques solides avec des institutions de premier plan.",
-    )
-    expect(section?.querySelector(".vt-stat-big-main svg")).not.toBeNull()
-    expect(section?.textContent).not.toMatch(/publication|projet publié|convention|document|domaine/i)
+    expect(Array.from(section?.querySelectorAll(".vt-timeline-label") ?? []).map((item) => item.textContent)).toEqual([
+      "Établissements",
+      "Partenaire",
+      "Projet",
+      "Pays partenaire",
+    ])
+    expect(section?.querySelectorAll(".vt-timeline-sublabel")).toHaveLength(0)
+    expect(section?.querySelectorAll(".vt-timeline-stat")).toHaveLength(4)
+    expect(section?.querySelectorAll(".vt-timeline-dot")).toHaveLength(4)
+    expect(section?.querySelector(".vt-asymmetric-stats, .vt-stat-small-card, .vt-stat-big-main")).toBeNull()
+    expect(section?.textContent).not.toMatch(/publication|projet publié|convention|document/i)
   })
 
   it("uniformise les titres, sous-titres et boutons des quatre sections", () => {
