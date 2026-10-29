@@ -3472,3 +3472,469 @@ select.vt-fld-input {
     transform: none;
   }
 }
+
+/* Détails publics : contenu, navigation secondaire et cartes associées. */
+.vitrine .vt-detail-page {
+  padding-bottom: 40px;
+}
+.vitrine .vt-detail-breadcrumb {
+  max-width: 1140px;
+  padding: 18px 20px 0;
+}
+.vitrine .vt-detail-hero {
+  width: min(100% - 40px, 1100px);
+  max-width: 1100px;
+  min-height: 300px;
+  margin: 20px auto 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 52px);
+  align-items: center;
+}
+.vitrine .vt-detail-hero-image {
+  min-height: 300px;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--brand-tint);
+}
+.vitrine .vt-detail-hero-image > img,
+.vitrine .vt-detail-hero-image > svg,
+.vitrine .vt-detail-hero-image > div {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  object-fit: cover;
+}
+.vitrine .vt-detail-hero-content {
+  min-width: 0;
+}
+.vitrine .vt-surtitre {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--brand-deep);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.vitrine .vt-surtitre::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  background: var(--gold);
+}
+.vitrine .vt-detail-hero h1 {
+  margin-top: 12px;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.12;
+  letter-spacing: -.025em;
+  overflow-wrap: anywhere;
+}
+.vitrine .vt-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+.vitrine .vt-detail-meta > span:not(.vt-badge-categorie):not(.vt-badge-strategique) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.vitrine .vt-detail-intro {
+  margin-top: 14px !important;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.7;
+}
+.vitrine .vt-detail-hero-compact {
+  min-height: auto;
+  display: block;
+  padding-block: 44px 32px;
+}
+.vitrine .vt-detail-hero-projet .vt-detail-hero-image {
+  order: 0;
+}
+.vitrine .vt-detail-hero-partenaire {
+  grid-template-columns: 160px minmax(0, 1fr);
+  min-height: 210px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--sh-sm);
+}
+.vitrine .vt-detail-partner-logo {
+  display: grid;
+  width: 160px;
+  aspect-ratio: 1;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: linear-gradient(145deg, #fff 10%, var(--brand-tint));
+}
+.vitrine .vt-detail-partner-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 14px;
+  object-fit: contain;
+}
+.vitrine .vt-badge-categorie {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  padding: 4px 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--brand-tint);
+  color: var(--brand-deep);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.vitrine .vt-badge-recherche {
+  background: #eaf1f8;
+  color: #294b6a;
+}
+.vitrine .vt-badge-formation {
+  background: #fff3d9;
+  color: #795400;
+}
+.vitrine .vt-badge-innovation {
+  background: #e8f4ee;
+  color: #245e46;
+}
+.vitrine .vt-badge-en-cours {
+  background: var(--ok);
+  color: var(--ok-text);
+}
+.vitrine .vt-badge-termine {
+  background: var(--info);
+  color: var(--info-text);
+}
+.vitrine .vt-badge-avenir {
+  background: var(--warn);
+  color: var(--warn-text);
+}
+.vitrine .vt-badge-neutre {
+  background: #f0f2f3;
+  color: #475467;
+}
+.vitrine .vt-badge-strategique {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--warn);
+  color: var(--warn-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.vitrine .vt-detail-conteneur,
+.vitrine .vt-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(250px, 1fr);
+  align-items: start;
+  gap: 28px;
+  width: min(100% - 40px, 1100px);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 0 64px;
+}
+.vitrine .vt-detail-main,
+.vitrine .vt-detail-sidebar {
+  display: grid;
+  min-width: 0;
+  gap: 20px;
+}
+.vitrine .vt-detail-section,
+.vitrine .vt-carte-laterale,
+.vitrine .vt-partage-social {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--sh-sm);
+}
+.vitrine .vt-detail-section h2,
+.vitrine .vt-carte-laterale h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 750;
+}
+.vitrine .vt-detail-section h2 > svg,
+.vitrine .vt-carte-laterale h2 > svg {
+  flex: 0 0 auto;
+  color: var(--brand);
+}
+.vitrine .vt-detail-prose {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.85;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.vitrine .vt-carte-laterale {
+  padding: 20px;
+}
+.vitrine .vt-carte-laterale h2 {
+  margin-bottom: 16px;
+  font-size: 17px;
+}
+.vitrine .vt-carte-info {
+  border-top: 3px solid var(--brand);
+}
+.vitrine .vt-carte-fiche {
+  background: var(--bg);
+}
+.vitrine .vt-carte-laterale-contenu {
+  min-width: 0;
+}
+.vitrine .vt-carte-laterale-contenu > .vt-muted {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.vitrine .vt-card-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--brand-deep);
+  font-weight: 700;
+  text-decoration: none;
+}
+.vitrine .vt-card-link:hover,
+.vitrine .vt-detail-link-list a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.vitrine .vt-detail-facts {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+.vitrine .vt-detail-facts > div {
+  display: grid;
+  gap: 3px;
+}
+.vitrine .vt-detail-facts dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+.vitrine .vt-detail-facts dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.vitrine .vt-detail-facts a,
+.vitrine .vt-external-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--brand-deep);
+  text-decoration: none;
+}
+.vitrine .vt-detail-link-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vitrine .vt-detail-link-list li {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.vitrine .vt-detail-link-list a {
+  color: var(--brand-deep);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.vitrine .vt-detail-link-list li > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.vitrine .vt-detail-galerie,
+.vitrine .vt-detail-actualites {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.vitrine .vt-detail-galerie figure {
+  min-width: 0;
+  margin: 0;
+}
+.vitrine .vt-detail-gallery-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  object-fit: cover;
+}
+.vitrine .vt-detail-galerie figcaption {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.vitrine .vt-detail-entity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vitrine .vt-detail-entity-grid li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 600;
+}
+.vitrine .vt-detail-entity-grid img {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+.vitrine .vt-detail-domaines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.vitrine .vt-detail-partenariats {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.vitrine .vt-partage-social > span {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 750;
+}
+.vitrine .vt-partage-social-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vitrine .vt-partage-social-actions > a,
+.vitrine .vt-partage-social-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: 600 12px var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+}
+.vitrine .vt-partage-social-actions > a:hover,
+.vitrine .vt-partage-social-actions > button:hover {
+  border-color: var(--brand);
+  color: var(--brand-deep);
+}
+.vitrine .vt-partage-social-actions svg {
+  flex: 0 0 auto;
+  color: var(--brand);
+}
+@media (max-width: 767px) {
+  .vitrine .vt-detail-hero,
+  .vitrine .vt-detail-hero-partenaire,
+  .vitrine .vt-detail-conteneur,
+  .vitrine .vt-detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vitrine .vt-detail-hero {
+    width: min(100% - 32px, 560px);
+    gap: 20px;
+    margin-top: 14px;
+  }
+  .vitrine .vt-detail-hero-image {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+  .vitrine .vt-detail-hero-image > img,
+  .vitrine .vt-detail-hero-image > svg,
+  .vitrine .vt-detail-hero-image > div {
+    min-height: 0;
+  }
+  .vitrine .vt-detail-hero-compact {
+    padding-block: 32px 20px;
+  }
+  .vitrine .vt-detail-hero-partenaire {
+    width: min(100% - 32px, 560px);
+    padding: 20px;
+  }
+  .vitrine .vt-detail-partner-logo {
+    width: 112px;
+  }
+  .vitrine .vt-detail-conteneur,
+  .vitrine .vt-detail-layout {
+    width: min(100% - 32px, 560px);
+    gap: 18px;
+    padding: 20px 0 44px;
+  }
+  .vitrine .vt-detail-section {
+    padding: 20px;
+  }
+  .vitrine .vt-detail-galerie,
+  .vitrine .vt-detail-actualites,
+  .vitrine .vt-detail-entity-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vitrine .vt-detail-breadcrumb {
+    padding-inline: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vitrine .vt-detail-section,
+  .vitrine .vt-carte-laterale,
+  .vitrine .vt-partage-social,
+  .vitrine .vt-detail-hero-image,
+  .vitrine .vt-partage-social-actions > a,
+  .vitrine .vt-partage-social-actions > button {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

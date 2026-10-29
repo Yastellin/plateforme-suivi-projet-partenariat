@@ -203,12 +203,12 @@ describe("sections de la page d'accueil publique", () => {
 
     expect(grille?.children).toHaveLength(3)
     expect(Array.from(grille?.children ?? []).every((carte) => carte.classList.contains("vt-card-list-item"))).toBe(true)
-    expect(Array.from(grille?.querySelectorAll("a[href^='/projets-partenariats/publication/']") ?? [])
+    expect(Array.from(grille?.querySelectorAll("a[href^='/actualites/']") ?? [])
       .map((lien) => lien.getAttribute("href")))
       .toEqual([
-        "/projets-partenariats/publication/publication-3",
-        "/projets-partenariats/publication/publication-2",
-        "/projets-partenariats/publication/publication-1",
+        "/actualites/publication-3",
+        "/actualites/publication-2",
+        "/actualites/publication-1",
       ])
   })
 
@@ -284,8 +284,8 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector('#partenaires a[href="/partenaires"]')?.textContent).toContain("Voir tous les partenaires")
     expect(conteneur.querySelector('#projets a[href="/projets"]')?.textContent).toContain("Voir tous les projets")
     expect(conteneur.querySelector('#partenariats a[href="/partenariats"]')?.textContent).toContain("Voir tous les partenariats")
-    expect(conteneur.querySelectorAll('#actualites a[href^="/projets-partenariats/publication/"]')).toHaveLength(3)
-    expect(conteneur.querySelectorAll('#projets a[href^="/projets-partenariats/publication/"]')).toHaveLength(3)
+    expect(conteneur.querySelectorAll('#actualites a[href^="/actualites/"]')).toHaveLength(3)
+    expect(conteneur.querySelectorAll('#projets a[href^="/projets/"]')).toHaveLength(3)
     expect(conteneur.querySelectorAll('#partenariats a[href^="/partenariats/"]')).toHaveLength(3)
   })
 

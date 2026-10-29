@@ -151,7 +151,7 @@ export function ActualitesPage() {
                 <RevealItem key={publication.id} className="vt-card-list-item">
                   <CartePublication
                     publication={publication}
-                    lien={`/projets-partenariats/publication/${publication.id}`}
+                    lien={`/actualites/${publication.id}`}
                   />
                 </RevealItem>
               ))}

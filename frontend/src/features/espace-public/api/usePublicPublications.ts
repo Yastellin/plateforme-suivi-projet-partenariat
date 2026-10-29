@@ -22,3 +22,12 @@ export function usePublicPublications(filtres: FiltresPublicPublications = {}) {
     placeholderData: keepPreviousData,
   })
 }
+
+// Détail public d'une publication, exposé séparément de la requête paginée.
+export function usePublicPublicationDetail(id?: string) {
+  return useQuery({
+    queryKey: ["public-publication", id],
+    queryFn: async () => (await apiClient.get<PublicationPublique>(`/public/publications/${id}`)).data,
+    enabled: Boolean(id),
+  })
+}

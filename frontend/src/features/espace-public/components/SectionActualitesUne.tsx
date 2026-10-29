@@ -41,7 +41,7 @@ export function SectionActualitesUne() {
               <RevealItem key={publication.id} className="vt-card-list-item h-full">
                 <CartePublication
                   publication={publication}
-                  lien={`/projets-partenariats/publication/${publication.id}`}
+                  lien={`/actualites/${publication.id}`}
                 />
               </RevealItem>
             ))}

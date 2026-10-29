@@ -52,24 +52,18 @@ export function initiales(nom: string): string {
     .join("")
 }
 
-// Texte de repli lorsque la description n'est pas renseignee : il decrit
-// l'element a partir des donnees disponibles, sans promesse inventee.
+// Renvoie uniquement le texte éditorial fourni par l'API, sans le fabriquer.
 export function resumeProjet(projet: {
   description: string | null
   statut: StatutProjet
   domaine: string | null
   etablissement: { nom: string } | null
 }): string {
-  if (projet.description) return projet.description
-  const statut = libelleStatutProjet(projet.statut).toLowerCase()
-  const domaine = projet.domaine ? ` dans le domaine ${projet.domaine.toLowerCase()}` : ""
-  const porteur = projet.etablissement ? ` porté par ${projet.etablissement.nom}` : " porté par la Présidence"
-  return `Projet ${statut}${domaine}${porteur}.`
+  return projet.description ?? ""
 }
 
 export function resumePartenaire(partenaire: { description: string | null; pays: string }): string {
-  if (partenaire.description) return partenaire.description
-  return `Partenaire de l'Université, présent en ${partenaire.pays}.`
+  return partenaire.description ?? ""
 }
 
 export function imagePrincipalePublication(publication: {
@@ -87,8 +81,7 @@ export function resumePublication(publication: {
   description_publique: string | null
   projet: { nom: string }
 }): string {
-  if (publication.description_publique) return publication.description_publique
-  return `Actualité issue du projet « ${publication.projet.nom} ».`
+  return publication.description_publique ?? ""
 }
 
 const TEINTES_VIGNETTE = ["#367D56", "#27435F", "#8A5A00", "#7A2E3A", "#4A5A2B", "#1B4D34"]
