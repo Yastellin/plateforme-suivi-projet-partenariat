@@ -38,6 +38,14 @@ const STATUTS = [
 // Valeur sentinelle pour l'option "Aucun" : Radix Select interdit value="".
 // Convertie en "" dans onSubmit, puis en null par normaliserPayload avant l'envoi.
 const VALEUR_AUCUN = "__aucun__"
+const MESSAGE_TITRE_TROP_COURT = "Le titre doit contenir au moins 3 caractères."
+
+function traduireErreurConvention(message: string): string {
+  if (/^titre must be longer than or equal to 3 characters\.?$/i.test(message.trim())) {
+    return MESSAGE_TITRE_TROP_COURT
+  }
+  return message
+}
 
 export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFormProps) {
   const [documentsEnAttente, setDocumentsEnAttente] = useState<DocumentEnAttente[]>([])
@@ -132,7 +140,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         }
         onSucces(conventionEnregistree)
       },
-      onError: (erreur: Error) => toast.error(erreur.message),
+      onError: (erreur: Error) => toast.error(traduireErreurConvention(erreur.message)),
     }
     if (convention) {
       modification.mutate(valeursEnvoyees, optionsMutation)

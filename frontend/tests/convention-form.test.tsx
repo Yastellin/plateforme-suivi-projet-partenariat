@@ -4,7 +4,14 @@ import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ConventionForm } from "@/features/conventions/components/ConventionForm"
 
-const { creerConvention } = vi.hoisted(() => ({ creerConvention: vi.fn() }))
+const { creerConvention, toastErreur } = vi.hoisted(() => ({
+  creerConvention: vi.fn(),
+  toastErreur: vi.fn(),
+}))
+
+vi.mock("sonner", () => ({
+  toast: { error: toastErreur, success: vi.fn() },
+}))
 
 vi.mock("@/features/conventions/api/useCreateConvention", () => ({
   useCreateConvention: () => ({ isPending: false, mutate: creerConvention }),
@@ -79,6 +86,7 @@ let racine: Root
 
 beforeEach(() => {
   creerConvention.mockClear()
+  toastErreur.mockClear()
   conteneur = document.createElement("div")
   document.body.appendChild(conteneur)
   racine = createRoot(conteneur)
@@ -154,6 +162,14 @@ describe("formulaire de convention", () => {
       titre: "Convention de test",
       projet_id: "projet-test",
     })
+
+    const optionsMutation = creerConvention.mock.calls[0][1]
+    await act(async () => {
+      optionsMutation.onError(new Error("titre must be longer than or equal to 3 characters"))
+    })
+    expect(toastErreur).toHaveBeenCalledWith(
+      "Le titre doit contenir au moins 3 caractères.",
+    )
   })
 
   it("affiche un avertissement non bloquant si la signature est postérieure au début", async () => {
