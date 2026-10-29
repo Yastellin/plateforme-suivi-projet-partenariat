@@ -40,6 +40,10 @@ vi.mock('@/features/notifications/api/useMarquerLue', () => ({
   useMarquerLue: () => ({ mutate: etat.marquerLue }),
 }));
 
+vi.mock('@/features/messages-contact/api/useMessagesContact', () => ({
+  useSupprimerMessageContact: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));

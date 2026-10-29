@@ -1,11 +1,12 @@
 // src/features/notifications/components/NotificationItem.tsx
 import { useState } from "react"
-import { Check, X } from "lucide-react"
+import { Check, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog"
 import { useMarquerLue } from "@/features/notifications/api/useMarquerLue"
+import { useSupprimerMessageContact } from "@/features/messages-contact/api/useMessagesContact"
 import {
   useTraiterDemandeModificationProjet,
   type DecisionDemandeModification,
@@ -32,6 +33,8 @@ export function NotificationItem({ notification }: { notification: Notification 
   const traiter = useTraiterDemandeModificationProjet()
   const [decision, setDecision] =
     useState<DecisionDemandeModification | null>(null)
+  const [confirmerSuppression, setConfirmerSuppression] = useState(false)
+  const supprimerMessage = useSupprimerMessageContact()
 
   // Notification de message de contact : on affiche les champs et le corps séparément
   const contenu =
@@ -60,6 +63,18 @@ export function NotificationItem({ notification }: { notification: Notification 
         onError: (erreur: Error) => toast.error(erreur.message),
       },
     )
+  }
+
+  const estMessageContact = notification.reference_type === TYPE_REFERENCE_MESSAGE_CONTACT
+
+  function supprimerLeMessage() {
+    supprimerMessage.mutate(notification.reference_id, {
+      onSuccess: () => {
+        toast.success("Message supprimé")
+        setConfirmerSuppression(false)
+      },
+      onError: (erreur: Error) => toast.error(erreur.message),
+    })
   }
 
   return (
@@ -144,6 +159,33 @@ export function NotificationItem({ notification }: { notification: Notification 
             Approuver
           </button>
         </div>
+      ) : null}
+
+      {estMessageContact ? (
+        <div className="flex justify-end border-t border-[var(--color-border)] px-3 py-2">
+          <button
+            type="button"
+            onClick={() => setConfirmerSuppression(true)}
+            disabled={supprimerMessage.isPending}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-60"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Supprimer le message
+          </button>
+        </div>
+      ) : null}
+
+      {confirmerSuppression ? (
+        <ConfirmDialog
+          ouvert
+          onFermer={() => setConfirmerSuppression(false)}
+          onConfirmer={supprimerLeMessage}
+          titre="Supprimer ce message ?"
+          description="Le message et ses notifications seront supprimés définitivement."
+          libelleAction="Supprimer"
+          enCours={supprimerMessage.isPending}
+          destructif
+        />
       ) : null}
 
       {decision ? (

@@ -45,3 +45,17 @@ export function useMarquerMessageLu() {
     },
   })
 }
+
+export function useSupprimerMessageContact() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const reponse = await apiClient.delete<{ id: string; supprime: boolean }>(`/messages-contact/${id}`)
+      return reponse.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages-contact"] })
+      queryClient.invalidateQueries({ queryKey: ["notifications"] })
+    },
+  })
+}

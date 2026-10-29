@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -67,6 +68,17 @@ export class MessagesContactController {
   @ApiOperation({ summary: 'Compter les messages non lus' })
   compterNonLus(@CurrentUser() user: UtilisateurConnecte) {
     return this.service.compterNonLus(user);
+  }
+
+  @Delete(':id')
+  @HttpCode(200)
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Supprimer un message de contact et ses notifications' })
+  supprimer(
+    @CurrentUser() user: UtilisateurConnecte,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.supprimer(id, user);
   }
 
   @Patch(':id/lu')
