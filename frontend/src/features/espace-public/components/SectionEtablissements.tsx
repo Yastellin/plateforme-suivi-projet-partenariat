@@ -4,8 +4,8 @@ import { Link } from "react-router-dom"
 import { ArrowRight, MapPin } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
-import { initiales, teinteDe } from "@/features/espace-public/lib/publique"
 import { Reveal, RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 
 export function SectionEtablissements() {
   const { data, isLoading } = usePublicAccueil()
@@ -39,8 +39,8 @@ export function SectionEtablissements() {
                           <img src={etab.logo_url} alt="" loading="lazy" decoding="async" />
                         </span>
                       ) : (
-                        <span className="vt-mono" style={{ background: teinteDe(etab.nom) }} aria-hidden="true">
-                          {etab.sigle ?? initiales(etab.nom)}
+                        <span className="vt-mono">
+                          <ImageDefaut alt="" className="vt-image-defaut" />
                         </span>
                       )}
                       <div style={{ minWidth: 0 }}>

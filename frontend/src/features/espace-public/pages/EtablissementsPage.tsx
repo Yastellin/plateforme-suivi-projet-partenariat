@@ -9,6 +9,7 @@ import { useDebounce } from "@/hooks/useDebounce"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 
 // Page Etablissements de la vitrine publique (section 6.2).
 // Liste publique des etablissements membres avec recherche instantanee.
@@ -72,7 +73,7 @@ export function EtablissementsPage() {
                         className="h-10 w-10 rounded object-contain"
                       />
                     ) : (
-                      <Building2 size={28} />
+                      <ImageDefaut alt="" className="h-10 w-10 rounded object-contain" />
                     )}
                   </div>
                   <div className="min-w-0">

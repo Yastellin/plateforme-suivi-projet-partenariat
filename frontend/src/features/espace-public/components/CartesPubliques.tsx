@@ -10,13 +10,11 @@ import type { PartenairePublic, ProjetPublic, PublicationPublique, StatutProjet 
 import type { PartenariatPublic } from "@/features/espace-public/api/usePublicDonneesDetail"
 import {
   formaterPeriode,
-  initiales,
   type PeriodeCalculeePartenariat,
   libelleStatutProjet,
   imagePrincipalePublication,
-  teinteDe,
 } from "@/features/espace-public/lib/publique"
-import { Illustration } from "@/features/espace-public/components/Illustrations"
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 
 function classeBadgeStatut(statut: StatutProjet): string {
   switch (statut) {
@@ -64,8 +62,8 @@ export function CartePartenaire({ partenaire, className }: { partenaire: Partena
           <img src={partenaire.logo_url} alt="" loading="lazy" decoding="async" />
         </span>
       ) : (
-        <span className="vt-pt-ini" style={{ background: teinteDe(partenaire.nom) }} aria-hidden="true">
-          {initiales(partenaire.nom)}
+        <span className="vt-pt-ini">
+          <ImageDefaut alt="" className="vt-image-defaut" />
         </span>
       )}
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -140,13 +138,13 @@ export function CartePartenariat({
             <span className="vt-card-partner-logo">
               {logoPartenaire?.logo_url ? (
                 <img src={logoPartenaire.logo_url} alt="" loading="lazy" decoding="async" />
-              ) : <Handshake size={26} aria-hidden="true" />}
+              ) : <ImageDefaut alt="" className="vt-image-defaut" />}
             </span>
             {partenariat.partenaires.length > 0 && <span className="vt-card-partner-count">{partenariat.partenaires.length} partenaire(s)</span>}
           </div>
         ) : (
           <div className="vt-pub-cover card-img-wrapper">
-            <Illustration type="cotutelle" />
+            <ImageDefaut alt="" className="vt-art-img vt-image-defaut" />
           </div>
         )}
         <div className="vt-pub-body vt-card-body">
@@ -190,7 +188,7 @@ export function CarteProjet({ projet, className, lien }: { projet: ProjetPublic;
   const contenu = (
     <>
       <div className="vt-pub-cover card-img-wrapper">
-        <Illustration type="reseau" />
+        <ImageDefaut alt="" className="vt-art-img vt-image-defaut" />
       </div>
       <div className="vt-pub-body">
         <span className={classeBadgeStatut(projet.statut)}>{libelleStatutProjet(projet.statut)}</span>
@@ -344,9 +342,7 @@ export function CartePublication({ publication, className, lien }: { publication
               decoding="async"
             />
           ) : (
-            <div role="img" aria-label={`Illustration neutre de ${publication.titre}`}>
-              <Illustration type="montagne" />
-            </div>
+            <ImageDefaut alt="" className="vt-art-img vt-image-defaut" />
           )}
         </div>
         <div className={`vt-pub-body${estMagazine ? " vt-news-list-content" : ""}`}>
