@@ -96,22 +96,14 @@ describe('barre latérale interne', () => {
     expect(lienNotifications?.textContent).toContain('Notifications');
     expect(lienNotifications?.textContent).toContain('27');
 
-    const boutonCompte = conteneur.querySelector<HTMLButtonElement>(
-      'button[aria-haspopup="menu"]',
+    // Avatar aux initiales du compte (pas d'image)
+    expect(conteneur.querySelector('aside img')).toBeNull();
+    expect(conteneur.querySelector('aside')?.textContent).toContain('RA');
+
+    const boutonDeconnexion = conteneur.querySelector<HTMLButtonElement>(
+      'button[aria-label="Se déconnecter"]',
     );
-    expect(boutonCompte).not.toBeNull();
-    expect(
-      boutonCompte?.querySelector('img')?.getAttribute('src'),
-    ).toBe('/api/uploads/logos/presidence/logo-universite.png');
-
-    await act(async () => {
-      boutonCompte?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    const boutonDeconnexion = Array.from(
-      conteneur.querySelectorAll<HTMLButtonElement>('button'),
-    ).find((bouton) => bouton.textContent?.includes('Se déconnecter'));
-    expect(boutonDeconnexion).toBeDefined();
+    expect(boutonDeconnexion).not.toBeNull();
 
     await act(async () => {
       boutonDeconnexion?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -119,7 +111,7 @@ describe('barre latérale interne', () => {
     expect(etat.deconnecter).toHaveBeenCalledOnce();
   });
 
-  it("affiche le logo propre de l'établissement dans le pied", async () => {
+  it("affiche le nom de l'établissement dans le pied de page", async () => {
     Object.assign(etat.utilisateur, {
       id: 'compte-fds',
       email: 'direction@univ-fianarantsoa.mg',
@@ -143,12 +135,9 @@ describe('barre latérale interne', () => {
       );
     });
 
-    const boutonCompte = conteneur.querySelector<HTMLButtonElement>(
-      'button[aria-haspopup="menu"]',
-    );
-    expect(boutonCompte?.querySelector('img')?.getAttribute('src')).toBe(
-      '/api/uploads/logos/etablissements/fds/logo-fds.png',
-    );
-    expect(boutonCompte?.textContent).toContain('Faculté des Sciences');
+    const pied = conteneur.querySelector('aside')?.textContent ?? '';
+    expect(pied).toContain('Faculté des Sciences');
+    expect(pied).toContain('direction');
+    expect(pied).toContain('DI');
   });
 });
