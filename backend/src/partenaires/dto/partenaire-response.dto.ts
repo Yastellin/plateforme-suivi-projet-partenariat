@@ -58,8 +58,8 @@ export class PartenaireResponseDto {
   publie_le: Date | null;
   @ApiProperty({ nullable: true })
   cree_par_role: string | null;
-  @ApiProperty()
-  etablissement_id: string;
+  @ApiProperty({ nullable: true })
+  etablissement_id: string | null;
   @ApiProperty({ type: [ContactResponseDto] })
   contacts?: ContactResponseDto[];
   @ApiProperty()

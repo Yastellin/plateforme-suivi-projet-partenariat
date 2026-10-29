@@ -92,12 +92,12 @@ export class Partenaire {
   @Column({ default: false })
   archive: boolean;
 
-  @Column({ type: 'uuid' })
-  etablissement_id: string;
+  @Column({ type: 'uuid', nullable: true })
+  etablissement_id: string | null;
 
-  @ManyToOne(() => Etablissement, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Etablissement, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'etablissement_id' })
-  etablissement: Etablissement;
+  etablissement: Etablissement | null;
 
   @OneToMany(() => Contact, (contact) => contact.partenaire, { cascade: true })
   contacts: Contact[];

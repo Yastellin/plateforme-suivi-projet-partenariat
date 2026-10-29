@@ -212,7 +212,7 @@ export interface Partenaire {
   soumis_le: string | null;
   publie_le: string | null;
   cree_par_role: RoleUtilisateur | null;
-  etablissement_id: string;
+  etablissement_id: string | null;
   created_at: string;
   updated_at: string;
   contacts: Contact[];

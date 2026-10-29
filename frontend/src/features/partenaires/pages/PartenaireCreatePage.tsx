@@ -8,7 +8,6 @@ import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput
 import { PartenaireForm } from '../components/PartenaireForm';
 import { useCreatePartenaire } from '../api/useCreatePartenaire';
 import { useRechercheDoublon, type PartenaireAvecRaisons } from '../api/useRechercheDoublon';
-import { useEtablissements } from '@/features/etablissements/api/useEtablissements';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAuth } from '@/hooks/useAuth';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -24,8 +23,6 @@ export function PartenaireCreatePage() {
   const estPresidence = utilisateur?.role === 'PRESIDENCE';
   const nomDifferee = useDebounce(nomRecherche, 400);
   const { data: doublons, isFetching: rechercheEnCours } = useRechercheDoublon('nom', nomDifferee);
-  const { data: pageEtablissements } = useEtablissements();
-  const etablissements = pageEtablissements?.data ?? [];
   const { mutate: creer, isPending } = useCreatePartenaire();
   const doublonsPartenaires = doublons?.filter(
     (doublon): doublon is PartenaireAvecRaisons => 'nom' in doublon,
@@ -101,8 +98,8 @@ export function PartenaireCreatePage() {
           ) : (
             <PartenaireForm
               nomInitial={nomRecherche}
-              etablissements={estPresidence ? etablissements : undefined}
               peutGererVisibilite={estPresidence}
+              onAnnuler={() => navigate(`${cheminBase}/partenaires-partenariats/partenaires`)}
               onSoumettre={onSoumettre}
               enCours={isPending}
             />

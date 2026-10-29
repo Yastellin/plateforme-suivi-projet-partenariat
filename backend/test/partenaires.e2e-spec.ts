@@ -48,33 +48,32 @@ describe('Partenaires (e2e)', () => {
   });
 
   describe('POST /api/partenaires', () => {
-    it('cree un partenaire pour un etablissement (PRESIDENCE)', async () => {
+    it('cree un partenaire propre a la PRESIDENCE sans etablissement', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .post('/api/partenaires')
         .set(...enteteBearer(presidence))
         .send({
-          nom: "Université d'Antananarivo",
+          nom: 'Partenaire propre Présidence Antananarivo',
           type: 'Université',
           pays: 'Madagascar',
-          etablissement_id: etablissementFdsId,
         })
         .expect(201);
 
       const partenaire = donnees<any>(reponse.body);
-      expect(partenaire.nom).toBe("Université d'Antananarivo");
-      expect(partenaire.etablissement_id).toBe(etablissementFdsId);
+      expect(partenaire.nom).toBe('Partenaire propre Présidence Antananarivo');
+      expect(partenaire.etablissement_id).toBeNull();
+      expect(partenaire.cree_par_role).toBe('PRESIDENCE');
       expect(partenaire.statut).toBe('ACTIF');
     });
 
-    it('refuse un doublon de nom dans le meme etablissement (409)', async () => {
+    it('refuse un doublon de nom dans le perimetre de la PRESIDENCE (409)', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .post('/api/partenaires')
         .set(...enteteBearer(presidence))
         .send({
-          nom: "Université d'Antananarivo",
+          nom: 'Partenaire propre Présidence Antananarivo',
           type: 'Université',
           pays: 'Madagascar',
-          etablissement_id: etablissementFdsId,
         })
         .expect(409);
 
@@ -82,16 +81,19 @@ describe('Partenaires (e2e)', () => {
       expect(reponse.body.message).toContain('existe déjà');
     });
 
-    it('exige un etablissement pour la PRESIDENCE (400)', async () => {
-      await request(ctx.app.getHttpServer())
+    it('ignore un etablissement fourni par le client pour la PRESIDENCE', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
         .post('/api/partenaires')
         .set(...enteteBearer(presidence))
         .send({
-          nom: 'Partenaire sans établissement',
+          nom: 'Partenaire client rattachement ignoré',
           type: 'ONG',
           pays: 'Madagascar',
+          etablissement_id: etablissementFdsId,
         })
-        .expect(400);
+        .expect(201);
+
+      expect(donnees<any>(reponse.body).etablissement_id).toBeNull();
     });
 
     it('rattache automatiquement le partenaire a l etablissement du compte', async () => {
@@ -133,7 +135,7 @@ describe('Partenaires (e2e)', () => {
       expect(reponse.body.message).toContain('appartient déjà');
     });
 
-    it("refuse pour un contact un téléphone déjà attribué à un partenaire (409)", async () => {
+    it('refuse pour un contact un téléphone déjà attribué à un partenaire (409)', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .post(`/api/partenaires/${partenaireToliaraId}/contacts`)
         .set(...enteteBearer(presidence))
@@ -213,6 +215,7 @@ describe('Partenaires (e2e)', () => {
         .expect(201);
 
       const partenaireId = donnees<any>(creation.body).id;
+      expect(donnees<any>(creation.body).etablissement_id).toBe(etablissementFdsId);
 
       await request(ctx.app.getHttpServer())
         .get(`/api/partenaires/${partenaireId}`)

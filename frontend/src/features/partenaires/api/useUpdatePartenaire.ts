@@ -13,7 +13,7 @@ interface VariablesUpdatePartenaire {
 }
 
 async function mettreAJourPartenaire({ id, valeurs }: VariablesUpdatePartenaire): Promise<Partenaire> {
-  const { telephone, etablissement_id: _etablissementId, ...reste } = valeurs;
+  const { telephone, ...reste } = valeurs;
 
   const payload = {
     ...videsEnNull(reste),

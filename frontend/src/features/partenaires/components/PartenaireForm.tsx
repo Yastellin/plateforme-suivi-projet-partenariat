@@ -8,13 +8,13 @@ import { FloatingLabelInput } from '@/components/forms/inputs/FloatingLabelInput
 import { PhoneInputSanitized } from '@/components/forms/inputs/PhoneInputSanitized';
 import { useRechercheDoublon, useRechercheDoublonsPartenaireCoordonnees } from '../api/useRechercheDoublon';
 import { useDebounce } from '@/hooks/useDebounce';
-import type { Etablissement, Partenaire } from '@/types/api';
+import type { Partenaire } from '@/types/api';
 
 interface PartenaireFormProps {
   partenaire?: Partenaire;
   nomInitial?: string;
-  etablissements?: Etablissement[];
   peutGererVisibilite?: boolean;
+  onAnnuler?: () => void;
   onSoumettre: (valeurs: PartenaireFormValues) => void;
   enCours: boolean;
 }
@@ -22,13 +22,11 @@ interface PartenaireFormProps {
 export function PartenaireForm({
   partenaire,
   nomInitial,
-  etablissements,
   peutGererVisibilite = false,
+  onAnnuler,
   onSoumettre,
   enCours,
 }: PartenaireFormProps) {
-  const afficherSelectionEtablissement = etablissements !== undefined;
-
   const {
     register,
     handleSubmit,
@@ -36,7 +34,7 @@ export function PartenaireForm({
     setValue,
     formState: { errors, isValid },
   } = useForm<PartenaireFormValues>({
-    resolver: zodResolver(creerSchemaPartenaire(afficherSelectionEtablissement)),
+    resolver: zodResolver(creerSchemaPartenaire()),
     mode: 'onChange',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -52,7 +50,6 @@ export function PartenaireForm({
       description: partenaire?.description ?? '',
       visibilite: partenaire?.visibilite ?? 'PRIVE',
       est_strategique: partenaire?.est_strategique ?? false,
-      etablissement_id: partenaire?.etablissement_id ?? '',
     },
   });
 
@@ -63,17 +60,15 @@ export function PartenaireForm({
   const emailsSupplementaires = watch('emails') ?? [];
   const telephone = watch('telephone') ?? '';
   const telephonesSupplementaires = watch('telephones') ?? [];
-  const etablissementId = watch('etablissement_id') ?? partenaire?.etablissement_id ?? '';
   const nomDiffere = useDebounce(nom, 400);
   const emailDifferee = useDebounce(email, 400);
   const telephoneDiffere = useDebounce(telephone, 400);
   const emailsSupplementairesDifferes = useDebounce(emailsSupplementaires, 400);
   const telephonesSupplementairesDifferes = useDebounce(telephonesSupplementaires, 400);
-  const nomPourRecherche = afficherSelectionEtablissement && !etablissementId ? '' : nomDiffere;
-  const { data: doublonsIdentite } = useRechercheDoublon('nom', nomPourRecherche, {
+  const { data: doublonsIdentite } = useRechercheDoublon('nom', nomDiffere, {
     pays,
     type,
-    etablissement_id: etablissementId || undefined,
+    etablissement_id: partenaire?.etablissement_id ?? undefined,
   });
   const { data: doublonsEmail } = useRechercheDoublon('email', emailDifferee);
   const { data: doublonsTelephone } = useRechercheDoublon('telephone', telephoneDiffere);
@@ -103,38 +98,13 @@ export function PartenaireForm({
         emails: valeurs.emails?.map((item) => item.trim()).filter(Boolean),
         telephones: valeurs.telephones?.map((item) => item.trim()).filter(Boolean),
       }))} noValidate className="flex flex-col gap-1">
-      {afficherSelectionEtablissement ? (
-        <div className="mb-4">
-          <label htmlFor="etablissement_id" className="mb-1.5 block text-[12.5px] font-medium text-[var(--color-text-secondary)]">
-            Établissement porteur <span className="text-[var(--status-expire-fg)]">*</span>
-          </label>
-          <select
-            id="etablissement_id"
-            className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-[13.5px] outline-none focus:border-[var(--color-brand)]"
-            {...register('etablissement_id')}
-          >
-            <option value="">Sélectionnez un établissement</option>
-            {etablissements?.map((etablissement) => (
-              <option key={etablissement.id} value={etablissement.id}>
-                {etablissement.nom}
-              </option>
-            ))}
-          </select>
-          {errors.etablissement_id ? (
-            <p role="alert" className="mt-1 px-0.5 text-[11.5px] font-medium text-[var(--status-expire-fg)]">
-              {errors.etablissement_id.message}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <FloatingLabelInput
           label="Nom"
           requis
           autoFocus
           placeholder="Ex : Airtel Madagascar"
-          aide="Doublon bloquant : même nom et même pays dans un établissement."
+          aide="Doublon bloquant : même nom et même pays."
           erreur={errors.nom?.message}
           {...register('nom')}
         />
@@ -149,7 +119,7 @@ export function PartenaireForm({
       {doublonIdentite ? (
         <div className="mb-4 -mt-2 flex items-center gap-2 px-0.5 text-[11.5px] font-medium text-[var(--status-attente-fg)]">
           <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
-          Une fiche avec le même nom et le même pays existe déjà dans cet établissement.
+          Une fiche avec le même nom et le même pays existe déjà.
         </div>
       ) : null}
 
@@ -265,14 +235,25 @@ export function PartenaireForm({
         Partenaire stratégique
       </label>
 
-      <button
-        type="submit"
-        disabled={enCours || !isValid || Boolean(doublonIdentite) || Boolean(doublonEmail) || Boolean(doublonTelephone) || Boolean(doublonSupplementaire)}
-        className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-        Enregistrer
-      </button>
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={enCours || !isValid || Boolean(doublonIdentite) || Boolean(doublonEmail) || Boolean(doublonTelephone) || Boolean(doublonSupplementaire)}
+          className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          Enregistrer
+        </button>
+        {onAnnuler ? (
+          <button
+            type="button"
+            onClick={onAnnuler}
+            className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-brand)] hover:text-[var(--color-text-primary)]"
+          >
+            Annuler
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }
