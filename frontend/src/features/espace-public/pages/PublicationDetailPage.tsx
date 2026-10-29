@@ -11,8 +11,8 @@ import { CarteLaterale } from "@/features/espace-public/components/CarteLaterale
 import { DetailLayout } from "@/features/espace-public/components/DetailLayout"
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { Illustration } from "@/features/espace-public/components/Illustrations"
-import { EmptyStateSection } from "@/features/espace-public/components/EmptyStateSection"
 import { PartageSocial } from "@/features/espace-public/components/PartageSocial"
+import { PageIntrouvable } from "@/features/espace-public/components/PageIntrouvable"
 
 export function PublicationDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -38,15 +38,7 @@ export function PublicationDetailPage() {
     )
   }
   if (!publication) {
-    return (
-      <div className="vt-wrap vt-section">
-        <EmptyStateSection
-          icone={<Newspaper aria-hidden="true" />}
-          titre="Actualité introuvable"
-          description="Cet élément n'existe pas ou a été retiré."
-        />
-      </div>
-    )
+    return <PageIntrouvable titre="Publication introuvable" description="Cette publication n'existe pas ou a été retirée." />
   }
 
   const photos = [...(publication.photos ?? [])].sort((a, b) => a.ordre - b.ordre)
