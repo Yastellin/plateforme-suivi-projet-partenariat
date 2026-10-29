@@ -97,7 +97,15 @@ export class MessageContactRecuListener implements BeforeApplicationShutdown {
     try {
       await this.notificationsService.creer({
         titre: 'Nouveau message de contact',
-        message: `${event.reference} : ${event.nom} — ${event.sujet}`,
+        // Le corps du message est porté par la notification (lisible dans l'espace interne).
+        message: [
+          `Référence : ${event.reference}`,
+          `Expéditeur : ${event.nom} (${event.email})`,
+          ...(event.telephone ? [`Téléphone : ${event.telephone}`] : []),
+          `Sujet : ${event.sujet}`,
+          '',
+          event.message,
+        ].join('\n'),
         type: TypeNotification.MESSAGE_CONTACT,
         priorite: PrioriteNotification.HAUTE,
         utilisateur_id: destinataire.id,

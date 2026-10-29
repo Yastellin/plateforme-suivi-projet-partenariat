@@ -39,6 +39,10 @@ vi.mock('@/features/notifications/api/useNombreNotificationsNonLues', () => ({
   useNombreNotificationsNonLues: () => ({ data: 27 }),
 }));
 
+vi.mock('@/features/messages-contact/api/useMessagesContact', () => ({
+  useNombreMessagesNonLus: () => ({ data: 3 }),
+}));
+
 vi.mock('@/contexts/identite-visuelle-context', () => ({
   NOM_INSTITUTION: 'Université de Fianarantsoa',
   useIdentiteVisuelle: () => ({

@@ -275,6 +275,9 @@ describe('Messages de contact (e2e)', () => {
       );
       expect(notifs.map((n) => n.utilisateur_id)).toEqual([presidence.id]);
       expect(notifs.map((n) => n.utilisateur_id)).not.toContain(decideur.id);
+      // La notification porte le corps du message (l'e-mail, lui, ne le porte pas)
+      expect(notifs[0].message).toContain('Bonjour, message à la présidence.');
+      expect(notifs[0].message).toContain('jean.rakoto@example.mg');
     });
 
     it('envoie un e-mail au destinataire avec un lien vers son espace, sans le contenu du message', async () => {

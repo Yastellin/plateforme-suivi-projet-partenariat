@@ -85,6 +85,7 @@ export class MessagesContactService {
       email: enregistre.email,
       telephone: enregistre.telephone,
       sujet: enregistre.sujet,
+      message: enregistre.message,
       etablissementId: enregistre.etablissement_id,
     };
     this.events.emit(MESSAGE_CONTACT_RECU, evenement);

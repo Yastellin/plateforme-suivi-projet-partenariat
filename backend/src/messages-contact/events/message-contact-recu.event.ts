@@ -8,5 +8,6 @@ export interface MessageContactRecuEvent {
   email: string;
   telephone: string | null;
   sujet: string;
+  message: string;
   etablissementId: string | null;
 }
