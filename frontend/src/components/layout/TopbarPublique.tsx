@@ -1,19 +1,18 @@
 // Navigation de la vitrine publique (accessible sans authentification).
 import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { ChevronDown, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 
 interface LienNav {
   label: string
   href: string
-  chevron?: boolean
 }
 
 const LIENS_NAV: LienNav[] = [
   { label: "Accueil", href: "/" },
   { label: "Actualités", href: "/actualites" },
-  { label: "Projets", href: "/projets", chevron: true },
-  { label: "Partenariats", href: "/partenariats", chevron: true },
+  { label: "Projets", href: "/projets" },
+  { label: "Partenariats", href: "/partenariats" },
   { label: "Partenaires", href: "/partenaires" },
   { label: "Établissements", href: "/etablissements" },
   { label: "Contact", href: "/contact" },
@@ -73,7 +72,6 @@ export function TopbarPublique() {
               aria-current={estActif(lien, location.pathname) ? "page" : undefined}
             >
               {lien.label}
-              {lien.chevron && <ChevronDown className="vt-nav-chevron" size={13} aria-hidden="true" />}
             </Link>
           ))}
         </nav>

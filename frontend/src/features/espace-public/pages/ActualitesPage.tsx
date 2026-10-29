@@ -14,6 +14,7 @@ import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
 import { imagePrincipalePublication } from "@/features/espace-public/lib/publique"
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 
 const TOUS = "tous"
 const PAR_PAGE = 9
@@ -157,7 +158,7 @@ export function ActualitesPage() {
                           <li key={publication.id}>
                             <Link to={`/actualites/${publication.id}`}>
                               <span className="vt-news-thumb">
-                                {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <Newspaper size={22} aria-hidden="true" />}
+                                {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <ImageDefaut alt="" className="vt-image-defaut" />}
                               </span>
                               <span className="vt-news-recent-title">{publication.titre}</span>
                             </Link>

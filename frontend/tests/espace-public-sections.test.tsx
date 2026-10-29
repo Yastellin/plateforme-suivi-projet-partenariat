@@ -312,9 +312,8 @@ describe("sections de la page d'accueil publique", () => {
 
     expect(conteneur.querySelector(".vt-logo-grid")?.children).toHaveLength(4)
     expect(tuiles).toHaveLength(4)
-    expect(tuiles[1].querySelector("img")).toBeNull()
-    expect(tuiles[1].querySelector("svg")).not.toBeNull()
-    expect(tuiles[1].querySelector(".sr-only")).not.toBeNull()
+    expect(tuiles[1].querySelector('img[src="/images/icone_aucune_image.jpg"]')).not.toBeNull()
+    expect(tuiles[1].querySelector("svg")).toBeNull()
   })
 
   it("privilégie la couverture, puis la première photo de galerie, avec un repli neutre", () => {
@@ -324,7 +323,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector('#actualites img[src="/images/couverture-demo.jpg"]')).not.toBeNull()
     expect(conteneur.querySelector('#actualites img[src="/images/galerie-1.jpg"]')).toBeNull()
     expect(conteneur.querySelector('#actualites img[src="/images/galerie-2.jpg"]')).not.toBeNull()
-    expect(conteneur.querySelector('#actualites [role="img"][aria-label="Illustration neutre de Actualité 3"]')).not.toBeNull()
+    expect(conteneur.querySelector('#actualites img[src="/images/icone_aucune_image.jpg"]')).not.toBeNull()
   })
 
   it("relie les CTA et les cartes aux routes canoniques", () => {

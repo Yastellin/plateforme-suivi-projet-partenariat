@@ -811,6 +811,29 @@
   height: 100%;
   display: block;
 }
+.vt-image-defaut {
+  display: block;
+  max-width: 100%;
+}
+.vt-pt-ini .vt-image-defaut,
+.vt-card-partner-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.vt-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.vt-card-partner-logo {
+  display: block;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  overflow: hidden;
+}
 .vt-pub-body {
   padding: 20px;
   display: flex;
@@ -2520,10 +2543,6 @@ select.vt-fld-input {
 .vitrine .vt-nav a {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-}
-.vitrine .vt-nav-chevron {
-  color: #75877a;
 }
 .vitrine .vt-info-top {
   background: #14221a;
@@ -2758,16 +2777,6 @@ select.vt-fld-input {
 }
 .vitrine .vt-nav a::after {
   display: none;
-}
-.vitrine .vt-nav-chevron {
-  width: .6rem;
-  height: .6rem;
-  color: currentColor;
-  transition: transform .2s ease;
-}
-.vitrine .vt-nav a:hover .vt-nav-chevron,
-.vitrine .vt-nav a:focus-visible .vt-nav-chevron {
-  transform: rotate(180deg);
 }
 .vitrine .vt-menu-btn {
   display: none;
@@ -3017,8 +3026,7 @@ select.vt-fld-input {
   background: var(--border-color);
 }
 .vitrine .vt-pub .card-img-wrapper > img,
-.vitrine .vt-pub .card-img-wrapper > svg,
-.vitrine .vt-pub .card-img-wrapper > div[role="img"] {
+.vitrine .vt-pub .card-img-wrapper > svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -3027,13 +3035,8 @@ select.vt-fld-input {
   transition: transform .5s ease;
 }
 .vitrine .vt-pub:hover .card-img-wrapper > img,
-.vitrine .vt-pub:hover .card-img-wrapper > svg,
-.vitrine .vt-pub:hover .card-img-wrapper > div[role="img"] {
+.vitrine .vt-pub:hover .card-img-wrapper > svg {
   transform: scale(1.05);
-}
-.vitrine .vt-pub .card-img-wrapper > div[role="img"] > svg {
-  width: 100%;
-  height: 100%;
 }
 .vitrine .vt-pub-body {
   display: flex;
@@ -3456,7 +3459,6 @@ select.vt-fld-input {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .vitrine .vt-nav-chevron,
   .vitrine .vt-pub,
   .vitrine .vt-pub .card-img-wrapper > img,
   .vitrine .vt-pub .card-img-wrapper > svg,

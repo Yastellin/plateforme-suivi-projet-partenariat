@@ -1,7 +1,7 @@
 // src/features/espace-public/pages/PublicPartenairesListePage.tsx
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Building2, ChevronLeft, ChevronRight, Handshake, Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, Handshake, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,6 +12,7 @@ import { usePublicTousPartenaires } from "@/features/espace-public/api/usePublic
 import { FilAriane } from "@/features/espace-public/components/FilAriane"
 import { PageHeaderPublique } from "@/features/espace-public/components/PageHeaderPublique"
 import { RevealGroup, RevealItem } from "@/features/espace-public/components/Reveal"
+import { ImageDefaut } from "@/features/espace-public/components/ImageDefaut"
 import type { PartenairePublic } from "@/types/api"
 
 const TAILLE_PAGE = 12
@@ -31,10 +32,7 @@ function TuileLogoPartenaire({ partenaire }: { partenaire: PartenairePublic }) {
       {partenaire.logo_url ? (
         <img src={partenaire.logo_url} alt="" loading="lazy" decoding="async" />
       ) : (
-        <>
-          <Building2 size={34} strokeWidth={1.5} aria-hidden="true" />
-          <span className="sr-only">Logo non disponible : {partenaire.nom}</span>
-        </>
+        <ImageDefaut alt="" className="vt-image-defaut" />
       )}
     </Link>
   )
