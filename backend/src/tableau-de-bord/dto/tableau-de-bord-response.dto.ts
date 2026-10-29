@@ -93,6 +93,14 @@ export class ConventionsParStatutDto {
   en_attente_signature: number;
 }
 
+export class ProjetParDomaineDto {
+  @ApiProperty({ example: 'Biologie' })
+  domaine: string;
+
+  @ApiProperty({ example: 4 })
+  nombre: number;
+}
+
 export class TableauDeBordResponseDto {
   @ApiProperty({ type: CompteursGlobauxDto })
   compteurs: CompteursGlobauxDto;
@@ -102,6 +110,9 @@ export class TableauDeBordResponseDto {
 
   @ApiProperty({ type: ConventionsParStatutDto })
   conventions_par_statut: ConventionsParStatutDto;
+
+  @ApiProperty({ type: [ProjetParDomaineDto] })
+  projets_par_domaine: ProjetParDomaineDto[];
 
   @ApiProperty({ example: 'GLOBAL' })
   perimetre: 'GLOBAL' | 'ETABLISSEMENT';

@@ -4,7 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import type { CompteursTableauDeBord, StatutProjet, TableauDeBordReponse } from '@/types/api';
 
+export interface ProjetParDomaine {
+  domaine: string;
+  nombre: number;
+}
+
 export interface CompteursEtendus extends CompteursTableauDeBord {
+  projets_par_domaine: ProjetParDomaine[];
   conventions_signees: number;
   projets_par_statut: Record<StatutProjet, number>;
   partenariats: number;
@@ -14,7 +20,7 @@ export interface CompteursEtendus extends CompteursTableauDeBord {
 
 async function recupererTableauDeBord(): Promise<CompteursEtendus> {
   const reponse = await apiClient.get<TableauDeBordReponse>('/tableau-de-bord');
-  const { compteurs, conventions_par_statut, projets_par_statut } = reponse.data;
+  const { compteurs, conventions_par_statut, projets_par_statut, projets_par_domaine } = reponse.data;
 
   const repartition = compteurs?.repartition_conventions ?? {
     BROUILLON: 0,
@@ -46,6 +52,7 @@ async function recupererTableauDeBord(): Promise<CompteursEtendus> {
     conventions_signees: compteurs?.conventions_signees ?? signees,
     repartition_conventions: repartition,
     projets_par_statut: projetsParStatut,
+    projets_par_domaine: projets_par_domaine ?? [],
     partenariats: compteurs?.partenariats ?? 0,
     cotutelles: compteurs?.cotutelles ?? 0,
     publications: compteurs?.publications ?? 0,

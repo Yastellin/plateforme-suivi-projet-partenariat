@@ -141,6 +141,7 @@ export interface TableauDeBordReponse {
     bientot_expirees: number;
     en_attente_signature: number;
   };
+  projets_par_domaine?: { domaine: string; nombre: number }[];
   perimetre: 'GLOBAL' | 'ETABLISSEMENT';
 }
 
