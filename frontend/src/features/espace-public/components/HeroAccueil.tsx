@@ -1,6 +1,5 @@
 // Hero d'accueil et compteurs alimentés par les données publiques.
 import { Link } from "react-router-dom"
-import { Building2 } from "lucide-react"
 import { usePublicAccueil } from "@/features/espace-public/api/usePublicAccueil"
 import { CompteurAnime } from "@/features/espace-public/components/CompteurAnime"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,9 +8,9 @@ export function HeroAccueil() {
   const { data, isLoading } = usePublicAccueil()
   const compteurs = data?.compteurs
 
-  function afficherNombre(valeur: number | undefined, petiteCarte = false) {
+  function afficherNombre(valeur: number | undefined) {
     if (isLoading) {
-      return <Skeleton className={petiteCarte ? "h-12 w-20" : "h-32 w-52"} aria-hidden="true" />
+      return <Skeleton className="h-14 w-24" aria-hidden="true" />
     }
     if (typeof valeur !== "number") {
       return <span aria-label="Donnée indisponible">—</span>
@@ -38,50 +37,35 @@ export function HeroAccueil() {
           </div>
         </div>
       </section>
-      <section className="vt-asymmetric-stats-section" aria-label="Chiffres clés de l'Université">
-        <div className="vt-asymmetric-stats">
-          <article className="vt-stat-big-main" aria-busy={isLoading}>
-            <Building2
-              size={160}
-              strokeWidth={1}
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                right: "-20px",
-                bottom: "-20px",
-                opacity: 0.1,
-                color: "#fff",
-              }}
-            />
-            <strong className="num">
-              {afficherNombre(compteurs?.nombre_etablissements)}
-            </strong>
-            <h2 className="lbl">Établissements partenaires</h2>
-            <p className="sub">
-              Des collaborations académiques solides avec des institutions de premier plan.
-            </p>
-          </article>
-          <div className="vt-stat-small-grid" role="group" aria-label="Autres chiffres publics">
-            <article className="vt-stat-small-card" aria-busy={isLoading}>
-              <strong className="num">
-                {afficherNombre(compteurs?.nombre_partenaires, true)}
-              </strong>
-              <span className="lbl">Partenaire</span>
-            </article>
-            <article className="vt-stat-small-card" aria-busy={isLoading}>
-              <strong className="num">
-                {afficherNombre(compteurs?.nombre_projets_actifs, true)}
-              </strong>
-              <span className="lbl">Projet</span>
-            </article>
-            <article className="vt-stat-small-card" aria-busy={isLoading}>
-              <strong className="num">
-                {afficherNombre(compteurs?.nombre_pays_partenaires, true)}
-              </strong>
-              <span className="lbl">Pays partenaire</span>
-            </article>
+      <section className="vt-horizontal-timeline" aria-label="Chiffres clés de l'Université">
+        <article className="vt-timeline-stat" aria-busy={isLoading}>
+          <span className="vt-timeline-dot" aria-hidden="true" />
+          <div className="vt-timeline-content">
+            <strong className="vt-timeline-number">{afficherNombre(compteurs?.nombre_etablissements)}</strong>
+            <span className="vt-timeline-label">Établissements</span>
           </div>
-        </div>
+        </article>
+        <article className="vt-timeline-stat" aria-busy={isLoading}>
+          <span className="vt-timeline-dot" aria-hidden="true" />
+          <div className="vt-timeline-content">
+            <strong className="vt-timeline-number">{afficherNombre(compteurs?.nombre_partenaires)}</strong>
+            <span className="vt-timeline-label">Partenaire</span>
+          </div>
+        </article>
+        <article className="vt-timeline-stat" aria-busy={isLoading}>
+          <span className="vt-timeline-dot" aria-hidden="true" />
+          <div className="vt-timeline-content">
+            <strong className="vt-timeline-number">{afficherNombre(compteurs?.nombre_projets_actifs)}</strong>
+            <span className="vt-timeline-label">Projet</span>
+          </div>
+        </article>
+        <article className="vt-timeline-stat" aria-busy={isLoading}>
+          <span className="vt-timeline-dot" aria-hidden="true" />
+          <div className="vt-timeline-content">
+            <strong className="vt-timeline-number">{afficherNombre(compteurs?.nombre_pays_partenaires)}</strong>
+            <span className="vt-timeline-label">Pays partenaire</span>
+          </div>
+        </article>
       </section>
     </>
   )

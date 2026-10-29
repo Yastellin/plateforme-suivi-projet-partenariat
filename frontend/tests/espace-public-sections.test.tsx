@@ -227,29 +227,28 @@ describe("sections de la page d'accueil publique", () => {
     expect(conteneur.querySelector('#partenaires .vt-empty-btn[href="/partenariats"]')?.textContent).toBe("Découvrir nos partenariats")
   })
 
-  it("affiche exactement les quatre compteurs publics dans la grille asymétrique", () => {
+  it("affiche les quatre compteurs publics sur la ligne de temps", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
-    const section = conteneur.querySelector(".vt-asymmetric-stats-section")
+    const section = conteneur.querySelector(".vt-horizontal-timeline")
 
-    expect(section?.querySelector(".vt-stat-big-main .num")?.textContent).toBe("3")
-    expect(section?.querySelector(".vt-stat-big-main .lbl")?.textContent).toBe("Établissements partenaires")
-    expect(Array.from(section?.querySelectorAll(".vt-stat-small-card .lbl") ?? []).map((item) => item.textContent)).toEqual([
-      "Partenaire",
-      "Projet",
-      "Pays partenaire",
-    ])
-    expect(Array.from(section?.querySelectorAll(".vt-stat-small-card .num") ?? []).map((item) => item.textContent)).toEqual([
+    expect(Array.from(section?.querySelectorAll(".vt-timeline-number") ?? []).map((item) => item.textContent)).toEqual([
+      "3",
       "4",
       "4",
       "2",
     ])
-    expect(section?.querySelectorAll(".vt-stat-small-card")).toHaveLength(3)
-    expect(section?.querySelector(".vt-stat-big-main .sub")?.textContent).toBe(
-      "Des collaborations académiques solides avec des institutions de premier plan.",
-    )
-    expect(section?.querySelector(".vt-stat-big-main svg")).not.toBeNull()
-    expect(section?.textContent).not.toMatch(/publication|projet publié|convention|document|domaine/i)
+    expect(Array.from(section?.querySelectorAll(".vt-timeline-label") ?? []).map((item) => item.textContent)).toEqual([
+      "Établissements",
+      "Partenaire",
+      "Projet",
+      "Pays partenaire",
+    ])
+    expect(section?.querySelectorAll(".vt-timeline-sublabel")).toHaveLength(0)
+    expect(section?.querySelectorAll(".vt-timeline-stat")).toHaveLength(4)
+    expect(section?.querySelectorAll(".vt-timeline-dot")).toHaveLength(4)
+    expect(section?.querySelector(".vt-asymmetric-stats, .vt-stat-small-card, .vt-stat-big-main")).toBeNull()
+    expect(section?.textContent).not.toMatch(/publication|projet publié|convention|document/i)
   })
 
   it("uniformise les titres, sous-titres et boutons des quatre sections", () => {
@@ -268,12 +267,19 @@ describe("sections de la page d'accueil publique", () => {
     )
 
     expect(entetes).toHaveLength(4)
-    expect(entetes.map((entete) => entete.querySelector("h2")?.textContent)).toEqual(titres)
-    expect(entetes.every((entete) => entete.querySelector("p")?.textContent)).toBe(true)
+    expect(entetes.map((entete) => entete.querySelector(".vt-accueil-section-copy h2")?.textContent)).toEqual(titres)
+    expect(entetes.every((entete) => entete.querySelector(".vt-section-eyebrow"))).toBe(true)
+    expect(entetes.every((entete) => entete.querySelector(".vt-accueil-section-copy > p")?.textContent)).toBe(true)
     expect(
-      Array.from(conteneur.querySelectorAll(".vt-accueil-section-action a"))
+      Array.from(conteneur.querySelectorAll(".vt-btn-circle-arrow"))
         .map((bouton) => bouton.textContent?.trim()),
     ).toEqual(boutons)
+    expect(
+      Array.from(conteneur.querySelectorAll(".vt-btn-circle-arrow"))
+        .map((bouton) => (bouton as HTMLAnchorElement).getAttribute("href")),
+    ).toEqual(["/actualites", "/partenariats", "/projets", "/partenaires"])
+    expect(entetes.every((entete) => entete.querySelector(".vt-arrow-circle svg[aria-hidden='true']"))).toBe(true)
+    expect(conteneur.querySelector(".vt-accueil-section-action, .vt-btn-voir-tout")).toBeNull()
     expect(conteneur.textContent).not.toMatch(/à la une|en vedette|mis en avant/i)
   })
 
@@ -352,7 +358,7 @@ describe("sections de la page d'accueil publique", () => {
     expect(onglets).toEqual(["Projets", "Partenariats", "Partenaires", "Publications"])
   })
 
-  it("garde les CTA après les présentations publiques dédiées", () => {
+  it("place les CTA circulaires dans l’en-tête avant le contenu des sections", () => {
     const conteneur = document.createElement("div")
     conteneur.innerHTML = rendreAccueil()
 
@@ -360,19 +366,18 @@ describe("sections de la page d'accueil publique", () => {
       ["actualites", ".vt-accueil-card-grid"],
       ["projets", ".vt-projects-list-home"],
       ["partenariats", ".vt-timeline"],
+      ["partenaires", ".vt-partner-grid"],
     ]) {
-      const cartes = conteneur.querySelector(`#${section} ${selecteur}`)
-      const bouton = conteneur.querySelector(`#${section} .vt-accueil-section-action`)
-      expect(cartes).not.toBeNull()
+      const entete = conteneur.querySelector(`#${section} .vt-accueil-section-head`)
+      const bouton = entete?.querySelector(".vt-btn-circle-arrow")
+      const contenu = conteneur.querySelector(`#${section} ${selecteur}`)
+      expect(entete).not.toBeNull()
       expect(bouton).not.toBeNull()
-      expect(cartes!.compareDocumentPosition(bouton!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(contenu).not.toBeNull()
+      expect(entete!.compareDocumentPosition(contenu!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     }
+    expect(conteneur.querySelector(".vt-accueil-section-action, .vt-btn-voir-tout")).toBeNull()
     expect(conteneur.querySelector("#projets .vt-projects-list-home")?.classList.contains("vt-hscroll")).toBe(false)
-    const logos = conteneur.querySelector("#partenaires .vt-partner-grid")
-    const boutonPartenaires = conteneur.querySelector("#partenaires .vt-accueil-section-action")
-    expect(logos).not.toBeNull()
-    expect(boutonPartenaires).not.toBeNull()
-    expect(logos!.compareDocumentPosition(boutonPartenaires!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it("présente les partenaires en grille de logos avec leur nom et leur pays", () => {
