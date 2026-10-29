@@ -8,12 +8,11 @@ import type { Partenaire } from '@/types/api';
 import type { PartenaireFormValues } from '@/lib/validators/partenaire.schema';
 
 async function creerPartenaire(valeurs: PartenaireFormValues): Promise<Partenaire> {
-  const { etablissement_id, telephone, ...reste } = valeurs;
+  const { telephone, ...reste } = valeurs;
 
   const payload = {
     ...videsEnNull(reste),
     telephone: telephone ? normaliserTelephone(telephone) : null,
-    ...(etablissement_id ? { etablissement_id } : {}),
   };
 
   const reponse = await apiClient.post<Partenaire>('/partenaires', payload);

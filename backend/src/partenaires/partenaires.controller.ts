@@ -48,7 +48,7 @@ export class PartenairesController {
   @ApiOperation({ summary: 'Créer un partenaire' })
   @ApiResponse({ status: 201, type: PartenaireResponseDto })
   create(@CurrentUser() user: any, @Body() dto: CreatePartenaireDto) {
-    let etablissementId: string;
+    let etablissementId: string | null;
 
     if (user.role === Role.ETABLISSEMENT) {
       etablissementId = user.etablissement_id;
@@ -58,12 +58,7 @@ export class PartenairesController {
         );
       }
     } else if (user.role === Role.PRESIDENCE) {
-      if (!dto.etablissement_id) {
-        throw new BadRequestException(
-          "Pour la PRÉSIDENCE, l'ID de l'établissement est requis.",
-        );
-      }
-      etablissementId = dto.etablissement_id;
+      etablissementId = null;
     } else {
       throw new ForbiddenException('Rôle non autorisé pour cette action.');
     }

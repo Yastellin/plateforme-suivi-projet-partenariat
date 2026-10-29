@@ -17,19 +17,11 @@ const partenaireSchemaBase = z.object({
   description: z.string().optional(),
   visibilite: z.enum(['PUBLIC', 'PRIVE']),
   est_strategique: z.boolean(),
-  etablissement_id: z.string().optional(),
 });
 
-export function creerSchemaPartenaire(etablissementObligatoire: boolean) {
+export function creerSchemaPartenaire() {
   return partenaireSchemaBase.superRefine((valeurs, ctx) => {
     verifierCoordonneesRepetees(valeurs, ctx);
-    if (etablissementObligatoire && !valeurs.etablissement_id) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['etablissement_id'],
-        message: "L'établissement porteur est obligatoire.",
-      });
-    }
   });
 }
 

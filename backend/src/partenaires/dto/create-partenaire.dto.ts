@@ -96,7 +96,8 @@ export class CreatePartenaireDto {
   est_strategique?: boolean;
 
   @ApiPropertyOptional({
-    description: "ID de l'établissement (uniquement pour la PRÉSIDENCE)",
+    description:
+      "Champ de compatibilité : l'établissement est déduit du token d'un compte établissement et ignoré pour la PRÉSIDENCE.",
   })
   @IsOptional()
   @IsUUID()

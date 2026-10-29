@@ -47,7 +47,7 @@ export class PartenairesService {
   ) {}
 
   async create(
-    etablissementId: string,
+    etablissementId: string | null,
     dto: CreatePartenaireDto,
     utilisateur?: ContexteUtilisateur | null,
   ): Promise<Partenaire> {
@@ -134,7 +134,7 @@ export class PartenairesService {
     };
   }
 
-  async findOne(id: string, etablissementId?: string) {
+  async findOne(id: string, etablissementId?: string | null) {
     const where: FindOptionsWhere<Partenaire> = { id, archive: false };
     if (etablissementId) where.etablissement_id = etablissementId;
 
@@ -492,15 +492,20 @@ export class PartenairesService {
   private async verifierDoublonIdentite(
     nom: string,
     pays: string,
-    etablissementId: string,
+    etablissementId: string | null,
     idExclu?: string,
   ): Promise<void> {
     const requete = this.partenaireRepo
       .createQueryBuilder('partenaire')
-      .where('partenaire.archive = false')
-      .andWhere('partenaire.etablissement_id = :etablissementId', {
+      .where('partenaire.archive = false');
+    if (etablissementId === null) {
+      requete.andWhere('partenaire.etablissement_id IS NULL');
+    } else {
+      requete.andWhere('partenaire.etablissement_id = :etablissementId', {
         etablissementId,
-      })
+      });
+    }
+    requete
       .andWhere('lower(trim(partenaire.nom)) = lower(trim(:nom))', { nom })
       .andWhere('lower(trim(partenaire.pays)) = lower(trim(:pays))', { pays });
     if (idExclu) requete.andWhere('partenaire.id != :idExclu', { idExclu });
