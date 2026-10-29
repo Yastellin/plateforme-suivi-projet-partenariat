@@ -100,7 +100,9 @@ describe("navigation publique partenaires et partenariats", () => {
     const liens = [...nav.querySelectorAll("a")].map((lien) => lien.textContent?.trim())
 
     expect(liens).toEqual(["Accueil", "Actualités", "Projets", "Partenariats", "Partenaires", "Établissements", "Contact"])
-    expect(nav.querySelectorAll(".vt-nav-chevron")).toHaveLength(2)
+    expect(nav.querySelectorAll(".vt-nav-chevron")).toHaveLength(0)
+    expect(nav.querySelector('a[href="/projets"]')?.textContent).toBe("Projets")
+    expect(nav.querySelector('a[href="/partenariats"]')?.textContent).toBe("Partenariats")
     expect(page.querySelectorAll(".vt-footer-cols > div")).toHaveLength(4)
     expect(page.querySelector("footer")?.textContent).toContain("BP 1264")
     expect(page.querySelector("footer")?.textContent).toContain("LinkedIn")
