@@ -68,7 +68,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     handleSubmit,
     watch,
     trigger,
-    formState: { errors, isValid },
+    formState: { errors, isValid, submitCount },
   } = useForm<ConventionFormValues>({
     resolver: zodResolver(creerSchemaConvention({ exigerDateDebutFuture: !convention })),
     mode: "onChange",
@@ -97,9 +97,9 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     if (dateDebut && dateFin) void trigger(["date_debut", "date_fin"])
   }, [dateDebut, dateFin, trigger])
 
-  useEffect(() => {
-    void trigger(["partenariat_id", "projet_id", "cotutelle_id"])
-  }, [partenariatId, projetId, cotutelleId, trigger])
+  const lienSelectionne = [partenariatId, projetId, cotutelleId].some(
+    (valeur) => Boolean(valeur && valeur !== VALEUR_AUCUN),
+  )
 
   const onSubmit = (valeurs: ConventionFormValues) => {
     // Conversion explicite de la sentinelle "Aucun" en "" (puis null via
@@ -154,24 +154,30 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label>Statut</Label>
-          <Controller
-            control={control}
-            name="statut"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger aria-invalid={!!errors.statut}><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUTS.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>Statut</Label>
+        <Controller
+          control={control}
+          name="statut"
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger aria-invalid={!!errors.statut}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STATUTS.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
+
+      <div
+        className="flex flex-col gap-4"
+        role="group"
+        aria-label="Liens de la convention"
+        aria-describedby={submitCount > 0 && errors.root?.liens ? "erreur-liens-convention" : undefined}
+      >
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="partenariat_id">Partenariat lie (optionnel)</Label>
           <Controller
@@ -183,7 +189,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
                 onValueChange={field.onChange}
                 disabled={partenariatsEnChargement}
               >
-                <SelectTrigger id="partenariat_id" aria-invalid={!!errors.partenariat_id}>
+                <SelectTrigger id="partenariat_id">
                   <SelectValue placeholder="Selectionner un partenariat" />
                 </SelectTrigger>
                 <SelectContent>
@@ -197,68 +203,72 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
               </Select>
             )}
           />
-          {errors.partenariat_id && <p className="text-sm text-destructive">{errors.partenariat_id.message}</p>}
         </div>
-      </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="projet_id">Projet lie (optionnel)</Label>
-        <Controller
-          control={control}
-          name="projet_id"
-          render={({ field }) => (
-            <Select
-              value={field.value || VALEUR_AUCUN}
-              onValueChange={field.onChange}
-              disabled={projetsEnChargement}
-            >
-              <SelectTrigger id="projet_id" aria-invalid={!!errors.projet_id}>
-                <SelectValue placeholder="Selectionner un projet" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={VALEUR_AUCUN}>Aucun</SelectItem>
-                {projets.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.nom || p.intitule_officiel || "Projet sans intitulé"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="projet_id">Projet lie (optionnel)</Label>
+          <Controller
+            control={control}
+            name="projet_id"
+            render={({ field }) => (
+              <Select
+                value={field.value || VALEUR_AUCUN}
+                onValueChange={field.onChange}
+                disabled={projetsEnChargement}
+              >
+                <SelectTrigger id="projet_id">
+                  <SelectValue placeholder="Selectionner un projet" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={VALEUR_AUCUN}>Aucun</SelectItem>
+                  {projets.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nom || p.intitule_officiel || "Projet sans intitulé"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="cotutelle_id">Cotutelle liée (optionnel)</Label>
-        <Controller
-          control={control}
-          name="cotutelle_id"
-          render={({ field }) => (
-            <Select
-              value={field.value || VALEUR_AUCUN}
-              onValueChange={field.onChange}
-              disabled={cotutellesEnChargement}
-            >
-              <SelectTrigger id="cotutelle_id" aria-invalid={!!errors.cotutelle_id}>
-                <SelectValue placeholder="Sélectionner une cotutelle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={VALEUR_AUCUN}>Aucune</SelectItem>
-                {cotutelles.map((cotutelle) => (
-                  <SelectItem key={cotutelle.id} value={cotutelle.id}>
-                    {cotutelle.nom_doctorant}
-                    {cotutelle.specialite ? ` — ${cotutelle.specialite}` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="cotutelle_id">Cotutelle liée (optionnel)</Label>
+          <Controller
+            control={control}
+            name="cotutelle_id"
+            render={({ field }) => (
+              <Select
+                value={field.value || VALEUR_AUCUN}
+                onValueChange={field.onChange}
+                disabled={cotutellesEnChargement}
+              >
+                <SelectTrigger id="cotutelle_id">
+                  <SelectValue placeholder="Sélectionner une cotutelle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={VALEUR_AUCUN}>Aucune</SelectItem>
+                  {cotutelles.map((cotutelle) => (
+                    <SelectItem key={cotutelle.id} value={cotutelle.id}>
+                      {cotutelle.nom_doctorant}
+                      {cotutelle.specialite ? ` — ${cotutelle.specialite}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+        {submitCount > 0 && errors.root?.liens?.message ? (
+          <p id="erreur-liens-convention" role="alert" className="text-sm text-destructive">
+            {errors.root.liens.message}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onAnnuler} disabled={enCours}>Annuler</Button>
-        <Button type="submit" disabled={enCours || !isValid}>
+        <Button type="submit" disabled={enCours || (!isValid && lienSelectionne)}>
           {enCours && <LoaderCircle className="animate-spin" />}
           {convention ? "Enregistrer les modifications" : "Creer la convention"}
         </Button>
