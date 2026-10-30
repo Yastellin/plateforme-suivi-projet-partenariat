@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
 import type { MessageContact, PageServeur } from "@/types/api"
 
-export type FiltreLecture = "tous" | "non-lus"
+export type FiltreLecture = "tous" | "non-lus" | "lus"
 
 export function useMessagesContact(filtre: FiltreLecture, page: number) {
   return useQuery({
@@ -13,7 +13,7 @@ export function useMessagesContact(filtre: FiltreLecture, page: number) {
         params: {
           page,
           limit: 20,
-          ...(filtre === "non-lus" ? { est_lu: false } : {}),
+          ...(filtre === "non-lus" ? { est_lu: false } : filtre === "lus" ? { est_lu: true } : {}),
         },
       })
       return reponse.data
