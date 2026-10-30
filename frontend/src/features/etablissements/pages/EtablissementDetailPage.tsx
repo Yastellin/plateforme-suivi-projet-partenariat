@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Building2, FolderKanban, Handshake, Network } from "lucide-react";
+import { TableauLiensEtablissement } from "@/features/etablissements/components/TableauLiensEtablissement";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Panel, PanelHeader, PanelBody } from "@/components/shared/Panel";
@@ -26,15 +27,15 @@ export function EtablissementDetailPage() {
   const [filtre, setFiltre] = useState<TypeStatistique>("tous");
   const { data: etablissement, isLoading } = useEtablissement(id);
   const { data: comparatif } = useComparatifEtablissements();
-  const projets = useProjets({ page: 1, limit: 5, etablissement_id: id });
+  const projets = useProjets({ page: 1, limit: 10, etablissement_id: id });
   const partenaires = usePartenaires({
     page: 1,
-    limit: 5,
+    limit: 10,
     etablissement_id: id,
   });
   const partenariats = usePartenariats({
     page: 1,
-    limit: 5,
+    limit: 10,
     etablissement_id: id,
   });
   useTitreBreadcrumb(etablissement?.nom);
@@ -137,19 +138,43 @@ export function EtablissementDetailPage() {
         <FiltreTypeStatistique valeur={filtre} onChange={setFiltre} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="flex flex-col gap-4">
         {filtre !== "partenaires" ? (
-          <ListeLiee
-            titre="Projets récents"
-            elements={(projets.data?.data ?? []).map((item) => ({
+          <TableauLiensEtablissement
+            titre="Projets"
+            sousTitre="Projets de cet établissement"
+            icone={FolderKanban}
+            libelleDate="Début"
+            messageVide="Aucun projet pour cet établissement."
+            lignes={(projets.data?.data ?? []).map((item) => ({
               id: item.id,
-              libelle: item.nom,
+              titre: item.nom,
+              sousTitre: item.intitule_officiel ?? item.type,
+              statut: item.statut,
+              date: item.date_debut,
               lien: `${cheminBase}/projets/${item.id}`,
             }))}
           />
         ) : null}
         {filtre !== "projets" ? (
-          <>
+          <TableauLiensEtablissement
+            titre="Partenariats"
+            sousTitre="Partenariats impliquant cet établissement"
+            icone={Network}
+            libelleDate="Début"
+            messageVide="Aucun partenariat pour cet établissement."
+            lignes={(partenariats.data?.data ?? []).map((item) => ({
+              id: item.id,
+              titre: item.intitule,
+              sousTitre: item.domaine,
+              statut: item.statut,
+              date: item.date_debut,
+              lien: `${cheminBase}/partenaires-partenariats/partenariats/${item.id}`,
+            }))}
+          />
+        ) : null}
+        {filtre !== "projets" ? (
+          <div className="grid gap-4 lg:grid-cols-3">
             <ListeLiee
               titre="Partenaires"
               elements={(partenaires.data?.data ?? []).map((item) => ({
@@ -158,15 +183,7 @@ export function EtablissementDetailPage() {
                 lien: `${cheminBase}/partenaires-partenariats/partenaires/${item.id}`,
               }))}
             />
-            <ListeLiee
-              titre="Partenariats"
-              elements={(partenariats.data?.data ?? []).map((item) => ({
-                id: item.id,
-                libelle: item.intitule,
-                lien: `${cheminBase}/partenaires-partenariats/partenariats/${item.id}`,
-              }))}
-            />
-          </>
+          </div>
         ) : null}
       </div>
     </div>
