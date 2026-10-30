@@ -59,14 +59,12 @@ export function EtablissementsListePage() {
       projetsActifs: somme("projets_actifs"),
       partenaires: somme("partenaires"),
       partenariats: somme("partenariats"),
-      maxProjets: Math.max(1, ...liste.map((item) => item.projets ?? 0)),
-      maxPartenaires: Math.max(1, ...liste.map((item) => item.partenaires ?? 0)),
     };
   }, [comparatif]);
 
   const etablissements = data?.data ?? [];
 
-  // Colonnes numériques visibles selon le filtre
+  // Colonnes visibles selon le filtre (Tous / Projets / Partenaires)
   const afficheProjets = filtre !== "partenaires";
   const affichePartenaires = filtre !== "projets";
 
@@ -126,7 +124,7 @@ export function EtablissementsListePage() {
         {isLoading ? (
           <div className="flex flex-col gap-3 p-[16px_18px]">
             {[0, 1, 2, 3, 4].map((cle) => (
-              <div key={cle} className="h-12 w-full animate-pulse rounded-[var(--radius-sm)] bg-[var(--color-page-bg)]" />
+              <div key={cle} className="h-14 w-full animate-pulse rounded-[var(--radius-sm)] bg-[var(--color-page-bg)]" />
             ))}
           </div>
         ) : etablissements.length === 0 ? (
@@ -137,15 +135,15 @@ export function EtablissementsListePage() {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-left text-[13.5px]">
+            <table className="w-full min-w-[640px] border-collapse text-left text-[14px]">
               <thead>
-                <tr className="border-b border-[var(--color-border)] bg-[var(--color-page-bg)] text-[12.5px] font-semibold text-[var(--color-text-secondary)]">
+                <tr className="border-b border-[var(--color-border)] bg-[var(--color-page-bg)] text-[13.5px] font-medium text-[var(--color-text-secondary)]">
                   <Th>Établissement</Th>
                   {afficheProjets ? <Th>Projets</Th> : null}
                   {affichePartenaires ? <Th>Partenaires</Th> : null}
                   {filtre === "tous" ? <Th>Partenariats</Th> : null}
                   <Th>Statut</Th>
-                  <th className="w-14 px-5 py-3" aria-hidden="true" />
+                  <th className="w-16 px-6 py-4" aria-hidden="true" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
@@ -154,8 +152,6 @@ export function EtablissementsListePage() {
                     key={etablissement.id}
                     etablissement={etablissement}
                     statistiques={statistiques.get(etablissement.id)}
-                    maxProjets={totaux.maxProjets}
-                    maxPartenaires={totaux.maxPartenaires}
                     afficheProjets={afficheProjets}
                     affichePartenaires={affichePartenaires}
                     afficheTotalPartenariats={filtre === "tous"}
@@ -175,10 +171,10 @@ export function EtablissementsListePage() {
 
 function Th({ children }: { children: ReactNode }) {
   return (
-    <th className="px-5 py-3 font-semibold">
-      <span className="inline-flex items-center gap-1">
+    <th className="px-6 py-4 font-medium">
+      <span className="inline-flex items-center gap-1.5">
         {children}
-        <ArrowUpDown className="h-3 w-3 opacity-60" aria-hidden="true" />
+        <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
       </span>
     </th>
   );
@@ -187,8 +183,6 @@ function Th({ children }: { children: ReactNode }) {
 function LigneEtablissement({
   etablissement,
   statistiques,
-  maxProjets,
-  maxPartenaires,
   afficheProjets,
   affichePartenaires,
   afficheTotalPartenariats,
@@ -196,8 +190,6 @@ function LigneEtablissement({
 }: {
   etablissement: Etablissement;
   statistiques?: ComparatifEtablissement;
-  maxProjets: number;
-  maxPartenaires: number;
   afficheProjets: boolean;
   affichePartenaires: boolean;
   afficheTotalPartenariats: boolean;
@@ -210,7 +202,7 @@ function LigneEtablissement({
 
   return (
     <tr className="transition-colors hover:bg-[var(--color-page-bg)]">
-      <td className="px-5 py-3.5">
+      <td className="px-6 py-4">
         <Link to={lien} className="flex min-w-0 items-center gap-3">
           <span className="grid h-9 w-9 flex-shrink-0 place-items-center overflow-hidden rounded-full bg-[var(--color-active-zone)] text-xs font-bold text-[var(--color-brand)]">
             {etablissement.logo_url ? (
@@ -223,16 +215,14 @@ function LigneEtablissement({
             <span className="block break-words font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand)]">
               {etablissement.nom}
             </span>
-            <span className="block font-mono text-[12px] text-[var(--color-text-secondary)]">{etablissement.sigle ?? "—"}</span>
+            <span className="block text-xs text-[var(--color-text-secondary)]">{etablissement.sigle ?? "—"}</span>
           </span>
         </Link>
       </td>
-      {afficheProjets ? <Valeur valeur={projets} max={maxProjets} couleur="bg-[var(--chart-brand)]" /> : null}
-      {affichePartenaires ? <Valeur valeur={partenaires} max={maxPartenaires} couleur="bg-[var(--chart-circuit)]" /> : null}
-      {afficheTotalPartenariats ? (
-        <td className="px-5 py-3.5 font-mono text-[var(--color-text-secondary)]">{partenariats}</td>
-      ) : null}
-      <td className="px-5 py-3.5">
+      {afficheProjets ? <td className="px-6 py-4 text-[var(--color-text-secondary)]">{projets}</td> : null}
+      {affichePartenaires ? <td className="px-6 py-4 text-[var(--color-text-secondary)]">{partenaires}</td> : null}
+      {afficheTotalPartenariats ? <td className="px-6 py-4 text-[var(--color-text-secondary)]">{partenariats}</td> : null}
+      <td className="px-6 py-4">
         <span
           className={cn(
             "inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold",
@@ -244,7 +234,7 @@ function LigneEtablissement({
           {actif ? "Actif" : "Inactif"}
         </span>
       </td>
-      <td className="px-5 py-3.5 text-right">
+      <td className="px-6 py-4 text-right">
         <Link
           to={lien}
           aria-label={`Ouvrir ${etablissement.nom}`}
@@ -254,19 +244,5 @@ function LigneEtablissement({
         </Link>
       </td>
     </tr>
-  );
-}
-
-function Valeur({ valeur, max, couleur }: { valeur: number; max: number; couleur: string }) {
-  const pourcentage = max > 0 ? Math.round((valeur / max) * 100) : 0;
-  return (
-    <td className="px-5 py-3.5">
-      <div className="flex items-center gap-3">
-        <span className="w-8 font-mono font-bold text-[var(--color-text-primary)]">{valeur}</span>
-        <span className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--color-page-bg)]">
-          <span className={cn("block h-full rounded-full", couleur)} style={{ width: `${pourcentage}%` }} />
-        </span>
-      </div>
-    </td>
   );
 }
