@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { AvatarCompte } from '@/components/shared/AvatarCompte';
 import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
-import { Breadcrumbs } from './Breadcrumbs';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
 import { useEtablissement } from '@/features/etablissements/api/useEtablissement';
@@ -47,8 +46,6 @@ export function TopbarInterne({ onOuvrirRecherche, onOuvrirNotifications, onOuvr
           <Menu className="h-4 w-4" />
         </button>
       ) : null}
-
-      <Breadcrumbs />
 
       <div className="ml-auto flex items-center gap-2.5">
         <button

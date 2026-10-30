@@ -14,13 +14,13 @@ export function PageHeader({ titre, description, actions, badge }: PageHeaderPro
     <div className="mb-5 flex items-start justify-between gap-[22px]">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-[24px] font-extrabold leading-[1.2] tracking-[-.025em]" style={{ fontFamily: 'var(--font-heading)' }}>
+          <h1 className="text-[32px] font-extrabold leading-[1.15] tracking-[-.025em]" style={{ fontFamily: 'var(--font-heading)' }}>
             {titre}
           </h1>
           {badge ?? null}
         </div>
         {description ? (
-          <p className="mt-[5px] text-[13.5px] font-medium text-[var(--color-text-secondary)]">{description}</p>
+          <p className="mt-2 text-[15px] font-normal text-[var(--color-text-secondary)]">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="flex flex-shrink-0 gap-2">{actions}</div> : null}
