@@ -221,18 +221,15 @@ describe('convention : regles de dates', () => {
     }
   });
 
-  it('exige au moins un rattachement métier', () => {
+  it('accepte une convention sans rattachement', () => {
     const resultat = schemaConvention.safeParse({
       ...valeurs({}),
       partenariat_id: '',
       projet_id: '',
       cotutelle_id: '',
     });
-    expect(resultat.success).toBe(false);
-    expect(cheminsEnErreur(resultat)).toContain('root');
-    expect(resultat.error?.issues[0]?.message).toBe(
-      'Veuillez sélectionner au moins un lien (partenariat, projet ou cotutelle).',
-    );
+
+    expect(resultat.success).toBe(true);
   });
 
   it('accepte un lien métier sélectionné avec les autres champs de lien vides', () => {

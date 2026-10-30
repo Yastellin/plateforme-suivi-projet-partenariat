@@ -23,7 +23,7 @@ export class CreateContactDto {
   @IsString()
   fonction?: string;
 
-  @ApiPropertyOptional({ example: 'soa.rakoto@univ-toliara.mg' })
+  @ApiPropertyOptional({ example: 'soa.rakoto@univ-fianarantsoa.mg' })
   @IsOptional()
   @IsEmail()
   email?: string;

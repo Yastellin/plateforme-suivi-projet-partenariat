@@ -29,6 +29,17 @@ const LIBELLES_ROLES: Record<RoleUtilisateur, string> = {
   DECIDEUR: "Décideur",
 };
 
+const ERREUR_ETABLISSEMENT_EXISTANT =
+  "Cet établissement est déjà enregistré. Utilisez son compte existant ou demandez à la Présidence de vérifier la fiche.";
+
+function normaliserNomEtablissement(nom: string): string {
+  return nom
+    .normalize("NFC")
+    .trim()
+    .replace(/\s+/gu, " ")
+    .toLocaleLowerCase("fr");
+}
+
 const DROITS: Record<RoleUtilisateur, string[]> = {
   PRESIDENCE: [
     "Consulter toutes les données",
@@ -55,15 +66,14 @@ export function ParametresCompte() {
     utilisateur?.etablissement_id ?? "",
   );
   const { data: utilisateurs } = useUtilisateurs(estPresidence);
-  const { data: pageEtablissements } = useEtablissements({
-    page: 1,
-    limit: 100,
-  });
+  const { data: pageEtablissements } = useEtablissements();
   const etablissements = pageEtablissements?.data ?? [];
   const modifierPreferences = useModifierPreferences();
   const modifierAcces = useModifierAccesUtilisateur();
   const creerUtilisateur = useCreerUtilisateur();
   const [creationOuverte, setCreationOuverte] = useState(false);
+  const [erreurNomEtablissementServeur, setErreurNomEtablissementServeur] =
+    useState(false);
   const [brouillonsAcces, setBrouillonsAcces] = useState<
     Record<string, { role: RoleUtilisateur; etablissement_id: string }>
   >({});
@@ -71,12 +81,12 @@ export function ParametresCompte() {
     email: string;
     mot_de_passe: string;
     role: RoleUtilisateur;
-    etablissement_id: string;
+    etablissement_nom: string;
   }>({
     email: "",
     mot_de_passe: "",
     role: "ETABLISSEMENT",
-    etablissement_id: "",
+    etablissement_nom: "",
   });
   const [preferencesLocales, setPreferences] =
     useState<PreferencesCompte | null>(null);
@@ -91,9 +101,20 @@ export function ParametresCompte() {
     nouveauCompte.email.trim(),
   );
   const motDePasseNouveauCompteValide = nouveauCompte.mot_de_passe.length >= 8;
+  const nomEtablissementNormalise = normaliserNomEtablissement(
+    nouveauCompte.etablissement_nom,
+  );
+  const etablissementDuplique =
+    Boolean(nomEtablissementNormalise) &&
+    etablissements.some(
+      (item) =>
+        normaliserNomEtablissement(item.nom) === nomEtablissementNormalise,
+    );
+  const nomEtablissementDejaPris =
+    etablissementDuplique || erreurNomEtablissementServeur;
   const etablissementNouveauCompteValide =
     nouveauCompte.role !== "ETABLISSEMENT" ||
-    Boolean(nouveauCompte.etablissement_id);
+    (Boolean(nomEtablissementNormalise) && !nomEtablissementDejaPris);
   const nouveauCompteValide =
     emailNouveauCompteValide &&
     motDePasseNouveauCompteValide &&
@@ -138,30 +159,41 @@ export function ParametresCompte() {
   function soumettreNouveauCompte(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!nouveauCompteValide) return;
-    creerUtilisateur.mutate(
-      {
-        email: nouveauCompte.email.trim(),
-        mot_de_passe: nouveauCompte.mot_de_passe,
-        role: nouveauCompte.role,
-        etablissement_id:
-          nouveauCompte.role === "ETABLISSEMENT"
-            ? nouveauCompte.etablissement_id
-            : undefined,
+    const payload =
+      nouveauCompte.role === "ETABLISSEMENT"
+        ? {
+            email: nouveauCompte.email.trim(),
+            mot_de_passe: nouveauCompte.mot_de_passe,
+            role: "ETABLISSEMENT" as const,
+            etablissement_nom: nouveauCompte.etablissement_nom
+              .trim()
+              .replace(/\s+/gu, " "),
+          }
+        : {
+            email: nouveauCompte.email.trim(),
+            mot_de_passe: nouveauCompte.mot_de_passe,
+            role: nouveauCompte.role,
+          };
+
+    creerUtilisateur.mutate(payload, {
+      onSuccess: () => {
+        toast.success("Compte créé");
+        setNouveauCompte({
+          email: "",
+          mot_de_passe: "",
+          role: "ETABLISSEMENT",
+          etablissement_nom: "",
+        });
+        setErreurNomEtablissementServeur(false);
+        setCreationOuverte(false);
       },
-      {
-        onSuccess: () => {
-          toast.success("Compte créé");
-          setNouveauCompte({
-            email: "",
-            mot_de_passe: "",
-            role: "ETABLISSEMENT",
-            etablissement_id: "",
-          });
-          setCreationOuverte(false);
-        },
-        onError: (erreur) => toast.error(erreur.message),
+      onError: (erreur) => {
+        if (erreur.message === ERREUR_ETABLISSEMENT_EXISTANT) {
+          setErreurNomEtablissementServeur(true);
+        }
+        toast.error(erreur.message);
       },
-    );
+    });
   }
 
   const role = (compte?.role ??
@@ -278,7 +310,7 @@ export function ParametresCompte() {
         <Panel>
           <PanelHeader
             titre="Sécurité"
-            sousTitre="Choisissez un mot de passe unique d'au moins 8 caractères"
+            sousTitre="Entre 8 et 72 caractères, avec une majuscule, une minuscule et un chiffre."
           />
           <PanelBody>
             <FormulaireMotDePasse />
@@ -355,7 +387,7 @@ export function ParametresCompte() {
                         email: event.target.value,
                       })
                     }
-                    placeholder="partenariats@univ-toliara.mg"
+                    placeholder="partenariats@univ-fianarantsoa.mg"
                     className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-normal"
                   />
                   {nouveauCompte.email && !emailNouveauCompteValide ? (
@@ -394,16 +426,18 @@ export function ParametresCompte() {
                   Rôle
                   <select
                     value={nouveauCompte.role}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const role = event.target.value as RoleUtilisateur;
                       setNouveauCompte({
                         ...nouveauCompte,
-                        role: event.target.value as RoleUtilisateur,
-                        etablissement_id:
-                          event.target.value === "ETABLISSEMENT"
-                            ? nouveauCompte.etablissement_id
+                        role,
+                        etablissement_nom:
+                          role === "ETABLISSEMENT"
+                            ? nouveauCompte.etablissement_nom
                             : "",
-                      })
-                    }
+                      });
+                      setErreurNomEtablissementServeur(false);
+                    }}
                     className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-normal"
                   >
                     <option value="ETABLISSEMENT">Établissement</option>
@@ -412,27 +446,54 @@ export function ParametresCompte() {
                   </select>
                 </label>
                 {nouveauCompte.role === "ETABLISSEMENT" ? (
-                  <label className="flex flex-col gap-1 text-xs font-semibold">
+                  <label
+                    htmlFor="nouveau-compte-etablissement-nom"
+                    className="flex flex-col gap-1 text-xs font-semibold"
+                  >
                     Établissement
-                    <select
+                    <input
+                      id="nouveau-compte-etablissement-nom"
+                      type="text"
                       required
-                      aria-invalid={!etablissementNouveauCompteValide}
-                      value={nouveauCompte.etablissement_id}
-                      onChange={(event) =>
+                      maxLength={255}
+                      aria-invalid={
+                        Boolean(nouveauCompte.etablissement_nom) &&
+                        !etablissementNouveauCompteValide
+                      }
+                      aria-describedby={
+                        nouveauCompte.etablissement_nom &&
+                        !etablissementNouveauCompteValide
+                          ? "aide-nouvel-etablissement erreur-nouvel-etablissement"
+                          : "aide-nouvel-etablissement"
+                      }
+                      value={nouveauCompte.etablissement_nom}
+                      onChange={(event) => {
                         setNouveauCompte({
                           ...nouveauCompte,
-                          etablissement_id: event.target.value,
-                        })
-                      }
+                          etablissement_nom: event.target.value,
+                        });
+                        setErreurNomEtablissementServeur(false);
+                      }}
+                      placeholder="Nom du nouvel établissement"
                       className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-normal"
+                    />
+                    <span
+                      id="aide-nouvel-etablissement"
+                      className="font-normal text-[var(--color-text-secondary)]"
                     >
-                      <option value="">Sélectionnez…</option>
-                      {etablissements.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.nom}
-                        </option>
-                      ))}
-                    </select>
+                      Une nouvelle fiche d’établissement sera créée pour ce compte.
+                    </span>
+                    {nouveauCompte.etablissement_nom &&
+                    !etablissementNouveauCompteValide ? (
+                      <span
+                        id="erreur-nouvel-etablissement"
+                        className="font-normal text-destructive"
+                      >
+                        {nomEtablissementDejaPris
+                          ? ERREUR_ETABLISSEMENT_EXISTANT
+                          : "Saisissez un nom d’établissement valide."}
+                      </span>
+                    ) : null}
                   </label>
                 ) : (
                   <span />

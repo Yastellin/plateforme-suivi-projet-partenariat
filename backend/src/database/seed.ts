@@ -187,8 +187,8 @@ export async function executerSeed(ds: DataSource): Promise<void> {
     pays: 'Madagascar',
     adresse: 'Maninday, Toliara',
     telephone: '+261 34 12 345 67',
-    email: 'contact@univ-toliara.mg',
-    site_web: 'https://www.univ-toliara.mg',
+    email: 'contact@univ-fianarantsoa.mg',
+    site_web: 'https://www.univ-fianarantsoa.mg',
     description: 'Partenaire académique historique',
     statut: StatutPartenaire.ACTIF,
     visibilite: Visibilite.PUBLIC,
@@ -201,7 +201,7 @@ export async function executerSeed(ds: DataSource): Promise<void> {
   const contact = await creer(ds, Contact, {
     nom: 'Pr. Rakoto Soa',
     fonction: 'Responsable des relations interuniversitaires',
-    email: 'soa.rakoto@univ-toliara.mg',
+    email: 'soa.rakoto@univ-fianarantsoa.mg',
     telephone: '+261 32 12 345 67',
     partenaire_id: partenaire.id,
   });

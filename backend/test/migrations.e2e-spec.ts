@@ -5,6 +5,7 @@ import { AddDocumentCotutellePartenariat1792000000001 } from '../src/database/mi
 import { AddSoumissionPublication1792000000002 } from '../src/database/migrations/1792000000002-AddSoumissionPublication';
 import { NormalizeContactDetails1793200000000 } from '../src/database/migrations/1793200000000-NormalizeContactDetails';
 import { EnforceDocumentParentAndBackfillPublication1793400000000 } from '../src/database/migrations/1793400000000-EnforceDocumentParentAndBackfillPublication';
+import { EnforceUniqueEtablissementName1793800000000 } from '../src/database/migrations/1793800000000-EnforceUniqueEtablissementName';
 import { demarrerBaseTest, type BaseTest } from './harness/base-postgres';
 
 describe('Migrations avec données préexistantes', () => {
@@ -35,7 +36,7 @@ describe('Migrations avec données préexistantes', () => {
       ) VALUES (
         '20000000-0000-4000-8000-000000000001',
         'Université de Toliara', 'Université', 'Madagascar',
-        ' Contact@UNIV-TOLIARA.MG ', '034 12 345 67',
+        ' Contact@UNIV-FIANARANTSOA.MG ', '034 12 345 67',
         '10000000-0000-4000-8000-000000000001'
       )
     `);
@@ -45,7 +46,7 @@ describe('Migrations avec données préexistantes', () => {
       ) VALUES (
         '30000000-0000-4000-8000-000000000001',
         'Rakoto Soa', 'Responsable des partenariats',
-        'soa.rakoto@univ-toliara.mg', '00 261 32 12 345 67',
+        'soa.rakoto@univ-fianarantsoa.mg', '00 261 32 12 345 67',
         '20000000-0000-4000-8000-000000000001'
       )
     `);
@@ -53,6 +54,7 @@ describe('Migrations avec données préexistantes', () => {
     queryRunner = dataSource.createQueryRunner();
     await queryRunner.connect();
     await new NormalizeContactDetails1793200000000().up(queryRunner);
+    await new EnforceUniqueEtablissementName1793800000000().up(queryRunner);
   }, 120000);
 
   afterAll(async () => {
@@ -73,7 +75,7 @@ describe('Migrations avec données préexistantes', () => {
       expect.arrayContaining([
         expect.objectContaining({
           type: 'EMAIL',
-          valeur_normalisee: 'contact@univ-toliara.mg',
+          valeur_normalisee: 'contact@univ-fianarantsoa.mg',
           partenaire_id: '20000000-0000-4000-8000-000000000001',
           contact_id: null,
         }),
@@ -93,6 +95,18 @@ describe('Migrations avec données préexistantes', () => {
     );
   });
 
+  it("applique l'unicité des noms d'établissement sans tenir compte de la casse ou des espaces", async () => {
+    await expect(
+      dataSource.query(`
+        INSERT INTO "Etablissement" (id, nom, sigle)
+        VALUES (
+          '10000000-0000-4000-8000-000000000002',
+          '  UNIVERSITÉ   DE FIANARANTSOA  ', 'UDF'
+        )
+      `),
+    ).rejects.toThrow();
+  });
+
   it("applique l'unicité globale des coordonnées normalisées", async () => {
     await expect(
       dataSource.query(`
@@ -100,7 +114,7 @@ describe('Migrations avec données préexistantes', () => {
           id, type, valeur, valeur_normalisee, contact_id
         ) VALUES (
           '40000000-0000-4000-8000-000000000001', 'EMAIL',
-          'CONTACT@univ-toliara.mg', 'contact@univ-toliara.mg',
+          'CONTACT@univ-fianarantsoa.mg', 'contact@univ-fianarantsoa.mg',
           '30000000-0000-4000-8000-000000000001'
         )
       `),

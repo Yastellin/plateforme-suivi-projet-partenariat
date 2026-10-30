@@ -180,7 +180,7 @@ export function FormulaireContact() {
             value={valeurs.email}
             onChange={(e) => modifier("email", e.target.value)}
             onBlur={() => marquerTouche("email")}
-            placeholder="Courriel"
+            placeholder="prenom.nom@univ-fianarantsoa.mg"
             aria-invalid={!!erreurAffichee("email")}
           />
         </Champ>

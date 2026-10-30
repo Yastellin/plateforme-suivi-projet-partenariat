@@ -3,8 +3,8 @@ import { resoudreUrlFichier, resoudreUrlsFichier } from "@/lib/url"
 
 describe("résolution des médias publics", () => {
   it("conserve une URL absolue", () => {
-    expect(resoudreUrlFichier("https://medias.univ-toliara.mg/logo.png")).toBe(
-      "https://medias.univ-toliara.mg/logo.png",
+    expect(resoudreUrlFichier("https://medias.univ-fianarantsoa.mg/logo.png")).toBe(
+      "https://medias.univ-fianarantsoa.mg/logo.png",
     )
   })
 
@@ -12,7 +12,7 @@ describe("résolution des médias publics", () => {
     const resolue = resoudreUrlFichier(
       "/uploads/publications/publication/photo.png",
     )
-    const url = new URL(resolue, "https://partenariats.univ-toliara.mg")
+    const url = new URL(resolue, "https://partenariats.univ-fianarantsoa.mg")
 
     expect(url.pathname).toBe(
       "/api/uploads/publications/publication/photo.png",

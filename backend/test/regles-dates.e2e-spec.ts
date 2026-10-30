@@ -96,7 +96,6 @@ describe('Regles de dates (e2e)', () => {
       .post('/api/conventions')
       .set(...enteteBearer(presidence))
       .send({
-        reference: `CONV-DATES-${Date.now()}-${Math.round(Math.random() * 100000)}`,
         titre: 'Convention de test des dates',
         partenariat_id: partenariatId,
         ...dates,

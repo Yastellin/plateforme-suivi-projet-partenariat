@@ -23,6 +23,20 @@ describe('normaliserPayload', () => {
     });
   });
 
+  it('convertit les trois liens vides d une convention en null', () => {
+    expect(
+      normaliserPayload({
+        partenariat_id: '',
+        projet_id: '',
+        cotutelle_id: '',
+      }),
+    ).toEqual({
+      partenariat_id: null,
+      projet_id: null,
+      cotutelle_id: null,
+    });
+  });
+
   it('descend dans les objets imbriques et les listes', () => {
     const resultat = normaliserPayload({
       projet: { projet_id: '', titre: 'ok' },

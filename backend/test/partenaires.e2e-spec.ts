@@ -127,7 +127,7 @@ describe('Partenaires (e2e)', () => {
           nom: 'Institut supérieur de Fianarantsoa',
           type: 'Institut',
           pays: 'Madagascar',
-          email: 'contact@univ-toliara.mg',
+          email: 'contact@univ-fianarantsoa.mg',
           etablissement_id: etablissementFlshId,
         })
         .expect(409);

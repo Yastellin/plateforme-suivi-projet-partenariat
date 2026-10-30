@@ -365,13 +365,65 @@ describe('Authentification (e2e)', () => {
       ).toBe(false);
     });
 
+    it('refuse un nom d’établissement existant et crée une fiche pour un nom inédit', async () => {
+      const [etablissementExistant] = await ctx.dataSource.query(
+        'SELECT id, nom FROM "Etablissement" LIMIT 1',
+      );
+      const [compteEtablissementsAvant] = await ctx.dataSource.query(
+        'SELECT COUNT(*)::int AS total FROM "Etablissement"',
+      );
+      const doublon = await request(ctx.app.getHttpServer())
+        .post('/api/utilisateurs')
+        .set(...enteteBearer(utilisateurPresidence))
+        .send({
+          email: `doublon-${Date.now()}@univ-fianarantsoa.mg`,
+          mot_de_passe: 'mot-de-passe-123',
+          role: Role.ETABLISSEMENT,
+          etablissement_nom: `  ${etablissementExistant.nom.toUpperCase()}  `,
+        })
+        .expect(409);
+      expect(doublon.body.message).toContain(
+        'Cet établissement est déjà enregistré',
+      );
+      const [compteEtablissementsApres] = await ctx.dataSource.query(
+        'SELECT COUNT(*)::int AS total FROM "Etablissement"',
+      );
+      expect(compteEtablissementsApres.total).toBe(
+        compteEtablissementsAvant.total,
+      );
+
+      const nomNouveau = `Nouvel établissement ${Date.now()}`;
+      const reponse = await request(ctx.app.getHttpServer())
+        .post('/api/utilisateurs')
+        .set(...enteteBearer(utilisateurPresidence))
+        .send({
+          email: `nouvel-etablissement-${Date.now()}@univ-fianarantsoa.mg`,
+          mot_de_passe: 'mot-de-passe-123',
+          role: Role.ETABLISSEMENT,
+          etablissement_nom: nomNouveau,
+        })
+        .expect(201);
+      const compte = donnees<any>(reponse.body);
+
+      expect(compte.etablissement_nom).toBe(nomNouveau);
+      expect(compte.etablissement_id).not.toBe(etablissementExistant.id);
+      const [etablissementCree] = await ctx.dataSource.query(
+        'SELECT id, nom FROM "Etablissement" WHERE id = $1',
+        [compte.etablissement_id],
+      );
+      expect(etablissementCree).toEqual({
+        id: compte.etablissement_id,
+        nom: nomNouveau,
+      });
+    });
+
     it('réserve la gestion des utilisateurs à la Présidence', async () => {
       await request(ctx.app.getHttpServer())
         .get('/api/utilisateurs')
         .set(...enteteBearer(utilisateurEtablissement))
         .expect(403);
 
-      const email = `decision-${Date.now()}@univ-toliara.mg`;
+      const email = `decision-${Date.now()}@univ-fianarantsoa.mg`;
       const cree = donnees<any>(
         (
           await request(ctx.app.getHttpServer())
@@ -431,7 +483,7 @@ describe('Authentification (e2e)', () => {
       await request(ctx.app.getHttpServer())
         .post('/api/conventions')
         .set(...enteteBearer(utilisateurEtablissement))
-        .send({ reference: 'CONV-TEST-403', titre: 'Convention interdite' })
+        .send({ titre: 'Convention interdite' })
         .expect(403);
     });
   });

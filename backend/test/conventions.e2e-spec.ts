@@ -1,7 +1,5 @@
 /**
- * Conventions : creation (Presidence), unicite de la reference, archivage.
- *
- * Reprend les verifications de test-conventions.ps1.
+ * Vérifie la création, les rattachements facultatifs, les références et l'archivage des conventions.
  */
 import request from 'supertest';
 import {
@@ -10,6 +8,8 @@ import {
 } from './harness/application-test';
 import { donnees, enteteBearer } from './harness/jetons';
 import { dateIsoDans } from './harness/dates';
+import { CotutelleThese } from '../src/cotutelles/entities/cotutelle-these.entity';
+import { TypeCotutelle } from '../src/common/enums/type-cotutelle.enum';
 
 describe('Conventions (e2e)', () => {
   let ctx: ApplicationTest;
@@ -17,6 +17,8 @@ describe('Conventions (e2e)', () => {
   let decideur: any;
   let etablissementFds: any;
   let partenariatId: string;
+  let projetId: string;
+  let partenaireId: string;
 
   beforeAll(async () => {
     ctx = await creerApplicationTest();
@@ -36,20 +38,41 @@ describe('Conventions (e2e)', () => {
     const [partenariat] = await ctx.dataSource.query(
       `SELECT id FROM "Partenariat" LIMIT 1`,
     );
+    const [projet] = await ctx.dataSource.query(
+      `SELECT id FROM "Projet" LIMIT 1`,
+    );
+    const [partenaire] = await ctx.dataSource.query(
+      `SELECT id FROM "Partenaire" LIMIT 1`,
+    );
     partenariatId = partenariat.id;
+    projetId = projet.id;
+    partenaireId = partenaire.id;
   }, 120000);
 
   afterAll(async () => {
     await ctx.fermer();
   });
 
+  async function creerCotutelleTest(): Promise<CotutelleThese> {
+    const depot = ctx.dataSource.getRepository(CotutelleThese);
+    return depot.save(
+      depot.create({
+        nom_doctorant: 'Doctorant de test',
+        type: TypeCotutelle.COTUTELLE,
+        date_debut: new Date('2026-01-01T00:00:00.000Z'),
+        etablissement_id: etablissementFds.etablissement_id,
+        partenaire_id: partenaireId,
+        archive: false,
+      }),
+    );
+  }
+
   describe('POST /api/conventions', () => {
-    it('cree une convention (PRESIDENCE)', async () => {
+    it('crée une convention avec un partenariat', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .post('/api/conventions')
         .set(...enteteBearer(presidence))
         .send({
-          reference: 'CONV-2026-100',
           titre: 'Convention de mobilité étudiante',
           date_debut: dateIsoDans(30),
           date_fin: dateIsoDans(1200),
@@ -59,7 +82,7 @@ describe('Conventions (e2e)', () => {
         .expect(201);
 
       const convention = donnees<any>(reponse.body);
-      expect(convention.reference).toBe('CONV-2026-100');
+      expect(convention.reference).toMatch(/^CONV-\d{4}-[0-9A-F-]{36}$/);
       expect(convention.statut).toBe('BROUILLON');
       expect(convention.archive).toBe(false);
       expect(convention.partenariat).toMatchObject({ id: partenariatId });
@@ -67,58 +90,154 @@ describe('Conventions (e2e)', () => {
       expect(convention.partenariat.libelle).not.toBe(partenariatId);
     });
 
-    it('génère une référence lorsque le champ est omis', async () => {
+    it('crée une convention indépendante avec les trois liens à null', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .post('/api/conventions')
+        .set(...enteteBearer(presidence))
+        .send({ titre: 'Convention indépendante' })
+        .expect(201);
+
+      const convention = donnees<any>(reponse.body);
+      expect(convention.partenariat_id).toBeNull();
+      expect(convention.projet_id).toBeNull();
+      expect(convention.cotutelle_id).toBeNull();
+      expect(convention.partenariat).toBeNull();
+      expect(convention.projet).toBeNull();
+      expect(convention.cotutelle).toBeNull();
+
+      const [ligne] = await ctx.dataSource.query(
+        'SELECT partenariat_id, projet_id FROM "Convention" WHERE id = $1',
+        [convention.id],
+      );
+      const cotutelles = await ctx.dataSource.query(
+        'SELECT id FROM "CotutelleThese" WHERE convention_id = $1',
+        [convention.id],
+      );
+      expect(ligne).toMatchObject({ partenariat_id: null, projet_id: null });
+      expect(cotutelles).toHaveLength(0);
+    });
+
+    it('accepte deux liens sur une même convention', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .post('/api/conventions')
         .set(...enteteBearer(presidence))
         .send({
-          titre: 'Convention à référence automatique',
+          titre: 'Convention avec deux liens',
           partenariat_id: partenariatId,
+          projet_id: projetId,
         })
         .expect(201);
 
       const convention = donnees<any>(reponse.body);
-      expect(convention.reference).toMatch(/^CONV-\d{4}-[0-9A-F]{8}$/);
+      expect(convention.partenariat_id).toBe(partenariatId);
+      expect(convention.projet_id).toBe(projetId);
+      expect(convention.cotutelle_id).toBeNull();
     });
 
-    it('refuse une reference en doublon (409)', async () => {
+    it('accepte les trois liens sur une même convention', async () => {
+      const cotutelle = await creerCotutelleTest();
       const reponse = await request(ctx.app.getHttpServer())
         .post('/api/conventions')
         .set(...enteteBearer(presidence))
         .send({
-          reference: 'CONV-2026-100',
-          titre: 'Doublon de reference',
+          titre: 'Convention avec trois liens',
           partenariat_id: partenariatId,
+          projet_id: projetId,
+          cotutelle_id: cotutelle.id,
         })
-        .expect(409);
+        .expect(201);
 
-      expect(reponse.body.status).toBe('error');
+      const convention = donnees<any>(reponse.body);
+      expect(convention.partenariat_id).toBe(partenariatId);
+      expect(convention.projet_id).toBe(projetId);
+      expect(convention.cotutelle_id).toBe(cotutelle.id);
     });
 
-    it('exige un rattachement (partenariat, projet ou cotutelle) (400)', async () => {
-      const reponse = await request(ctx.app.getHttpServer())
-        .post('/api/conventions')
-        .set(...enteteBearer(presidence))
-        .send({
-          reference: 'CONV-2026-SANS-LIEN',
-          titre: 'Convention sans rattachement',
-        })
-        .expect(400);
+    it('génère des références distinctes pour des créations successives', async () => {
+      const creer = () =>
+        request(ctx.app.getHttpServer())
+          .post('/api/conventions')
+          .set(...enteteBearer(presidence))
+          .send({ titre: 'Convention sans rattachement' })
+          .expect(201);
 
-      expect(reponse.body.message).toContain('partenariat');
+      const [premiere, seconde] = await Promise.all([creer(), creer()]);
+      const referencePremiere = donnees<any>(premiere.body).reference;
+      const referenceSeconde = donnees<any>(seconde.body).reference;
+
+      expect(referencePremiere).not.toBe(referenceSeconde);
     });
 
     it('refuse une convention sans titre (400)', async () => {
       await request(ctx.app.getHttpServer())
         .post('/api/conventions')
         .set(...enteteBearer(presidence))
-        .send({ reference: 'CONV-2026-101' })
+        .send({})
         .expect(400);
     });
   });
 
+  describe('PATCH /api/conventions/:id', () => {
+    it('permet de retirer le dernier partenariat', async () => {
+      const creation = await request(ctx.app.getHttpServer())
+        .post('/api/conventions')
+        .set(...enteteBearer(presidence))
+        .send({
+          titre: 'Convention à délier',
+          partenariat_id: partenariatId,
+        })
+        .expect(201);
+      const id = donnees<any>(creation.body).id;
+
+      await request(ctx.app.getHttpServer())
+        .patch(`/api/conventions/${id}`)
+        .set(...enteteBearer(presidence))
+        .send({ partenariat_id: null })
+        .expect(200);
+
+      const relue = await request(ctx.app.getHttpServer())
+        .get(`/api/conventions/${id}`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      const convention = donnees<any>(relue.body);
+      expect(convention.partenariat_id).toBeNull();
+      expect(convention.partenariat).toBeNull();
+    });
+
+    it('retire la cotutelle finale même sans autre champ à modifier', async () => {
+      const cotutelle = await creerCotutelleTest();
+      const creation = await request(ctx.app.getHttpServer())
+        .post('/api/conventions')
+        .set(...enteteBearer(presidence))
+        .send({
+          titre: 'Convention liée à une cotutelle',
+          cotutelle_id: cotutelle.id,
+        })
+        .expect(201);
+      const id = donnees<any>(creation.body).id;
+
+      await request(ctx.app.getHttpServer())
+        .patch(`/api/conventions/${id}`)
+        .set(...enteteBearer(presidence))
+        .send({ cotutelle_id: null })
+        .expect(200);
+
+      const relue = await request(ctx.app.getHttpServer())
+        .get(`/api/conventions/${id}`)
+        .set(...enteteBearer(presidence))
+        .expect(200);
+      expect(donnees<any>(relue.body).cotutelle_id).toBeNull();
+
+      const [cotutelleRelue] = await ctx.dataSource.query(
+        'SELECT convention_id FROM "CotutelleThese" WHERE id = $1',
+        [cotutelle.id],
+      );
+      expect(cotutelleRelue.convention_id).toBeNull();
+    });
+  });
+
   describe('GET /api/conventions', () => {
-    it('est accessible a la PRESIDENCE et au DECIDEUR', async () => {
+    it('est accessible à la PRESIDENCE et au DECIDEUR', async () => {
       await request(ctx.app.getHttpServer())
         .get('/api/conventions?page=1&limit=5')
         .set(...enteteBearer(presidence))
@@ -157,14 +276,12 @@ describe('Conventions (e2e)', () => {
         .post('/api/conventions')
         .set(...enteteBearer(presidence))
         .send({
-          reference: 'CONV-2026-ARCH',
-          titre: 'Convention a archiver',
+          titre: 'Convention à archiver',
           partenariat_id: partenariatId,
         })
         .expect(201);
 
       const conventionId = donnees<any>(creation.body).id;
-
       const reponse = await request(ctx.app.getHttpServer())
         .post(`/api/conventions/${conventionId}/archiver`)
         .set(...enteteBearer(presidence))
@@ -173,7 +290,7 @@ describe('Conventions (e2e)', () => {
       expect(donnees<any>(reponse.body).archive).toBe(true);
     });
 
-    it('est interdit a un ETABLISSEMENT (403)', async () => {
+    it('est interdit à un ETABLISSEMENT (403)', async () => {
       await request(ctx.app.getHttpServer())
         .post('/api/conventions/00000000-0000-4000-8000-000000000000/archiver')
         .set(...enteteBearer(etablissementFds))

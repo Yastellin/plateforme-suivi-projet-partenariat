@@ -55,7 +55,7 @@ export class CreatePartenaireDto {
   })
   telephones?: string[];
 
-  @ApiPropertyOptional({ example: 'contact@univ-toliara.mg' })
+  @ApiPropertyOptional({ example: 'contact@univ-fianarantsoa.mg' })
   @IsOptional()
   @IsEmail()
   email?: string;
@@ -70,7 +70,7 @@ export class CreatePartenaireDto {
   @IsEmail({}, { each: true })
   emails?: string[];
 
-  @ApiPropertyOptional({ example: 'https://www.univ-toliara.mg' })
+  @ApiPropertyOptional({ example: 'https://www.univ-fianarantsoa.mg' })
   @IsOptional()
   @IsString()
   site_web?: string;

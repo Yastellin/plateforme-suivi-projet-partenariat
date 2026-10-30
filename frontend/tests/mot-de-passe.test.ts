@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { libelleErreurToken } from '../src/features/auth/lib/libelles-erreur-token';
 import {
+  schemaChangerMotDePasse,
+  versPayloadChangerMotDePasse,
+} from '../src/lib/validators/compte.schema';
+import {
   LONGUEUR_MAX_MOT_DE_PASSE,
   LONGUEUR_MIN_MOT_DE_PASSE,
   MOTIF_MOT_DE_PASSE,
@@ -11,6 +15,62 @@ import {
 } from '../src/lib/validators/mot-de-passe.schema';
 
 const MOT_DE_PASSE_VALIDE = 'NouveauMotDePasse1';
+
+describe('schemaChangerMotDePasse', () => {
+  const valeurs = {
+    mot_de_passe_actuel: 'AncienMotDePasse1',
+    nouveau_mot_de_passe: MOT_DE_PASSE_VALIDE,
+    confirmation_mot_de_passe: MOT_DE_PASSE_VALIDE,
+  };
+
+  it('accepte un mot de passe conforme de 8 à 72 caractères', () => {
+    expect(schemaChangerMotDePasse.safeParse(valeurs).success).toBe(true);
+
+    for (const nouveau_mot_de_passe of [
+      'Abcdefg1',
+      `${'A'.repeat(70)}a1`,
+    ]) {
+      expect(
+        schemaChangerMotDePasse.safeParse({
+          ...valeurs,
+          nouveau_mot_de_passe,
+          confirmation_mot_de_passe: nouveau_mot_de_passe,
+        }).success,
+      ).toBe(true);
+    }
+  });
+
+  it('refuse un mot de passe trop court, trop long ou de complexité insuffisante', () => {
+    for (const nouveau_mot_de_passe of [
+      'Court1',
+      `${'A'.repeat(71)}a1`,
+      'sansmajuscule1',
+      'SANSMINUSCULE1',
+      'SansChiffre',
+    ]) {
+      expect(
+        schemaChangerMotDePasse.safeParse({
+          ...valeurs,
+          nouveau_mot_de_passe,
+          confirmation_mot_de_passe: nouveau_mot_de_passe,
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it('refuse une confirmation différente et exclut la confirmation du payload', () => {
+    expect(
+      schemaChangerMotDePasse.safeParse({
+        ...valeurs,
+        confirmation_mot_de_passe: 'AutreMotDePasse2',
+      }).success,
+    ).toBe(false);
+    expect(versPayloadChangerMotDePasse(valeurs)).toEqual({
+      mot_de_passe_actuel: valeurs.mot_de_passe_actuel,
+      nouveau_mot_de_passe: valeurs.nouveau_mot_de_passe,
+    });
+  });
+});
 
 describe('motDePasseOublieSchema', () => {
   it('accepte une adresse institutionnelle', () => {

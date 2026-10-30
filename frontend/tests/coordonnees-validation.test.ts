@@ -22,8 +22,8 @@ describe('unicité des coordonnées dans un formulaire', () => {
   it("détecte un e-mail répété sans tenir compte de la casse", () => {
     const resultat = creerSchemaPartenaire(false).safeParse({
       ...partenaireValide,
-      email: 'Soa.Rakoto@univ-toliara.mg',
-      emails: ['soa.rakoto@univ-toliara.mg'],
+      email: 'Soa.Rakoto@univ-fianarantsoa.mg',
+      emails: ['soa.rakoto@univ-fianarantsoa.mg'],
     });
 
     expect(resultat.success).toBe(false);
@@ -66,8 +66,8 @@ describe('unicité des coordonnées dans un formulaire', () => {
     expect(
       creerSchemaPartenaire(false).safeParse({
         ...partenaireValide,
-        email: 'contact@univ-toliara.mg',
-        emails: ['partenariats@univ-toliara.mg'],
+        email: 'contact@univ-fianarantsoa.mg',
+        emails: ['partenariats@univ-fianarantsoa.mg'],
         telephone: '032 12 345 67',
         telephones: ['034 12 345 67'],
       }).success,

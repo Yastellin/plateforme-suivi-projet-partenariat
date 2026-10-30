@@ -109,7 +109,6 @@ describe('Correctifs signales (e2e)', () => {
         .post('/api/conventions')
         .set(...enteteBearer(presidence))
         .send({
-          reference: 'CONV-REG-001',
           titre: 'Convention en attente de signature',
           statut: 'EN_ATTENTE_SIGNATURE',
           partenariat_id: partenariatId,

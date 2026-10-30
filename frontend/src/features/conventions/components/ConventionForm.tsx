@@ -81,7 +81,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     handleSubmit,
     watch,
     trigger,
-    formState: { errors, submitCount },
+    formState: { errors },
   } = useForm<ConventionFormValues>({
     resolver: zodResolver(creerSchemaConvention({ exigerDateDebutFuture: !convention })),
     mode: "onChange",
@@ -103,23 +103,11 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
   const dateDebut = watch("date_debut")
   const dateFin = watch("date_fin")
 
-  const partenariatId = watch("partenariat_id")
-  const projetId = watch("projet_id")
-  const cotutelleId = watch("cotutelle_id")
-
-useEffect(() => {
-  if (submitCount > 0) {
-    console.log("Revalidation de la règle des liens")
-    void trigger("partenariat_id")
-  }
-}, [partenariatId, projetId, cotutelleId, submitCount, trigger])
-
   useEffect(() => {
     if (dateDebut && dateFin) void trigger(["date_debut", "date_fin"])
   }, [dateDebut, dateFin, trigger])
 
-  const onSubmit = (valeurs: ConventionFormValues) => {
-    console.log("FONCTION ONSUBMIT APPELÉE AVEC :", valeurs); 
+  const onSubmit = (valeurs: ConventionFormValues) => { 
     // Conversion explicite de la sentinelle "Aucun" en "" (puis null via
     // normaliserPayload) : le backend attend un UUID ou une valeur absente.
     const valeursEnvoyees: ConventionFormValues = {
@@ -154,6 +142,7 @@ useEffect(() => {
       },
       onError: (erreur: Error) => toast.error(traduireErreurConvention(erreur.message)),
     }
+    console.log("Envoi de la convention :", valeursEnvoyees)
     if (convention) {
       modification.mutate(valeursEnvoyees, optionsMutation)
     } else {
@@ -214,14 +203,9 @@ useEffect(() => {
         />
       </div>
 
-      <div
-        className="flex flex-col gap-4"
-        role="group"
-        aria-label="Liens de la convention"
-        aria-describedby={submitCount > 0 && errors.partenariat_id ? "erreur-liens-convention" : undefined}
-      >
+      <div className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">
-          Associez cette convention à au moins un partenariat, un projet ou une cotutelle.
+          Vous pouvez lier facultativement cette convention à un partenariat, un projet ou une cotutelle, ou la laisser indépendante.
         </p>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="partenariat_id">Partenariat lié (optionnel)</Label>
@@ -304,11 +288,6 @@ useEffect(() => {
             )}
           />
         </div>
-        {submitCount > 0 && errors.partenariat_id?.message ? (
-          <p id="erreur-liens-convention" role="alert" className="text-sm text-destructive">
-            {errors.partenariat_id.message}
-          </p>
-        ) : null}
       </div>
 
       {!convention ? (

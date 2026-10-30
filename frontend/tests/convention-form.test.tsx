@@ -168,6 +168,46 @@ describe("formulaire de convention", () => {
     )
   })
 
+  it("soumet une convention indépendante sans rattachement", async () => {
+    await act(async () => {
+      racine.render(
+        createElement(ConventionForm, {
+          onSucces: vi.fn(),
+          onAnnuler: vi.fn(),
+        }),
+      )
+    })
+
+    const champTitre = conteneur.querySelector<HTMLInputElement>("#titre")!
+    const definirValeur = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!
+    await act(async () => {
+      definirValeur.call(champTitre, "Convention indépendante")
+      champTitre.dispatchEvent(new Event("input", { bubbles: true }))
+      conteneur.querySelectorAll("select").forEach((select, index) => {
+        if (index > 0) {
+          select.value = "__aucun__"
+          select.dispatchEvent(new Event("change", { bubbles: true }))
+        }
+      })
+    })
+
+    const boutonCreer = Array.from(conteneur.querySelectorAll("button")).find(
+      (bouton) => bouton.textContent?.includes("Créer la convention"),
+    ) as HTMLButtonElement
+    await act(async () => boutonCreer.click())
+
+    expect(creerConvention).toHaveBeenCalledOnce()
+    expect(creerConvention.mock.calls[0][0]).toMatchObject({
+      titre: "Convention indépendante",
+      partenariat_id: "",
+      projet_id: "",
+      cotutelle_id: "",
+    })
+  })
+
   it("affiche un avertissement non bloquant si la signature est postérieure au début", async () => {
     await act(async () => {
       racine.render(

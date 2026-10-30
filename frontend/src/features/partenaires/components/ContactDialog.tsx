@@ -133,7 +133,7 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, partenai
               label="Adresse e-mail"
               type="email"
               icone={<Mail />}
-              placeholder="prenom.nom@exemple.mg"
+              placeholder="prenom.nom@univ-fianarantsoa.mg"
               erreur={errors.email?.message}
               {...register('email')}
             />
@@ -149,7 +149,7 @@ export function ContactDialog({ ouvert, onFermer, onSoumettre, enCours, partenai
                   <FloatingLabelInput
                     label={`Adresse e-mail ${index + 2}`}
                     type="email"
-                    placeholder="autre.adresse@exemple.mg"
+                    placeholder="autre.adresse@univ-fianarantsoa.mg"
                     erreur={errors.emails?.[index]?.message}
                     {...register(`emails.${index}`)}
                   />

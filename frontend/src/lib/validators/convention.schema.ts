@@ -34,14 +34,6 @@ export function creerSchemaConvention({ exigerDateDebutFuture = false }: Options
         message: "La date de fin doit être postérieure ou égale à la date de début.",
       })
     }
-    const estSelectionne = (valeur?: string) => Boolean(valeur && valeur !== "__aucun__")
-    if (!estSelectionne(valeurs.partenariat_id) && !estSelectionne(valeurs.projet_id) && !estSelectionne(valeurs.cotutelle_id)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["partenariat_id"],
-        message: "Veuillez sélectionner au moins un lien (partenariat, projet ou cotutelle).",
-      })
-    }
   })
 }
 
