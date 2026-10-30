@@ -1,8 +1,8 @@
 /* src/styles/design-tokens-uf.css */
 
 :root {
-  --font-heading: 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   --fs-base: 14px;

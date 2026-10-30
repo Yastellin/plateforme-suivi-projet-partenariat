@@ -25,7 +25,7 @@
   --color-input: var(--color-border);
   --color-ring: var(--color-brand);
 
-  --font-sans: var(--font-body);
+  --font-sans: 'Outfit', sans-serif;
   --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
 
