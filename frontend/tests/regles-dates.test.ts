@@ -159,7 +159,6 @@ describe('convention : regles de dates', () => {
   const creation = creerSchemaConvention({ exigerDateDebutFuture: true });
 
   const valeurs = (dates: { date_debut?: string; date_fin?: string }) => ({
-    reference: 'C-1',
     titre: 'Convention',
     statut: 'BROUILLON' as const,
     description: '',
@@ -210,6 +209,18 @@ describe('convention : regles de dates', () => {
     ).toBe(true);
   });
 
+  it('retire une ancienne référence du payload validé', () => {
+    const resultat = schemaConvention.safeParse({
+      ...valeurs({}),
+      reference: 'CONV-2026-001',
+    });
+
+    expect(resultat.success).toBe(true);
+    if (resultat.success) {
+      expect(resultat.data).not.toHaveProperty('reference');
+    }
+  });
+
   it('exige au moins un rattachement métier', () => {
     const resultat = schemaConvention.safeParse({
       ...valeurs({}),
@@ -227,7 +238,6 @@ describe('convention : regles de dates', () => {
   it('accepte un lien métier sélectionné avec les autres champs de lien vides', () => {
     expect(
       schemaConvention.safeParse({
-        reference: 'C-1',
         titre: 'Convention',
         statut: 'BROUILLON',
         description: '',
