@@ -88,6 +88,17 @@
 }
 
 /* ============ Mode sombre : cartes KPI, anneau et textes (mode sombre uniquement) ============ */
+
+/* Listes déroulantes natives : options lisibles en mode sombre (couleurs uniquement) */
+.dark select {
+  color-scheme: dark;
+  color: var(--color-text-primary);
+}
+.dark select option,
+.dark select optgroup {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
 .dark .kpi-carte-emerald { background: linear-gradient(135deg, #0F2A21 0%, #111816 75%); border-color: #1F5A44; }
 .dark .kpi-carte-blue    { background: linear-gradient(135deg, #0E2233 0%, #111816 75%); border-color: #1E4A66; }
 .dark .kpi-carte-violet  { background: linear-gradient(135deg, #1A1830 0%, #111816 75%); border-color: #3A2F66; }
