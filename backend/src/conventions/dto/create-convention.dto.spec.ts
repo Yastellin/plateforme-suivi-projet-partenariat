@@ -20,8 +20,21 @@ describe('CreateConventionDto', () => {
     const messages = Object.values(erreurTitre?.constraints ?? {});
 
     expect(messages).toContain('Le titre doit être du texte.');
-    expect(messages).toContain(
-      'Le titre doit contenir au moins 3 caractères.',
+    expect(messages).toContain('Le titre doit contenir au moins 3 caractères.');
+  });
+
+  it('rejette une référence fournie, car elle est générée par le serveur', () => {
+    const dto = Object.assign(new CreateConventionDto(), {
+      titre: 'Convention test',
+      reference: 'CONV-2026-0001',
+    });
+    const erreurs = validateSync(dto, {
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    });
+
+    expect(erreurs.some((erreur) => erreur.property === 'reference')).toBe(
+      true,
     );
   });
 });

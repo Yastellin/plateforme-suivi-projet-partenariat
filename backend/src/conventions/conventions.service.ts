@@ -43,9 +43,8 @@ export class ConventionsService {
   ) {}
 
   async create(dto: CreateConventionDto): Promise<ConventionResponseDto> {
-    const reference =
-      dto.reference?.trim() ||
-      `CONV-${new Date().getFullYear()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+    const annee = new Date().getFullYear();
+    const reference = `CONV-${annee}-${randomUUID().toUpperCase()}`;
 
     if (!dto.partenariat_id && !dto.projet_id && !dto.cotutelle_id) {
       throw new BadRequestException(
@@ -228,17 +227,6 @@ export class ConventionsService {
       const projetRepo = manager.getRepository(Projet);
       const cotutelleRepo = manager.getRepository(CotutelleThese);
 
-      if (dto.reference) {
-        const existante = await conventionRepo.findOne({
-          where: { reference: dto.reference },
-        });
-        if (existante && existante.id !== id) {
-          throw new ConflictException(
-            `Une convention avec la reference "${dto.reference}" existe deja`,
-          );
-        }
-      }
-
       if (dto.partenariat_id) {
         const partenariat = await partenariatRepo.findOne({
           where: { id: dto.partenariat_id, archive: false },
@@ -256,7 +244,6 @@ export class ConventionsService {
       }
 
       const data: Partial<Convention> = {};
-      if (dto.reference) data.reference = dto.reference;
       if (dto.titre) data.titre = dto.titre;
       if (dto.date_signature !== undefined) {
         data.date_signature = dto.date_signature
