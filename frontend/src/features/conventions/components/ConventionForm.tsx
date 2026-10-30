@@ -81,7 +81,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     handleSubmit,
     watch,
     trigger,
-    formState: { errors, submitCount },
+    formState: { errors },
   } = useForm<ConventionFormValues>({
     resolver: zodResolver(creerSchemaConvention({ exigerDateDebutFuture: !convention })),
     mode: "onChange",
@@ -142,6 +142,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
       },
       onError: (erreur: Error) => toast.error(traduireErreurConvention(erreur.message)),
     }
+    console.log("Envoi de la convention :", valeursEnvoyees)
     if (convention) {
       modification.mutate(valeursEnvoyees, optionsMutation)
     } else {
@@ -202,14 +203,9 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         />
       </div>
 
-      <div
-        className="flex flex-col gap-4"
-        role="group"
-        aria-label="Liens de la convention"
-        aria-describedby={submitCount > 0 && errors.root?.liens ? "erreur-liens-convention" : undefined}
-      >
+      <div className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">
-          Associez cette convention à au moins un partenariat, un projet ou une cotutelle.
+          Vous pouvez lier facultativement cette convention à un partenariat, un projet ou une cotutelle, ou la laisser indépendante.
         </p>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="partenariat_id">Partenariat lié (optionnel)</Label>
@@ -292,11 +288,6 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
             )}
           />
         </div>
-        {submitCount > 0 && errors.root?.liens?.message ? (
-          <p id="erreur-liens-convention" role="alert" className="text-sm text-destructive">
-            {errors.root.liens.message}
-          </p>
-        ) : null}
       </div>
 
       {!convention ? (

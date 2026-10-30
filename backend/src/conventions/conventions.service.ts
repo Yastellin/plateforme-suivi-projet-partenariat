@@ -46,12 +46,6 @@ export class ConventionsService {
     const annee = new Date().getFullYear();
     const reference = `CONV-${annee}-${randomUUID().toUpperCase()}`;
 
-    if (!dto.partenariat_id && !dto.projet_id && !dto.cotutelle_id) {
-      throw new BadRequestException(
-        'Une convention doit etre associee a un partenariat, un projet ou une cotutelle',
-      );
-    }
-
     const convention = await this.dataSource.transaction(async (manager) => {
       const conventionRepo = manager.getRepository(Convention);
       const partenariatRepo = manager.getRepository(Partenariat);
@@ -182,24 +176,6 @@ export class ConventionsService {
     dto: UpdateConventionDto,
   ): Promise<ConventionResponseDto> {
     const conventionActuelle = await this.findOne(id);
-    const partenariatId =
-      dto.partenariat_id !== undefined
-        ? dto.partenariat_id || null
-        : conventionActuelle.partenariat_id;
-    const projetId =
-      dto.projet_id !== undefined
-        ? dto.projet_id || null
-        : conventionActuelle.projet_id;
-    const cotutelleId =
-      dto.cotutelle_id !== undefined
-        ? dto.cotutelle_id || null
-        : conventionActuelle.cotutelle_id;
-    if (!partenariatId && !projetId && !cotutelleId) {
-      throw new BadRequestException(
-        'Une convention doit etre associee a un partenariat, un projet ou une cotutelle',
-      );
-    }
-
     // Une validation de DTO ne voit pas la valeur conservée lors d'un PATCH
     // partiel. Combiner l'état courant et la commande empêche donc de placer
     // uniquement la date de fin avant une date de début déjà enregistrée.
@@ -266,7 +242,9 @@ export class ConventionsService {
         data.projet_id = dto.projet_id || null;
       }
 
-      await conventionRepo.update(id, data);
+      if (Object.keys(data).length > 0) {
+        await conventionRepo.update(id, data);
+      }
 
       if (dto.cotutelle_id !== undefined) {
         await cotutelleRepo.update(

@@ -98,9 +98,7 @@ Write-Host "PROJET ID : $PROJET_ID"
 # ============================================
 Section "2. Creation d'une convention"
 
-$REF = "CONV-TEST-" + (Get-Date -Format "yyyyMMddHHmmss")
 $r = Invoke-Api -Method POST -Url "$API/conventions" -Token $TOKEN_PRES -Body @{
-    reference = $REF
     titre = "Convention de test"
     date_debut = (DateIso 60)
     date_fin = (DateIso 1500)
@@ -110,7 +108,8 @@ $r = Invoke-Api -Method POST -Url "$API/conventions" -Token $TOKEN_PRES -Body @{
 }
 Check "Creation convention (201)" 201 $r.StatusCode
 $CONVENTION_ID = $r.Content.data.id
-Check "reference" $REF $r.Content.data.reference
+$REF = $r.Content.data.reference
+Check "reference générée" $true ($REF -match '^CONV-\d{4}-[0-9A-F-]{36}$')
 Check "statut BROUILLON" "BROUILLON" $r.Content.data.statut
 Check "archive = false" "false" "$($r.Content.data.archive)".ToLower()
 Write-Host "CONVENTION ID : $CONVENTION_ID"
@@ -165,7 +164,6 @@ Section "6. Permissions"
 
 # Etablissement ne peut pas creer
 $r = Invoke-Api -Method POST -Url "$API/conventions" -Token $TOKEN_ETAB -Body @{
-    reference = "CONV-INTERDIT"
     titre = "Interdit"
     partenariat_id = $PARTENARIAT_ID
 }
@@ -181,7 +179,6 @@ Check "Lecture par Decideur (200)" 200 $r.StatusCode
 
 # Decideur ne peut pas creer
 $r = Invoke-Api -Method POST -Url "$API/conventions" -Token $TOKEN_DEC -Body @{
-    reference = "CONV-INTERDIT-2"
     titre = "Interdit"
     partenariat_id = $PARTENARIAT_ID
 }
@@ -193,11 +190,11 @@ Check "Creation par Decideur (403)" 403 $r.StatusCode
 Section "7. Reference unique"
 
 $r = Invoke-Api -Method POST -Url "$API/conventions" -Token $TOKEN_PRES -Body @{
-    reference = $REF
-    titre = "Doublon"
+    titre = "Deuxieme convention"
     partenariat_id = $PARTENARIAT_ID
 }
-Check "Reference en doublon (409)" 409 $r.StatusCode
+Check "Creation avec reference automatique (201)" 201 $r.StatusCode
+Check "References distinctes" $true ($r.Content.data.reference -ne $REF)
 
 # ============================================
 # 8. ARCHIVAGE

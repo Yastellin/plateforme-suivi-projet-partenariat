@@ -431,7 +431,7 @@ describe('Authentification (e2e)', () => {
       await request(ctx.app.getHttpServer())
         .post('/api/conventions')
         .set(...enteteBearer(utilisateurEtablissement))
-        .send({ reference: 'CONV-TEST-403', titre: 'Convention interdite' })
+        .send({ titre: 'Convention interdite' })
         .expect(403);
     });
   });
