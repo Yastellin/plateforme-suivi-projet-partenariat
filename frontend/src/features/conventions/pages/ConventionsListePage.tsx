@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { Plus, FileText } from "lucide-react"
+import { Plus, FileText, Pencil, Archive } from "lucide-react"
+import { toast } from "sonner"
+import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Panel, PanelBody } from "@/components/shared/Panel"
@@ -12,6 +14,8 @@ import { TablePagination } from "@/components/shared/TablePagination"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useConventions } from "@/features/conventions/api/useConventions"
+import { useArchiverConvention } from "@/features/conventions/api/useArchiverConvention"
+import type { Convention } from "@/types/api"
 import { useDebounce } from "@/hooks/useDebounce"
 import { useAuth } from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -39,6 +43,8 @@ export function ConventionsListePage() {
   const [statutFiltre, setStatutFiltre] = useState<FiltreStatut>("tous")
   const [page, setPage] = useState(1)
   const rechercheDebouncee = useDebounce(recherche, 300)
+  const [aArchiver, setAArchiver] = useState<Convention | null>(null)
+  const archiver = useArchiverConvention()
 
   const role = utilisateur?.role
   const cheminBase = role === 'PRESIDENCE' ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur'
@@ -128,11 +134,11 @@ export function ConventionsListePage() {
               <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr>
-                    {['Titre', 'Référence', 'Date de signature', 'Statut'].map((entete) => (
+                    {['Titre', 'Référence', 'Date de signature', 'Statut', 'Actions'].map((entete) => (
                       <th
                         key={entete}
                         scope="col"
-                        className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
+                        className={`whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]${entete === 'Actions' ? ' text-right' : ''}`}
                       >
                         {entete}
                       </th>
@@ -157,10 +163,35 @@ export function ConventionsListePage() {
                           {convention.reference}
                         </td>
                         <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
-                          {formaterDate(convention.date_signature ?? "")}
+                          {convention.date_signature ? formaterDate(convention.date_signature) : "—"}
                         </td>
                         <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px]">
                           <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
+                        </td>
+                        <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] text-right">
+                          <div className="inline-flex items-center gap-1">
+                            {permissions.peutModifier ? (
+                              <Link
+                                to={`${cheminBase}/conventions/${convention.id}/modifier`}
+                                aria-label={`Modifier ${convention.titre}`}
+                                title="Modifier"
+                                className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] hover:bg-[var(--color-page-bg)] hover:text-[var(--color-brand)]"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Link>
+                            ) : null}
+                            {permissions.peutArchiver ? (
+                              <button
+                                type="button"
+                                aria-label={`Archiver ${convention.titre}`}
+                                title="Archiver"
+                                onClick={() => setAArchiver(convention)}
+                                className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] hover:bg-[var(--color-page-bg)] hover:text-[var(--status-expire-fg)]"
+                              >
+                                <Archive className="h-4 w-4" />
+                              </button>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     )
@@ -173,7 +204,26 @@ export function ConventionsListePage() {
         )}
       </Panel>
 
-
+      {aArchiver ? (
+        <DestructiveConfirmDialog
+          ouvert
+          onFermer={() => setAArchiver(null)}
+          onConfirmer={() =>
+            archiver.mutate(aArchiver.id, {
+              onSuccess: () => {
+                toast.success("Convention archivée")
+                setAArchiver(null)
+              },
+              onError: (erreur: Error) => toast.error(erreur.message),
+            })
+          }
+          titre="Archiver cette convention ?"
+          description="La convention sera retirée de la liste active. Cette action est irréversible."
+          nomCible={aArchiver.reference}
+          libelleAction="Archiver"
+          enCours={archiver.isPending}
+        />
+      ) : null}
     </div>
   )
 }
