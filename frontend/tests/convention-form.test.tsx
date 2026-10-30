@@ -42,10 +42,6 @@ vi.mock("@/components/ui/button", async () => {
       React.createElement("button", props, children),
   }
 })
-vi.mock("@/components/ui/input", async () => {
-  const React = await import("react")
-  return { Input: (props: any) => React.createElement("input", props) }
-})
 vi.mock("@/components/ui/label", async () => {
   const React = await import("react")
   return {
@@ -142,7 +138,7 @@ describe("formulaire de convention", () => {
       "value",
     )!.set!
     await act(async () => {
-      definirValeur.call(champTitre, "Convention de test")
+      definirValeur.call(champTitre, "Convention 2")
       champTitre.dispatchEvent(new Event("input", { bubbles: true }))
     })
 
@@ -159,7 +155,7 @@ describe("formulaire de convention", () => {
 
     expect(creerConvention).toHaveBeenCalledOnce()
     expect(creerConvention.mock.calls[0][0]).toMatchObject({
-      titre: "Convention de test",
+      titre: "Convention 2",
       projet_id: "projet-test",
     })
 
