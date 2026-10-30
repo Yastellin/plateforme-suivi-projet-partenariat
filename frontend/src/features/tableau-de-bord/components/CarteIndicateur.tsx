@@ -48,7 +48,7 @@ export function CarteIndicateur({ titre, valeur, icone, theme, lien, pied }: Car
         </span>
       </div>
 
-      <p className="kpi-valeur mt-4 text-4xl font-bold tracking-tight text-slate-900">{valeur}</p>
+      <p className="kpi-valeur mt-4 text-5xl font-bold leading-none tracking-tight text-slate-900">{valeur}</p>
 
       <div className="mt-3 text-sm">
         {lien ? (
