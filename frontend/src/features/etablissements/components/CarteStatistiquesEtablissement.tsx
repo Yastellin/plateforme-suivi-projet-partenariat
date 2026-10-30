@@ -51,14 +51,18 @@ export function CarteStatistiquesEtablissement({
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[14px] font-semibold text-[var(--color-text-primary)]">{etablissement.nom}</p>
-          <p className="font-mono text-[11.5px] text-[var(--color-text-secondary)]">{etablissement.sigle ?? "—"}</p>
+          <p className="break-words text-[14px] font-semibold leading-5 text-[var(--color-text-primary)]">{etablissement.nom}</p>
+          <span className="mt-1 inline-block rounded-[var(--radius-sm)] bg-[var(--color-page-bg)] px-1.5 py-px font-mono text-[11px] text-[var(--color-text-secondary)]">
+            {etablissement.sigle ?? "—"}
+          </span>
         </div>
-        {projetsActifs > 0 ? (
-          <StatusBadge libelle="Projets actifs" tonalite="actif" />
-        ) : (
-          <StatusBadge libelle="Aucun projet actif" tonalite="brouillon" />
-        )}
+        <div className="flex-shrink-0 self-start">
+          {projetsActifs > 0 ? (
+            <StatusBadge libelle="Actif" tonalite="actif" />
+          ) : (
+            <StatusBadge libelle="Inactif" tonalite="brouillon" />
+          )}
+        </div>
       </div>
 
       {filtre !== "partenaires" ? (
