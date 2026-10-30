@@ -1,6 +1,6 @@
 // src/features/conventions/pages/ConventionDetailPage.tsx
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { FileText, Archive, Pencil } from "lucide-react"
 import { toast } from "sonner"
@@ -20,6 +20,30 @@ import { useArchiverConvention } from "@/features/conventions/api/useArchiverCon
 import { usePermissions } from "@/hooks/usePermissions"
 import { formaterDate } from "@/lib/format"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
+
+interface ChampDetail {
+  libelle: string
+  valeur: ReactNode
+  sousValeur?: string | null
+  mono?: boolean
+}
+
+// Grille libellé / valeur ; une valeur vide s'affiche « — ».
+function DetailChamps({ elements }: { elements: ChampDetail[] }) {
+  return (
+    <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+      {elements.map((champ) => (
+        <div key={champ.libelle} className="min-w-0">
+          <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">{champ.libelle}</dt>
+          <dd className={`mt-1 break-words text-[13.5px] text-[var(--color-text-primary)] ${champ.mono ? "font-mono text-[12.5px]" : ""}`}>
+            {champ.valeur ?? "—"}
+            {champ.sousValeur ? <span className="block text-[12.5px] text-[var(--color-text-secondary)]">{champ.sousValeur}</span> : null}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
 
 export function ConventionDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -85,40 +109,53 @@ export function ConventionDetailPage() {
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="informations" className="mt-4">
+        <TabsContent value="informations" className="mt-4 flex flex-col gap-4">
           <Panel>
             <PanelHeader titre="Informations générales" />
             <PanelBody>
-              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {convention.date_signature && (
-                  <div>
-                    <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">Date de signature</dt>
-                    <dd className="mt-1 font-mono text-[12.5px]">{formaterDate(convention.date_signature)}</dd>
-                  </div>
-                )}
-                {convention.date_debut && (
-                  <div>
-                    <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">Date de début</dt>
-                    <dd className="mt-1 font-mono text-[12.5px]">{formaterDate(convention.date_debut)}</dd>
-                  </div>
-                )}
-                {convention.date_fin && (
-                  <div>
-                    <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">Date de fin</dt>
-                    <dd className="mt-1 font-mono text-[12.5px]">{formaterDate(convention.date_fin)}</dd>
-                  </div>
-                )}
-                <div>
-                  <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">Référence</dt>
-                  <dd className="mt-1 font-mono text-[12.5px]">{convention.reference}</dd>
-                </div>
-              </dl>
-              {convention.description && (
-                <div className="mt-4">
-                  <dt className="text-[11.5px] font-bold uppercase tracking-wide text-[var(--color-text-secondary)]">Description</dt>
-                  <dd className="mt-1 text-[13.5px]">{convention.description}</dd>
-                </div>
-              )}
+              <DetailChamps
+                elements={[
+                  { libelle: "Référence", valeur: convention.reference, mono: true },
+                  { libelle: "Statut", valeur: <StatusBadge libelle={info.libelle} tonalite={info.tonalite} /> },
+                  { libelle: "Établissement", valeur: convention.etablissement_nom },
+                  { libelle: "Dernière étape", valeur: convention.date_derniere_etape ? formaterDate(convention.date_derniere_etape) : null, mono: true },
+                ]}
+              />
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader titre="Dates" />
+            <PanelBody>
+              <DetailChamps
+                elements={[
+                  { libelle: "Date de signature", valeur: convention.date_signature ? formaterDate(convention.date_signature) : null, mono: true },
+                  { libelle: "Date de début", valeur: convention.date_debut ? formaterDate(convention.date_debut) : null, mono: true },
+                  { libelle: "Date de fin", valeur: convention.date_fin ? formaterDate(convention.date_fin) : null, mono: true },
+                ]}
+              />
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader titre="Liens" sousTitre="Partenariat, projet et cotutelle rattachés à cette convention" />
+            <PanelBody>
+              <DetailChamps
+                elements={[
+                  { libelle: "Partenariat", valeur: convention.partenariat ? convention.partenariat.libelle : null, sousValeur: convention.partenariat?.complement },
+                  { libelle: "Projet", valeur: convention.projet ? convention.projet.libelle : null, sousValeur: convention.projet?.complement },
+                  { libelle: "Cotutelle", valeur: convention.cotutelle ? convention.cotutelle.libelle : null, sousValeur: convention.cotutelle?.complement },
+                ]}
+              />
+            </PanelBody>
+          </Panel>
+
+          <Panel>
+            <PanelHeader titre="Description" />
+            <PanelBody>
+              <p className="whitespace-pre-wrap text-[13.5px] leading-6 text-[var(--color-text-primary)]">
+                {convention.description?.trim() ? convention.description : "Aucune description renseignée."}
+              </p>
             </PanelBody>
           </Panel>
         </TabsContent>
