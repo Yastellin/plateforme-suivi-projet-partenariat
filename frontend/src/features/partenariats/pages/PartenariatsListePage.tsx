@@ -1,11 +1,12 @@
 // src/features/partenariats/pages/PartenariatsListePage.tsx
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Handshake, Plus } from "lucide-react";
+import { ArrowUpDown, Handshake, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { usePartenariats } from "../api/usePartenariats";
 import { useSoumettreEnMassePartenariats } from "../api/useSoumettreEnMassePartenariats";
+import { useEtablissements } from "@/features/etablissements/api/useEtablissements";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Panel, PanelBody } from "@/components/shared/Panel";
 import { TableToolbar } from "@/components/shared/TableToolbar";
@@ -19,18 +20,59 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formaterDate } from "@/lib/format";
 import { filtrerListeGenerale } from "@/lib/perimetre-liste";
+import { cn } from "@/lib/utils";
 import {
   LIBELLES_DOMAINE_PARTENARIAT,
   LIBELLES_STATUT_PARTENARIAT,
 } from "@/lib/status-mappings";
+import type { Partenariat } from "@/types/api";
 
 const LIMITE_PAR_PAGE = 20;
+
+const STATUTS = ["BROUILLON", "EN_ATTENTE", "EN_COURS", "SUSPENDU", "TERMINE"] as const;
+const DOMAINES = [
+  "RECHERCHE",
+  "FORMATION",
+  "INNOVATION",
+  "DEVELOPPEMENT",
+  "COOPERATION_INSTITUTIONNELLE",
+  "AUTRE",
+] as const;
+
+// Transmission : où en est le partenariat côté vitrine / Présidence
+function transmission(partenariat: Partenariat): { libelle: string; classe: string } {
+  if (partenariat.publie_le) {
+    return {
+      libelle: "Vitrine",
+      classe: "bg-[var(--status-actif-bg)] text-[var(--status-actif-fg)]",
+    };
+  }
+  if (partenariat.soumis_le) {
+    return {
+      libelle: "Soumis",
+      classe: "bg-[var(--status-attente-bg)] text-[var(--status-attente-fg)]",
+    };
+  }
+  if (partenariat.cree_par_role === "PRESIDENCE") {
+    return {
+      libelle: "Présidence",
+      classe: "border border-[var(--color-border)] text-[var(--color-text-secondary)]",
+    };
+  }
+  return {
+    libelle: "Non soumis",
+    classe: "bg-[var(--status-brouillon-bg)] text-[var(--status-brouillon-fg)]",
+  };
+}
 
 export function PartenariatsListePage() {
   const { utilisateur } = useAuth();
   const permissions = usePermissions();
   const [page, setPage] = useState(1);
   const [recherche, setRecherche] = useState("");
+  const [statut, setStatut] = useState("");
+  const [domaine, setDomaine] = useState("");
+  const [etablissementId, setEtablissementId] = useState("");
   const [modeSelection, setModeSelection] = useState(false);
   const [selection, setSelection] = useState<Set<string>>(new Set());
   const soumission = useSoumettreEnMassePartenariats();
@@ -38,9 +80,16 @@ export function PartenariatsListePage() {
     page,
     limit: LIMITE_PAR_PAGE,
     recherche,
+    statut,
+    domaine,
+    etablissement_id: etablissementId,
   });
 
   const role = utilisateur?.role;
+  const peutFiltrerParEtablissement = role !== "ETABLISSEMENT";
+  const { data: etablissementsPage } = useEtablissements({ page: 1, limit: 100 });
+  const etablissements = etablissementsPage?.data ?? [];
+
   const cheminBase =
     role === "PRESIDENCE"
       ? "/presidence"
@@ -59,6 +108,15 @@ export function PartenariatsListePage() {
   const tousSoumissiblesSelectionnes =
     soumissibles.length > 0 &&
     soumissibles.every((partenariat) => selection.has(partenariat.id));
+  const filtresActifs = Boolean(recherche || statut || domaine || etablissementId);
+
+  function reinitialiserFiltres() {
+    setRecherche("");
+    setStatut("");
+    setDomaine("");
+    setEtablissementId("");
+    setPage(1);
+  }
 
   function basculer(id: string) {
     setSelection((courante) => {
@@ -135,7 +193,7 @@ export function PartenariatsListePage() {
         }
       />
 
-      <Panel>
+      <Panel className="overflow-hidden">
         <TableToolbar
           valeurRecherche={recherche}
           onRechercheChange={(valeur) => {
@@ -143,36 +201,78 @@ export function PartenariatsListePage() {
             setPage(1);
           }}
           placeholderRecherche="Rechercher un partenariat…"
+          enfants={
+            <div className="flex flex-wrap items-center gap-2">
+              <FiltreSelect
+                libelle="Statut"
+                valeur={statut}
+                onChange={(valeur) => {
+                  setStatut(valeur);
+                  setPage(1);
+                }}
+                options={STATUTS.map((s) => ({ valeur: s, libelle: LIBELLES_STATUT_PARTENARIAT[s].libelle }))}
+              />
+              <FiltreSelect
+                libelle="Domaine"
+                valeur={domaine}
+                onChange={(valeur) => {
+                  setDomaine(valeur);
+                  setPage(1);
+                }}
+                options={DOMAINES.map((d) => ({ valeur: d, libelle: LIBELLES_DOMAINE_PARTENARIAT[d] }))}
+              />
+              {peutFiltrerParEtablissement ? (
+                <FiltreSelect
+                  libelle="Établissement"
+                  valeur={etablissementId}
+                  onChange={(valeur) => {
+                    setEtablissementId(valeur);
+                    setPage(1);
+                  }}
+                  options={etablissements.map((e) => ({ valeur: e.id, libelle: e.sigle ?? e.nom }))}
+                />
+              ) : null}
+              {filtresActifs ? (
+                <button
+                  type="button"
+                  onClick={reinitialiserFiltres}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 text-[12.5px] font-semibold text-[var(--color-brand)] hover:bg-[var(--color-active-zone)]"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Réinitialiser
+                </button>
+              ) : null}
+            </div>
+          }
         />
 
         {isLoading ? (
           <div className="flex flex-col gap-3 p-[16px_18px]">
             {[0, 1, 2, 3, 4].map((cle) => (
-              <Skeleton key={cle} className="h-12 w-full" />
+              <Skeleton key={cle} className="h-14 w-full" />
             ))}
           </div>
         ) : partenariats.length === 0 ? (
           <EmptyState
             icone={Handshake}
             titre={
-              recherche
-                ? "Aucun résultat pour cette recherche"
+              filtresActifs
+                ? "Aucun partenariat ne correspond aux filtres"
                 : "Aucun partenariat enregistré"
             }
             description={
-              recherche
-                ? "Essayez avec un autre terme de recherche."
+              filtresActifs
+                ? "Modifiez ou réinitialisez les filtres pour voir d'autres résultats."
                 : "Les partenariats ajoutés apparaîtront ici."
             }
           />
         ) : (
-          <PanelBody>
+          <PanelBody className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[13px]">
+              <table className="w-full min-w-[980px] border-collapse text-left text-[14px]">
                 <thead>
-                  <tr>
+                  <tr className="border-b border-[var(--color-border)] bg-[var(--color-page-bg)] text-[12.5px] font-semibold text-[var(--color-text-secondary)]">
                     {modeSelection ? (
-                      <th className="border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px]">
+                      <th className="w-10 px-5 py-3">
                         <input
                           type="checkbox"
                           checked={tousSoumissiblesSelectionnes}
@@ -181,40 +281,27 @@ export function PartenariatsListePage() {
                         />
                       </th>
                     ) : null}
-                    {[
-                      "Intitulé",
-                      "Domaine",
-                      "Période",
-                      "Établissements",
-                      "Transmission / vitrine",
-                      "Statut",
-                    ].map((entete) => (
-                      <th
-                        key={entete}
-                        scope="col"
-                        className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
-                      >
-                        {entete}
-                      </th>
-                    ))}
+                    <Th>Intitulé</Th>
+                    <Th>Domaine</Th>
+                    <Th>Période</Th>
+                    <Th>Établissements</Th>
+                    <Th>Transmission</Th>
+                    <Th>Statut</Th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-[var(--color-border)]">
                   {partenariats.map((partenariat) => {
-                    const info =
-                      LIBELLES_STATUT_PARTENARIAT[partenariat.statut];
+                    const info = LIBELLES_STATUT_PARTENARIAT[partenariat.statut];
+                    const trans = transmission(partenariat);
                     const peutSelectionner =
                       partenariat.cree_par_role === "ETABLISSEMENT" &&
                       partenariat.statut === "BROUILLON" &&
                       !partenariat.soumis_le &&
                       !partenariat.publie_le;
                     return (
-                      <tr
-                        key={partenariat.id}
-                        className="hover:bg-[var(--color-page-bg)]"
-                      >
+                      <tr key={partenariat.id} className="transition-colors hover:bg-[var(--color-page-bg)]">
                         {modeSelection ? (
-                          <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                          <td className="px-5 py-4">
                             {peutSelectionner ? (
                               <input
                                 type="checkbox"
@@ -225,82 +312,83 @@ export function PartenariatsListePage() {
                             ) : null}
                           </td>
                         ) : null}
-                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+
+                        <td className="max-w-[320px] px-5 py-4">
                           <Link
                             to={`${cheminBase}/partenaires-partenariats/partenariats/${partenariat.id}`}
-                            className="text-[13.5px] font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand)]"
+                            className="line-clamp-2 break-words font-semibold leading-5 text-[var(--color-text-primary)] hover:text-[var(--color-brand)]"
                           >
                             {partenariat.intitule}
                           </Link>
                           {partenariat.partenaires.length > 0 ? (
-                            <ul
-                              className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[var(--color-text-secondary)]"
-                              aria-label="Partenaires"
-                            >
+                            <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Partenaires">
                               {partenariat.partenaires.map((partenaire) => (
                                 <li
                                   key={partenaire.id}
-                                  className="inline-flex items-center gap-1"
+                                  className="inline-flex max-w-full items-center gap-1 rounded-md bg-[var(--color-page-bg)] px-1.5 py-0.5 text-[12px] text-[var(--color-text-secondary)]"
                                 >
                                   <LogoMedia
                                     src={partenaire.logo_url}
                                     nom={partenaire.nom}
-                                    className="h-4 w-4 shrink-0 rounded-sm bg-white object-contain text-[7px]"
+                                    className="h-3.5 w-3.5 shrink-0 rounded-sm bg-white object-contain text-[7px]"
                                     loading="lazy"
                                   />
-                                  {partenaire.nom}
+                                  <span className="truncate">{partenaire.nom}</span>
                                 </li>
                               ))}
                             </ul>
                           ) : null}
                         </td>
-                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
-                          {LIBELLES_DOMAINE_PARTENARIAT[partenariat.domaine]}
+
+                        <td className="px-5 py-4">
+                          <span className="inline-flex rounded-md bg-[var(--color-active-zone)] px-2 py-0.5 text-[12.5px] font-medium text-[var(--color-brand)]">
+                            {LIBELLES_DOMAINE_PARTENARIAT[partenariat.domaine]}
+                          </span>
                         </td>
-                        <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] font-mono text-[12.5px]">
-                          {formaterDate(partenariat.date_debut)}
-                          {partenariat.date_fin
-                            ? ` au ${formaterDate(partenariat.date_fin)}`
-                            : ""}
+
+                        <td className="whitespace-nowrap px-5 py-4 tabular-nums">
+                          <div className="flex flex-col gap-0.5 text-[13px]">
+                            <span className="text-[var(--color-text-primary)]">
+                              <span className="text-[var(--color-text-secondary)]">Du </span>
+                              {formaterDate(partenariat.date_debut)}
+                            </span>
+                            <span className="text-[var(--color-text-secondary)]">
+                              {partenariat.date_fin ? `Au ${formaterDate(partenariat.date_fin)}` : "Sans échéance"}
+                            </span>
+                          </div>
                         </td>
-                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">
+
+                        <td className="px-5 py-4">
                           {partenariat.etablissements.length > 0 ? (
-                            <ul className="flex flex-wrap gap-x-2 gap-y-1">
-                              {partenariat.etablissements.map(
-                                (etablissement) => (
-                                  <li
-                                    key={etablissement.id}
-                                    className="inline-flex items-center gap-1"
-                                  >
-                                    <LogoMedia
-                                      src={etablissement.logo_url}
-                                      nom={etablissement.nom}
-                                      className="h-5 w-5 shrink-0 rounded bg-white object-contain text-[8px]"
-                                      loading="lazy"
-                                    />
-                                    {etablissement.sigle ?? etablissement.nom}
-                                  </li>
-                                ),
-                              )}
+                            <ul className="flex flex-wrap gap-1.5">
+                              {partenariat.etablissements.map((etablissement) => (
+                                <li
+                                  key={etablissement.id}
+                                  className="inline-flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2 py-0.5 text-[12.5px] font-medium text-[var(--color-text-primary)]"
+                                >
+                                  <LogoMedia
+                                    src={etablissement.logo_url}
+                                    nom={etablissement.nom}
+                                    className="h-4 w-4 shrink-0 rounded bg-white object-contain text-[8px]"
+                                    loading="lazy"
+                                  />
+                                  {etablissement.sigle ?? etablissement.nom}
+                                </li>
+                              ))}
                             </ul>
                           ) : (
-                            "Aucun"
+                            <span className="text-[var(--color-text-secondary)]">Aucun</span>
                           )}
                         </td>
-                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px] text-xs font-medium text-[var(--color-text-secondary)]">
-                          {partenariat.publie_le
-                            ? "Présent sur la vitrine"
-                            : partenariat.soumis_le
-                              ? "Soumis à la Présidence"
-                              : partenariat.cree_par_role === "PRESIDENCE"
-                                ? "Donnée Présidence"
-                                : "Non soumis"}
+
+                        <td className="px-5 py-4">
+                          <span className={cn("inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-semibold", trans.classe)}>
+                            {trans.libelle}
+                          </span>
                         </td>
-                        <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
-                          <StatusBadge
-                            libelle={info.libelle}
-                            tonalite={info.tonalite}
-                          />
+
+                        <td className="px-5 py-4">
+                          <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
                         </td>
                       </tr>
                     );
@@ -315,5 +403,50 @@ export function PartenariatsListePage() {
         )}
       </Panel>
     </div>
+  );
+}
+
+function Th({ children }: { children: ReactNode }) {
+  return (
+    <th scope="col" className="whitespace-nowrap px-5 py-3 font-semibold">
+      <span className="inline-flex items-center gap-1.5">
+        {children}
+        <ArrowUpDown className="h-3 w-3 opacity-60" aria-hidden="true" />
+      </span>
+    </th>
+  );
+}
+
+function FiltreSelect({
+  libelle,
+  valeur,
+  onChange,
+  options,
+}: {
+  libelle: string;
+  valeur: string;
+  onChange: (valeur: string) => void;
+  options: { valeur: string; libelle: string }[];
+}) {
+  return (
+    <label className="inline-flex items-center gap-2 text-[12.5px] font-medium text-[var(--color-text-secondary)]">
+      <span className="sr-only sm:not-sr-only">{libelle}</span>
+      <select
+        value={valeur}
+        onChange={(evenement) => onChange(evenement.target.value)}
+        aria-label={libelle}
+        className={cn(
+          "h-8 max-w-[200px] rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-page-bg)] px-2 text-[13px] font-medium text-[var(--color-text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]",
+          valeur && "border-[var(--color-brand)]",
+        )}
+      >
+        <option value="">Tous</option>
+        {options.map((option) => (
+          <option key={option.valeur} value={option.valeur}>
+            {option.libelle}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }

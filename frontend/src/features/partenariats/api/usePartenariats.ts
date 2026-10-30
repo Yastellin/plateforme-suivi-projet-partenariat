@@ -9,6 +9,8 @@ interface ParametresPartenariats {
   limit: number;
   recherche?: string;
   etablissement_id?: string;
+  statut?: string;
+  domaine?: string;
 }
 
 async function recupererPartenariats(parametres: ParametresPartenariats): Promise<PageServeur<Partenariat>> {
@@ -17,7 +19,9 @@ async function recupererPartenariats(parametres: ParametresPartenariats): Promis
       page: parametres.page,
       limit: parametres.limit,
       intitule: parametres.recherche || undefined,
-      etablissement_id: parametres.etablissement_id,
+      etablissement_id: parametres.etablissement_id || undefined,
+      statut: parametres.statut || undefined,
+      domaine: parametres.domaine || undefined,
     },
   });
   return reponse.data;
