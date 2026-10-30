@@ -95,16 +95,16 @@ export function PartenaireCreatePage() {
   }
 
   return (
-    <div>
+    <div className="mx-auto w-full max-w-[880px]">
       <PageHeader
         titre="Nouveau partenaire"
         description="Enregistrez un nouveau partenaire dans la plateforme."
       />
 
-      <Panel className="max-w-[640px]">
+      <Panel>
         <PanelBody>
           {!etapeFormulaire ? (
-            <div>
+            <div className="mx-auto w-full max-w-[560px]">
               <FloatingLabelInput
                 label="Nom du partenaire"
                 autoFocus
