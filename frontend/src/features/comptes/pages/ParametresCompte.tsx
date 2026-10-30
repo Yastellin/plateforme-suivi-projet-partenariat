@@ -29,8 +29,14 @@ const LIBELLES_ROLES: Record<RoleUtilisateur, string> = {
   DECIDEUR: "Décideur",
 };
 
+const ERREUR_EMAIL_EXISTANT =
+  "Un compte utilise déjà cette adresse e-mail.";
 const ERREUR_ETABLISSEMENT_EXISTANT =
   "Cet établissement est déjà enregistré. Utilisez son compte existant ou demandez à la Présidence de vérifier la fiche.";
+
+function normaliserAdresseEmail(email: string): string {
+  return email.trim().toLocaleLowerCase("fr");
+}
 
 function normaliserNomEtablissement(nom: string): string {
   return nom
@@ -72,6 +78,7 @@ export function ParametresCompte() {
   const modifierAcces = useModifierAccesUtilisateur();
   const creerUtilisateur = useCreerUtilisateur();
   const [creationOuverte, setCreationOuverte] = useState(false);
+  const [erreurEmailServeur, setErreurEmailServeur] = useState(false);
   const [erreurNomEtablissementServeur, setErreurNomEtablissementServeur] =
     useState(false);
   const [brouillonsAcces, setBrouillonsAcces] = useState<
@@ -97,9 +104,21 @@ export function ParametresCompte() {
     aide_contextuelle: compte?.preferences?.aide_contextuelle ?? true,
   };
 
-  const emailNouveauCompteValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    nouveauCompte.email.trim(),
+  const emailNouveauCompteNormalise = normaliserAdresseEmail(
+    nouveauCompte.email,
   );
+  const compteEmailDuplique = (utilisateurs ?? []).find(
+    (item) =>
+      normaliserAdresseEmail(item.email) === emailNouveauCompteNormalise &&
+      Boolean(emailNouveauCompteNormalise),
+  );
+  const emailDuplique = Boolean(compteEmailDuplique) || erreurEmailServeur;
+  const messageEmailDuplique = compteEmailDuplique
+    ? `Cette adresse e-mail est déjà utilisée par un compte ${LIBELLES_ROLES[compteEmailDuplique.role]}. Choisissez une autre adresse.`
+    : `${ERREUR_EMAIL_EXISTANT} Choisissez une autre adresse.`;
+  const emailNouveauCompteValide =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nouveauCompte.email.trim()) &&
+    !emailDuplique;
   const motDePasseNouveauCompteValide = nouveauCompte.mot_de_passe.length >= 8;
   const nomEtablissementNormalise = normaliserNomEtablissement(
     nouveauCompte.etablissement_nom,
@@ -184,10 +203,14 @@ export function ParametresCompte() {
           role: "ETABLISSEMENT",
           etablissement_nom: "",
         });
+        setErreurEmailServeur(false);
         setErreurNomEtablissementServeur(false);
         setCreationOuverte(false);
       },
       onError: (erreur) => {
+        if (erreur.message === ERREUR_EMAIL_EXISTANT) {
+          setErreurEmailServeur(true);
+        }
         if (erreur.message === ERREUR_ETABLISSEMENT_EXISTANT) {
           setErreurNomEtablissementServeur(true);
         }
@@ -375,24 +398,36 @@ export function ParametresCompte() {
                 <label className="flex flex-col gap-1 text-xs font-semibold">
                   Adresse e-mail
                   <input
+                    id="nouveau-compte-email"
                     type="email"
                     required
                     aria-invalid={
                       Boolean(nouveauCompte.email) && !emailNouveauCompteValide
                     }
+                    aria-describedby={
+                      nouveauCompte.email && !emailNouveauCompteValide
+                        ? "erreur-nouvel-email"
+                        : undefined
+                    }
                     value={nouveauCompte.email}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       setNouveauCompte({
                         ...nouveauCompte,
                         email: event.target.value,
-                      })
-                    }
+                      });
+                      setErreurEmailServeur(false);
+                    }}
                     placeholder="partenariats@univ-fianarantsoa.mg"
                     className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-normal"
                   />
                   {nouveauCompte.email && !emailNouveauCompteValide ? (
-                    <span className="font-normal text-destructive">
-                      Saisissez une adresse e-mail valide.
+                    <span
+                      id="erreur-nouvel-email"
+                      className="font-normal text-destructive"
+                    >
+                      {emailDuplique
+                        ? messageEmailDuplique
+                        : "Saisissez une adresse e-mail valide."}
                     </span>
                   ) : null}
                 </label>

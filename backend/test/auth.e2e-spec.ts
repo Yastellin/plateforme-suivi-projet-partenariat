@@ -365,6 +365,38 @@ describe('Authentification (e2e)', () => {
       ).toBe(false);
     });
 
+    it('refuse les adresses e-mail déjà utilisées par tous les rôles', async () => {
+      const casDoublons = [
+        {
+          email: utilisateurPresidence.email.toUpperCase(),
+          role: Role.DECIDEUR,
+        },
+        {
+          email: utilisateurDecideur.email,
+          role: Role.ETABLISSEMENT,
+          etablissement_nom: 'Nouvel établissement de test',
+        },
+        {
+          email: utilisateurEtablissement.email,
+          role: Role.PRESIDENCE,
+        },
+      ];
+
+      for (const doublon of casDoublons) {
+        const reponse = await request(ctx.app.getHttpServer())
+          .post('/api/utilisateurs')
+          .set(...enteteBearer(utilisateurPresidence))
+          .send({
+            ...doublon,
+            mot_de_passe: 'mot-de-passe-123',
+          })
+          .expect(409);
+        expect(reponse.body.message).toBe(
+          'Un compte utilise déjà cette adresse e-mail.',
+        );
+      }
+    });
+
     it('refuse un nom d’établissement existant et crée une fiche pour un nom inédit', async () => {
       const [etablissementExistant] = await ctx.dataSource.query(
         'SELECT id, nom FROM "Etablissement" LIMIT 1',
