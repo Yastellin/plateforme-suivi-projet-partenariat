@@ -1,7 +1,7 @@
 // src/features/espace-public/components/FilAriane.tsx
 import { Fragment } from "react"
 import { Link } from "react-router-dom"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Home } from "lucide-react"
 
 export interface EtapeFil {
   libelle: string
@@ -16,7 +16,15 @@ export function FilAriane({ etapes }: { etapes: EtapeFil[] }) {
         {etapes.map((etape, i) => (
           <Fragment key={`${etape.libelle}-${i}`}>
             <li>
-              {etape.to ? <Link to={etape.to}>{etape.libelle}</Link> : <span aria-current="page">{etape.libelle}</span>}
+              {etape.to === "/" ? (
+                <Link to="/" aria-label={etape.libelle} title={etape.libelle} className="vt-crumb-accueil">
+                  <Home size={16} />
+                </Link>
+              ) : etape.to ? (
+                <Link to={etape.to}>{etape.libelle}</Link>
+              ) : (
+                <span aria-current="page">{etape.libelle}</span>
+              )}
             </li>
             {i < etapes.length - 1 && (
               <li aria-hidden="true" className="vt-crumb-sep">
