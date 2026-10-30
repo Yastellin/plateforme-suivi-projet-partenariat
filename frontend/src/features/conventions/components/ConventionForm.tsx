@@ -107,7 +107,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     if (dateDebut && dateFin) void trigger(["date_debut", "date_fin"])
   }, [dateDebut, dateFin, trigger])
 
-  const onSubmit = (valeurs: ConventionFormValues) => {
+  const onSubmit = (valeurs: ConventionFormValues) => { 
     // Conversion explicite de la sentinelle "Aucun" en "" (puis null via
     // normaliserPayload) : le backend attend un UUID ou une valeur absente.
     const valeursEnvoyees: ConventionFormValues = {

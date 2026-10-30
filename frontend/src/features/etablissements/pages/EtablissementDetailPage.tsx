@@ -1,7 +1,9 @@
 // src/features/etablissements/pages/EtablissementDetailPage.tsx
 
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Building2, FolderKanban, Handshake, Network } from "lucide-react";
+import { TableauLiensEtablissement } from "@/features/etablissements/components/TableauLiensEtablissement";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Panel, PanelHeader, PanelBody } from "@/components/shared/Panel";
@@ -14,21 +16,26 @@ import { usePartenariats } from "@/features/partenariats/api/usePartenariats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext";
 import { usePermissions } from "@/hooks/usePermissions";
+import {
+  FiltreTypeStatistique,
+  type TypeStatistique,
+} from "@/features/etablissements/components/FiltreTypeStatistique";
 
 export function EtablissementDetailPage() {
   const { id = "" } = useParams<{ id: string }>();
   const permissions = usePermissions();
+  const [filtre, setFiltre] = useState<TypeStatistique>("tous");
   const { data: etablissement, isLoading } = useEtablissement(id);
   const { data: comparatif } = useComparatifEtablissements();
-  const projets = useProjets({ page: 1, limit: 5, etablissement_id: id });
+  const projets = useProjets({ page: 1, limit: 10, etablissement_id: id });
   const partenaires = usePartenaires({
     page: 1,
-    limit: 5,
+    limit: 10,
     etablissement_id: id,
   });
   const partenariats = usePartenariats({
     page: 1,
-    limit: 5,
+    limit: 10,
     etablissement_id: id,
   });
   useTitreBreadcrumb(etablissement?.nom);
@@ -88,62 +95,96 @@ export function EtablissementDetailPage() {
           />
           <PanelBody>
             <div className="grid grid-cols-2 gap-3">
-              <Indicateur
-                icone={FolderKanban}
-                libelle="Projets"
-                valeur={statistiques?.projets ?? projets.data?.meta.total ?? 0}
-              />
-              <Indicateur
-                icone={FolderKanban}
-                libelle="Projets actifs"
-                valeur={statistiques?.projets_actifs ?? 0}
-              />
-              <Indicateur
-                icone={Handshake}
-                libelle="Partenaires"
-                valeur={
-                  statistiques?.partenaires ?? partenaires.data?.meta.total ?? 0
-                }
-              />
-              <Indicateur
-                icone={Network}
-                libelle="Partenariats"
-                valeur={
-                  statistiques?.partenariats ??
-                  partenariats.data?.meta.total ??
-                  0
-                }
-              />
+              {filtre !== "partenaires" ? (
+                <>
+                  <Indicateur
+                    icone={FolderKanban}
+                    libelle="Projets"
+                    valeur={statistiques?.projets ?? projets.data?.meta.total ?? 0}
+                  />
+                  <Indicateur
+                    icone={FolderKanban}
+                    libelle="Projets actifs"
+                    valeur={statistiques?.projets_actifs ?? 0}
+                  />
+                </>
+              ) : null}
+              {filtre !== "projets" ? (
+                <>
+                  <Indicateur
+                    icone={Handshake}
+                    libelle="Partenaires"
+                    valeur={
+                      statistiques?.partenaires ?? partenaires.data?.meta.total ?? 0
+                    }
+                  />
+                  <Indicateur
+                    icone={Network}
+                    libelle="Partenariats"
+                    valeur={
+                      statistiques?.partenariats ??
+                      partenariats.data?.meta.total ??
+                      0
+                    }
+                  />
+                </>
+              ) : null}
             </div>
           </PanelBody>
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <ListeLiee
-          titre="Projets récents"
-          elements={(projets.data?.data ?? []).map((item) => ({
-            id: item.id,
-            libelle: item.nom,
-            lien: `${cheminBase}/projets/${item.id}`,
-          }))}
-        />
-        <ListeLiee
-          titre="Partenaires"
-          elements={(partenaires.data?.data ?? []).map((item) => ({
-            id: item.id,
-            libelle: item.nom,
-            lien: `${cheminBase}/partenaires-partenariats/partenaires/${item.id}`,
-          }))}
-        />
-        <ListeLiee
-          titre="Partenariats"
-          elements={(partenariats.data?.data ?? []).map((item) => ({
-            id: item.id,
-            libelle: item.intitule,
-            lien: `${cheminBase}/partenaires-partenariats/partenariats/${item.id}`,
-          }))}
-        />
+      <div className="mb-4 flex justify-end">
+        <FiltreTypeStatistique valeur={filtre} onChange={setFiltre} />
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {filtre !== "partenaires" ? (
+          <TableauLiensEtablissement
+            titre="Projets"
+            sousTitre="Projets de cet établissement"
+            icone={FolderKanban}
+            libelleDate="Début"
+            messageVide="Aucun projet pour cet établissement."
+            lignes={(projets.data?.data ?? []).map((item) => ({
+              id: item.id,
+              titre: item.nom,
+              sousTitre: item.intitule_officiel ?? item.type,
+              statut: item.statut,
+              date: item.date_debut,
+              lien: `${cheminBase}/projets/${item.id}`,
+            }))}
+          />
+        ) : null}
+        {filtre !== "projets" ? (
+          <TableauLiensEtablissement
+            titre="Partenariats"
+            sousTitre="Partenariats impliquant cet établissement"
+            icone={Network}
+            libelleDate="Début"
+            messageVide="Aucun partenariat pour cet établissement."
+            lignes={(partenariats.data?.data ?? []).map((item) => ({
+              id: item.id,
+              titre: item.intitule,
+              sousTitre: item.domaine,
+              statut: item.statut,
+              date: item.date_debut,
+              lien: `${cheminBase}/partenaires-partenariats/partenariats/${item.id}`,
+            }))}
+          />
+        ) : null}
+        {filtre !== "projets" ? (
+          <div className="grid gap-4 lg:grid-cols-3">
+            <ListeLiee
+              titre="Partenaires"
+              elements={(partenaires.data?.data ?? []).map((item) => ({
+                id: item.id,
+                libelle: item.nom,
+                lien: `${cheminBase}/partenaires-partenariats/partenaires/${item.id}`,
+              }))}
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

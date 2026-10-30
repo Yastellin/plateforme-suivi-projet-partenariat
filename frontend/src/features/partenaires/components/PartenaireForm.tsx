@@ -1,6 +1,6 @@
 // src/features/partenaires/components/PartenaireForm.tsx
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ImagePlus, Loader2, Plus, Save, TriangleAlert, X } from 'lucide-react';
@@ -19,6 +19,19 @@ interface PartenaireFormProps {
   onAnnuler?: () => void;
   onSoumettre: (valeurs: PartenaireFormValues, logo?: File) => void;
   enCours: boolean;
+}
+
+// Groupe visuel du formulaire : titre de section et filet horizontal.
+function SectionFormulaire({ titre, children }: { titre: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-4">
+      <h3 className="flex items-center gap-3 text-[11.5px] font-bold uppercase tracking-[.06em] text-[var(--color-text-secondary)]">
+        {titre}
+        <span aria-hidden="true" className="h-px flex-1 bg-[var(--color-border)]" />
+      </h3>
+      {children}
+    </section>
+  );
 }
 
 export function PartenaireForm({
@@ -137,7 +150,8 @@ export function PartenaireForm({
         ...valeurs,
         emails: valeurs.emails?.map((item) => item.trim()).filter(Boolean),
         telephones: valeurs.telephones?.map((item) => item.trim()).filter(Boolean),
-      }, logoFichier ?? undefined))} noValidate className="flex flex-col gap-1">
+      }, logoFichier ?? undefined))} noValidate className="flex flex-col gap-8">
+      <SectionFormulaire titre="Identité">
       {!partenaire ? (
         <div className="mb-2">
           <p className="mb-2 text-[12.5px] font-medium text-[var(--color-text-secondary)]">
@@ -214,6 +228,9 @@ export function PartenaireForm({
         </div>
       ) : null}
 
+      </SectionFormulaire>
+
+      <SectionFormulaire titre="Coordonnées">
       <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <FloatingLabelInput
           label="Pays"
@@ -281,6 +298,9 @@ export function PartenaireForm({
         <div className="mb-4 flex items-center gap-2 text-[11.5px] font-medium text-[var(--status-attente-fg)]"><TriangleAlert className="h-3.5 w-3.5 shrink-0" /> Une coordonnée additionnelle appartient déjà à une autre personne ou un autre partenaire.</div>
       ) : null}
 
+      </SectionFormulaire>
+
+      <SectionFormulaire titre="Présentation">
       <FloatingLabelInput
         label="Site web"
         placeholder="https://www.exemple.mg"
@@ -301,6 +321,9 @@ export function PartenaireForm({
         />
       </div>
 
+      </SectionFormulaire>
+
+      <SectionFormulaire titre="Paramètres">
       {peutGererVisibilite ? (
         <div className="mb-5 flex items-center justify-between rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 py-3">
           <div>
@@ -326,11 +349,13 @@ export function PartenaireForm({
         Partenaire stratégique
       </label>
 
-      <div className="mt-2 flex flex-wrap items-center gap-3">
+      </SectionFormulaire>
+
+      <div className="-mx-[18px] flex flex-wrap items-center justify-end gap-3 border-t border-[var(--color-border)] px-[18px] pt-5">
         <button
           type="submit"
           disabled={enCours || !isValid || Boolean(doublonIdentite) || Boolean(doublonEmail) || Boolean(doublonTelephone) || Boolean(doublonSupplementaire)}
-          className="flex items-center justify-center gap-2 self-start rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
+          className="flex items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
         >
           {enCours ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Enregistrer
