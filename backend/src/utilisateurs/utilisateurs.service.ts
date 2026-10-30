@@ -89,7 +89,11 @@ export class UtilisateursService {
     auteur: { id: string; email: string; role: string },
   ) {
     const email = dto.email.trim().toLocaleLowerCase('fr');
-    if (await this.utilisateurs.existsBy({ email })) {
+    const emailExiste = await this.utilisateurs
+      .createQueryBuilder('utilisateur')
+      .where('LOWER(utilisateur.email) = :email', { email })
+      .getExists();
+    if (emailExiste) {
       throw new ConflictException(
         'Un compte utilise déjà cette adresse e-mail.',
       );

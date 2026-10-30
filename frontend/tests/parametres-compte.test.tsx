@@ -34,7 +34,31 @@ vi.mock("@/features/comptes/api/useCompte", () => ({
 vi.mock("@/features/comptes/api/useUtilisateurs", () => ({
   useCreerUtilisateur: () => ({ isPending: false, mutate: creerUtilisateur }),
   useModifierAccesUtilisateur: () => ({ isPending: false, mutate: vi.fn() }),
-  useUtilisateurs: () => ({ data: [] }),
+  useUtilisateurs: () => ({
+    data: [
+      {
+        id: "compte-presidence",
+        email: "presidence@univ-fianarantsoa.mg",
+        role: "PRESIDENCE",
+        actif: true,
+        etablissement_id: null,
+      },
+      {
+        id: "compte-decideur",
+        email: "decideur@univ-fianarantsoa.mg",
+        role: "DECIDEUR",
+        actif: true,
+        etablissement_id: null,
+      },
+      {
+        id: "compte-etablissement",
+        email: "fds@univ-fianarantsoa.mg",
+        role: "ETABLISSEMENT",
+        actif: true,
+        etablissement_id: "etab-existant",
+      },
+    ],
+  }),
 }));
 
 vi.mock("@/features/etablissements/api/useEtablissement", () => ({
@@ -80,6 +104,17 @@ async function saisir(champ: HTMLInputElement, valeur: string) {
   await act(async () => {
     definirValeur.call(champ, valeur);
     champ.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+async function choisir(selecteur: HTMLSelectElement, valeur: string) {
+  const definirValeur = Object.getOwnPropertyDescriptor(
+    HTMLSelectElement.prototype,
+    "value",
+  )!.set!;
+  await act(async () => {
+    definirValeur.call(selecteur, valeur);
+    selecteur.dispatchEvent(new Event("change", { bubbles: true }));
   });
 }
 
@@ -134,5 +169,96 @@ describe("création d'un compte établissement", () => {
       role: "ETABLISSEMENT",
       etablissement_nom: "Nouvel établissement universitaire",
     });
+  });
+
+  it.each([
+    {
+      role: "PRESIDENCE",
+      email: "nouvelle.presidence@univ-fianarantsoa.mg",
+    },
+    {
+      role: "DECIDEUR",
+      email: "nouveau.decideur@univ-fianarantsoa.mg",
+    },
+  ])("permet de créer un compte $role sans établissement", async ({ role, email }) => {
+    await act(async () => racine.render(createElement(ParametresCompte)));
+
+    const boutonNouveauCompte = Array.from(
+      conteneur.querySelectorAll<HTMLButtonElement>("button"),
+    ).find((bouton) => bouton.textContent?.includes("Nouveau compte"))!;
+    await act(async () => boutonNouveauCompte.click());
+
+    const formulaire = conteneur.querySelector<HTMLFormElement>("form")!;
+    await choisir(
+      formulaire.querySelector<HTMLSelectElement>("select")!,
+      role,
+    );
+    expect(
+      formulaire.querySelector("#nouveau-compte-etablissement-nom"),
+    ).toBeNull();
+    await saisir(
+      formulaire.querySelector<HTMLInputElement>('input[type="email"]')!,
+      email,
+    );
+    await saisir(
+      formulaire.querySelector<HTMLInputElement>('input[type="password"]')!,
+      "MotDePasse1",
+    );
+
+    const boutonCreer = Array.from(
+      formulaire.querySelectorAll<HTMLButtonElement>("button"),
+    ).find((bouton) => bouton.textContent?.includes("Créer le compte"))!;
+    expect(boutonCreer.disabled).toBe(false);
+    await act(async () => boutonCreer.click());
+
+    expect(creerUtilisateur.mock.calls[0][0]).toEqual({
+      email,
+      mot_de_passe: "MotDePasse1",
+      role,
+    });
+  });
+
+  it("bloque les adresses déjà utilisées par tous les types de compte", async () => {
+    await act(async () => racine.render(createElement(ParametresCompte)));
+
+    const boutonNouveauCompte = Array.from(
+      conteneur.querySelectorAll<HTMLButtonElement>("button"),
+    ).find((bouton) => bouton.textContent?.includes("Nouveau compte"))!;
+    await act(async () => boutonNouveauCompte.click());
+
+    const formulaire = conteneur.querySelector<HTMLFormElement>("form")!;
+    const champEmail = formulaire.querySelector<HTMLInputElement>(
+      'input[type="email"]',
+    )!;
+    const selectRole = formulaire.querySelector<HTMLSelectElement>("select")!;
+    const boutonCreer = Array.from(
+      formulaire.querySelectorAll<HTMLButtonElement>("button"),
+    ).find((bouton) => bouton.textContent?.includes("Créer le compte"))!;
+    const comptesExistants = [
+      {
+        role: "PRESIDENCE",
+        email: "PRESIDENCE@UNIV-FIANARANTSOA.MG",
+        libelle: "Présidence",
+      },
+      {
+        role: "DECIDEUR",
+        email: "decideur@univ-fianarantsoa.mg",
+        libelle: "Décideur",
+      },
+      {
+        role: "ETABLISSEMENT",
+        email: "fds@univ-fianarantsoa.mg",
+        libelle: "Établissement",
+      },
+    ];
+
+    for (const compte of comptesExistants) {
+      await choisir(selectRole, compte.role);
+      await saisir(champEmail, compte.email);
+      expect(
+        formulaire.querySelector("#erreur-nouvel-email")?.textContent,
+      ).toContain(`compte ${compte.libelle}`);
+      expect(boutonCreer.disabled).toBe(true);
+    }
   });
 });
