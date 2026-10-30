@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { ChevronRight, Home } from 'lucide-react';
 import { useContext } from 'react';
 import { ContexteTitreBreadcrumb } from '@/contexts/TitreBreadcrumbContext';
 
@@ -91,7 +92,7 @@ export function Breadcrumbs() {
   return (
     <nav
       aria-label="Fil d'Ariane"
-      className="flex items-center gap-[7px] text-[13px] font-medium text-[var(--color-text-secondary)]"
+      className="flex min-w-0 items-center gap-2 text-[13px] font-medium text-[var(--color-text-secondary)]"
     >
       {segments.map((segment, index) => {
         const chemin = '/' + segments.slice(0, index + 1).join('/');
@@ -99,27 +100,36 @@ export function Breadcrumbs() {
         const estRacine = index === 0;
         const libelle = libelleSegment(segment, estDernier, estRacine, titreContexte);
         const estFiltreNonNavigable = estTypeArchiveDansUrl(segments, index);
+        // La racine (tableau de bord) est représentée par une icône maison
+        const estAccueil = estRacine && !estDernier;
 
         return (
-          <span key={chemin} className="flex items-center gap-[7px]">
+          <span key={chemin} className="flex min-w-0 items-center gap-2">
             {index > 0 && (
-              <span aria-hidden="true" className="opacity-55">
-                /
-              </span>
+              <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
             )}
             {estDernier ? (
-              <span className="font-semibold text-[var(--color-text-primary)]">
-                {libelle}
-              </span>
-            ) : estFiltreNonNavigable ? (
               <span
-                className="text-[var(--color-text-secondary)]"
-                aria-current="false"
+                aria-current="page"
+                className="truncate font-semibold text-[var(--color-text-primary)]"
               >
                 {libelle}
               </span>
+            ) : estAccueil ? (
+              <Link
+                to={chemin}
+                aria-label={libelle}
+                title={libelle}
+                className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-[var(--radius-sm)] hover:bg-[var(--color-chrome-hover)] hover:text-[var(--color-brand)]"
+              >
+                <Home className="h-4 w-4" />
+              </Link>
+            ) : estFiltreNonNavigable ? (
+              <span className="text-[var(--color-text-secondary)]" aria-current="false">
+                {libelle}
+              </span>
             ) : (
-              <Link to={chemin} className="hover:text-[var(--color-brand)]">
+              <Link to={chemin} className="truncate hover:text-[var(--color-brand)]">
                 {libelle}
               </Link>
             )}

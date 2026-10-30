@@ -1579,11 +1579,23 @@ select.vt-fld-input {
   align-items: center;
 }
 .vitrine .vt-crumb a {
-  color: var(--brand-deep);
+  color: var(--muted);
+  font-weight: 500;
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 .vitrine .vt-crumb a:hover {
-  text-decoration: underline;
+  color: var(--brand-deep);
+}
+.vitrine .vt-crumb .vt-crumb-accueil {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+.vitrine .vt-crumb .vt-crumb-accueil:hover {
+  background: var(--brand-tint);
 }
 .vitrine .vt-crumb span[aria-current="page"] {
   color: var(--text);
