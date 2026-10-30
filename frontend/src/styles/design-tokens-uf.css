@@ -60,7 +60,7 @@
   --color-chrome-border: #1C2724;
 
   --color-text-primary: #F3F6F5;
-  --color-text-secondary: #8A9994;
+  --color-text-secondary: #B3C1BC;
   --color-border: #1F2B28;
 
   --color-brand: #34D399;
@@ -88,6 +88,11 @@
 }
 
 /* ============ Mode sombre : cartes KPI, anneau et textes (mode sombre uniquement) ============ */
+
+/* Titre principal en blanc pur (mode sombre uniquement, la vitrine est exclue) */
+.dark h1:not(.vitrine *) {
+  color: #FFFFFF;
+}
 
 /* Listes déroulantes natives : options lisibles en mode sombre (couleurs uniquement) */
 .dark select {
