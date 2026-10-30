@@ -10,7 +10,7 @@ const etat = vi.hoisted(() => ({
   deconnecter: vi.fn(),
   utilisateur: {
     id: 'rakoto',
-    email: 'rakoto@univ-toliara.mg',
+    email: 'rakoto@univ-fianarantsoa.mg',
     role: 'PRESIDENCE',
     etablissement_id: null as string | null,
     etablissement_nom: null as string | null,
@@ -59,7 +59,7 @@ beforeEach(() => {
   etat.deconnecter.mockReset();
   Object.assign(etat.utilisateur, {
     id: 'rakoto',
-    email: 'rakoto@univ-toliara.mg',
+    email: 'rakoto@univ-fianarantsoa.mg',
     role: 'PRESIDENCE',
     etablissement_id: null,
     etablissement_nom: null,

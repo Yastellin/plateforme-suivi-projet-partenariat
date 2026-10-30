@@ -188,7 +188,7 @@ describe('ProjetsController', () => {
       await controller.update(
         {
           id: 'utilisateur-etablissement',
-          email: 'direction@univ-toliara.mg',
+          email: 'direction@univ-fianarantsoa.mg',
           role: Role.ETABLISSEMENT,
           etablissement_id: 'etab-1',
         },
@@ -203,7 +203,7 @@ describe('ProjetsController', () => {
         'etab-1',
         {
           id: 'utilisateur-etablissement',
-          email: 'direction@univ-toliara.mg',
+          email: 'direction@univ-fianarantsoa.mg',
           role: Role.ETABLISSEMENT,
         },
       );
@@ -213,7 +213,7 @@ describe('ProjetsController', () => {
   describe('demandes de modification', () => {
     const utilisateurEtablissement = {
       id: 'utilisateur-etablissement',
-      email: 'rakoto@univ-toliara.mg',
+      email: 'rakoto@univ-fianarantsoa.mg',
       role: Role.ETABLISSEMENT,
       etablissement_id: 'etab-1',
     };

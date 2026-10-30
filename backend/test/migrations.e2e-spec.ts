@@ -35,7 +35,7 @@ describe('Migrations avec données préexistantes', () => {
       ) VALUES (
         '20000000-0000-4000-8000-000000000001',
         'Université de Toliara', 'Université', 'Madagascar',
-        ' Contact@UNIV-TOLIARA.MG ', '034 12 345 67',
+        ' Contact@UNIV-FIANARANTSOA.MG ', '034 12 345 67',
         '10000000-0000-4000-8000-000000000001'
       )
     `);
@@ -45,7 +45,7 @@ describe('Migrations avec données préexistantes', () => {
       ) VALUES (
         '30000000-0000-4000-8000-000000000001',
         'Rakoto Soa', 'Responsable des partenariats',
-        'soa.rakoto@univ-toliara.mg', '00 261 32 12 345 67',
+        'soa.rakoto@univ-fianarantsoa.mg', '00 261 32 12 345 67',
         '20000000-0000-4000-8000-000000000001'
       )
     `);
@@ -73,7 +73,7 @@ describe('Migrations avec données préexistantes', () => {
       expect.arrayContaining([
         expect.objectContaining({
           type: 'EMAIL',
-          valeur_normalisee: 'contact@univ-toliara.mg',
+          valeur_normalisee: 'contact@univ-fianarantsoa.mg',
           partenaire_id: '20000000-0000-4000-8000-000000000001',
           contact_id: null,
         }),
@@ -100,7 +100,7 @@ describe('Migrations avec données préexistantes', () => {
           id, type, valeur, valeur_normalisee, contact_id
         ) VALUES (
           '40000000-0000-4000-8000-000000000001', 'EMAIL',
-          'CONTACT@univ-toliara.mg', 'contact@univ-toliara.mg',
+          'CONTACT@univ-fianarantsoa.mg', 'contact@univ-fianarantsoa.mg',
           '30000000-0000-4000-8000-000000000001'
         )
       `),

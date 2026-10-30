@@ -371,7 +371,7 @@ describe('Authentification (e2e)', () => {
         .set(...enteteBearer(utilisateurEtablissement))
         .expect(403);
 
-      const email = `decision-${Date.now()}@univ-toliara.mg`;
+      const email = `decision-${Date.now()}@univ-fianarantsoa.mg`;
       const cree = donnees<any>(
         (
           await request(ctx.app.getHttpServer())

@@ -278,7 +278,7 @@ export function ParametresCompte() {
         <Panel>
           <PanelHeader
             titre="Sécurité"
-            sousTitre="Choisissez un mot de passe unique d'au moins 8 caractères"
+            sousTitre="Entre 8 et 72 caractères, avec une majuscule, une minuscule et un chiffre."
           />
           <PanelBody>
             <FormulaireMotDePasse />
@@ -355,7 +355,7 @@ export function ParametresCompte() {
                         email: event.target.value,
                       })
                     }
-                    placeholder="partenariats@univ-toliara.mg"
+                    placeholder="partenariats@univ-fianarantsoa.mg"
                     className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-normal"
                   />
                   {nouveauCompte.email && !emailNouveauCompteValide ? (
