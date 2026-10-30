@@ -12,4 +12,16 @@ describe('CreateConventionDto', () => {
       'Le titre doit contenir au moins 3 caractères.',
     );
   });
+
+  it('renvoie des messages français si le titre est absent', () => {
+    const erreurTitre = validateSync(new CreateConventionDto()).find(
+      (erreur) => erreur.property === 'titre',
+    );
+    const messages = Object.values(erreurTitre?.constraints ?? {});
+
+    expect(messages).toContain('Le titre doit être du texte.');
+    expect(messages).toContain(
+      'Le titre doit contenir au moins 3 caractères.',
+    );
+  });
 });
