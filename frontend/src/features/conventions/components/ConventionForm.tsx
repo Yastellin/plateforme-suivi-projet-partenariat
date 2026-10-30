@@ -103,11 +103,23 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
   const dateDebut = watch("date_debut")
   const dateFin = watch("date_fin")
 
+  const partenariatId = watch("partenariat_id")
+  const projetId = watch("projet_id")
+  const cotutelleId = watch("cotutelle_id")
+
+useEffect(() => {
+  if (submitCount > 0) {
+    console.log("Revalidation de la règle des liens")
+    void trigger("partenariat_id")
+  }
+}, [partenariatId, projetId, cotutelleId, submitCount, trigger])
+
   useEffect(() => {
     if (dateDebut && dateFin) void trigger(["date_debut", "date_fin"])
   }, [dateDebut, dateFin, trigger])
 
   const onSubmit = (valeurs: ConventionFormValues) => {
+    console.log("FONCTION ONSUBMIT APPELÉE AVEC :", valeurs); 
     // Conversion explicite de la sentinelle "Aucun" en "" (puis null via
     // normaliserPayload) : le backend attend un UUID ou une valeur absente.
     const valeursEnvoyees: ConventionFormValues = {
@@ -206,7 +218,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
         className="flex flex-col gap-4"
         role="group"
         aria-label="Liens de la convention"
-        aria-describedby={submitCount > 0 && errors.root?.liens ? "erreur-liens-convention" : undefined}
+        aria-describedby={submitCount > 0 && errors.partenariat_id ? "erreur-liens-convention" : undefined}
       >
         <p className="text-sm text-muted-foreground">
           Associez cette convention à au moins un partenariat, un projet ou une cotutelle.
@@ -292,9 +304,9 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
             )}
           />
         </div>
-        {submitCount > 0 && errors.root?.liens?.message ? (
+        {submitCount > 0 && errors.partenariat_id?.message ? (
           <p id="erreur-liens-convention" role="alert" className="text-sm text-destructive">
-            {errors.root.liens.message}
+            {errors.partenariat_id.message}
           </p>
         ) : null}
       </div>
