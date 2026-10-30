@@ -155,7 +155,7 @@ export function ProjetsListePage() {
             {permissions.peutCreer ? (
               <Link
                 to={`${cheminBase}/projets/nouveau`}
-                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-chrome-border)] px-3.5 py-2 text-[13px] font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[var(--color-brand-deep)]"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Nouveau projet
