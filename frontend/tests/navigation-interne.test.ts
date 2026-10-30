@@ -30,4 +30,30 @@ describe("navigation interne", () => {
     expect(chemins).toContain("/etablissement/archives");
     expect(chemins).toContain("/etablissement/historique");
   });
+
+  it.each([
+    ["PRESIDENCE", "/presidence", "Partenaires", "Partenariats"],
+    ["DECIDEUR", "/decideur", "Partenaires", "Partenariats"],
+    ["ETABLISSEMENT", "/etablissement", "Mes partenaires", "Mes partenariats"],
+  ] as const)(
+    "expose partenaires et partenariats comme deux liens directs pour %s",
+    (role, base, libellePartenaire, libellePartenariat) => {
+      const items = construireNavigation(role, base).flatMap(
+        (groupe) => groupe.items,
+      );
+      const partenaires = items.find((item) => item.cle === "partenaires");
+      const partenariats = items.find((item) => item.cle === "partenariats");
+
+      expect(partenaires).toMatchObject({
+        libelle: libellePartenaire,
+        chemin: `${base}/partenaires-partenariats/partenaires`,
+      });
+      expect(partenariats).toMatchObject({
+        libelle: libellePartenariat,
+        chemin: `${base}/partenaires-partenariats/partenariats`,
+      });
+      expect(partenaires?.enfants).toBeUndefined();
+      expect(partenariats?.enfants).toBeUndefined();
+    },
+  );
 });

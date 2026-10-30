@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Library,
   Presentation,
+  Users,
   Mail,
   Search,
   Settings,
@@ -48,15 +49,8 @@ export function construireNavigation(role: RoleUtilisateur, base: string): Group
         items: [
           { cle: 'tableau-de-bord', libelle: 'Tableau de bord', icone: LayoutDashboard, chemin: base },
           { cle: 'etablissements', libelle: 'Établissements', icone: Building2, chemin: `${base}/etablissements` },
-          {
-            cle: 'partenaires-partenariats',
-            libelle: 'Partenaires & Partenariats',
-            icone: Handshake,
-            enfants: [
-              { libelle: 'Partenaires', chemin: `${base}/partenaires-partenariats/partenaires` },
-              { libelle: 'Partenariats', chemin: `${base}/partenaires-partenariats/partenariats` },
-            ],
-          },
+          { cle: 'partenaires', libelle: 'Partenaires', icone: Users, chemin: `${base}/partenaires-partenariats/partenaires` },
+          { cle: 'partenariats', libelle: 'Partenariats', icone: Handshake, chemin: `${base}/partenaires-partenariats/partenariats` },
           { cle: 'cotutelles', libelle: 'Cotutelles', icone: GraduationCap, chemin: `${base}/cotutelles` },
           { cle: 'projets', libelle: 'Projets', icone: Presentation, chemin: `${base}/projets` },
           { cle: 'conventions', libelle: 'Conventions', icone: FileCheck2, chemin: `${base}/conventions` },
@@ -88,15 +82,8 @@ export function construireNavigation(role: RoleUtilisateur, base: string): Group
         libelle: 'Pilotage',
         items: [
           { cle: 'tableau-de-bord', libelle: 'Tableau de bord', icone: LayoutDashboard, chemin: base },
-          {
-            cle: 'partenaires-partenariats',
-            libelle: 'Mes partenaires & partenariats',
-            icone: Handshake,
-            enfants: [
-              { libelle: 'Mes partenaires', chemin: `${base}/partenaires-partenariats/partenaires` },
-              { libelle: 'Mes partenariats', chemin: `${base}/partenaires-partenariats/partenariats` },
-            ],
-          },
+          { cle: 'partenaires', libelle: 'Mes partenaires', icone: Users, chemin: `${base}/partenaires-partenariats/partenaires` },
+          { cle: 'partenariats', libelle: 'Mes partenariats', icone: Handshake, chemin: `${base}/partenaires-partenariats/partenariats` },
           { cle: 'projets', libelle: 'Mes projets', icone: Presentation, chemin: `${base}/projets` },
           { cle: 'cotutelles', libelle: 'Cotutelles', icone: GraduationCap, chemin: `${base}/cotutelles` },
           { cle: 'archives', libelle: 'Archives', icone: Archive, chemin: `${base}/archives` },
@@ -121,15 +108,8 @@ export function construireNavigation(role: RoleUtilisateur, base: string): Group
       libelle: 'Pilotage',
       items: [
         { cle: 'tableau-de-bord', libelle: 'Tableau de bord', icone: LayoutDashboard, chemin: base },
-        {
-          cle: 'partenaires-partenariats',
-          libelle: 'Partenaires & Partenariats',
-          icone: Handshake,
-          enfants: [
-            { libelle: 'Partenaires', chemin: `${base}/partenaires-partenariats/partenaires` },
-            { libelle: 'Partenariats', chemin: `${base}/partenaires-partenariats/partenariats` },
-          ],
-        },
+        { cle: 'partenaires', libelle: 'Partenaires', icone: Users, chemin: `${base}/partenaires-partenariats/partenaires` },
+        { cle: 'partenariats', libelle: 'Partenariats', icone: Handshake, chemin: `${base}/partenaires-partenariats/partenariats` },
         { cle: 'cotutelles', libelle: 'Cotutelles', icone: GraduationCap, chemin: `${base}/cotutelles` },
         { cle: 'projets', libelle: 'Projets', icone: Presentation, chemin: `${base}/projets` },
         { cle: 'conventions', libelle: 'Conventions', icone: FileCheck2, chemin: `${base}/conventions` },
