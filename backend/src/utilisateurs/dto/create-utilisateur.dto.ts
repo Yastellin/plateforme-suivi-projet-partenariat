@@ -1,8 +1,10 @@
 import {
   IsEmail,
   IsEnum,
+  IsNotEmpty,
   IsString,
-  IsUUID,
+  Matches,
+  MaxLength,
   MinLength,
   ValidateIf,
 } from 'class-validator';
@@ -23,8 +25,14 @@ export class CreateUtilisateurDto {
   @IsEnum(Role)
   role: Role;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Nom du nouvel établissement pour un compte établissement',
+    maxLength: 255,
+  })
   @ValidateIf((dto: CreateUtilisateurDto) => dto.role === Role.ETABLISSEMENT)
-  @IsUUID()
-  etablissement_id?: string;
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  @Matches(/\S/, { message: 'Le nom de l’établissement est requis.' })
+  etablissement_nom?: string;
 }

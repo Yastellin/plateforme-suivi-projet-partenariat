@@ -244,7 +244,7 @@ export function PartenaireForm({
           <FloatingLabelInput
             label="Adresse e-mail"
             type="email"
-            placeholder="contact@exemple.mg"
+            placeholder="contact@univ-fianarantsoa.mg"
             erreur={errors.email?.message}
             {...register('email')}
           />
@@ -270,7 +270,7 @@ export function PartenaireForm({
         <div className="flex flex-col gap-2">
           {emailsSupplementaires.map((_, index) => (
             <div key={`email-${index}`} className="flex items-start gap-2">
-              <div className="flex-1"><FloatingLabelInput label={`Adresse e-mail ${index + 2}`} type="email" placeholder="autre.contact@exemple.mg" erreur={errors.emails?.[index]?.message} {...register(`emails.${index}`)} /></div>
+              <div className="flex-1"><FloatingLabelInput label={`Adresse e-mail ${index + 2}`} type="email" placeholder="autre.contact@univ-fianarantsoa.mg" erreur={errors.emails?.[index]?.message} {...register(`emails.${index}`)} /></div>
               <button type="button" className="mt-2 rounded p-2 text-[var(--color-text-secondary)] hover:text-destructive" aria-label={`Retirer l'adresse e-mail ${index + 2}`} onClick={() => setValue('emails', emailsSupplementaires.filter((__, position) => position !== index), { shouldDirty: true, shouldValidate: true })}><X className="h-4 w-4" /></button>
             </div>
           ))}

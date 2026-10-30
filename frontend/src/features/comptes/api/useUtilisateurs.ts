@@ -17,6 +17,14 @@ export interface AccesUtilisateurPayload {
   etablissement_id?: string | null;
 }
 
+export type CreerUtilisateurPayload = {
+  email: string;
+  mot_de_passe: string;
+} & (
+  | { role: "ETABLISSEMENT"; etablissement_nom: string }
+  | { role: Exclude<RoleUtilisateur, "ETABLISSEMENT"> }
+);
+
 export function useModifierAccesUtilisateur() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -40,12 +48,8 @@ export function useModifierAccesUtilisateur() {
 export function useCreerUtilisateur() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: {
-      email: string;
-      mot_de_passe: string;
-      role: RoleUtilisateur;
-      etablissement_id?: string;
-    }) => (await apiClient.post<Utilisateur>("/utilisateurs", payload)).data,
+    mutationFn: async (payload: CreerUtilisateurPayload) =>
+      (await apiClient.post<Utilisateur>("/utilisateurs", payload)).data,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["utilisateurs"] }),
   });

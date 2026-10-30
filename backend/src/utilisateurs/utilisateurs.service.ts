@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, QueryFailedError, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Utilisateur } from '../auth/entities/utilisateur.entity';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
@@ -20,6 +20,9 @@ import { UpdateMotDePasseDto } from './dto/update-mot-de-passe.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { CreateUtilisateurDto } from './dto/create-utilisateur.dto';
 import { UpdateAccesUtilisateurDto } from './dto/update-acces-utilisateur.dto';
+
+const ERREUR_ETABLISSEMENT_EXISTANT =
+  'Cet établissement est déjà enregistré. Utilisez son compte existant ou demandez à la Présidence de vérifier la fiche.';
 
 @Injectable()
 export class UtilisateursService {
@@ -81,30 +84,100 @@ export class UtilisateursService {
     return utilisateurs.map((utilisateur) => this.presenter(utilisateur));
   }
 
-  async creer(dto: CreateUtilisateurDto, auteur: { id: string; email: string; role: string }) {
+  async creer(
+    dto: CreateUtilisateurDto,
+    auteur: { id: string; email: string; role: string },
+  ) {
     const email = dto.email.trim().toLocaleLowerCase('fr');
     if (await this.utilisateurs.existsBy({ email })) {
-      throw new ConflictException('Un compte utilise déjà cette adresse e-mail.');
+      throw new ConflictException(
+        'Un compte utilise déjà cette adresse e-mail.',
+      );
     }
-    await this.validerEtablissement(dto.role, dto.etablissement_id);
-    const utilisateur = await this.utilisateurs.save(
-      this.utilisateurs.create({
-        email,
-        password_hash: await bcrypt.hash(dto.mot_de_passe, 10),
-        role: dto.role,
-        etablissement_id: dto.role === Role.ETABLISSEMENT ? dto.etablissement_id! : null,
-        actif: true,
-        preferences: {},
-      }),
-    );
+    const nomEtablissement = dto.etablissement_nom
+      ?.trim()
+      .replace(/\s+/gu, ' ');
+    if (dto.role === Role.ETABLISSEMENT && !nomEtablissement) {
+      throw new BadRequestException('Le nom de l’établissement est requis.');
+    }
+    if (dto.role === Role.ETABLISSEMENT) {
+      const nomExiste = await this.etablissements
+        .createQueryBuilder('etablissement')
+        .where(
+          `LOWER(BTRIM(REGEXP_REPLACE(etablissement.nom, '[[:space:]]+', ' ', 'g'))) = LOWER(BTRIM(REGEXP_REPLACE(:nom, '[[:space:]]+', ' ', 'g')))`,
+          { nom: nomEtablissement },
+        )
+        .getExists();
+      if (nomExiste) {
+        throw new ConflictException(ERREUR_ETABLISSEMENT_EXISTANT);
+      }
+    }
+    const passwordHash = await bcrypt.hash(dto.mot_de_passe, 10);
+
+    let resultat: {
+      utilisateur: Utilisateur;
+      etablissementCree: Etablissement | null;
+    };
+    try {
+      resultat = await this.utilisateurs.manager.transaction(
+        async (manager) => {
+          let etablissementCree: Etablissement | null = null;
+          if (dto.role === Role.ETABLISSEMENT) {
+            const depotEtablissement = manager.getRepository(Etablissement);
+            etablissementCree = await depotEtablissement.save(
+              depotEtablissement.create({ nom: nomEtablissement! }),
+            );
+          }
+
+          const depotUtilisateur = manager.getRepository(Utilisateur);
+          const utilisateur = await depotUtilisateur.save(
+            depotUtilisateur.create({
+              email,
+              password_hash: passwordHash,
+              role: dto.role,
+              etablissement_id: etablissementCree?.id ?? null,
+              actif: true,
+              preferences: {},
+            }),
+          );
+          return { utilisateur, etablissementCree };
+        },
+      );
+    } catch (erreur) {
+      const erreurBase =
+        erreur instanceof QueryFailedError
+          ? (erreur.driverError as {
+              code?: string;
+              constraint?: string;
+            })
+          : null;
+      if (
+        erreurBase?.code === '23505' &&
+        erreurBase.constraint === 'uq_etablissement_nom_normalise'
+      ) {
+        throw new ConflictException(ERREUR_ETABLISSEMENT_EXISTANT);
+      }
+      throw erreur;
+    }
+
+    if (resultat.etablissementCree) {
+      await this.historique.enregistrer({
+        action: ActionHistorique.CREATION,
+        entite_type: 'Etablissement',
+        entite_id: resultat.etablissementCree.id,
+        entite_nom: resultat.etablissementCree.nom,
+        utilisateur: auteur,
+        details: 'Création lors de la création d’un compte établissement',
+      });
+    }
     await this.historique.enregistrer({
       action: ActionHistorique.CREATION,
       entite_type: 'Utilisateur',
-      entite_id: utilisateur.id,
-      entite_nom: utilisateur.email,
+      entite_id: resultat.utilisateur.id,
+      entite_nom: resultat.utilisateur.email,
       utilisateur: auteur,
     });
-    return this.compte(utilisateur.id);
+    return this.compte(resultat.utilisateur.id);
   }
 
   async modifierAcces(
