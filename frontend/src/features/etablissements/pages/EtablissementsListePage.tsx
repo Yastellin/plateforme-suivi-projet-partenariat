@@ -4,14 +4,13 @@ import { useMemo, useState } from "react";
 import { Building2, FolderKanban, Handshake, Network } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/EmptyState";
-import { KpiCard } from "@/components/shared/KpiCard";
-import { KpiGrid } from "@/components/shared/KpiGrid";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Panel, PanelBody } from "@/components/shared/Panel";
 import { TablePagination } from "@/components/shared/TablePagination";
 import { TableToolbar } from "@/components/shared/TableToolbar";
 import { useEtablissements } from "@/features/etablissements/api/useEtablissements";
 import { useComparatifEtablissements } from "@/features/tableau-de-bord/api/useComparatifEtablissements";
+import { CarteIndicateur } from "@/features/tableau-de-bord/components/CarteIndicateur";
 import { CarteStatistiquesEtablissement } from "@/features/etablissements/components/CarteStatistiquesEtablissement";
 import {
   FiltreTypeStatistique,
@@ -44,11 +43,12 @@ export function EtablissementsListePage() {
   // Totaux de la plateforme (tous établissements confondus)
   const totaux = useMemo(() => {
     const liste = comparatif ?? [];
-    const somme = (cle: "projets" | "partenaires" | "partenariats") =>
+    const somme = (cle: "projets" | "projets_actifs" | "partenaires" | "partenariats") =>
       liste.reduce((acc, item) => acc + (item[cle] ?? 0), 0);
     return {
       etablissements: liste.length,
       projets: somme("projets"),
+      projetsActifs: somme("projets_actifs"),
       partenaires: somme("partenaires"),
       partenariats: somme("partenariats"),
       maxProjets: Math.max(1, ...liste.map((item) => item.projets ?? 0)),
@@ -69,12 +69,36 @@ export function EtablissementsListePage() {
         }
       />
 
-      <KpiGrid>
-        <KpiCard icone={Building2} libelle="Établissements" valeur={totaux.etablissements} />
-        <KpiCard icone={FolderKanban} libelle="Projets" valeur={totaux.projets} />
-        <KpiCard icone={Handshake} libelle="Partenaires" valeur={totaux.partenaires} />
-        <KpiCard icone={Network} libelle="Partenariats" valeur={totaux.partenariats} />
-      </KpiGrid>
+      <div className="mb-[22px] grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <CarteIndicateur
+          titre="Établissements"
+          valeur={totaux.etablissements}
+          icone={<Building2 className="h-[18px] w-[18px]" />}
+          theme="violet"
+          pied="Enregistrés sur la plateforme"
+        />
+        <CarteIndicateur
+          titre="Projets"
+          valeur={totaux.projets}
+          icone={<FolderKanban className="h-[18px] w-[18px]" />}
+          theme="blue"
+          pied={`${totaux.projetsActifs} en cours`}
+        />
+        <CarteIndicateur
+          titre="Partenaires"
+          valeur={totaux.partenaires}
+          icone={<Handshake className="h-[18px] w-[18px]" />}
+          theme="emerald"
+          pied="Soumis par les établissements"
+        />
+        <CarteIndicateur
+          titre="Partenariats"
+          valeur={totaux.partenariats}
+          icone={<Network className="h-[18px] w-[18px]" />}
+          theme="amber"
+          pied="Soumis par les établissements"
+        />
+      </div>
 
       <Panel>
         <TableToolbar
