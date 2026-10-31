@@ -139,8 +139,19 @@ export function Breadcrumbs() {
         aria-label="Fil d'Ariane"
         className="flex min-w-0 items-center gap-2 text-[14px] font-medium text-[var(--color-text-secondary)]"
       >
-        <span aria-current="page" className="truncate font-semibold text-[var(--color-text-primary)]">
-          Tableau de bord
+        <Link
+          to={prefixe}
+          aria-label="Tableau de bord"
+          title="Tableau de bord"
+          className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-[var(--radius-sm)] hover:bg-[var(--color-chrome-hover)] hover:text-[var(--color-brand)]"
+        >
+          <Home className="h-4 w-4" />
+        </Link>
+        <span className="flex min-w-0 items-center gap-2">
+          <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
+          <span aria-current="page" className="truncate font-semibold text-[var(--color-text-primary)]">
+            Tableau de bord
+          </span>
         </span>
       </nav>
     );
@@ -159,6 +170,9 @@ export function Breadcrumbs() {
   } else {
     etapes = etapesFilles(segments, 1, titreContexte);
   }
+
+  // Étape « Tableau de bord » systématique entre l'icône et le reste du fil
+  etapes = [{ libelle: 'Tableau de bord', chemin: prefixe, navigable: true }, ...etapes];
 
   const indexDernier = etapes.length - 1;
 
