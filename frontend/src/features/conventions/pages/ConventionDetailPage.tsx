@@ -158,6 +158,15 @@ export function ConventionDetailPage() {
               </p>
             </PanelBody>
           </Panel>
+
+          {permissions.estPresidence || permissions.estDecideur ? (
+            <Panel>
+              <PanelHeader titre="Documents associés" sousTitre="Fichiers liés à cette convention, téléchargeables depuis cette fiche" />
+              <PanelBody>
+                <ListeDocumentsEntite conventionId={convention.id} />
+              </PanelBody>
+            </Panel>
+          ) : null}
         </TabsContent>
 
         <TabsContent value="documents" className="mt-4 flex flex-col gap-4">

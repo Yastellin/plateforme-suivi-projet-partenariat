@@ -204,7 +204,7 @@ export function PartenariatDetailPage() {
         </Panel>
       )}
 
-      {role !== "ETABLISSEMENT" ? (
+      {role === "PRESIDENCE" || role === "DECIDEUR" ? (
         <Panel className="mt-4">
           <PanelHeader
             titre="Documents"
