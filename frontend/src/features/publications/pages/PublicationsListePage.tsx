@@ -1,6 +1,7 @@
 // src/features/publications/pages/PublicationsListePage.tsx
 
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { Newspaper, ExternalLink } from "lucide-react"
 
 import { DataTable, type Colonne } from "@/components/shared/DataTable"
@@ -20,7 +21,19 @@ const COLONNES: Colonne<Publication>[] = [
   {
     id: "titre",
     header: "Titre",
-    cell: (p) => <span className="font-medium text-[var(--color-text-primary)]">{p.titre}</span>,
+    cell: (p) => (
+      <Link
+        to={p.statut === "PUBLIEE"
+          ? `/projets-partenariats/publication/${p.id}`
+          : `/presidence/publications/${p.projet_id}`}
+        aria-label={p.statut === "PUBLIEE"
+          ? `Ouvrir le détail de la publication ${p.titre}`
+          : `Ouvrir l'éditeur de la publication ${p.titre}`}
+        className="font-medium text-[var(--color-brand)] hover:underline"
+      >
+        {p.titre}
+      </Link>
+    ),
     primaire: true,
   },
   {
