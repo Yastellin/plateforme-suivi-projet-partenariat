@@ -15,12 +15,10 @@ import { Panel, PanelHeader, PanelBody } from '@/components/shared/Panel';
 export function TableauDeBordPresidence() {
   const { data: compteurs, isLoading: chargementCompteurs } = useTableauDeBord();
 
-  const anneeCourante = new Date().getFullYear();
-
   return (
     <div>
       <PageHeader
-        titre={`Tableau de bord — Synthèse ${anneeCourante}`}
+        titre= "Tableau de bord"
         description="Vue consolidée des projets, partenariats et conventions sur l'ensemble des établissements."
         actions={
           <Link
