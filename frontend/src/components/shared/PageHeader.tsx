@@ -14,7 +14,7 @@ export function PageHeader({ titre, description, actions, badge }: PageHeaderPro
     <div className="mb-5 flex items-start justify-between gap-[22px]">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-3xl font-bold leading-tight tracking-tight text-[var(--color-text-primary)] dark:text-white" style={{ fontFamily: 'var(--font-heading)' }}>
+          <h1 className="text-3xl font-bold leading-tight tracking-tight text-[var(--color-text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>
             {titre}
           </h1>
           {badge ?? null}
