@@ -33,6 +33,13 @@ vi.mock('@/features/projets/api/useSoumettreEnMasseProjets', () => ({
   }),
 }));
 
+vi.mock('@/features/projets/api/useArchiverProjet', () => ({
+  useArchiverProjet: () => ({
+    isPending: false,
+    mutate: vi.fn(),
+  }),
+}));
+
 vi.mock('@/features/projets/api/useProjets', () => ({
   useProjets: () => ({
     isLoading: false,

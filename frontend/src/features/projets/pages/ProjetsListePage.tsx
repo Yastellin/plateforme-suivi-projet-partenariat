@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, FolderKanban, Pencil, Plus } from "lucide-react";
+import { Archive, Check, FolderKanban, Pencil, Plus } from "lucide-react";
 import { useProjets } from "../api/useProjets";
 import { useSoumettreEnMasseProjets } from "../api/useSoumettreEnMasseProjets";
+import { useArchiverProjet } from "../api/useArchiverProjet";
+import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Panel, PanelBody } from "@/components/shared/Panel";
 import { TableToolbar } from "@/components/shared/TableToolbar";
@@ -17,7 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formaterDate } from "@/lib/format";
 import { LIBELLES_STATUT_PROJET } from "@/lib/status-mappings";
-import type { StatutProjet } from "@/types/api";
+import type { Projet, StatutProjet } from "@/types/api";
 import { toast } from "sonner";
 import { ActionsSoumissionMasse } from "@/components/shared/ActionsSoumissionMasse";
 import { peutModifierProjet } from "@/features/projets/lib/permissions-projet";
@@ -62,6 +64,8 @@ export function ProjetsListePage() {
   });
 
   const soumettreEnMasse = useSoumettreEnMasseProjets();
+  const [aArchiver, setAArchiver] = useState<Projet | null>(null);
+  const archiver = useArchiverProjet();
 
   const role = utilisateur?.role;
   const cheminBase =
@@ -348,6 +352,7 @@ export function ProjetsListePage() {
                         </td>
                         {afficherActionsModification ? (
                           <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
+                            <div className="flex flex-wrap items-center gap-2">
                             {peutModifierProjet(projet, role) ? (
                               <Link
                                 to={`${cheminBase}/projets/${projet.id}/modifier`}
@@ -371,6 +376,18 @@ export function ProjetsListePage() {
                                 —
                               </span>
                             )}
+                            {permissions.peutArchiver ? (
+                              <button
+                                type="button"
+                                onClick={() => setAArchiver(projet)}
+                                aria-label={`Archiver ${projet.nom}`}
+                                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--status-expire-fg)] hover:text-[var(--status-expire-fg)]"
+                              >
+                                <Archive className="h-3 w-3" aria-hidden="true" />
+                                Archiver
+                              </button>
+                            ) : null}
+                            </div>
                           </td>
                         ) : null}
                         {modeSelection ? (
@@ -410,6 +427,27 @@ export function ProjetsListePage() {
           </PanelBody>
         )}
       </Panel>
+
+      {aArchiver ? (
+        <DestructiveConfirmDialog
+          ouvert
+          onFermer={() => setAArchiver(null)}
+          onConfirmer={() =>
+            archiver.mutate(aArchiver.id, {
+              onSuccess: () => {
+                toast.success("Projet archivé");
+                setAArchiver(null);
+              },
+              onError: (erreur: Error) => toast.error(erreur.message),
+            })
+          }
+          titre="Archiver ce projet ?"
+          description="Cette action retire le projet des listes actives. Il restera consultable dans les archives."
+          nomCible={aArchiver.nom}
+          libelleAction="Archiver"
+          enCours={archiver.isPending}
+        />
+      ) : null}
     </div>
   );
 }
