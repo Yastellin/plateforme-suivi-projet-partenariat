@@ -45,11 +45,11 @@ export function CarteIndicateur({ titre, valeur, icone, theme, lien, pied }: Car
         {icone}
       </span>
 
-      <h3 className="kpi-titre mt-4 text-sm font-medium text-slate-600">{titre}</h3>
+      <h3 className="kpi-titre mt-4 text-sm font-medium text-slate-500">{titre}</h3>
 
-      <p className="kpi-valeur mt-1 text-4xl font-bold leading-none tracking-tight text-slate-900">{valeur}</p>
+      <p className="kpi-valeur mt-1 text-3xl font-bold tabular-nums leading-none text-slate-900 dark:text-white">{valeur}</p>
 
-      <div className="mt-3 text-sm">
+      <div className="mt-3 text-xs font-medium">
         {lien ? (
           <Link to={lien.chemin} className={cn('font-medium hover:underline', couleurLien)}>
             {lien.libelle}
