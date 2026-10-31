@@ -105,19 +105,9 @@ export function EtablissementDetailPage() {
   return (
     <div className="mx-auto w-full max-w-6xl">
       {/* Bannière d'en-tête */}
-      <header className="relative overflow-hidden rounded-3xl bg-linear-to-br from-emerald-700 via-emerald-600 to-teal-500 px-6 pb-16 pt-9 text-white sm:px-10 dark:from-emerald-900 dark:via-emerald-800 dark:to-teal-800">
-        <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-28 right-28 h-64 w-64 rounded-full bg-teal-200/20 blur-3xl" />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[.07]"
-          style={{
-            backgroundImage:
-              "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
-        <div className="relative flex flex-wrap items-center gap-6">
-          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-white/15 text-3xl font-bold tracking-tight ring-1 ring-white/30 backdrop-blur sm:h-24 sm:w-24 sm:text-4xl">
+      <header className="hero rounded-3xl px-6 pb-16 pt-9 text-white sm:px-10">
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-white text-3xl font-bold tracking-tight text-emerald-700 shadow-lg shadow-black/20 sm:h-24 sm:w-24 sm:text-4xl">
             {etablissement.logo_url ? (
               <img
                 src={etablissement.logo_url}
@@ -133,12 +123,12 @@ export function EtablissementDetailPage() {
               <Building2 className="h-4 w-4" aria-hidden="true" />
               Établissement
             </p>
-            <h1 className="mt-2 text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
+            <h1 className="mt-2 text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl">
               {etablissement.nom}
             </h1>
             {etablissement.sigle ? (
               <div className="mt-4">
-                <span className="inline-block rounded-full bg-white px-3.5 py-1 text-xs font-bold tracking-wide text-emerald-800">
+                <span className="inline-block rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold tracking-wide text-white ring-1 ring-white/35">
                   {etablissement.sigle}
                 </span>
               </div>
