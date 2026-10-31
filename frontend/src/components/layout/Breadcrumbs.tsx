@@ -7,7 +7,6 @@ const LIBELLES_SEGMENTS: Record<string, string> = {
   presidence: 'Présidence',
   etablissement: 'Établissement',
   decideur: 'Décideur',
-  'partenaires-partenariats': 'Partenaires & Partenariats',
   partenaires: 'Partenaires',
   partenariats: 'Partenariats',
   cotutelles: 'Cotutelles',
@@ -95,6 +94,8 @@ export function Breadcrumbs() {
       className="flex min-w-0 items-center gap-2 text-[13px] font-medium text-[var(--color-text-secondary)]"
     >
       {segments.map((segment, index) => {
+        if (segment === 'partenaires-partenariats') return null;
+
         const chemin = '/' + segments.slice(0, index + 1).join('/');
         const estDernier = index === segments.length - 1;
         const estRacine = index === 0;
