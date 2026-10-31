@@ -225,13 +225,13 @@ export function PublicationsListePage() {
         </div>
 
         <div className="overflow-x-auto border-t border-black/5 dark:border-white/10">
-          <table className="w-full min-w-[48rem] text-left text-sm">
+          <table className="w-full min-w-[640px] border-collapse text-left text-[14px]">
             <thead className="bg-slate-50 dark:bg-white/5">
-              <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <th scope="col" className="px-4 py-3 font-semibold">Publication</th>
-                <th scope="col" className="px-4 py-3 font-semibold">Statut</th>
-                <th scope="col" className="px-4 py-3 font-semibold">Date de publication</th>
-                <th scope="col" className="px-4 py-3 text-right font-semibold">Actions</th>
+              <tr className="text-[12.5px] font-semibold text-slate-500 dark:text-slate-400">
+                <th scope="col" className="px-5 py-3 font-semibold">Publication</th>
+                <th scope="col" className="px-5 py-3 font-semibold">Statut</th>
+                <th scope="col" className="px-5 py-3 font-semibold">Date de publication</th>
+                <th scope="col" className="px-5 py-3 text-right font-semibold">Actions</th>
               </tr>
             </thead>
 
@@ -239,7 +239,7 @@ export function PublicationsListePage() {
               {listeQuery.isLoading ? (
                 [0, 1, 2, 3, 4].map((cle) => (
                   <tr key={cle}>
-                    <td colSpan={4} className="px-4 py-3">
+                    <td colSpan={4} className="px-5 py-4">
                       <div className="h-12 animate-pulse rounded-lg bg-black/5 dark:bg-white/10" />
                     </td>
                   </tr>
@@ -269,7 +269,7 @@ export function PublicationsListePage() {
 
                   return (
                     <tr key={publication.id} className="hover:bg-slate-50/70 dark:hover:bg-white/[.03]">
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="relative h-12 w-12 shrink-0">
                             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-emerald-100 to-slate-200 dark:from-emerald-400/15 dark:to-white/10">
@@ -313,7 +313,7 @@ export function PublicationsListePage() {
                         </div>
                       </td>
 
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                             estPubliee
@@ -329,7 +329,7 @@ export function PublicationsListePage() {
                         </span>
                       </td>
 
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4">
                         {date ? (
                           <span className="tabular-nums text-slate-700 dark:text-slate-300">{date}</span>
                         ) : (
@@ -337,7 +337,7 @@ export function PublicationsListePage() {
                         )}
                       </td>
 
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4">
                         <div className="flex flex-wrap justify-end gap-2">
                           {estPubliee ? (
                             <a
