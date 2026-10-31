@@ -337,9 +337,10 @@ export function PublicationsListePage() {
                                 title="Retirer de l'espace public"
                                 aria-label={`Retirer « ${publication.titre} » de l'espace public`}
                                 onClick={() => ouvrirAction(publication, "RETIRER")}
-                                className={`${classeIconeAction} hover:text-[var(--status-expire-fg)]`}
+                                className="inline-flex h-8 items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-2.5 text-xs font-semibold text-[var(--color-text-secondary)] hover:border-[var(--status-expire-fg)] hover:text-[var(--status-expire-fg)]"
                               >
-                                <EyeOff className="h-4 w-4" aria-hidden="true" />
+                                <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+                                Retirer
                               </button>
                             ) : null}
 
