@@ -104,43 +104,41 @@ export function EtablissementDetailPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl">
-      {/* Bannière d'en-tête */}
-      <header className="hero rounded-3xl px-6 pb-16 pt-9 text-white sm:px-10">
-        <div className="flex flex-wrap items-center gap-6">
-          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-white text-3xl font-bold tracking-tight text-emerald-700 shadow-lg shadow-black/20 sm:h-24 sm:w-24 sm:text-4xl">
-            {etablissement.logo_url ? (
-              <img
-                src={etablissement.logo_url}
-                alt=""
-                className="h-full w-full rounded-2xl object-contain p-2"
-              />
-            ) : (
-              initiales(etablissement.sigle || etablissement.nom)
-            )}
-          </div>
-          <div className="min-w-[16rem] flex-1">
-            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-emerald-100/90">
-              <Building2 className="h-4 w-4" aria-hidden="true" />
-              Établissement
-            </p>
-            <h1 className="mt-2 text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl">
-              {etablissement.nom}
-            </h1>
-            {etablissement.sigle ? (
-              <div className="mt-4">
-                <span className="inline-block rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold tracking-wide text-white ring-1 ring-white/35">
-                  {etablissement.sigle}
-                </span>
-              </div>
-            ) : null}
-          </div>
+      {/* En-tête : logo et identité, posé directement sur la page */}
+      <header className="mt-6 flex flex-wrap items-center gap-5">
+        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-black/5 bg-white shadow-sm sm:h-20 sm:w-20 dark:border-white/10 dark:bg-white/10">
+          {etablissement.logo_url ? (
+            <img
+              src={etablissement.logo_url}
+              alt=""
+              className="h-full w-full rounded-2xl object-contain p-2"
+            />
+          ) : (
+            <span className="text-xl font-bold tracking-tight text-emerald-700 sm:text-2xl dark:text-emerald-300">
+              {initiales(etablissement.sigle || etablissement.nom)}
+            </span>
+          )}
+        </div>
+        <div className="min-w-[16rem] flex-1">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-slate-500 dark:text-slate-400">
+            <Building2 className="h-4 w-4" aria-hidden="true" />
+            Établissement
+          </p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+            {etablissement.nom}
+          </h1>
+          {etablissement.sigle ? (
+            <span className="mt-2 inline-block rounded-md bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300">
+              {etablissement.sigle}
+            </span>
+          ) : null}
         </div>
       </header>
 
       {/* Indicateurs */}
       <section
         aria-label="Statistiques"
-        className="relative -mt-9 mx-3 grid grid-cols-2 gap-4 sm:mx-6 lg:grid-cols-4"
+        className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4"
       >
         {kpis.map((kpi) => {
           const Icone = kpi.icone;
