@@ -37,7 +37,7 @@ export function PanelHeader({ titre, sousTitre, action, className }: PanelHeader
       )}
     >
       <div className="min-w-0">
-        <h3 className="text-base font-semibold text-[var(--color-text-primary)] dark:text-white" style={{ fontFamily: 'var(--font-heading)' }}>
+        <h3 className="titre-panel text-base font-semibold text-[var(--color-text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>
           {titre}
         </h3>
         {sousTitre ? (
