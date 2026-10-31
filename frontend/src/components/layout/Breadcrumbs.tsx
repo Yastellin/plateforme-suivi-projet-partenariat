@@ -91,7 +91,7 @@ export function Breadcrumbs() {
   return (
     <nav
       aria-label="Fil d'Ariane"
-      className="flex min-w-0 items-center gap-2 text-[13px] font-medium text-[var(--color-text-secondary)]"
+      className="flex min-w-0 items-center gap-2 text-[14px] font-medium text-[var(--color-text-secondary)]"
     >
       {segments.map((segment, index) => {
         if (segment === 'partenaires-partenariats') return null;

@@ -9,6 +9,7 @@ import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-
 import { useAuth } from "@/hooks/useAuth"
 import type { RoleUtilisateur } from "@/types/api"
 import { SidebarInterne } from "@/components/layout/SidebarInterne"
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs"
 import { TopbarPublique } from "@/components/layout/TopbarPublique"
 import { BarreInfoPublique } from "@/components/layout/BarreInfoPublique"
 import { BoutonContactFlottant } from "@/components/layout/BoutonContactFlottant"
@@ -247,6 +248,9 @@ function LayoutInterne() {
             onOuvrirMenu={() => setMenuMobileOuvert(true)}
           />
           <main className="flex-1 overflow-y-auto p-[22px_28px_44px]">
+            <div className="mb-3">
+              <Breadcrumbs />
+            </div>
             <Outlet />
           </main>
         </div>

@@ -33,22 +33,21 @@ export function CarteIndicateur({ titre, valeur, icone, theme, lien, pied }: Car
   return (
     <article
       className={cn(
-        'rounded-2xl border bg-white p-6 transition-shadow duration-200 hover:shadow-md',
+        'rounded-2xl border bg-white p-5 transition-shadow duration-200 hover:shadow-md',
         classes.bordure,
         classes.carte,
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="kpi-titre text-sm font-medium text-slate-600">{titre}</h3>
-        <span
-          aria-hidden="true"
-          className={cn('grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl', classes.icone, classes.iconeSombre)}
-        >
-          {icone}
-        </span>
-      </div>
+      <span
+        aria-hidden="true"
+        className={cn('grid h-10 w-10 place-items-center rounded-xl', classes.icone, classes.iconeSombre)}
+      >
+        {icone}
+      </span>
 
-      <p className="kpi-valeur mt-4 text-5xl font-bold leading-none tracking-tight text-slate-900">{valeur}</p>
+      <h3 className="kpi-titre mt-4 text-sm font-medium text-slate-600">{titre}</h3>
+
+      <p className="kpi-valeur mt-1 text-4xl font-bold leading-none tracking-tight text-slate-900">{valeur}</p>
 
       <div className="mt-3 text-sm">
         {lien ? (
