@@ -93,7 +93,7 @@ export function MessagesContactPage() {
         description="Messages envoyés depuis le formulaire public de la vitrine."
       />
 
-      <section className="grid h-[calc(100vh-220px)] min-h-[560px] overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)] lg:grid-cols-[360px_1fr]">
+      <section className="grid h-[calc(100dvh-220px)] min-h-[560px] overflow-hidden rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-sm)] lg:grid-cols-[360px_1fr]">
         {/* ---------- Liste ---------- */}
         <div className="flex min-h-0 flex-col border-r border-[var(--color-border)]">
           <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] px-4 py-3">

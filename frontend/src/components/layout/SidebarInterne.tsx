@@ -122,7 +122,7 @@ export function SidebarInterne() {
       animate={{ width: reduit ? LargeurReduite : LargeurDeploye }}
       transition={{ duration: 0.18, ease: 'easeInOut' }}
       style={{ fontFamily: POLICE_SIDEBAR }}
-      className="relative flex h-screen flex-shrink-0 flex-col overflow-visible bg-[#111827] text-[#9ca3af]"
+      className="relative flex h-full flex-shrink-0 flex-col overflow-visible bg-[#111827] text-[#9ca3af]"
     >
       <button
         type="button"
