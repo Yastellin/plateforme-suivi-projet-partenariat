@@ -24,7 +24,7 @@ import { useEtablissement } from '@/features/etablissements/api/useEtablissement
 const CLE_REPLI = 'uf_sidebar_reduit';
 
 // Palette sombre de la barre latérale (cahier des charges « Apex Dashboard »)
-const POLICE_SIDEBAR = "'Outfit', system-ui, sans-serif";
+const POLICE_SIDEBAR = "'Inter Variable', Inter, system-ui, sans-serif";
 const LargeurDeploye = 256;
 const LargeurReduite = 72;
 

@@ -25,7 +25,7 @@
   --color-input: var(--color-border);
   --color-ring: var(--color-brand);
 
-  --font-sans: 'Outfit', sans-serif;
+  --font-sans: "Inter Variable", Inter, system-ui, sans-serif;
   --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
 
@@ -44,14 +44,14 @@
     color: var(--color-text-primary);
     font-family: var(--font-body);
     font-size: var(--fs-base);
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
 
   h1 {
     font-family: var(--font-heading);
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.025em;
   }
 
@@ -59,8 +59,8 @@
   h3,
   h4 {
     font-family: var(--font-heading);
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 }
 

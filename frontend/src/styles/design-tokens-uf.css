@@ -1,8 +1,8 @@
 /* src/styles/design-tokens-uf.css */
 
 :root {
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Outfit', sans-serif;
+  --font-heading: 'Inter Variable', Inter, system-ui, sans-serif;
+  --font-body: 'Inter Variable', Inter, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   --fs-base: 14px;
@@ -115,7 +115,7 @@
 .dark .kpi-icone-amber   { background: #3D3217; color: #FBBF24; }
 
 .dark .kpi-titre  { color: #C9D6D1; }
-.dark .kpi-valeur { color: #F3F6F5; }
+.dark .kpi-valeur { color: #FFFFFF; }
 .dark .kpi-pied   { color: #8A9994; }
 
 .dark .texte-fort-sombre  { color: #F3F6F5; }

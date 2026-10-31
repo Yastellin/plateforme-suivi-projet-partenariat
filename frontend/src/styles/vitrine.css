@@ -32,7 +32,7 @@
   --warn: #fbf0d6;
   --warn-text: #6b4b00;
   --err: #b3261e;
-  --font-body: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter Variable", Inter, "Segoe UI", system-ui, sans-serif;
   --font-title: var(--font-body);
   --font-mono: var(--font-body);
   --r: 12px;
