@@ -28,6 +28,7 @@ import {
   LIBELLES_STATUT_PARTENARIAT,
 } from "@/lib/status-mappings";
 import type { Partenariat } from "@/types/api";
+import { LienDocumentsEntite } from "@/features/documents/components/LienDocumentsEntite";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -101,6 +102,7 @@ export function PartenariatsListePage() {
         ? "/etablissement"
         : "/decideur";
   const cheminCreation = `${cheminBase}/partenaires-partenariats/partenariats/nouveau`;
+  const peutConsulterDocuments = permissions.estPresidence || permissions.estDecideur;
   // Même règle que la fiche détail : Présidence, ou brouillon créé par l'établissement
   const peutModifierLigne = (partenariat: Partenariat) =>
     permissions.estPresidence ||
@@ -404,7 +406,15 @@ export function PartenariatsListePage() {
                           <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
                         </td>
                         <td className="whitespace-nowrap px-5 py-4 text-right">
-                          <div className="inline-flex items-center gap-1">
+                          <div className="inline-flex flex-wrap items-center justify-end gap-2">
+                            {peutConsulterDocuments ? (
+                              <LienDocumentsEntite
+                                entite="partenariat"
+                                id={partenariat.id}
+                                nom={partenariat.intitule}
+                                cheminBase={cheminBase}
+                              />
+                            ) : null}
                             {peutModifierLigne(partenariat) ? (
                               <Link
                                 to={`${cheminBase}/partenaires-partenariats/partenariats/${partenariat.id}`}

@@ -5,7 +5,6 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 import {
   Archive,
-  ExternalLink,
   Send,
   Pencil,
   Newspaper,
@@ -30,6 +29,7 @@ import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 import { peutModifierProjet } from "@/features/projets/lib/permissions-projet"
 import { peutDemanderModificationProjet } from "@/features/projets/lib/demande-modification-projet"
 import { BoutonDemanderModificationProjet } from "@/features/projets/components/BoutonDemanderModificationProjet"
+import { ListeDocumentsEntite } from "@/features/documents/components/ListeDocumentsEntite"
 
 export function ProjetDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -192,7 +192,7 @@ export function ProjetDetailPage() {
           <Panel>
             <PanelHeader
               titre="Documents"
-              sousTitre="Fichiers liés au projet"
+              sousTitre="Fichiers liés au projet, téléchargeables depuis cette fiche"
             />
             <PanelBody>
               {permissions.estEtablissement ? (
@@ -200,13 +200,7 @@ export function ProjetDetailPage() {
                   Les documents officiels sont gérés par la Présidence.
                 </p>
               ) : (
-                <Link
-                  to={`${cheminBase}/documents?projet=${projet.id}`}
-                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Voir les documents
-                </Link>
+                <ListeDocumentsEntite projetId={projet.id} />
               )}
             </PanelBody>
           </Panel>

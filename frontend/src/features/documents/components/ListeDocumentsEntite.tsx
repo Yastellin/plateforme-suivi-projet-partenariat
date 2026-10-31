@@ -47,8 +47,8 @@ export function ListeDocumentsEntite({
     return <p className="text-sm text-muted-foreground">Chargement...</p>;
   }
 
-  // Les documents sont reserves a la Presidence (contrat API) : les autres
-  // roles voient l'explication du refus plutot qu'une liste vide trompeuse.
+  // Le contrat API reste la source d'autorisation ; une réponse refusée est
+  // affichée explicitement plutôt que présentée comme une liste vide.
   if (isError) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -121,8 +121,14 @@ function LigneDocument({
         ) : (
           <Badge variant="secondary">Courante</Badge>
         )}
-        <Button variant="ghost" size="icon" onClick={onTelecharger}>
-          <Download size={16} />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onTelecharger}
+          aria-label={`Télécharger ${document.nom_fichier}`}
+          title={`Télécharger ${document.nom_fichier}`}
+        >
+          <Download size={16} aria-hidden="true" />
         </Button>
       </div>
     </div>
