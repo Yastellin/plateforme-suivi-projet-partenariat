@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Handshake } from "lucide-react";
+import { Archive, Handshake, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { usePartenaires } from "../api/usePartenaires";
 import { useSoumettreEnMassePartenaires } from "../api/useSoumettreEnMassePartenaires";
+import { useArchiverPartenaire } from "../api/useArchiverPartenaire";
+import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog";
+import type { Partenaire } from "@/types/api";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Panel, PanelBody } from "@/components/shared/Panel";
 import { TableToolbar } from "@/components/shared/TableToolbar";
@@ -28,6 +31,8 @@ export function PartenairesListePage() {
   const [recherche, setRecherche] = useState("");
   const [modeSelection, setModeSelection] = useState(false);
   const [selection, setSelection] = useState<Set<string>>(new Set());
+  const [aArchiver, setAArchiver] = useState<Partenaire | null>(null);
+  const archiver = useArchiverPartenaire();
   const soumission = useSoumettreEnMassePartenaires();
   const { data, isLoading } = usePartenaires({
     page,
@@ -43,6 +48,12 @@ export function PartenairesListePage() {
         ? "/etablissement"
         : "/decideur";
   const partenaires = filtrerListeGenerale(data?.data ?? [], role);
+  // Même règle que la fiche détail : Présidence, ou partenaire non soumis créé par l'établissement
+  const peutModifierLigne = (partenaire: Partenaire) =>
+    permissions.estPresidence ||
+    (permissions.estEtablissement &&
+      partenaire.cree_par_role === "ETABLISSEMENT" &&
+      !partenaire.soumis_le);
   const soumissibles = partenaires.filter(
     (partenaire) =>
       partenaire.cree_par_role === "ETABLISSEMENT" &&
@@ -189,6 +200,12 @@ export function PartenairesListePage() {
                         {entete}
                       </th>
                     ))}
+                    <th
+                      scope="col"
+                      className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-right text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,6 +271,31 @@ export function PartenairesListePage() {
                           }
                         />
                       </td>
+                      <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] text-right">
+                        <div className="inline-flex items-center gap-1">
+                          {peutModifierLigne(partenaire) ? (
+                            <Link
+                              to={`${cheminBase}/partenaires-partenariats/partenaires/${partenaire.id}`}
+                              aria-label={`Modifier ${partenaire.nom}`}
+                              title="Modifier"
+                              className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] hover:bg-[var(--color-page-bg)] hover:text-[var(--color-brand)]"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          ) : null}
+                          {permissions.peutArchiver ? (
+                            <button
+                              type="button"
+                              aria-label={`Archiver ${partenaire.nom}`}
+                              title="Archiver"
+                              onClick={() => setAArchiver(partenaire)}
+                              className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] hover:bg-[var(--color-page-bg)] hover:text-[var(--status-expire-fg)]"
+                            >
+                              <Archive className="h-4 w-4" />
+                            </button>
+                          ) : null}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -265,6 +307,27 @@ export function PartenairesListePage() {
           </PanelBody>
         )}
       </Panel>
+
+      {aArchiver ? (
+        <DestructiveConfirmDialog
+          ouvert
+          onFermer={() => setAArchiver(null)}
+          onConfirmer={() =>
+            archiver.mutate(aArchiver.id, {
+              onSuccess: () => {
+                toast.success("Partenaire archivé");
+                setAArchiver(null);
+              },
+              onError: (erreur: Error) => toast.error(erreur.message),
+            })
+          }
+          titre="Archiver ce partenaire ?"
+          description="Cette action retire le partenaire des listes actives. Il restera consultable dans les archives."
+          nomCible={aArchiver.nom}
+          libelleAction="Archiver"
+          enCours={archiver.isPending}
+        />
+      ) : null}
     </div>
   );
 }

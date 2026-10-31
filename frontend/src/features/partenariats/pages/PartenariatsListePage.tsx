@@ -2,9 +2,11 @@
 
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpDown, Handshake, Plus, RotateCcw } from "lucide-react";
+import { Archive, ArrowUpDown, Handshake, Pencil, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { usePartenariats } from "../api/usePartenariats";
+import { useArchiverPartenariat } from "../api/useArchiverPartenariat";
+import { DestructiveConfirmDialog } from "@/components/shared/DestructiveConfirmDialog";
 import { useSoumettreEnMassePartenariats } from "../api/useSoumettreEnMassePartenariats";
 import { useEtablissements } from "@/features/etablissements/api/useEtablissements";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -75,6 +77,8 @@ export function PartenariatsListePage() {
   const [etablissementId, setEtablissementId] = useState("");
   const [modeSelection, setModeSelection] = useState(false);
   const [selection, setSelection] = useState<Set<string>>(new Set());
+  const [aArchiver, setAArchiver] = useState<Partenariat | null>(null);
+  const archiver = useArchiverPartenariat();
   const soumission = useSoumettreEnMassePartenariats();
   const { data, isLoading } = usePartenariats({
     page,
@@ -97,6 +101,12 @@ export function PartenariatsListePage() {
         ? "/etablissement"
         : "/decideur";
   const cheminCreation = `${cheminBase}/partenaires-partenariats/partenariats/nouveau`;
+  // Même règle que la fiche détail : Présidence, ou brouillon créé par l'établissement
+  const peutModifierLigne = (partenariat: Partenariat) =>
+    permissions.estPresidence ||
+    (role === "ETABLISSEMENT" &&
+      partenariat.cree_par_role === "ETABLISSEMENT" &&
+      partenariat.statut === "BROUILLON");
   const partenariats = filtrerListeGenerale(data?.data ?? [], role);
   const soumissibles = partenariats.filter(
     (item) =>
@@ -287,6 +297,9 @@ export function PartenariatsListePage() {
                     <Th>Établissements</Th>
                     <Th>Transmission</Th>
                     <Th>Statut</Th>
+                    <th scope="col" className="whitespace-nowrap px-5 py-3 text-right font-semibold">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
@@ -390,6 +403,31 @@ export function PartenariatsListePage() {
                         <td className="px-5 py-4">
                           <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
                         </td>
+                        <td className="whitespace-nowrap px-5 py-4 text-right">
+                          <div className="inline-flex items-center gap-1">
+                            {peutModifierLigne(partenariat) ? (
+                              <Link
+                                to={`${cheminBase}/partenaires-partenariats/partenariats/${partenariat.id}`}
+                                aria-label={`Modifier ${partenariat.intitule}`}
+                                title="Modifier"
+                                className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] hover:bg-[var(--color-page-bg)] hover:text-[var(--color-brand)]"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Link>
+                            ) : null}
+                            {permissions.estPresidence ? (
+                              <button
+                                type="button"
+                                aria-label={`Archiver ${partenariat.intitule}`}
+                                title="Archiver"
+                                onClick={() => setAArchiver(partenariat)}
+                                className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] hover:bg-[var(--color-page-bg)] hover:text-[var(--status-expire-fg)]"
+                              >
+                                <Archive className="h-4 w-4" />
+                              </button>
+                            ) : null}
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
@@ -402,6 +440,27 @@ export function PartenariatsListePage() {
           </PanelBody>
         )}
       </Panel>
+
+      {aArchiver ? (
+        <DestructiveConfirmDialog
+          ouvert
+          onFermer={() => setAArchiver(null)}
+          onConfirmer={() =>
+            archiver.mutate(aArchiver.id, {
+              onSuccess: () => {
+                toast.success("Partenariat archivé");
+                setAArchiver(null);
+              },
+              onError: (erreur: Error) => toast.error(erreur.message),
+            })
+          }
+          titre="Archiver ce partenariat ?"
+          description="Cette action retire le partenariat des listes actives. Il restera consultable dans les archives."
+          nomCible={aArchiver.intitule}
+          libelleAction="Archiver"
+          enCours={archiver.isPending}
+        />
+      ) : null}
     </div>
   );
 }
