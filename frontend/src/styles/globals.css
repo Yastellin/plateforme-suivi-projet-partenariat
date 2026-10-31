@@ -4,6 +4,9 @@
 @import "tw-animate-css";
 @import "./design-tokens-uf.css";
 
+/* Mode sombre piloté par la classe .dark (bouton de thème), et non par les préférences du système */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: var(--color-page-bg);
   --color-foreground: var(--color-text-primary);
