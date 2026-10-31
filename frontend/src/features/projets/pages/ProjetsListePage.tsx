@@ -26,7 +26,6 @@ import { peutModifierProjet } from "@/features/projets/lib/permissions-projet";
 import { peutDemanderModificationProjet } from "@/features/projets/lib/demande-modification-projet";
 import { BoutonDemanderModificationProjet } from "@/features/projets/components/BoutonDemanderModificationProjet";
 import { filtrerListeGenerale } from "@/lib/perimetre-liste";
-import { LienDocumentsEntite } from "@/features/documents/components/LienDocumentsEntite";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -76,8 +75,6 @@ export function ProjetsListePage() {
         ? "/etablissement"
         : "/decideur";
   const afficherActionsModification = permissions.peutModifier;
-  const peutConsulterDocuments = permissions.estPresidence || permissions.estDecideur;
-  const afficherActionsLigne = afficherActionsModification || peutConsulterDocuments;
 
   const projets = filtrerListeGenerale(data?.data ?? [], role).filter(
     (projet) => {
@@ -270,7 +267,7 @@ export function ProjetsListePage() {
                     >
                       Statut
                     </th>
-                    {afficherActionsLigne ? (
+                    {afficherActionsModification ? (
                       <th
                         scope="col"
                         className="whitespace-nowrap border-b border-[var(--color-border)] bg-[var(--color-page-bg)] px-[18px] py-[11px] text-left text-[11.5px] font-bold uppercase tracking-[.04em] text-[var(--color-text-secondary)]"
@@ -353,17 +350,9 @@ export function ProjetsListePage() {
                             tonalite={info.tonalite}
                           />
                         </td>
-                        {afficherActionsLigne ? (
+                        {afficherActionsModification ? (
                           <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
                             <div className="flex flex-wrap items-center gap-2">
-                            {peutConsulterDocuments ? (
-                              <LienDocumentsEntite
-                                entite="projet"
-                                id={projet.id}
-                                nom={projet.nom}
-                                cheminBase={cheminBase}
-                              />
-                            ) : null}
                             {peutModifierProjet(projet, role) ? (
                               <Link
                                 to={`${cheminBase}/projets/${projet.id}/modifier`}
@@ -379,7 +368,7 @@ export function ProjetsListePage() {
                                 projetNom={projet.nom}
                                 compact
                               />
-                            ) : peutConsulterDocuments ? null : (
+                            ) : (
                               <span
                                 className="text-[var(--color-text-secondary)]"
                                 aria-label="Modification non autorisée"

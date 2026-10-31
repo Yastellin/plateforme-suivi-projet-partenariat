@@ -28,7 +28,6 @@ import {
   LIBELLES_STATUT_PARTENARIAT,
 } from "@/lib/status-mappings";
 import type { Partenariat } from "@/types/api";
-import { LienDocumentsEntite } from "@/features/documents/components/LienDocumentsEntite";
 
 const LIMITE_PAR_PAGE = 20;
 
@@ -102,7 +101,6 @@ export function PartenariatsListePage() {
         ? "/etablissement"
         : "/decideur";
   const cheminCreation = `${cheminBase}/partenaires-partenariats/partenariats/nouveau`;
-  const peutConsulterDocuments = permissions.estPresidence || permissions.estDecideur;
   // Même règle que la fiche détail : Présidence, ou brouillon créé par l'établissement
   const peutModifierLigne = (partenariat: Partenariat) =>
     permissions.estPresidence ||
@@ -299,9 +297,11 @@ export function PartenariatsListePage() {
                     <Th>Établissements</Th>
                     <Th>Transmission</Th>
                     <Th>Statut</Th>
-                    <th scope="col" className="whitespace-nowrap px-5 py-3 text-right font-semibold">
-                      Actions
-                    </th>
+                    {permissions.peutModifier ? (
+                      <th scope="col" className="whitespace-nowrap px-5 py-3 text-right font-semibold">
+                        Actions
+                      </th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
@@ -405,16 +405,9 @@ export function PartenariatsListePage() {
                         <td className="px-5 py-4">
                           <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
                         </td>
-                        <td className="whitespace-nowrap px-5 py-4 text-right">
-                          <div className="inline-flex flex-wrap items-center justify-end gap-2">
-                            {peutConsulterDocuments ? (
-                              <LienDocumentsEntite
-                                entite="partenariat"
-                                id={partenariat.id}
-                                nom={partenariat.intitule}
-                                cheminBase={cheminBase}
-                              />
-                            ) : null}
+                        {permissions.peutModifier ? (
+                          <td className="whitespace-nowrap px-5 py-4 text-right">
+                            <div className="inline-flex items-center gap-1">
                             {peutModifierLigne(partenariat) ? (
                               <Link
                                 to={`${cheminBase}/partenaires-partenariats/partenariats/${partenariat.id}`}
@@ -436,8 +429,9 @@ export function PartenariatsListePage() {
                                 <Archive className="h-4 w-4" />
                               </button>
                             ) : null}
-                          </div>
-                        </td>
+                            </div>
+                          </td>
+                        ) : null}
                       </tr>
                     );
                   })}

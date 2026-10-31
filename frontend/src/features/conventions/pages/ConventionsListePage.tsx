@@ -21,7 +21,6 @@ import { useAuth } from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
 import { LIBELLES_STATUT_CONVENTION } from "@/lib/status-mappings"
 import { formaterDate } from "@/lib/format"
-import { LienDocumentsEntite } from "@/features/documents/components/LienDocumentsEntite"
 
 const LIMITE_PAR_PAGE = 20
 
@@ -49,7 +48,6 @@ export function ConventionsListePage() {
 
   const role = utilisateur?.role
   const cheminBase = role === 'PRESIDENCE' ? '/presidence' : role === 'ETABLISSEMENT' ? '/etablissement' : '/decideur'
-  const peutConsulterDocuments = permissions.estPresidence || permissions.estDecideur
 
   const filtres = useMemo(
     () => ({
@@ -62,6 +60,14 @@ export function ConventionsListePage() {
   )
 
   const { data, isLoading } = useConventions(filtres)
+  const afficherColonneActions = permissions.peutModifier || permissions.peutArchiver
+  const entetesColonnes = [
+    'Titre',
+    'Référence',
+    'Date de signature',
+    'Statut',
+    ...(afficherColonneActions ? ['Actions'] : []),
+  ]
 
   return (
     <div>
@@ -136,7 +142,7 @@ export function ConventionsListePage() {
               <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr>
-                    {['Titre', 'Référence', 'Date de signature', 'Statut', 'Actions'].map((entete) => (
+                    {entetesColonnes.map((entete) => (
                       <th
                         key={entete}
                         scope="col"
@@ -170,16 +176,9 @@ export function ConventionsListePage() {
                         <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px]">
                           <StatusBadge libelle={info.libelle} tonalite={info.tonalite} />
                         </td>
-                        <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] text-right">
-                          <div className="inline-flex flex-wrap items-center justify-end gap-2">
-                            {peutConsulterDocuments ? (
-                              <LienDocumentsEntite
-                                entite="convention"
-                                id={convention.id}
-                                nom={convention.titre}
-                                cheminBase={cheminBase}
-                              />
-                            ) : null}
+                        {afficherColonneActions ? (
+                          <td className="whitespace-nowrap border-b border-[var(--color-border)] px-[18px] py-[13px] text-right">
+                            <div className="inline-flex items-center gap-1">
                             {permissions.peutModifier ? (
                               <Link
                                 to={`${cheminBase}/conventions/${convention.id}/modifier`}
@@ -201,8 +200,9 @@ export function ConventionsListePage() {
                                 <Archive className="h-4 w-4" />
                               </button>
                             ) : null}
-                          </div>
-                        </td>
+                            </div>
+                          </td>
+                        ) : null}
                       </tr>
                     )
                   })}

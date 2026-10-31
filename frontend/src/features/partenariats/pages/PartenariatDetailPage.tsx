@@ -25,6 +25,7 @@ import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext";
 import { useActionWorkflow } from "@/features/soumissions/api/useActionWorkflow";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ListeDocumentsEntite } from "@/features/documents/components/ListeDocumentsEntite";
+import { DocumentDropzone } from "@/features/documents/components/DocumentDropzone";
 
 export function PartenariatDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -212,6 +213,14 @@ export function PartenariatDetailPage() {
           />
           <PanelBody>
             <ListeDocumentsEntite partenariatId={partenariat.id} />
+            {estPresidence ? (
+              <div className="mt-5 border-t border-[var(--color-border)] pt-5">
+                <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">
+                  Ajouter des documents
+                </h3>
+                <DocumentDropzone partenariatId={partenariat.id} />
+              </div>
+            ) : null}
           </PanelBody>
         </Panel>
       ) : null}
