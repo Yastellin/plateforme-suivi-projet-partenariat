@@ -12,6 +12,8 @@ interface LogoUploaderProps {
   nom: string;
   queryKeys?: readonly (readonly unknown[])[];
   lectureSeule?: boolean;
+  /** "compte" : présentation de la page Paramètres du compte (même logique). */
+  variante?: "standard" | "compte";
 }
 
 interface ReponseTeleversementLogo {
@@ -25,7 +27,9 @@ export function LogoUploader({
   nom,
   queryKeys = [],
   lectureSeule = false,
+  variante = "standard",
 }: LogoUploaderProps) {
+  const versionCompte = variante === "compte";
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [apercu, setApercu] = useState<string | null>(null);
@@ -118,6 +122,71 @@ export function LogoUploader({
     ? logoTeleverse?.url
     : logoUrl;
   const source = apercu ?? logoConfirme;
+  if (versionCompte) {
+    return (
+      <div className="flex flex-wrap items-center gap-5">
+        <LogoMedia
+          key={source ?? "sans-logo"}
+          src={source}
+          nom={nom}
+          className="h-24 w-24 flex-shrink-0 rounded-2xl border border-black/10 bg-white object-contain p-2 text-lg dark:border-white/10"
+        />
+        {!lectureSeule ? (
+          <div className="flex flex-col gap-2">
+            <input
+              ref={inputRef}
+              type="file"
+              className="sr-only"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(event) => choisir(event.target.files?.[0])}
+            />
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                disabled={mutation.isPending || suppression.isPending}
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/10"
+              >
+                {mutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ImagePlus className="h-4 w-4" />
+                )}
+                {logoConfirme ? "Remplacer le logo" : "Ajouter un logo"}
+              </button>
+              {logoConfirme ? (
+                <button
+                  type="button"
+                  onClick={() => setDialogueRetraitOuvert(true)}
+                  disabled={mutation.isPending || suppression.isPending}
+                  className="text-sm font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400"
+                >
+                  Retirer le logo
+                </button>
+              ) : null}
+            </div>
+            <p
+              className="text-xs text-slate-500 dark:text-slate-400"
+              data-aide-contextuelle-contenu
+            >
+              JPEG, PNG ou WebP — 2 Mo maximum
+            </p>
+          </div>
+        ) : null}
+        <ConfirmDialog
+          ouvert={dialogueRetraitOuvert}
+          onFermer={() => setDialogueRetraitOuvert(false)}
+          onConfirmer={() => suppression.mutate()}
+          titre="Retirer le logo ?"
+          description={`Le logo de ${nom} sera retiré.`}
+          libelleAction="Retirer le logo"
+          enCours={suppression.isPending}
+          destructif
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-4">
       <LogoMedia
