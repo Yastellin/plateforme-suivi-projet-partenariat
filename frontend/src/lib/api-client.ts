@@ -130,9 +130,31 @@ apiClient.interceptors.response.use(
       }
     }
 
-    const message =
+    let message =
       erreur.response?.data?.message ??
       "Une erreur réseau est survenue. Vérifiez votre connexion."
+
+    // Axios livre également les réponses d'erreur en Blob quand un endpoint
+    // de téléchargement est appelé avec responseType: "blob". Décode seulement
+    // ce cas pour préserver le message JSON normalisé de l'API.
+    const corpsBinaire = erreur.response?.data as unknown
+    if (
+      erreur.config?.responseType === "blob" &&
+      typeof Blob !== "undefined" &&
+      corpsBinaire instanceof Blob
+    ) {
+      try {
+        const enveloppe = JSON.parse(await corpsBinaire.text()) as {
+          message?: unknown
+        }
+        if (typeof enveloppe.message === "string" && enveloppe.message.trim()) {
+          message = enveloppe.message
+        }
+      } catch {
+        // Le contenu n'est pas une enveloppe JSON : conserver le message de repli.
+      }
+    }
+
     return Promise.reject(new Error(message))
   },
 )

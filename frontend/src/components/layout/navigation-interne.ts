@@ -4,6 +4,7 @@ import {
   Building2,
   ChartPie,
   Database,
+  Download,
   FileCheck2,
   FileText,
   GraduationCap,
@@ -66,6 +67,7 @@ export function construireNavigation(role: RoleUtilisateur, base: string): Group
         libelle: 'Diffusion',
         items: [
           { cle: 'recherche', libelle: 'Recherche', icone: Search, chemin: `${base}/recherche` },
+          { cle: 'exports', libelle: 'Exports', icone: Download, chemin: `${base}/exports` },
           { cle: 'synthese', libelle: 'Synthèse annuelle', icone: ChartPie, chemin: `${base}/synthese` },
           { cle: 'messages', libelle: 'Messages de contact', icone: Mail, chemin: `${base}/messages` },
           { cle: 'notifications', libelle: 'Notifications', icone: Bell, chemin: `${base}/notifications` },

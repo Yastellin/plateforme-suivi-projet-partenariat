@@ -9,7 +9,12 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    include: [
+      'tests/**/*.test.ts',
+      'tests/**/*.test.tsx',
+      'src/features/export/**/*.test.ts',
+      'src/features/export/**/*.test.tsx',
+    ],
     environment: 'node',
   },
 });

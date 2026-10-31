@@ -303,6 +303,7 @@ const router = createBrowserRouter([
       { path: "/presidence/archives/:type/:id", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ArchiveDetailPage /></Charge></RouteProtegee> },
       { path: "/presidence/historique", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><HistoriquePage /></Charge></RouteProtegee> },
       { path: "/presidence/export", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ExportPage /></Charge></RouteProtegee> },
+      { path: "/presidence/exports", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><ExportPage /></Charge></RouteProtegee> },
       { path: "/presidence/recherche", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><RecherchePage /></Charge></RouteProtegee> },
       { path: "/presidence/synthese", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><SynthesePage /></Charge></RouteProtegee> },
       { path: "/presidence/synthese/:etablissementId", element: <RouteProtegee rolesAutorises={["PRESIDENCE"]}><Charge><SyntheseEtablissementPage /></Charge></RouteProtegee> },
