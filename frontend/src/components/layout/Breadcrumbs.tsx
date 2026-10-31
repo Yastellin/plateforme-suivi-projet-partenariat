@@ -1,12 +1,17 @@
+// src/components/layout/Breadcrumbs.tsx
+
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 import { useContext } from 'react';
 import { ContexteTitreBreadcrumb } from '@/contexts/TitreBreadcrumbContext';
+import { construireNavigation, type ItemNavigation } from './navigation-interne';
+import type { RoleUtilisateur } from '@/types/api';
 
 const LIBELLES_SEGMENTS: Record<string, string> = {
   presidence: 'Présidence',
   etablissement: 'Établissement',
   decideur: 'Décideur',
+  'partenaires-partenariats': 'Partenaires & Partenariats',
   partenaires: 'Partenaires',
   partenariats: 'Partenariats',
   cotutelles: 'Cotutelles',
@@ -26,10 +31,11 @@ const LIBELLES_SEGMENTS: Record<string, string> = {
   nouveau: 'Nouveau',
 };
 
-const LIBELLES_RACINE: Record<string, string> = {
-  presidence: 'Tableau de bord',
-  etablissement: 'Tableau de bord',
-  decideur: 'Tableau de bord',
+// Rôle attendu pour chaque préfixe d'URL (premier segment)
+const ROLE_PAR_PREFIXE: Record<string, RoleUtilisateur> = {
+  presidence: 'PRESIDENCE',
+  etablissement: 'ETABLISSEMENT',
+  decideur: 'DECIDEUR',
 };
 
 // Types d'archives acceptes par le backend. Utilise pour detecter les URL
@@ -52,10 +58,7 @@ function estUUID(segment: string): boolean {
 
 // Detecte le cas /archives/<type>/<id> : le segment <type> est un filtre
 // interne, il n'a pas de route autonome et ne doit pas etre cliquable.
-function estTypeArchiveDansUrl(
-  segments: string[],
-  index: number,
-): boolean {
+function estTypeArchiveDansUrl(segments: string[], index: number): boolean {
   if (index <= 0) return false;
   const precedent = segments[index - 1];
   return precedent === 'archives' && TYPES_ARCHIVE.has(segments[index]);
@@ -64,17 +67,56 @@ function estTypeArchiveDansUrl(
 function libelleSegment(
   segment: string,
   estDernier: boolean,
-  estRacine: boolean,
   titreContexte: string | null,
 ): string {
   if (estUUID(segment)) {
     if (estDernier && titreContexte) return titreContexte;
     return 'Détail';
   }
-  if (estDernier && estRacine) {
-    return LIBELLES_RACINE[segment] ?? segment;
-  }
   return LIBELLES_SEGMENTS[segment] ?? segment;
+}
+
+interface Etape {
+  libelle: string;
+  chemin: string;
+  navigable: boolean;
+}
+
+// Page fille : segments d'URL à partir de `debut` (exclu : déjà couvert par le menu)
+function etapesFilles(
+  segments: string[],
+  debut: number,
+  titreContexte: string | null,
+): Etape[] {
+  const etapes: Etape[] = [];
+  for (let index = debut; index < segments.length; index += 1) {
+    const segment = segments[index];
+    const estDernier = index === segments.length - 1;
+    etapes.push({
+      libelle: libelleSegment(segment, estDernier, titreContexte),
+      chemin: '/' + segments.slice(0, index + 1).join('/'),
+      navigable: !estTypeArchiveDansUrl(segments, index),
+    });
+  }
+  return etapes;
+}
+
+// Entrée du menu principal (sidebar) la plus précise pour l'URL courante
+function entreeMenuCourante(
+  pathname: string,
+  prefixe: string,
+): ItemNavigation | null {
+  const role = ROLE_PAR_PREFIXE[prefixe.replace('/', '')];
+  if (!role) return null;
+  const items = construireNavigation(role, prefixe).flatMap((groupe) => groupe.items);
+  const candidats = items.filter(
+    (item) =>
+      item.chemin !== undefined &&
+      item.chemin !== prefixe &&
+      (pathname === item.chemin || pathname.startsWith(item.chemin + '/')),
+  );
+  candidats.sort((a, b) => (b.chemin?.length ?? 0) - (a.chemin?.length ?? 0));
+  return candidats[0] ?? null;
 }
 
 export function Breadcrumbs() {
@@ -88,51 +130,69 @@ export function Breadcrumbs() {
     return null;
   }
 
+  const prefixe = `/${segments[0]}`;
+
+  // Page d'accueil du rôle : pas de fil à afficher après l'icône
+  if (segments.length === 1) {
+    return (
+      <nav
+        aria-label="Fil d'Ariane"
+        className="flex min-w-0 items-center gap-2 text-[14px] font-medium text-[var(--color-text-secondary)]"
+      >
+        <span aria-current="page" className="truncate font-semibold text-[var(--color-text-primary)]">
+          Tableau de bord
+        </span>
+      </nav>
+    );
+  }
+
+  const menu = entreeMenuCourante(pathname, prefixe);
+
+  let etapes: Etape[];
+  if (menu?.chemin) {
+    // Menu principal (ex. « Projets »), puis les pages filles de l'URL
+    const profondeurMenu = menu.chemin.split('/').filter(Boolean).length;
+    etapes = [
+      { libelle: menu.libelle, chemin: menu.chemin, navigable: true },
+      ...etapesFilles(segments, profondeurMenu, titreContexte),
+    ];
+  } else {
+    etapes = etapesFilles(segments, 1, titreContexte);
+  }
+
+  const indexDernier = etapes.length - 1;
+
   return (
     <nav
       aria-label="Fil d'Ariane"
       className="flex min-w-0 items-center gap-2 text-[14px] font-medium text-[var(--color-text-secondary)]"
     >
-      {segments.map((segment, index) => {
-        if (segment === 'partenaires-partenariats') return null;
+      <Link
+        to={prefixe}
+        aria-label="Tableau de bord"
+        title="Tableau de bord"
+        className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-[var(--radius-sm)] hover:bg-[var(--color-chrome-hover)] hover:text-[var(--color-brand)]"
+      >
+        <Home className="h-4 w-4" />
+      </Link>
 
-        const chemin = '/' + segments.slice(0, index + 1).join('/');
-        const estDernier = index === segments.length - 1;
-        const estRacine = index === 0;
-        const libelle = libelleSegment(segment, estDernier, estRacine, titreContexte);
-        const estFiltreNonNavigable = estTypeArchiveDansUrl(segments, index);
-        // La racine (tableau de bord) est représentée par une icône maison
-        const estAccueil = estRacine && !estDernier;
-
+      {etapes.map((etape, index) => {
+        const estDernier = index === indexDernier;
         return (
-          <span key={chemin} className="flex min-w-0 items-center gap-2">
-            {index > 0 && (
-              <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
-            )}
+          <span key={etape.chemin} className="flex min-w-0 items-center gap-2">
+            <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
             {estDernier ? (
-              <span
-                aria-current="page"
-                className="truncate font-semibold text-[var(--color-text-primary)]"
-              >
-                {libelle}
+              <span aria-current="page" className="truncate font-semibold text-[var(--color-text-primary)]">
+                {etape.libelle}
               </span>
-            ) : estAccueil ? (
-              <Link
-                to={chemin}
-                aria-label={libelle}
-                title={libelle}
-                className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-[var(--radius-sm)] hover:bg-[var(--color-chrome-hover)] hover:text-[var(--color-brand)]"
-              >
-                <Home className="h-4 w-4" />
+            ) : etape.navigable ? (
+              <Link to={etape.chemin} className="truncate hover:text-[var(--color-brand)]">
+                {etape.libelle}
               </Link>
-            ) : estFiltreNonNavigable ? (
-              <span className="text-[var(--color-text-secondary)]" aria-current="false">
-                {libelle}
-              </span>
             ) : (
-              <Link to={chemin} className="truncate hover:text-[var(--color-brand)]">
-                {libelle}
-              </Link>
+              <span className="text-[var(--color-text-secondary)]" aria-current="false">
+                {etape.libelle}
+              </span>
             )}
           </span>
         );
