@@ -38,6 +38,26 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  /* Le layout interne n'a qu'une zone de défilement : son contenu. */
+  body.interface-verrouillee {
+    overflow: hidden;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   * {
     border-color: var(--color-border);
   }

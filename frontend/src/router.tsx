@@ -200,6 +200,12 @@ function LayoutInterne() {
   const [paletteOuverte, setPaletteOuverte] = useState(false)
   const [menuMobileOuvert, setMenuMobileOuvert] = useState(false)
 
+  // La fenêtre ne défile pas dans l'espace interne : seul le contenu défile.
+  useEffect(() => {
+    document.body.classList.add("interface-verrouillee")
+    return () => document.body.classList.remove("interface-verrouillee")
+  }, [])
+
   useEffect(() => {
     function gererTouche(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -213,9 +219,9 @@ function LayoutInterne() {
 
   return (
     <TitreBreadcrumbProvider>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-dvh overflow-hidden">
         {/* Sidebar desktop */}
-        <div className="hidden lg:block">
+        <div className="hidden h-full shrink-0 lg:block">
           <SidebarInterne />
         </div>
 
@@ -241,7 +247,7 @@ function LayoutInterne() {
           </div>
         ) : null}
 
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopbarInterne
             onOuvrirRecherche={() => setPaletteOuverte(true)}
             onOuvrirNotifications={() => setDrawerNotifs(true)}
