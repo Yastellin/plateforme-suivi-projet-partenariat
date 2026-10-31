@@ -133,15 +133,3 @@ html.animations-reduites *::after {
   border-radius: 9999px;
 }
 
-/* Bannière de la fiche établissement : fond uni, une seule lumière douce (sans motif) */
-.hero {
-  background-image:
-    radial-gradient(120% 140% at 100% 0%, rgba(255, 255, 255, 0.16), transparent 55%),
-    linear-gradient(135deg, #047857, #065f46);
-}
-
-.dark .hero {
-  background-image:
-    radial-gradient(120% 140% at 100% 0%, rgba(255, 255, 255, 0.07), transparent 55%),
-    linear-gradient(135deg, #065f46, #022c22);
-}
