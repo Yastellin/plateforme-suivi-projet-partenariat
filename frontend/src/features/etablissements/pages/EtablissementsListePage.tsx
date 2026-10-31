@@ -64,9 +64,10 @@ export function EtablissementsListePage() {
 
   const etablissements = data?.data ?? [];
 
-  // Colonnes visibles selon le filtre (Tous / Projets / Partenaires)
-  const afficheProjets = filtre !== "partenaires";
-  const affichePartenaires = filtre !== "projets";
+  // Colonnes visibles selon le filtre (Tous / Projets / Partenaires / Partenariats)
+  const afficheProjets = filtre === "tous" || filtre === "projets";
+  const affichePartenaires = filtre === "tous" || filtre === "partenaires";
+  const afficheTotalPartenariats = filtre === "tous" || filtre === "partenariats";
 
   return (
     <div>
@@ -141,7 +142,7 @@ export function EtablissementsListePage() {
                   <Th>Établissement</Th>
                   {afficheProjets ? <Th>Projets</Th> : null}
                   {affichePartenaires ? <Th>Partenaires</Th> : null}
-                  {filtre === "tous" ? <Th>Partenariats</Th> : null}
+                  {afficheTotalPartenariats ? <Th>Partenariats</Th> : null}
                   <Th>Statut</Th>
                   <th className="w-16 px-6 py-4" aria-hidden="true" />
                 </tr>
@@ -154,7 +155,7 @@ export function EtablissementsListePage() {
                     statistiques={statistiques.get(etablissement.id)}
                     afficheProjets={afficheProjets}
                     affichePartenaires={affichePartenaires}
-                    afficheTotalPartenariats={filtre === "tous"}
+                    afficheTotalPartenariats={afficheTotalPartenariats}
                     lien={`${cheminBase}/etablissements/${etablissement.id}`}
                   />
                 ))}
