@@ -2,12 +2,13 @@
 
 import { cn } from "@/lib/utils";
 
-export type TypeStatistique = "tous" | "projets" | "partenaires";
+export type TypeStatistique = "tous" | "projets" | "partenaires" | "partenariats";
 
 const OPTIONS: { valeur: TypeStatistique; libelle: string }[] = [
   { valeur: "tous", libelle: "Tous" },
   { valeur: "projets", libelle: "Projets" },
   { valeur: "partenaires", libelle: "Partenaires" },
+  { valeur: "partenariats", libelle: "Partenariats" },
 ];
 
 interface FiltreTypeStatistiqueProps {
@@ -15,7 +16,7 @@ interface FiltreTypeStatistiqueProps {
   onChange: (valeur: TypeStatistique) => void;
 }
 
-// Segmented control : n'affiche que les projets, que les partenaires, ou les deux.
+// Segmented control : n'affiche que les projets, les partenaires, les partenariats, ou tout.
 export function FiltreTypeStatistique({ valeur, onChange }: FiltreTypeStatistiqueProps) {
   return (
     <div
