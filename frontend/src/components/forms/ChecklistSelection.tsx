@@ -1,5 +1,6 @@
 // src/components/forms/ChecklistSelection.tsx
 
+import type { ReactNode } from 'react';
 import { Search, X } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -7,6 +8,8 @@ export interface OptionSelection {
   id: string;
   libelle: string;
   detail?: string;
+  /** Élément affiché à gauche de la ligne (ex. logo de l'établissement). */
+  vignette?: ReactNode;
 }
 
 interface RechercheSelection {
@@ -116,6 +119,7 @@ export function ChecklistSelection({
                     onChange={() => basculer(option)}
                     className="h-[15px] w-[15px] accent-[var(--color-brand)]"
                   />
+                  {option.vignette ?? null}
                   <span className="min-w-0">
                     <span className="block text-[13.5px] font-semibold">{option.libelle}</span>
                     {option.detail ? (

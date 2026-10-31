@@ -15,6 +15,7 @@ import { useEcheancier } from '../api/useEcheancier';
 import { cheminTableauDeBord } from '@/router';
 import { useAuth } from '@/hooks/useAuth';
 import { LIBELLES_STATUT_CONVENTION } from '@/lib/status-mappings';
+import { LogoEtablissement } from '@/components/shared/LogoEtablissement';
 import { formaterDate } from '@/lib/format';
 import type { Convention } from '@/types/api';
 
@@ -153,7 +154,14 @@ export function EcheancierListe({ compact = false }: EcheancierListeProps) {
                     {convention.reference}
                   </td>
                   <td className="border-b border-[var(--color-border)] px-[18px] py-[13px]">
-                    <span className="text-[13.5px] font-semibold">{convention.etablissement_nom ?? '—'}</span>
+                    {convention.etablissement_nom ? (
+                      <span className="flex items-center gap-2">
+                        <LogoEtablissement logoUrl={convention.etablissement_logo_url} nom={convention.etablissement_nom} className="h-6 w-6" />
+                        <span className="text-[13.5px] font-semibold">{convention.etablissement_nom}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[13.5px] font-semibold">—</span>
+                    )}
                   </td>
                   {!compact && (
                     <td className="max-w-[220px] truncate border-b border-[var(--color-border)] px-[18px] py-[13px] text-[var(--color-text-secondary)]">

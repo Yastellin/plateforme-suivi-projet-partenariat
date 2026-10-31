@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChecklistSelection } from '@/components/forms/ChecklistSelection';
 import { useEtablissements } from '@/features/etablissements/api/useEtablissements';
+import { LogoEtablissement } from '@/components/shared/LogoEtablissement';
 
 interface SelectionEtablissementsProps {
   selection: string[];
@@ -24,6 +25,7 @@ export function SelectionEtablissements({ selection, libelles, onChange, erreur 
       id: etablissement.id,
       libelle: etablissement.sigle ?? etablissement.nom,
       detail: etablissement.sigle ? etablissement.nom : undefined,
+      vignette: <LogoEtablissement logoUrl={etablissement.logo_url} nom={etablissement.nom} />,
     }));
 
   return (

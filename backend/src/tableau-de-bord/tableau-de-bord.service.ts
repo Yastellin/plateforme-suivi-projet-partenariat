@@ -15,6 +15,10 @@ import { PartenariatEtablissement } from '../partenariats/entities/partenariat-e
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 import { Projet } from '../projets/entities/projet.entity';
 import { Convention } from '../conventions/entities/convention.entity';
+import {
+  CHARGEMENT_ETABLISSEMENT,
+  etablissementDeConvention,
+} from '../conventions/convention-etablissement';
 import { Publication } from '../publications/enitities/publication.entity';
 import {
   TableauDeBordResponseDto,
@@ -380,7 +384,7 @@ export class TableauDeBordService {
           ? { projet: { etablissement_id: etablissementId } }
           : {}),
       },
-      relations: etablissementId ? { projet: true } : undefined,
+      relations: CHARGEMENT_ETABLISSEMENT,
       order: { date_fin: 'ASC' },
       take: 50,
     });
@@ -392,12 +396,15 @@ export class TableauDeBordService {
           (c.date_fin!.getTime() - maintenant.getTime()) /
             (24 * 60 * 60 * 1000),
         );
+        const etablissement = etablissementDeConvention(c);
         return {
           id: c.id,
           reference: c.reference,
           titre: c.titre,
           date_fin: c.date_fin!,
           jours_restants: jours,
+          etablissement_nom: etablissement?.nom ?? null,
+          etablissement_logo_url: etablissement?.logo_url ?? null,
         };
       });
 
@@ -414,6 +421,7 @@ export class TableauDeBordService {
         date_fin_prevue: LessThan(maintenant),
         ...(etablissementId ? { etablissement_id: etablissementId } : {}),
       },
+      relations: { etablissement: true },
       order: { date_fin_prevue: 'ASC' },
       take: 50,
     });
@@ -428,6 +436,8 @@ export class TableauDeBordService {
         nom: p.nom,
         date_fin_prevue: p.date_fin_prevue,
         jours_de_retard: jours,
+        etablissement_nom: p.etablissement?.nom ?? null,
+        etablissement_logo_url: p.etablissement?.logo_url ?? null,
       };
     });
 

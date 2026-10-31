@@ -9,6 +9,49 @@ interface GraphiqueComparatifProps {
   chargement: boolean;
 }
 
+interface EtiquetteEtablissementProps {
+  x?: number;
+  y?: number;
+  payload?: { value: string; index: number };
+  donnees: ComparatifEtablissement[];
+}
+
+function initialesDe(nom: string): string {
+  return nom
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((mot) => mot[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+/** Libellé de l'axe : logo choisi par l'établissement (ou initiales) puis son nom. */
+function EtiquetteEtablissement({ x = 0, y = 0, payload, donnees }: EtiquetteEtablissementProps) {
+  const nom = payload?.value ?? '';
+  const etablissement = payload ? donnees[payload.index] : undefined;
+  const logo = etablissement?.etablissement_logo_url;
+  const libelleCourt = nom.length > 16 ? `${nom.slice(0, 15)}…` : nom;
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <title>{nom}</title>
+      {logo ? (
+        <image href={logo} x={-12} y={4} width={24} height={24} preserveAspectRatio="xMidYMid meet" />
+      ) : (
+        <>
+          <circle cx={0} cy={16} r={12} fill="var(--color-page-bg)" stroke="var(--color-border)" />
+          <text x={0} y={20} textAnchor="middle" fontSize={9.5} fontWeight={700} fill="var(--color-text-secondary)">
+            {initialesDe(nom) || '—'}
+          </text>
+        </>
+      )}
+      <text x={0} y={44} textAnchor="middle" fontSize={11.5} fill="var(--color-text-secondary)">
+        {libelleCourt}
+      </text>
+    </g>
+  );
+}
+
 export function GraphiqueComparatif({ donnees, chargement }: GraphiqueComparatifProps) {
   const donneesSecurisees = Array.isArray(donnees) ? donnees : [];
 
@@ -30,7 +73,9 @@ export function GraphiqueComparatif({ donnees, chargement }: GraphiqueComparatif
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
         <XAxis
           dataKey="etablissement_nom"
-          tick={{ fontSize: 11.5, fill: 'var(--color-text-secondary)' }}
+          height={60}
+          interval={0}
+          tick={<EtiquetteEtablissement donnees={donneesSecurisees} />}
           axisLine={{ stroke: 'var(--color-border)' }}
           tickLine={false}
         />

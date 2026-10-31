@@ -79,6 +79,7 @@ export class StatistiquesService {
         etablissement_id: etab.id,
         etablissement_nom: etab.nom,
         etablissement_sigle: etab.sigle,
+        etablissement_logo_url: etab.logo_url ?? null,
         partenaires,
         partenariats,
         projets,
