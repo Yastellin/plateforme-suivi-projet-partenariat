@@ -760,12 +760,14 @@ export function ParametresCompte() {
                       <tr key={item.id} className={cn(suspendu && "opacity-60")}>
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-3">
-                            <span
-                              aria-hidden="true"
-                              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-200 text-[11px] font-bold text-slate-700 dark:bg-white/10 dark:text-slate-200"
-                            >
-                              {initialesEmail(item.email)}
-                            </span>
+                            <AvatarCompte
+                              role={item.role}
+                              email={item.email}
+                              logoCompte={item.logo_url}
+                              logoEtablissement={item.etablissement_logo_url}
+                              nomEtablissement={item.etablissement_nom}
+                              className="h-8 w-8 text-[11px]"
+                            />
                             <span className="break-all font-medium text-slate-900 dark:text-slate-100">
                               {item.email}
                             </span>
@@ -958,13 +960,6 @@ const CLASSE_CHAMP =
 
 const CLASSE_CHAMP_TABLE =
   "h-9 rounded-xl border bg-white px-3 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 dark:bg-white/5 dark:text-slate-100";
-
-function initialesEmail(email: string): string {
-  const partieLocale = email.split("@")[0] ?? "";
-  const morceaux = partieLocale.split(/[._\-\s]+/).filter(Boolean);
-  if (morceaux.length >= 2) return `${morceaux[0][0]}${morceaux[1][0]}`.toUpperCase();
-  return partieLocale.slice(0, 2).toUpperCase() || "?";
-}
 
 function LignePreference({
   titre,
