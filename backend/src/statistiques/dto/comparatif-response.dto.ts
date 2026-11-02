@@ -8,6 +8,9 @@ export class StatistiquesEtablissementDto {
   etablissement_nom: string;
 
   @ApiProperty({ nullable: true })
+  etablissement_logo_url: string | null;
+
+  @ApiProperty({ nullable: true })
   etablissement_sigle: string | null;
 
   @ApiProperty()

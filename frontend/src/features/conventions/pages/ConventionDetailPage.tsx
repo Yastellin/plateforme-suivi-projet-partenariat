@@ -19,6 +19,7 @@ import { useConvention } from "@/features/conventions/api/useConvention"
 import { useArchiverConvention } from "@/features/conventions/api/useArchiverConvention"
 import { usePermissions } from "@/hooks/usePermissions"
 import { formaterDate } from "@/lib/format"
+import { LogoEtablissement } from "@/components/shared/LogoEtablissement"
 import { useTitreBreadcrumb } from "@/contexts/TitreBreadcrumbContext"
 
 interface ChampDetail {
@@ -117,7 +118,15 @@ export function ConventionDetailPage() {
                 elements={[
                   { libelle: "Référence", valeur: convention.reference, mono: true },
                   { libelle: "Statut", valeur: <StatusBadge libelle={info.libelle} tonalite={info.tonalite} /> },
-                  { libelle: "Établissement", valeur: convention.etablissement_nom },
+                  {
+                    libelle: "Établissement",
+                    valeur: convention.etablissement_nom ? (
+                      <span className="inline-flex items-center gap-2">
+                        <LogoEtablissement logoUrl={convention.etablissement_logo_url} nom={convention.etablissement_nom} className="h-6 w-6" />
+                        {convention.etablissement_nom}
+                      </span>
+                    ) : null,
+                  },
                   { libelle: "Dernière étape", valeur: convention.date_derniere_etape ? formaterDate(convention.date_derniere_etape) : null, mono: true },
                 ]}
               />

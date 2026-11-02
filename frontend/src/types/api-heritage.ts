@@ -130,7 +130,8 @@ export interface Convention {
   id: string;
   reference: string;
   titre: string;
-  etablissement_nom?: string;
+  etablissement_nom?: string | null;
+  etablissement_logo_url?: string | null;
   date_signature?: string;
   date_debut?: string;
   date_fin?: string;

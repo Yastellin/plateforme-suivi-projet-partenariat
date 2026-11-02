@@ -53,6 +53,12 @@ export class ConventionResponseDto {
   projet: ConventionLienDto | null;
 
   @ApiPropertyOptional({ nullable: true })
+  etablissement_nom?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  etablissement_logo_url?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
   cotutelle_id: string | null;
 
   @ApiPropertyOptional({ nullable: true })

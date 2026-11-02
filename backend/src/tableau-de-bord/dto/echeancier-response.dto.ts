@@ -15,6 +15,12 @@ export class EcheanceConventionDto {
 
   @ApiProperty()
   jours_restants: number;
+
+  @ApiProperty({ nullable: true })
+  etablissement_nom: string | null;
+
+  @ApiProperty({ nullable: true })
+  etablissement_logo_url: string | null;
 }
 
 export class ProjetEnRetardDto {
@@ -29,6 +35,12 @@ export class ProjetEnRetardDto {
 
   @ApiProperty()
   jours_de_retard: number;
+
+  @ApiProperty({ nullable: true })
+  etablissement_nom: string | null;
+
+  @ApiProperty({ nullable: true })
+  etablissement_logo_url: string | null;
 }
 
 export class EcheancierResponseDto {

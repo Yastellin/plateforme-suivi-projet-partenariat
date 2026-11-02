@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 import { Input } from "@/components/ui/input";
+import { LogoEtablissement } from "@/components/shared/LogoEtablissement";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -267,7 +268,10 @@ function FormulaireNouveauPorteur({
             <SelectContent>
               {etablissements.map((e) => (
                 <SelectItem key={e.id} value={e.id}>
-                  {e.sigle ? `${e.sigle} — ${e.nom}` : e.nom}
+                  <span className="flex items-center gap-2">
+                    <LogoEtablissement logoUrl={e.logo_url} nom={e.nom} className="h-6 w-6" />
+                    {e.sigle ? `${e.sigle} — ${e.nom}` : e.nom}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>

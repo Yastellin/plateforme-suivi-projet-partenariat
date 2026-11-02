@@ -26,6 +26,10 @@ import type { ContexteUtilisateur } from '../historique/historique.service';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
 import { Projet } from '../projets/entities/projet.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
+import {
+  CHARGEMENT_ETABLISSEMENT,
+  etablissementDeConvention,
+} from './convention-etablissement';
 
 @Injectable()
 export class ConventionsService {
@@ -150,7 +154,7 @@ export class ConventionsService {
 
     const [data, total] = await this.conventionRepo.findAndCount({
       where,
-      relations: { partenariat: true, projet: true, cotutelles: true },
+      relations: CHARGEMENT_ETABLISSEMENT,
       skip: (page - 1) * limit,
       take: limit,
       order: { created_at: 'DESC' },
@@ -165,7 +169,7 @@ export class ConventionsService {
   async findOne(id: string): Promise<ConventionResponseDto> {
     const convention = await this.conventionRepo.findOne({
       where: { id, archive: false },
-      relations: { partenariat: true, projet: true, cotutelles: true },
+      relations: CHARGEMENT_ETABLISSEMENT,
     });
     if (!convention) throw new NotFoundException('Convention non trouvee');
     return this.mapToResponse(convention);
@@ -290,7 +294,10 @@ export class ConventionsService {
   }
 
   private mapToResponse(data: Convention): ConventionResponseDto {
+    const etablissement = etablissementDeConvention(data);
     return {
+      etablissement_nom: etablissement?.nom ?? null,
+      etablissement_logo_url: etablissement?.logo_url ?? null,
       id: data.id,
       reference: data.reference,
       titre: data.titre,

@@ -151,13 +151,15 @@ export interface EcheanceProchaine {
   objet?: string;
   date_fin: string;
   jours_restants?: number;
-  etablissement_nom?: string;
+  etablissement_nom?: string | null;
+  etablissement_logo_url?: string | null;
   statut?: StatutConvention;
 }
 
 export interface ComparatifEtablissement {
   etablissement_id: string;
   etablissement_nom: string;
+  etablissement_logo_url?: string | null;
   etablissement_sigle?: string | null;
   partenaires?: number;
   partenaires_actifs?: number;
