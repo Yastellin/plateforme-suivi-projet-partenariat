@@ -8,6 +8,7 @@ import { nomAffichageUtilisateur } from '@/lib/utilisateur-utils';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBadge } from '@/features/notifications/components/NotificationBadge';
 import { useEtablissement } from '@/features/etablissements/api/useEtablissement';
+import { useCompte } from '@/features/comptes/api/useCompte';
 
 interface TopbarInterneProps {
   onOuvrirRecherche: () => void;
@@ -29,6 +30,8 @@ export function TopbarInterne({ onOuvrirRecherche, onOuvrirNotifications, onOuvr
       ? utilisateur.etablissement_id ?? undefined
       : undefined,
   );
+
+  const { data: compteDecideur } = useCompte(utilisateur?.role === 'DECIDEUR');
 
   const peutAfficherCloche = permissions.estPresidence || permissions.estEtablissement;
   // La route /presidence/projets/nouveau n'existe pas encore : bouton masqué.
@@ -93,6 +96,7 @@ export function TopbarInterne({ onOuvrirRecherche, onOuvrirNotifications, onOuvr
               role={utilisateur.role}
               email={utilisateur.email}
               logoEtablissement={etablissementCompte?.logo_url}
+              logoCompte={compteDecideur?.logo_url}
               nomEtablissement={
                 etablissementCompte?.nom ?? utilisateur.etablissement_nom
               }

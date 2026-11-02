@@ -13,6 +13,7 @@ const etat = vi.hoisted(() => ({
     etablissement_id: null as string | null,
     etablissement_nom: null as string | null,
   },
+  compte: undefined as { logo_url: string | null } | undefined,
   etablissement: undefined as
     | { id: string; nom: string; logo_url: string | null }
     | undefined,
@@ -31,6 +32,10 @@ vi.mock('@/hooks/usePermissions', () => ({
 
 vi.mock('@/features/etablissements/api/useEtablissement', () => ({
   useEtablissement: () => ({ data: etat.etablissement }),
+}));
+
+vi.mock('@/features/comptes/api/useCompte', () => ({
+  useCompte: () => ({ data: etat.compte }),
 }));
 
 vi.mock('@/features/notifications/api/useNombreNotificationsNonLues', () => ({
