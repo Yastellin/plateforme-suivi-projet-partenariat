@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { LogoUploader } from "@/components/shared/LogoUploader";
+import { AvatarCompte } from "@/components/shared/AvatarCompte";
 import { FormulaireMotDePasse } from "@/features/comptes/components/FormulaireMotDePasse";
 import {
   useCompte,
@@ -247,12 +248,14 @@ export function ParametresCompte() {
           className={cn(CLASSE_CARTE, "overflow-hidden")}
         >
           <div className="flex items-center gap-4 p-6">
-            <div
-              aria-hidden="true"
-              className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-emerald-600 text-base font-bold text-white"
-            >
-              {initialesEmail(emailAffiche)}
-            </div>
+            <AvatarCompte
+              role={role}
+              email={emailAffiche}
+              logoCompte={compte?.logo_url}
+              logoEtablissement={etablissement?.logo_url}
+              nomEtablissement={etablissement?.nom}
+              className="h-14 w-14 text-base"
+            />
             <div className="min-w-0">
               <p className="truncate font-semibold text-slate-900 dark:text-white">
                 {emailAffiche}
