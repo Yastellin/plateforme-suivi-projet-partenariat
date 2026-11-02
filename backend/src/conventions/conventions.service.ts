@@ -27,6 +27,23 @@ import { ActionHistorique } from '../common/enums/action-historique.enum';
 import { Projet } from '../projets/entities/projet.entity';
 import { CotutelleThese } from '../cotutelles/entities/cotutelle-these.entity';
 
+function dateSignatureAtteinte(valeur: string, maintenant = new Date()): boolean {
+  const dateSeule = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valeur);
+  const date = dateSeule
+    ? new Date(Number(dateSeule[1]), Number(dateSeule[2]) - 1, Number(dateSeule[3]))
+    : new Date(valeur);
+  if (Number.isNaN(date.getTime())) return false;
+  if (
+    dateSeule &&
+    (date.getFullYear() !== Number(dateSeule[1]) ||
+      date.getMonth() !== Number(dateSeule[2]) - 1 ||
+      date.getDate() !== Number(dateSeule[3]))
+  ) return false;
+  const jourSignature = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const jourActuel = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate());
+  return jourSignature <= jourActuel;
+}
+
 @Injectable()
 export class ConventionsService {
   constructor(
@@ -43,6 +60,21 @@ export class ConventionsService {
   ) {}
 
   async create(dto: CreateConventionDto): Promise<ConventionResponseDto> {
+    if (dto.statut === StatutConvention.SIGNEE && !dto.date_signature?.trim()) {
+      throw new BadRequestException(
+        'Une convention au statut « Signée » doit avoir une date de signature.',
+      );
+    }
+    if (
+      dto.statut === StatutConvention.EN_ATTENTE_SIGNATURE &&
+      dto.date_signature &&
+      dateSignatureAtteinte(dto.date_signature)
+    ) {
+      throw new BadRequestException(
+        'Une convention dont la date de signature est atteinte ou passée ne peut pas rester « En attente de signature ».',
+      );
+    }
+
     const annee = new Date().getFullYear();
     const reference = `CONV-${annee}-${randomUUID().toUpperCase()}`;
 

@@ -208,6 +208,92 @@ describe("formulaire de convention", () => {
     })
   })
 
+  it("automatise le statut à la création puis le restaure si la date redevient future", async () => {
+    await act(async () => {
+      racine.render(
+        createElement(ConventionForm, {
+          onSucces: vi.fn(),
+          onAnnuler: vi.fn(),
+        }),
+      )
+    })
+
+    const definirValeur = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!
+    const dateSignature = conteneur.querySelector<HTMLInputElement>("#date_signature")!
+    const aujourdhui = new Date()
+    const dateAtteinte = [
+      aujourdhui.getFullYear(),
+      String(aujourdhui.getMonth() + 1).padStart(2, "0"),
+      String(aujourdhui.getDate()).padStart(2, "0"),
+    ].join("-")
+
+    await act(async () => {
+      definirValeur.call(dateSignature, dateAtteinte)
+      dateSignature.dispatchEvent(new Event("input", { bubbles: true }))
+    })
+
+    const selectStatut = Array.from(conteneur.querySelectorAll("select")).find(
+      (select) => Array.from(select.options).some((option) => option.value === "SIGNEE"),
+    ) as HTMLSelectElement
+    expect(selectStatut.value).toBe("SIGNEE")
+    expect(conteneur.textContent).toContain("le statut passera automatiquement à « Signée »")
+
+    const dateFuture = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate() + 1)
+    const dateFutureLocale = [
+      dateFuture.getFullYear(),
+      String(dateFuture.getMonth() + 1).padStart(2, "0"),
+      String(dateFuture.getDate()).padStart(2, "0"),
+    ].join("-")
+    await act(async () => {
+      definirValeur.call(dateSignature, dateFutureLocale)
+      dateSignature.dispatchEvent(new Event("input", { bubbles: true }))
+    })
+
+    expect(selectStatut.value).toBe("BROUILLON")
+    expect(conteneur.textContent).not.toContain("le statut passera automatiquement à « Signée »")
+  })
+
+  it("conserve le statut choisi manuellement même avec une date atteinte", async () => {
+    await act(async () => {
+      racine.render(
+        createElement(ConventionForm, {
+          onSucces: vi.fn(),
+          onAnnuler: vi.fn(),
+        }),
+      )
+    })
+
+    const definirValeur = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!
+    const selectStatut = Array.from(conteneur.querySelectorAll("select")).find(
+      (select) => Array.from(select.options).some((option) => option.value === "EN_ATTENTE_SIGNATURE"),
+    ) as HTMLSelectElement
+    await act(async () => {
+      selectStatut.value = "EN_ATTENTE_SIGNATURE"
+      selectStatut.dispatchEvent(new Event("change", { bubbles: true }))
+    })
+
+    const aujourdhui = new Date()
+    const dateLocale = [
+      aujourdhui.getFullYear(),
+      String(aujourdhui.getMonth() + 1).padStart(2, "0"),
+      String(aujourdhui.getDate()).padStart(2, "0"),
+    ].join("-")
+    const dateSignature = conteneur.querySelector<HTMLInputElement>("#date_signature")!
+    await act(async () => {
+      definirValeur.call(dateSignature, dateLocale)
+      dateSignature.dispatchEvent(new Event("input", { bubbles: true }))
+    })
+
+    expect(selectStatut.value).toBe("EN_ATTENTE_SIGNATURE")
+    expect(conteneur.textContent).not.toContain("le statut passera automatiquement à « Signée »")
+  })
+
   it("affiche un avertissement non bloquant si la signature est postérieure au début", async () => {
     await act(async () => {
       racine.render(

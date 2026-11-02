@@ -4,6 +4,51 @@ import { Projet } from '../projets/entities/projet.entity';
 import { CreateConventionDto } from './dto/create-convention.dto';
 
 describe('ConventionsService', () => {
+  it('refuse une convention signée sans date de signature', async () => {
+    const service = new ConventionsService(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      { transaction: jest.fn() } as any,
+      {} as any,
+    );
+    const dto = Object.assign(new CreateConventionDto(), {
+      titre: 'Convention signée sans date',
+      statut: 'SIGNEE',
+    });
+
+    await expect(service.create(dto)).rejects.toThrow(
+      'Une convention au statut « Signée » doit avoir une date de signature.',
+    );
+  });
+
+  it('refuse une convention en attente dont la date de signature est atteinte', async () => {
+    const service = new ConventionsService(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      { transaction: jest.fn() } as any,
+      {} as any,
+    );
+    const aujourdhui = new Date();
+    const dateLocale = [
+      aujourdhui.getFullYear(),
+      String(aujourdhui.getMonth() + 1).padStart(2, '0'),
+      String(aujourdhui.getDate()).padStart(2, '0'),
+    ].join('-');
+    const dto = Object.assign(new CreateConventionDto(), {
+      titre: 'Convention en attente',
+      statut: 'EN_ATTENTE_SIGNATURE',
+      date_signature: dateLocale,
+    });
+
+    await expect(service.create(dto)).rejects.toThrow(
+      'Une convention dont la date de signature est atteinte ou passée ne peut pas rester « En attente de signature ».',
+    );
+  });
+
   it('génère des références uniques sans les recevoir du client', async () => {
     let identifiant = 0;
     const conventionRepo = {
