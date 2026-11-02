@@ -96,8 +96,9 @@ describe('barre latérale interne', () => {
     expect(lienNotifications?.textContent).toContain('Notifications');
     expect(lienNotifications?.textContent).toContain('27');
 
-    // Avatar aux initiales du compte (pas d'image)
-    expect(conteneur.querySelector('aside img')).toBeNull();
+    // Logo de la Présidence en haut ; avatar du pied de page aux initiales du compte
+    expect(conteneur.querySelector('aside img')?.getAttribute('src')).toContain('logo-universite');
+    expect(conteneur.querySelectorAll('aside img')).toHaveLength(1);
     expect(conteneur.querySelector('aside')?.textContent).toContain('RA');
 
     const boutonDeconnexion = conteneur.querySelector<HTMLButtonElement>(
@@ -138,6 +139,10 @@ describe('barre latérale interne', () => {
     const pied = conteneur.querySelector('aside')?.textContent ?? '';
     expect(pied).toContain('Faculté des Sciences');
     expect(pied).toContain('direction');
-    expect(pied).toContain('DI');
+
+    // Haut : logo de la Présidence ; bas : logo de l'établissement
+    const sources = Array.from(conteneur.querySelectorAll('aside img')).map((img) => img.getAttribute('src') ?? '');
+    expect(sources.some((src) => src.includes('logo-universite'))).toBe(true);
+    expect(sources.some((src) => src.includes('logo-fds'))).toBe(true);
   });
 });

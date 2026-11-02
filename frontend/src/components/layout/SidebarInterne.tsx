@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Building2,
   ChevronDown,
   ChevronRight,
   ChevronsLeftRight,
@@ -12,6 +11,8 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { LogoInstitutionnel } from '@/components/shared/LogoInstitutionnel';
+import { LogoMedia } from '@/components/shared/ImageMedia';
 import { construireNavigation } from '@/components/layout/navigation-interne';
 import { cheminTableauDeBord } from '@/router';
 import { cn } from '@/lib/utils';
@@ -48,6 +49,19 @@ function initialesDe(nom: string): string {
     return `${morceaux[0][0]}${morceaux[1][0]}`.toUpperCase();
   }
   return (morceaux[0] ?? '??').slice(0, 2).toUpperCase();
+}
+
+// Initiales du compte : repli du pied de page (sans logo disponible).
+function AvatarInitiales({ nom }: { nom: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-[#00c853] text-xs font-bold text-white"
+      title={nom}
+    >
+      {initialesDe(nom)}
+    </div>
+  );
 }
 
 export function SidebarInterne() {
@@ -135,11 +149,12 @@ export function SidebarInterne() {
 
       {/* En-tête : logo carré émeraude, nom de l'application, sous-titre */}
       <div className={cn('flex flex-shrink-0 items-center gap-3 px-5 pb-5 pt-6', reduit && 'justify-center px-0')}>
+        {/* Logo de la Présidence, identique quel que soit le compte connecté */}
         <div
           aria-hidden="true"
-          className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg bg-[#00c853] text-white shadow-[0_0_18px_rgba(0,200,83,0.35)]"
+          className="grid h-10 w-10 flex-shrink-0 place-items-center overflow-hidden rounded-lg bg-[#00c853] text-white shadow-[0_0_18px_rgba(0,200,83,0.35)]"
         >
-          <Building2 className="h-5 w-5" />
+          <LogoInstitutionnel className="h-full w-full object-contain p-1 text-xs" />
         </div>
         {!reduit ? (
           <div className="min-w-0 leading-tight">
@@ -258,13 +273,17 @@ export function SidebarInterne() {
       {/* Pied de page : profil, rôle et déconnexion à droite */}
       <div className="flex-shrink-0 border-t border-[#1f2937] p-3">
         <div className={cn('flex items-center gap-3 rounded-lg p-2', reduit && 'justify-center p-0')}>
-          <div
-            aria-hidden="true"
-            className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-[#00c853] text-xs font-bold text-white"
-            title={nomCompte}
-          >
-            {initialesDe(nomCompte)}
-          </div>
+          {utilisateur.role === 'ETABLISSEMENT' && etablissementCompte?.logo_url ? (
+            <LogoMedia
+              src={etablissementCompte.logo_url}
+              nom={etablissementCompte.nom}
+              title={nomCompte}
+              className="h-9 w-9 flex-shrink-0 rounded-full border border-[#1f2937] bg-white object-contain p-0.5"
+              fallback={<AvatarInitiales nom={nomCompte} />}
+            />
+          ) : (
+            <AvatarInitiales nom={nomCompte} />
+          )}
           {!reduit ? (
             <>
               <div className="min-w-0 flex-1 leading-tight">
