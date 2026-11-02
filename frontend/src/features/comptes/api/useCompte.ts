@@ -2,10 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import type { PreferencesCompte, Utilisateur } from '@/types/api';
 
-export function useCompte() {
+export function useCompte(actif = true) {
   return useQuery({
     queryKey: ['compte'],
     queryFn: async () => (await apiClient.get<Utilisateur>('/compte')).data,
+    enabled: actif,
   });
 }
 

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { LogoInstitutionnel } from '@/components/shared/LogoInstitutionnel';
+import { useCompte } from '@/features/comptes/api/useCompte';
 import { LogoMedia } from '@/components/shared/ImageMedia';
 import { construireNavigation } from '@/components/layout/navigation-interne';
 import { cheminTableauDeBord } from '@/router';
@@ -67,6 +68,7 @@ function AvatarInitiales({ nom }: { nom: string }) {
 export function SidebarInterne() {
   const { utilisateur, deconnecter } = useAuth();
   const location = useLocation();
+  const { data: compteDecideur } = useCompte(utilisateur?.role === 'DECIDEUR');
   const { data: etablissementCompte } = useEtablissement(
     utilisateur?.role === 'ETABLISSEMENT'
       ? utilisateur.etablissement_id ?? undefined
@@ -273,10 +275,20 @@ export function SidebarInterne() {
       {/* Pied de page : profil, rôle et déconnexion à droite */}
       <div className="flex-shrink-0 border-t border-[#1f2937] p-3">
         <div className={cn('flex items-center gap-3 rounded-lg p-2', reduit && 'justify-center p-0')}>
-          {utilisateur.role === 'ETABLISSEMENT' && etablissementCompte?.logo_url ? (
+          {utilisateur.role === 'PRESIDENCE' ? (
+            <LogoInstitutionnel className="h-9 w-9 flex-shrink-0 rounded-full border border-[#1f2937] bg-white object-contain p-0.5" />
+          ) : utilisateur.role === 'ETABLISSEMENT' && etablissementCompte?.logo_url ? (
             <LogoMedia
               src={etablissementCompte.logo_url}
               nom={etablissementCompte.nom}
+              title={nomCompte}
+              className="h-9 w-9 flex-shrink-0 rounded-full border border-[#1f2937] bg-white object-contain p-0.5"
+              fallback={<AvatarInitiales nom={nomCompte} />}
+            />
+          ) : utilisateur.role === 'DECIDEUR' && compteDecideur?.logo_url ? (
+            <LogoMedia
+              src={compteDecideur.logo_url}
+              nom={nomCompte}
               title={nomCompte}
               className="h-9 w-9 flex-shrink-0 rounded-full border border-[#1f2937] bg-white object-contain p-0.5"
               fallback={<AvatarInitiales nom={nomCompte} />}

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -13,7 +14,9 @@ import { Utilisateur } from '../auth/entities/utilisateur.entity';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
 import { Etablissement } from '../etablissements/entities/etablissement.entity';
 import { MOT_DE_PASSE_MODIFIE, MotDePasseModifieEvent } from '../auth/events/mot-de-passe-modifie.event';
-import { HistoriqueService } from '../historique/historique.service';
+import { HistoriqueService, type ContexteUtilisateur } from '../historique/historique.service';
+import { STORAGE_PORT } from '../storage/storage.port';
+import type { StoragePort } from '../storage/storage.port';
 import { ActionHistorique } from '../common/enums/action-historique.enum';
 import { Role } from '../common/enums/role.enum';
 import { UpdateMotDePasseDto } from './dto/update-mot-de-passe.dto';
@@ -32,7 +35,52 @@ export class UtilisateursService {
     @InjectRepository(Etablissement) private etablissements: Repository<Etablissement>,
     private evenements: EventEmitter2,
     private historique: HistoriqueService,
+    @Inject(STORAGE_PORT) private storage: StoragePort,
   ) {}
+
+  /** Téléversement du logo du compte décideur. */
+  async televerserLogoCompte(
+    id: string,
+    fichier: Express.Multer.File,
+    contexte?: ContexteUtilisateur | null,
+  ) {
+    if (!fichier) throw new BadRequestException('Aucun fichier fourni');
+    const MIME_AUTORISES = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!MIME_AUTORISES.includes(fichier.mimetype)) {
+      throw new BadRequestException('Format de logo non autorise (JPEG, PNG ou WebP)');
+    }
+    const utilisateur = await this.trouver(id);
+    const ancienLogo = utilisateur.logo_url;
+    const urlFichier = await this.storage.enregistrer(fichier, `logos/comptes/${id}`);
+    await this.utilisateurs.update(id, { logo_url: urlFichier });
+    if (ancienLogo) await this.storage.supprimer(ancienLogo).catch(() => undefined);
+    await this.historique.enregistrer({
+      action: ActionHistorique.MODIFICATION,
+      entite_type: 'Compte',
+      entite_id: id,
+      entite_nom: utilisateur.email,
+      utilisateur: contexte ?? null,
+      details: 'Mise a jour du logo du compte',
+    });
+    return this.compte(id);
+  }
+
+  /** Retrait du logo du compte décideur. */
+  async retirerLogoCompte(id: string, contexte?: ContexteUtilisateur | null) {
+    const utilisateur = await this.trouver(id);
+    if (!utilisateur.logo_url) return this.compte(id);
+    await this.utilisateurs.update(id, { logo_url: null });
+    await this.storage.supprimer(utilisateur.logo_url).catch(() => undefined);
+    await this.historique.enregistrer({
+      action: ActionHistorique.MODIFICATION,
+      entite_type: 'Compte',
+      entite_id: id,
+      entite_nom: utilisateur.email,
+      utilisateur: contexte ?? null,
+      details: 'Retrait du logo du compte',
+    });
+    return this.compte(id);
+  }
 
   async compte(id: string) {
     const utilisateur = await this.trouver(id);
@@ -263,6 +311,7 @@ export class UtilisateursService {
       actif: utilisateur.actif,
       etablissement_id: utilisateur.etablissement_id,
       etablissement_nom: utilisateur.etablissement?.nom ?? null,
+      logo_url: utilisateur.logo_url ?? null,
       derniere_connexion: utilisateur.derniere_connexion,
       preferences: utilisateur.preferences ?? {},
       created_at: utilisateur.created_at,

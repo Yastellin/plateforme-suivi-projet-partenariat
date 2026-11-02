@@ -222,7 +222,7 @@ export function ParametresCompte() {
     utilisateur?.role ??
     "DECIDEUR") as RoleUtilisateur;
 
-  const afficherLogo = estPresidence || Boolean(etablissement);
+  const afficherLogo = estPresidence || Boolean(etablissement) || role === "DECIDEUR";
 
   const emailAffiche = compte?.email ?? utilisateur?.email ?? "—";
   const etablissementAffiche =
@@ -469,6 +469,14 @@ export function ParametresCompte() {
                   logoUrl={configuration?.logo_url}
                   nom="Présidence"
                   queryKeys={[["configuration"], ["public", "configuration"]]}
+                />
+              ) : role === "DECIDEUR" ? (
+                <LogoUploader
+                  variante="compte"
+                  endpoint="/compte/logo"
+                  logoUrl={compte?.logo_url ?? null}
+                  nom={emailAffiche}
+                  queryKeys={[["compte"]]}
                 />
               ) : etablissement ? (
                 <LogoUploader
