@@ -6,8 +6,8 @@ import { Handshake, FolderKanban, FileStack, ClockAlert, Plus, ExternalLink } fr
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTableauDeBord } from '../api/useTableauDeBord';
 import { useProjets } from '@/features/projets/api/useProjets';
-import { KpiCard } from '@/components/shared/KpiCard';
-import { KpiGrid } from '@/components/shared/KpiGrid';
+import { CarteIndicateur } from '../components/CarteIndicateur';
+import { cheminTableauDeBord } from '@/router';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Panel, PanelHeader } from '@/components/shared/Panel';
 import { TableToolbar } from '@/components/shared/TableToolbar';
@@ -36,6 +36,7 @@ const OPTIONS_FILTRE = [
 ];
 
 export function TableauDeBordEtablissement() {
+  const base = cheminTableauDeBord('ETABLISSEMENT');
   const { utilisateur } = useAuth();
   const { data: compteurs, isLoading: chargementCompteurs } = useTableauDeBord();
 
@@ -101,40 +102,47 @@ export function TableauDeBordEtablissement() {
         }
       />
 
-      <KpiGrid>
+      <div className="mb-[22px] grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {chargementCompteurs || !compteurs ? (
           <>
-            <Skeleton className="h-[120px] rounded-[var(--radius)]" />
-            <Skeleton className="h-[120px] rounded-[var(--radius)]" />
-            <Skeleton className="h-[120px] rounded-[var(--radius)]" />
-            <Skeleton className="h-[120px] rounded-[var(--radius)]" />
+            <Skeleton className="h-[164px] rounded-2xl" />
+            <Skeleton className="h-[164px] rounded-2xl" />
+            <Skeleton className="h-[164px] rounded-2xl" />
+            <Skeleton className="h-[164px] rounded-2xl" />
           </>
         ) : (
           <>
-            <KpiCard
-              icone={<Handshake className="h-4 w-4" />}
-              libelle="Mes partenaires"
+            <CarteIndicateur
+              titre="Mes partenaires"
               valeur={compteurs.partenaires_actifs ?? compteurs.partenaires ?? 0}
+              icone={<Handshake className="h-[18px] w-[18px]" />}
+              theme="emerald"
+              lien={{ libelle: 'Voir la liste', chemin: `${base}/partenaires-partenariats/partenaires` }}
             />
-            <KpiCard
-              icone={<FolderKanban className="h-4 w-4" />}
-              libelle="Mes projets en cours"
+            <CarteIndicateur
+              titre="Mes projets en cours"
               valeur={compteurs.projets_en_cours ?? compteurs.projets ?? 0}
+              icone={<FolderKanban className="h-[18px] w-[18px]" />}
+              theme="blue"
+              lien={{ libelle: 'Voir les projets', chemin: `${base}/projets` }}
             />
-            <KpiCard
-              icone={<FileStack className="h-4 w-4" />}
-              libelle="Mes partenariats"
+            <CarteIndicateur
+              titre="Mes partenariats"
               valeur={compteurs.partenariats ?? 0}
+              icone={<FileStack className="h-[18px] w-[18px]" />}
+              theme="violet"
+              lien={{ libelle: 'Voir les partenariats', chemin: `${base}/partenaires-partenariats/partenariats` }}
             />
-            <KpiCard
-              icone={<ClockAlert className="h-4 w-4" />}
-              libelle="Projets en retard"
+            <CarteIndicateur
+              titre="Projets en retard"
               valeur={projetsEnRetard}
-              critique
+              icone={<ClockAlert className="h-[18px] w-[18px]" />}
+              theme="amber"
+              pied={projetsEnRetard === 0 ? 'Aucun en retard' : `${projetsEnRetard} en retard`}
             />
           </>
         )}
-      </KpiGrid>
+      </div>
 
       <div className="mb-[22px] grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Panel>
