@@ -312,6 +312,7 @@ export class UtilisateursService {
       etablissement_id: utilisateur.etablissement_id,
       etablissement_nom: utilisateur.etablissement?.nom ?? null,
       logo_url: utilisateur.logo_url ?? null,
+      etablissement_logo_url: utilisateur.etablissement?.logo_url ?? null,
       derniere_connexion: utilisateur.derniere_connexion,
       preferences: utilisateur.preferences ?? {},
       created_at: utilisateur.created_at,
