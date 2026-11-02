@@ -8,6 +8,8 @@ interface AvatarCompteProps {
   role: RoleUtilisateur;
   email: string;
   logoEtablissement?: string | null;
+  /** Logo propre au compte décideur. */
+  logoCompte?: string | null;
   nomEtablissement?: string | null;
   className?: string;
 }
@@ -20,6 +22,7 @@ export function AvatarCompte({
   role,
   email,
   logoEtablissement,
+  logoCompte,
   nomEtablissement,
   className,
 }: AvatarCompteProps) {
@@ -51,6 +54,31 @@ export function AvatarCompte({
             )}
             role="img"
             aria-label={`Initiales du compte ${email}`}
+          >
+            {initialesUtilisateur(email)}
+          </span>
+        )}
+      />
+    );
+  }
+
+  if (role === 'DECIDEUR') {
+    return (
+      <LogoMedia
+        src={logoCompte}
+        nom={email}
+        className={cn(
+          'h-8 w-8 flex-shrink-0 rounded-full border border-[var(--color-border)] bg-white object-contain p-0.5 text-[11px]',
+          className,
+        )}
+        fallback={(
+          <span
+            className={cn(
+              'grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-[var(--color-brand)] text-[11.5px] font-bold text-white',
+              className,
+            )}
+            role="img"
+            aria-label={`Compte ${email}`}
           >
             {initialesUtilisateur(email)}
           </span>

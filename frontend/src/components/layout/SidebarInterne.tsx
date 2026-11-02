@@ -156,7 +156,7 @@ export function SidebarInterne() {
           aria-hidden="true"
           className="grid h-10 w-10 flex-shrink-0 place-items-center overflow-hidden rounded-lg bg-[#00c853] text-white shadow-[0_0_18px_rgba(0,200,83,0.35)]"
         >
-          <LogoInstitutionnel className="h-full w-full object-contain p-1 text-xs" />
+          <LogoInstitutionnel className="h-full w-full object-contain text-xs" />
         </div>
         {!reduit ? (
           <div className="min-w-0 leading-tight">
