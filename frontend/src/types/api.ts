@@ -28,6 +28,7 @@ export interface Utilisateur {
   role: RoleUtilisateur;
   etablissement_id: string | null;
   etablissement_nom: string | null;
+  logo_url?: string | null;
   actif?: boolean;
   derniere_connexion?: string | null;
   preferences?: PreferencesCompte;

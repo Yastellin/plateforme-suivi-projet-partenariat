@@ -1,4 +1,18 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -37,6 +51,44 @@ export class CompteController {
     @Body() dto: UpdatePreferencesDto,
   ) {
     return this.service.modifierPreferences(user.id, dto);
+  }
+
+  @Post('logo')
+  @HttpCode(200)
+  @Roles(Role.DECIDEUR)
+  @UseInterceptors(
+    FileInterceptor('fichier', {
+      limits: { fileSize: 2 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(new BadRequestException('Le logo doit etre une image'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  @ApiOperation({ summary: 'Téléverser le logo de son compte décideur' })
+  televerserLogo(
+    @CurrentUser() user: any,
+    @UploadedFile() fichier: Express.Multer.File,
+  ) {
+    return this.service.televerserLogoCompte(user.id, fichier, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+  }
+
+  @Delete('logo')
+  @HttpCode(200)
+  @Roles(Role.DECIDEUR)
+  @ApiOperation({ summary: 'Retirer le logo de son compte décideur' })
+  retirerLogo(@CurrentUser() user: any) {
+    return this.service.retirerLogoCompte(user.id, {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 }
 

@@ -48,6 +48,10 @@ export class Utilisateur {
   @Column({ default: true })
   actif: boolean;
 
+  /** Logo choisi par un compte décideur (les autres comptes utilisent le logo de leur établissement ou de la Présidence). */
+  @Column({ type: 'varchar', nullable: true })
+  logo_url: string | null;
+
   @Column({ type: 'timestamp', precision: 3, nullable: true })
   derniere_connexion: Date | null;
 

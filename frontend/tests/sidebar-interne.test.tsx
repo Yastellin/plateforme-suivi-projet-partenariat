@@ -15,6 +15,7 @@ const etat = vi.hoisted(() => ({
     etablissement_id: null as string | null,
     etablissement_nom: null as string | null,
   },
+  compte: undefined as { logo_url: string | null } | undefined,
   etablissement: undefined as
     | { id: string; nom: string; logo_url: string | null }
     | undefined,
@@ -25,6 +26,10 @@ vi.mock('@/hooks/useAuth', () => ({
     utilisateur: etat.utilisateur,
     deconnecter: etat.deconnecter,
   }),
+}));
+
+vi.mock('@/features/comptes/api/useCompte', () => ({
+  useCompte: () => ({ data: etat.compte }),
 }));
 
 vi.mock('@/features/etablissements/api/useEtablissement', () => ({
@@ -65,6 +70,7 @@ beforeEach(() => {
     etablissement_nom: null,
   });
   etat.etablissement = undefined;
+  etat.compte = undefined;
   window.localStorage.clear();
   conteneur = document.createElement('div');
   document.body.appendChild(conteneur);
@@ -96,10 +102,10 @@ describe('barre latérale interne', () => {
     expect(lienNotifications?.textContent).toContain('Notifications');
     expect(lienNotifications?.textContent).toContain('27');
 
-    // Logo de la Présidence en haut ; avatar du pied de page aux initiales du compte
-    expect(conteneur.querySelector('aside img')?.getAttribute('src')).toContain('logo-universite');
-    expect(conteneur.querySelectorAll('aside img')).toHaveLength(1);
-    expect(conteneur.querySelector('aside')?.textContent).toContain('RA');
+    // Logo de la Présidence en haut et en pied de page (logo fixe pour tous les comptes)
+    const logosPresidence = Array.from(conteneur.querySelectorAll('aside img'));
+    expect(logosPresidence).toHaveLength(2);
+    expect(logosPresidence.every((img) => img.getAttribute('src')?.includes('logo-universite'))).toBe(true);
 
     const boutonDeconnexion = conteneur.querySelector<HTMLButtonElement>(
       'button[aria-label="Se déconnecter"]',
@@ -144,5 +150,30 @@ describe('barre latérale interne', () => {
     const sources = Array.from(conteneur.querySelectorAll('aside img')).map((img) => img.getAttribute('src') ?? '');
     expect(sources.some((src) => src.includes('logo-universite'))).toBe(true);
     expect(sources.some((src) => src.includes('logo-fds'))).toBe(true);
+  });
+
+  it('affiche le logo propre du compte décideur dans le pied de page', async () => {
+    Object.assign(etat.utilisateur, {
+      id: 'compte-decideur',
+      email: 'decideur@univ-fianarantsoa.mg',
+      role: 'DECIDEUR',
+      etablissement_id: null,
+      etablissement_nom: null,
+    });
+    etat.compte = { logo_url: '/uploads/logos/comptes/compte-decideur/logo-decideur.png' };
+
+    await act(async () => {
+      racine.render(
+        createElement(
+          MemoryRouter,
+          { initialEntries: ['/decideur'] },
+          createElement(SidebarInterne),
+        ),
+      );
+    });
+
+    const sources = Array.from(conteneur.querySelectorAll('aside img')).map((img) => img.getAttribute('src') ?? '');
+    expect(sources.some((src) => src.includes('logo-decideur'))).toBe(true);
+    expect(sources.some((src) => src.includes('logo-universite'))).toBe(true);
   });
 });
