@@ -96,6 +96,20 @@ describe('Partenaires (e2e)', () => {
       expect(donnees<any>(reponse.body).etablissement_id).toBeNull();
     });
 
+    it('refuse un doublon global après normalisation, même créé par un autre établissement', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .post('/api/partenaires')
+        .set(...enteteBearer(etablissementFlsh))
+        .send({
+          nom: ' UNIVERSITE   de TOLIARA ',
+          type: 'Université',
+          pays: 'France',
+        })
+        .expect(409);
+
+      expect(reponse.body.message).toContain('existe déjà');
+    });
+
     it('rattache automatiquement le partenaire a l etablissement du compte', async () => {
       const reponse = await request(ctx.app.getHttpServer())
         .post('/api/partenaires')
@@ -273,6 +287,39 @@ describe('Partenaires (e2e)', () => {
         .get('/api/partenaires/recherche-doublon')
         .set(...enteteBearer(presidence))
         .expect(400);
+    });
+  });
+
+  describe('GET /api/partenaires/verification-nom', () => {
+    it('détecte casse et accents et renvoie les fiches visibles à la Présidence', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .get('/api/partenaires/verification-nom?nom=Universite%20de%20Toliara')
+        .set(...enteteBearer(presidence))
+        .expect(200);
+
+      expect(donnees(reponse.body)).toMatchObject({
+        doublon_exact: true,
+        correspondants: [
+          expect.objectContaining({
+            id: partenaireToliaraId,
+            nom: 'Université de Toliara',
+          }),
+        ],
+        similaires: [],
+      });
+    });
+
+    it('ne divulgue pas les fiches d’un autre établissement', async () => {
+      const reponse = await request(ctx.app.getHttpServer())
+        .get('/api/partenaires/verification-nom?nom=Université%20de%20Toliara')
+        .set(...enteteBearer(etablissementFlsh))
+        .expect(200);
+
+      expect(donnees(reponse.body)).toEqual({
+        doublon_exact: true,
+        correspondants: [],
+        similaires: [],
+      });
     });
   });
 

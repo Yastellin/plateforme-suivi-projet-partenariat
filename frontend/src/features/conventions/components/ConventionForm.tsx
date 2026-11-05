@@ -1,5 +1,5 @@
 // src/features/conventions/components/ConventionForm.tsx
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
@@ -39,6 +39,16 @@ const STATUTS = [
 // Convertie en "" dans onSubmit, puis en null par normaliserPayload avant l'envoi.
 const VALEUR_AUCUN = "__aucun__"
 const MESSAGE_TITRE_TROP_COURT = "Le titre doit contenir au moins 3 caractères."
+
+function dateLocaleCompleteAtteinte(valeur: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valeur)) return false
+  const [annee, mois, jour] = valeur.split("-").map(Number)
+  const date = new Date(annee, mois - 1, jour)
+  if (date.getFullYear() !== annee || date.getMonth() !== mois - 1 || date.getDate() !== jour) return false
+  const aujourdhui = new Date()
+  const debutAujourdhui = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate())
+  return date <= debutAujourdhui
+}
 
 function traduireErreurConvention(message: string): string {
   if (/^titre must be longer than or equal to 3 characters\.?$/i.test(message.trim())) {
@@ -81,6 +91,7 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
     handleSubmit,
     watch,
     trigger,
+    setValue,
     formState: { errors },
   } = useForm<ConventionFormValues>({
     resolver: zodResolver(creerSchemaConvention({ exigerDateDebutFuture: !convention })),
@@ -100,12 +111,41 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
   })
 
   const dateSignature = watch("date_signature")
+  const statut = watch("statut")
   const dateDebut = watch("date_debut")
   const dateFin = watch("date_fin")
+  const statutChoisiManuellement = useRef(false)
+  const statutAvantAutomatisme = useRef<ConventionFormValues["statut"] | null>(null)
+  const dateSignatureAtteinte = dateLocaleCompleteAtteinte(dateSignature ?? "")
 
   useEffect(() => {
     if (dateDebut && dateFin) void trigger(["date_debut", "date_fin"])
   }, [dateDebut, dateFin, trigger])
+
+  useEffect(() => {
+    if (convention || statutChoisiManuellement.current) return
+
+    const statutEligible = statut === "BROUILLON" || statut === "EN_ATTENTE_SIGNATURE"
+    if (dateSignatureAtteinte && statutEligible) {
+      statutAvantAutomatisme.current = statut
+      console.log("Application automatique du statut SIGNEE à la création.", { date_signature: dateSignature })
+      setValue("statut", "SIGNEE", { shouldDirty: true, shouldValidate: true })
+      return
+    }
+
+    if (!dateSignatureAtteinte && statut === "SIGNEE" && statutAvantAutomatisme.current) {
+      const statutARestaurer = statutAvantAutomatisme.current
+      statutAvantAutomatisme.current = null
+      console.log("Restauration du statut avant automatisation à la création.", { statut: statutARestaurer })
+      setValue("statut", statutARestaurer, { shouldDirty: true, shouldValidate: true })
+    }
+  }, [convention, dateSignature, dateSignatureAtteinte, setValue, statut])
+
+  const afficherMentionStatutAutomatique =
+    !convention &&
+    !statutChoisiManuellement.current &&
+    dateSignatureAtteinte &&
+    (statut === "BROUILLON" || statut === "EN_ATTENTE_SIGNATURE" || statut === "SIGNEE")
 
   const onSubmit = (valeurs: ConventionFormValues) => { 
     // Conversion explicite de la sentinelle "Aucun" en "" (puis null via
@@ -191,7 +231,16 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
           control={control}
           name="statut"
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select
+              value={field.value}
+              onValueChange={(valeur) => {
+                if (!convention) {
+                  statutChoisiManuellement.current = true
+                  statutAvantAutomatisme.current = null
+                }
+                field.onChange(valeur)
+              }}
+            >
               <SelectTrigger aria-invalid={!!errors.statut}><SelectValue /></SelectTrigger>
               <SelectContent>
                 {STATUTS.map((s) => (
@@ -201,6 +250,11 @@ export function ConventionForm({ convention, onSucces, onAnnuler }: ConventionFo
             </Select>
           )}
         />
+        {afficherMentionStatutAutomatique ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            À la création, le statut passera automatiquement à « Signée », car la date de signature est aujourd’hui ou déjà passée. Vous pouvez choisir un statut manuellement pour conserver votre choix.
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-4">

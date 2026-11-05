@@ -111,6 +111,7 @@ describe('Correctifs signales (e2e)', () => {
         .send({
           titre: 'Convention en attente de signature',
           statut: 'EN_ATTENTE_SIGNATURE',
+          date_signature: dateIsoDans(1),
           partenariat_id: partenariatId,
         })
         .expect(201);

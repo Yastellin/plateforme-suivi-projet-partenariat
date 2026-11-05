@@ -79,11 +79,34 @@ export class PartenairesController {
     return this.partenairesService.findAll(query, perimetre);
   }
 
+  @Get('verification-nom')
+  @Roles(Role.PRESIDENCE, Role.ETABLISSEMENT)
+  @ApiOperation({ summary: 'Vérifier un nom de partenaire avant sa création' })
+  @ApiResponse({ status: 200 })
+  verifierNom(@CurrentUser() user: any, @Query('nom') nom?: string) {
+    if (!nom?.trim() || nom.trim().length < 2) {
+      throw new BadRequestException(
+        'Le nom du partenaire doit contenir au moins 2 caractères.',
+      );
+    }
+    if (user.role === Role.ETABLISSEMENT && !user.etablissement_id) {
+      throw new BadRequestException(
+        'Aucun établissement associé à ce compte.',
+      );
+    }
+    return this.partenairesService.verifierNom(
+      nom,
+      user.role,
+      user.role === Role.ETABLISSEMENT ? user.etablissement_id : undefined,
+      determinerPerimetreListe(user),
+    );
+  }
+
   @Get('recherche-doublon')
   @ApiOperation({
     summary: 'Détecter un doublon par identité, e-mail ou téléphone',
     description:
-      'Identité bloquante : même nom normalisé + même pays + même établissement. E-mails et téléphones sont uniques globalement.',
+      'Recherche les noms correspondants dans le périmètre autorisé. Les créations utilisent une vérification du nom normalisé; les e-mails et téléphones restent uniques globalement.',
   })
   @ApiResponse({ status: 200 })
   rechercherDoublon(

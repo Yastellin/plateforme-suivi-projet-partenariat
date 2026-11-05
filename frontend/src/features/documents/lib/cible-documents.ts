@@ -64,16 +64,6 @@ export function lireCibleDocuments(
   return null;
 }
 
-export function creerLienDocuments(
-  cheminBase: string,
-  entite: EntiteDocuments,
-  id: string,
-): string {
-  const definition = DEFINITIONS[entite];
-  const parametres = new URLSearchParams({ [definition.parametre]: id });
-  return `${cheminBase}/documents?${parametres.toString()}`;
-}
-
 export function creerLienFicheDocument(
   cheminBase: string,
   cible: CibleDocuments,

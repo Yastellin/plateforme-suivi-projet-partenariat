@@ -33,6 +33,10 @@ import { CoordonneesService } from '../coordonnees/coordonnees.service';
 import { Role } from '../common/enums/role.enum';
 import type { PerimetreListeDonnees } from '../common/utils/perimetre-liste';
 import { nommerEtablissementSoumission } from '../common/utils/notification-soumission';
+import {
+  calculerSimilariteNoms,
+  normaliserNomPartenaire,
+} from './normalisation-nom-partenaire';
 
 @Injectable()
 export class PartenairesService {
@@ -51,7 +55,7 @@ export class PartenairesService {
     dto: CreatePartenaireDto,
     utilisateur?: ContexteUtilisateur | null,
   ): Promise<Partenaire> {
-    await this.verifierDoublonIdentite(dto.nom, dto.pays, etablissementId);
+    await this.verifierDoublonNom(dto.nom);
 
     const partenaireId = await this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(Partenaire);
@@ -178,12 +182,12 @@ export class PartenairesService {
     }
     const nom = dto.nom?.trim() ?? partenaire.nom;
     const pays = dto.pays?.trim() ?? partenaire.pays;
-    await this.verifierDoublonIdentite(
-      nom,
-      pays,
-      partenaire.etablissement_id,
-      id,
-    );
+    if (
+      dto.nom !== undefined &&
+      normaliserNomPartenaire(nom) !== normaliserNomPartenaire(partenaire.nom)
+    ) {
+      await this.verifierDoublonNom(nom, id);
+    }
 
     const existantes = await this.coordonnees.valeursPartenaire(id);
     const emails =
@@ -471,6 +475,72 @@ export class PartenairesService {
     return this.findOne(id);
   }
 
+  async verifierNom(
+    nom: string,
+    role: Role,
+    etablissementId?: string | null,
+    perimetre: PerimetreListeDonnees = {},
+  ) {
+    const nomNormalise = normaliserNomPartenaire(nom);
+    const partenaires = await this.obtenirPartenairesActifs();
+    const correspondantsExacts = partenaires.filter(
+      (partenaire) => normaliserNomPartenaire(partenaire.nom) === nomNormalise,
+    );
+    const partenairesVisibles = partenaires.filter((partenaire) => {
+      if (
+        role === Role.ETABLISSEMENT &&
+        partenaire.etablissement_id !== etablissementId
+      ) return false;
+      if (
+        perimetre.etablissementId &&
+        partenaire.etablissement_id !== perimetre.etablissementId
+      ) return false;
+      if (perimetre.origine && partenaire.cree_par_role !== perimetre.origine)
+        return false;
+      if (perimetre.etatSoumission === 'SOUMISES' && !partenaire.soumis_le)
+        return false;
+      if (perimetre.etatSoumission === 'NON_SOUMISES' && partenaire.soumis_le)
+        return false;
+      return true;
+    });
+    const correspondantsVisibles = partenairesVisibles
+      .filter((partenaire) => normaliserNomPartenaire(partenaire.nom) === nomNormalise)
+      .map(({ id, nom: nomPartenaire, pays, type }) => ({
+        id,
+        nom: nomPartenaire,
+        pays,
+        type,
+      }));
+    if (correspondantsExacts.length > 0 && correspondantsVisibles.length === 0) {
+      return { doublon_exact: true, correspondants: [], similaires: [] };
+    }
+    const similaires = partenairesVisibles
+      .map((partenaire) => ({
+        partenaire,
+        similarite: calculerSimilariteNoms(nom, partenaire.nom),
+      }))
+      .filter(
+        ({ partenaire, similarite }) =>
+          partenaire.nom.length >= 4 && similarite >= 0.72 &&
+          normaliserNomPartenaire(partenaire.nom) !== nomNormalise,
+      )
+      .sort((a, b) => b.similarite - a.similarite)
+      .slice(0, 10)
+      .map(({ partenaire, similarite }) => ({
+        id: partenaire.id,
+        nom: partenaire.nom,
+        pays: partenaire.pays,
+        type: partenaire.type,
+        similarite: Math.round(similarite * 100),
+      }));
+
+    return {
+      doublon_exact: correspondantsExacts.length > 0,
+      correspondants: correspondantsVisibles,
+      similaires,
+    };
+  }
+
   async rechercherDoublon(
     criteres: {
       nom?: string;
@@ -487,32 +557,32 @@ export class PartenairesService {
         : [];
     if (!criteres.nom?.trim()) return doublonsCoordonnees;
 
-    const nomCanonique = this.canoniser(criteres.nom);
-    const requete = this.partenaireRepo
-      .createQueryBuilder('partenaire')
-      .where('partenaire.archive = false')
-      .andWhere('partenaire.nom ILIKE :nom', {
-        nom: `%${criteres.nom.trim()}%`,
-      });
-    if (etablissementId) {
-      requete.andWhere('partenaire.etablissement_id = :etablissementId', {
-        etablissementId,
-      });
-    }
-    const candidats = await requete.take(10).getMany();
+    const nomCanonique = normaliserNomPartenaire(criteres.nom);
+    const where: FindOptionsWhere<Partenaire> = { archive: false };
+    if (etablissementId) where.etablissement_id = etablissementId;
+    const partenaires = await this.partenaireRepo.find({ where });
+    const candidats = partenaires
+      .filter(
+        (partenaire) =>
+          (!etablissementId || partenaire.etablissement_id === etablissementId) &&
+          normaliserNomPartenaire(partenaire.nom).includes(nomCanonique),
+      )
+      .slice(0, 10);
 
     const doublonsIdentite = candidats.map((partenaire) => {
       const raisons: string[] = [];
-      if (this.canoniser(partenaire.nom) === nomCanonique)
+      if (normaliserNomPartenaire(partenaire.nom) === nomCanonique)
         raisons.push('nom identique');
       if (
         criteres.pays &&
-        this.canoniser(partenaire.pays) === this.canoniser(criteres.pays)
+        normaliserNomPartenaire(partenaire.pays) ===
+          normaliserNomPartenaire(criteres.pays)
       )
         raisons.push('pays identique');
       if (
         criteres.type &&
-        this.canoniser(partenaire.type) === this.canoniser(criteres.type)
+        normaliserNomPartenaire(partenaire.type) ===
+          normaliserNomPartenaire(criteres.type)
       )
         raisons.push('type identique');
       return { ...partenaire, raisons_doublon: raisons };
@@ -520,35 +590,35 @@ export class PartenairesService {
     return [...doublonsIdentite, ...doublonsCoordonnees];
   }
 
-  private async verifierDoublonIdentite(
+  private async verifierDoublonNom(
     nom: string,
-    pays: string,
-    etablissementId: string | null,
     idExclu?: string,
   ): Promise<void> {
-    const requete = this.partenaireRepo
-      .createQueryBuilder('partenaire')
-      .where('partenaire.archive = false');
-    if (etablissementId === null) {
-      requete.andWhere('partenaire.etablissement_id IS NULL');
-    } else {
-      requete.andWhere('partenaire.etablissement_id = :etablissementId', {
-        etablissementId,
-      });
-    }
-    requete
-      .andWhere('lower(trim(partenaire.nom)) = lower(trim(:nom))', { nom })
-      .andWhere('lower(trim(partenaire.pays)) = lower(trim(:pays))', { pays });
-    if (idExclu) requete.andWhere('partenaire.id != :idExclu', { idExclu });
-    if (await requete.getExists()) {
+    const nomNormalise = normaliserNomPartenaire(nom);
+    const existe = (await this.obtenirPartenairesActifs()).some(
+      (partenaire) =>
+        partenaire.id !== idExclu &&
+        normaliserNomPartenaire(partenaire.nom) === nomNormalise,
+    );
+    if (existe) {
       throw new ConflictException(
-        `Un partenaire nommé « ${nom.trim()} » existe déjà dans ce pays pour cet établissement.`,
+        `Un partenaire portant le nom « ${nom.trim()} » existe déjà.`,
       );
     }
   }
 
-  /** Même normalisation que l'index SQL uq_partenaire_identite_active. */
-  private canoniser(valeur: string): string {
-    return valeur.trim().toLocaleLowerCase('fr');
+  private obtenirPartenairesActifs(): Promise<Partenaire[]> {
+    return this.partenaireRepo.find({
+      where: { archive: false },
+      select: [
+        'id',
+        'nom',
+        'pays',
+        'type',
+        'etablissement_id',
+        'cree_par_role',
+        'soumis_le',
+      ],
+    });
   }
 }

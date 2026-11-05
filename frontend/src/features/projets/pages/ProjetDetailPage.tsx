@@ -30,6 +30,7 @@ import { peutModifierProjet } from "@/features/projets/lib/permissions-projet"
 import { peutDemanderModificationProjet } from "@/features/projets/lib/demande-modification-projet"
 import { BoutonDemanderModificationProjet } from "@/features/projets/components/BoutonDemanderModificationProjet"
 import { ListeDocumentsEntite } from "@/features/documents/components/ListeDocumentsEntite"
+import { DocumentDropzone } from "@/features/documents/components/DocumentDropzone"
 
 export function ProjetDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -200,7 +201,17 @@ export function ProjetDetailPage() {
                   Les documents officiels sont gérés par la Présidence.
                 </p>
               ) : (
-                <ListeDocumentsEntite projetId={projet.id} />
+                <>
+                  <ListeDocumentsEntite projetId={projet.id} />
+                  {permissions.peutTeleverser ? (
+                    <div className="mt-5 border-t border-[var(--color-border)] pt-5">
+                      <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">
+                        Ajouter des documents
+                      </h3>
+                      <DocumentDropzone projetId={projet.id} />
+                    </div>
+                  ) : null}
+                </>
               )}
             </PanelBody>
           </Panel>

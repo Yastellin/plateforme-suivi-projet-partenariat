@@ -22,6 +22,15 @@ interface PartenaireFormProps {
 }
 
 // Groupe visuel du formulaire : titre de section et filet horizontal.
+function normaliserNomPartenaire(valeur: string): string {
+  return valeur
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('fr');
+}
+
 function SectionFormulaire({ titre, children }: { titre: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-4">
@@ -108,12 +117,15 @@ export function PartenaireForm({
   const listeDoublonsTelephone = Array.isArray(doublonsTelephone) ? doublonsTelephone : [];
   const listeDoublonsSupplementaires = Array.isArray(doublonsSupplementaires) ? doublonsSupplementaires : [];
   const idProprietaire = (doublon: { id: string; proprietaire_id?: string }) => doublon.proprietaire_id ?? doublon.id;
-  const doublonIdentite = listeDoublonsIdentite.find((doublon) =>
-    idProprietaire(doublon) !== partenaire?.id &&
-    'raisons_doublon' in doublon &&
-    doublon.raisons_doublon?.includes('nom identique') &&
-    doublon.raisons_doublon?.includes('pays identique'),
-  );
+  const nomModifie =
+    !partenaire || normaliserNomPartenaire(nom) !== normaliserNomPartenaire(partenaire.nom);
+  const doublonIdentite = nomModifie
+    ? listeDoublonsIdentite.find((doublon) =>
+        idProprietaire(doublon) !== partenaire?.id &&
+        'raisons_doublon' in doublon &&
+        doublon.raisons_doublon?.includes('nom identique'),
+      )
+    : undefined;
   const doublonEmail = listeDoublonsEmail.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
   const doublonTelephone = listeDoublonsTelephone.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
   const doublonSupplementaire = listeDoublonsSupplementaires.find((doublon) => idProprietaire(doublon) !== partenaire?.id);
@@ -209,7 +221,7 @@ export function PartenaireForm({
           requis
           autoFocus
           placeholder="Ex : Airtel Madagascar"
-          aide="Doublon bloquant : même nom et même pays."
+          aide="Les noms identiques sont vérifiés sans tenir compte de la casse, des accents ou des espaces superflus."
           erreur={errors.nom?.message}
           {...register('nom')}
         />
@@ -224,7 +236,7 @@ export function PartenaireForm({
       {doublonIdentite ? (
         <div className="mb-4 -mt-2 flex items-center gap-2 px-0.5 text-[11.5px] font-medium text-[var(--status-attente-fg)]">
           <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
-          Une fiche avec le même nom et le même pays existe déjà.
+          Une fiche avec le même nom existe déjà.
         </div>
       ) : null}
 
