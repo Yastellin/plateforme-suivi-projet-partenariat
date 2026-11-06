@@ -8,7 +8,7 @@ import { LogoInstitutionnel } from "@/components/shared/LogoInstitutionnel"
  * Pour la changer : placer le fichier dans frontend/public/images/ et modifier ce chemin.
  * Si le fichier n'existe pas, le panneau affiche uniquement le dégradé vert.
  */
-export const IMAGE_FOND_CONNEXION = "/images/connexion-fond.jpg"
+export const IMAGE_FOND_CONNEXION = "/images/logo-50-ans.jpeg"
 
 interface LayoutAuthentificationProps {
   titre: string

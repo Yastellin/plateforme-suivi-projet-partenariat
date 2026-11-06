@@ -15,14 +15,12 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     // Desactive le header X-Powered-By (information disclosure)
-    // Helmet s en charge, mais on peut aussi le desactiver globalement.
   });
 
   // 2. Configuration commune (Helmet, prefixe /api, validation, CORS, statique)
   configurerApplication(app);
 
   // 3. Graceful shutdown : ferme proprement les connexions (base de donnees, HTTP)
-  // lors d un SIGTERM ou SIGINT (docker stop, redemarrage).
   app.enableShutdownHooks();
 
   const config = new DocumentBuilder()

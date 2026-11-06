@@ -212,9 +212,6 @@ export class ConventionsService {
     dto: UpdateConventionDto,
   ): Promise<ConventionResponseDto> {
     const conventionActuelle = await this.findOne(id);
-    // Une validation de DTO ne voit pas la valeur conservée lors d'un PATCH
-    // partiel. Combiner l'état courant et la commande empêche donc de placer
-    // uniquement la date de fin avant une date de début déjà enregistrée.
     const dateDebut =
       dto.date_debut !== undefined
         ? dto.date_debut
