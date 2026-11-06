@@ -14,8 +14,8 @@
 
 ## Modifications réalisées dans la copie candidate
 
-1. Harmonisation des styles principaux vers Times New Roman, texte courant 12 pt, paragraphes justifiés et interligne 1,5 ; titres noirs avec une hiérarchie typographique ; légendes et textes de tableaux réduits à une taille adaptée.
-2. Harmonisation des marges des sections du corps du document à 3 cm à gauche, 2 cm à droite et 2,5 cm en haut et en bas. Les deux sections réservées aux couvertures conservent des marges de 2,5 cm.
+1. Harmonisation des styles principaux vers Times New Roman, texte courant 12 pt, paragraphes justifiés et interligne 1,5 ; titres noirs avec une hiérarchie typographique ; légendes et textes de tableaux réduits à une taille adaptée. **Le chapitre II est exclu de cette harmonisation : ses paragraphes et leur mise en forme directe ont été restaurés depuis la source, et ses styles source sont isolés dans le DOCX candidat.**
+2. Harmonisation des marges des sections du corps du document à 3 cm à gauche, 2 cm à droite et 2,5 cm en haut et en bas. Les deux sections réservées aux couvertures conservent des marges de 2,5 cm. La mise en page effective de la section contenant le chapitre II correspond aux valeurs de la source.
 3. Mise en paysage des pages dédiées aux diagrammes des sections Word 4, 6, 8, 10, 12 et 14 (indexées à partir de 1 pour le lecteur), avec réduction proportionnelle des images pour les faire tenir dans la zone disponible. Les proportions ne sont pas étirées.
 4. Conservation des 39 images incorporées et des 14 tableaux du document source.
 5. Correction, dans l’introduction seulement, de l’attribution du lieu de stage : ITDC MADA est nommé comme entreprise d’accueil et l’équipe Projet et Partenariat de la Présidence comme commanditaire. Le texte du chapitre II demeure intact.
@@ -28,6 +28,7 @@
 
 - Le DOCX source contient 39 images, 14 tableaux et 15 propriétés de section.
 - Le DOCX candidat conserve les images et tableaux et son archive DOCX est valide.
+- Contrôle comparatif du chapitre II : son texte correspond à la source ; les propriétés directes de paragraphes et de caractères ont été restaurées depuis la source, les styles hérités ont été isolés, et la configuration de page de la section qui le contient correspond à celle de la source. Aucun texte de ce chapitre n’a été édité.
 - Le document source est en A4 portrait, mais ses sections ont des marges différentes. Le candidat normalise les marges et place les pages de diagrammes dédiées en A4 paysage.
 - Le style de corps existant était déjà principalement fondé sur Times New Roman 12 pt, justification et interligne 1,5 ; les titres utilisaient notamment une couleur bleue. La copie candidate harmonise les styles concernés en noir.
 - Le document source comporte un champ de table des matières, mais ses résultats stockés sont à actualiser. Les listes automatiques des figures et tableaux, les références croisées et l’affichage final des champs n’ont pas pu être validés.
