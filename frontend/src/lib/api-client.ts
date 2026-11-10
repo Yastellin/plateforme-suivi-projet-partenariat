@@ -6,8 +6,6 @@ import { estPayloadNormalisable, normaliserPayload } from "./payload"
 import { tokenStorage } from "./token-storage"
 import { API_BASE_URL } from "./url"
 
-// API_BASE_URL est normalisée dans url.ts. Sa valeur relative par défaut évite
-// de faire appeler « localhost » au navigateur de l'utilisateur en production.
 let accessToken: string | null = null
 
 export function definirAccessToken(token: string | null): void {

@@ -1,11 +1,5 @@
 // src/lib/payload.ts
 
-/*
- * Les formulaires HTML renvoient des chaines vides pour les champs non
- * renseignes (dates, listes deroulantes, zones de texte). L'API, elle, attend
- * `null` (ou l'absence de la cle) : une date vide envoye telle quelle est
- * rejetee par la validation ("must be a valid ISO 8601 date string").
- */
 
 function estObjetSimple(valeur: unknown): valeur is Record<string, unknown> {
   return (
