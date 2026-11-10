@@ -57,8 +57,8 @@
 
 - Les pratiques antérieures, les comparaisons de solutions et plusieurs affirmations institutionnelles nécessitent des sources réellement consultées.
 - La bibliographie et la webographie ne peuvent pas être complétées sans les références effectivement utilisées et leurs dates de consultation lorsqu’elles sont requises.
-- Les règles RG doivent être rapprochées de la version validée du cahier des charges. Les numéros provisoires ne doivent pas être présentés comme des numéros officiels.
-- Le dictionnaire contient des incertitudes sur le nombre d’entités, les types SQL, les valeurs et certaines relations ; les migrations et le cahier des charges doivent être comparés avant validation.
+- Le chapitre V présente désormais RG01 à RG31 comme une numérotation locale fondée sur le modèle et le code backend, sans la faire passer pour la numérotation officielle RG01 à RG110. La correspondance avec une version validée du cahier des charges reste à établir à partir de ce document de référence.
+- Le registre TypeORM compte 33 entités. Les types d’identifiants déclarés dans les entités et ceux des migrations historiques ne sont pas uniformes : plusieurs migrations créent des identifiants en `text` alors que les entités actuelles les déclarent en `uuid`. Le dictionnaire détaillé reste à vérifier ligne par ligne avant validation.
 - Le modèle TypeORM établit une relation facultative Cotutelle–Convention dans le code actuel. Sa conformité au cahier des charges reste à confirmer.
 
 ### Images et sommaires
