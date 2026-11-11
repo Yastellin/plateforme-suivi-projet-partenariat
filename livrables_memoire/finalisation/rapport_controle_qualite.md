@@ -17,22 +17,24 @@
 1. Harmonisation des styles principaux vers Times New Roman, texte courant 12 pt, paragraphes justifiés et interligne 1,5 ; titres noirs avec une hiérarchie typographique ; légendes et textes de tableaux réduits à une taille adaptée. **Le chapitre II est exclu de cette harmonisation : ses paragraphes et leur mise en forme directe ont été restaurés depuis la source, et ses styles source sont isolés dans le DOCX candidat.**
 2. Harmonisation des marges des sections du corps du document à 3 cm à gauche, 2 cm à droite et 2,5 cm en haut et en bas. Les deux sections réservées aux couvertures conservent des marges de 2,5 cm. La mise en page effective de la section contenant le chapitre II correspond aux valeurs de la source.
 3. Mise en paysage des pages dédiées aux diagrammes des sections Word 4, 6, 8, 10, 12 et 14 (indexées à partir de 1 pour le lecteur), avec réduction proportionnelle des images pour les faire tenir dans la zone disponible. Les proportions ne sont pas étirées.
-4. Conservation des 39 images incorporées et des 14 tableaux du document source.
+4. Conservation des médias et tableaux de la copie source, avec les compléments préliminaires et de contrôle qualité ajoutés dans le candidat ; l’archive finale contient 45 fichiers média, 15 tableaux et 16 sections.
 5. Correction, dans l’introduction seulement, de l’attribution du lieu de stage : ITDC MADA est nommé comme entreprise d’accueil et l’équipe Projet et Partenariat de la Présidence comme commanditaire. Le texte du chapitre II demeure intact.
 6. Ajout d’un projet de résumé français, d’Abstract anglais et d’une conclusion rédigés à partir des informations présentes dans le rapport. Ces passages restent soumis à la validation de l’auteur.
 7. Mise à jour des versions déclarées dans la configuration et des éléments vérifiables sur les exports.
 8. Reformulation prudente de la section 8.11 « Notifications » et de la mention de l’incident de convention, sans prétendre que les alertes planifiées ou la correction historique ont été testées.
 9. Activation de l’actualisation des champs Word à l’ouverture.
-10. Suppression des marqueurs provisoires dans les présentations des moyens humains et matériels (tableaux 3.3, 3.4 et 4.1) ; versions des dépendances reportées à partir des lockfiles. Le tableau 9.1 compare désormais les besoins fonctionnels aux fonctions identifiées dans le code, sans présenter les pratiques antérieures comme des observations vérifiées.
+10. Complétion des remarques des 104 champs du dictionnaire à partir des entités, enums, services et migrations ; retrait des marqueurs provisoires des tableaux 3.3, 3.4, 3.5 et 4.1 ; reformulation du tableau 9.1 en correspondance entre besoins fonctionnels et réponses présentes dans le code, sans présenter les pratiques antérieures comme des observations établies.
 
 ## Résultats des contrôles techniques
 
 - Le DOCX source contient 39 images, 14 tableaux et 15 propriétés de section.
-- Le DOCX candidat conserve les images et tableaux et son archive DOCX est valide.
+- Le DOCX candidat conserve les médias de la copie source et comprend les ajouts préliminaires ; son archive DOCX contient 45 fichiers média, 15 tableaux et 16 sections, et reste valide.
 - Contrôle comparatif du chapitre II : son texte correspond à la source ; les propriétés directes de paragraphes et de caractères ont été restaurées depuis la source, les styles hérités ont été isolés, et la configuration de page de la section qui le contient correspond à celle de la source. Aucun texte de ce chapitre n’a été édité.
+- Les rubriques préliminaires et finales demandées sont désormais alimentées : CV synthétique fondé sur les seules données disponibles, avant-propos, résumé, Abstract, sommaire préliminaire à trois niveaux (70 entrées), listes des figures (24 entrées) et tableaux (13 entrées), liste de 32 abréviations, deux glossaires distincts (15 termes chacun), bibliographie, webographie et annexe de sources techniques.
+- Les listes des figures et tableaux comprennent 37 champs `PAGEREF` liés à des signets existants. Le sommaire final conserve son champ `TOC`; l’actualisation automatique à l’ouverture est activée. Les valeurs actualisées n’ont pas été vérifiées dans Word.
 - Le document source est en A4 portrait, mais ses sections ont des marges différentes. Le candidat normalise les marges et place les pages de diagrammes dédiées en A4 paysage.
 - Le style de corps existant était déjà principalement fondé sur Times New Roman 12 pt, justification et interligne 1,5 ; les titres utilisaient notamment une couleur bleue. La copie candidate harmonise les styles concernés en noir.
-- Le document source comporte un champ de table des matières, mais ses résultats stockés sont à actualiser. Les listes automatiques des figures et tableaux, les références croisées et l’affichage final des champs n’ont pas pu être validés.
+- Le sommaire préliminaire à trois niveaux est désormais visible et distinct de la table des matières finale, qui conserve son champ Word `TOC`. Les listes des figures et tableaux sont remplies à partir des légendes existantes et portent des champs `PAGEREF`; leurs numéros de page, références croisées et résultats de champs restent à actualiser et à contrôler dans Word.
 - Aucun logiciel Word, LibreOffice, convertisseur DOCX-PDF ou moteur de rendu compatible n’est disponible dans l’environnement. Le PDF final n’a donc pas été généré et le rendu visuel page par page n’a pas été contrôlé.
 - Le nombre réel de pages après mise en page n’a pas été vérifié. Les numéros de page conservés dans le sommaire source — qui va jusqu’à la page 88 — ne sont pas une preuve du nombre de pages du candidat.
 
@@ -40,7 +42,7 @@
 
 ### Informations personnelles et institutionnelles
 
-- Le CV est vide. Les informations de parcours nécessaires ne figurent pas dans les sources accessibles.
+- Le CV est rempli sous forme synthétique avec le nom, matricule, formation, parcours, année universitaire, entreprise d’accueil, dates du stage et contribution au backend, tous repris du document. Les coordonnées, expériences antérieures et autres renseignements personnels ne figurent pas dans les sources accessibles ; ils ne sont pas inventés.
 - Les rôles principaux du binôme et du commanditaire sont résumés à partir des informations de stage communiquées et du code. Le nom de l’encadreur professionnel et le détail exhaustif de la répartition individuelle ne sont pas présents dans les éléments du dépôt ; aucun nom ni journal de tâches n’a été fabriqué.
 - L’auteur reste responsable de la rédaction finale du chapitre I et de la vérification de ses dates, décrets, missions et chiffres de formation. Aucun de ces faits n’a été inventé ou corrigé ici.
 - Le texte du chapitre II est fourni par ITDC MADA et n’a pas été modifié, conformément à la consigne de l’auteur.
@@ -57,10 +59,10 @@
 ### Sources et modélisation
 
 - Les pratiques antérieures, les comparaisons de solutions et plusieurs affirmations institutionnelles nécessitent des sources réellement consultées.
-- La bibliographie et la webographie ne peuvent pas être complétées sans les références effectivement utilisées et leurs dates de consultation lorsqu’elles sont requises.
-- Le chapitre V présente désormais RG01 à RG31 comme une numérotation locale fondée sur le modèle et le code backend, sans la faire passer pour la numérotation officielle RG01 à RG110. La correspondance avec une version validée du cahier des charges reste à établir à partir de ce document de référence.
-- Le registre TypeORM compte 33 entités. Les types d’identifiants déclarés dans les entités et ceux des migrations historiques ne sont pas uniformes : plusieurs migrations créent des identifiants en `text` alors que les entités actuelles les déclarent en `uuid`. Les remarques des 104 lignes du dictionnaire ont été complétées à partir des entités, enums, services et migrations correspondant aux champs déjà listés. Les différences TypeORM/migrations sont signalées dans les remarques au lieu d’être masquées ; les colonnes « Type » et la structure exhaustive du dictionnaire restent à valider séparément.
-- Le dictionnaire fourni ne reprend pas tous les champs et relations présents dans le code actuel (notamment certaines métadonnées de provenance, les difficultés/perspectives du partenariat et les photos de publication). Ils n’ont pas été ajoutés, car la demande portait sur la colonne « Remarque » des lignes existantes.
+- La bibliographie et la webographie citent désormais le dépôt de code source du projet réellement examiné (commit et date indiqués). Aucune référence externe non consultée n’a été ajoutée ; les affirmations institutionnelles et les pratiques antérieures demandent encore des sources primaires vérifiables.
+- Le chapitre V présente RG01 à RG31 comme une numérotation locale fondée sur le modèle et le code backend, sans la faire passer pour la numérotation officielle RG01 à RG110. La correspondance avec une version validée du cahier des charges reste à établir.
+- Les remarques des 104 lignes du dictionnaire ont été complétées à partir des entités, enums, services et migrations correspondant aux champs listés. Les différences entre types TypeORM et types SQL historiques sont signalées ; les colonnes « Type » et la structure exhaustive restent à valider séparément.
+- Le dictionnaire ne reprend pas tous les champs et relations du code actuel, notamment certaines métadonnées de provenance, les difficultés et perspectives des partenariats et les photos de publication ; ces lignes n’ont pas été ajoutées dans cette passe.
 - Le modèle TypeORM établit une relation facultative Cotutelle–Convention dans le code actuel. Sa conformité au cahier des charges reste à confirmer.
 
 ### Images et sommaires
@@ -72,11 +74,11 @@
 
 ### Pagination et validation visuelle
 
-- La pagination stricte requise — chiffres romains du CV au sommaire, chiffres arabes à partir de l’introduction, absence de numéro affiché sur les pages de présentation des parties, puis reprise des chiffres romains après la conclusion en continuité avec le sommaire — n’a pas été finalisée ni vérifiée.
-- Les sauts de section, pieds de page indépendants, numéros masqués et continuité des compteurs doivent être contrôlés dans Word après actualisation des champs.
+- La section préliminaire du CV au sommaire est réglée en chiffres romains majuscules à partir de I ; la section contenant l’introduction est réglée en chiffres arabes à partir de 1. Ces réglages OOXML et les champs PAGE des pieds de page n’ont pas été validés par un rendu.
+- L’absence de numéro visible sur les pages de présentation des parties et la reprise de la séquence romaine après la conclusion ne sont pas finalisées. Les sauts de section, pieds de page indépendants, numéros masqués et continuité des compteurs doivent encore être contrôlés dans Word après actualisation des champs.
 - Le document candidat doit être ouvert dans Microsoft Word ou LibreOffice, converti en PDF, puis contrôlé page par page avant toute affirmation de conformité.
 - La règle de 80 à 130 pages ne peut pas être confirmée sans calcul fiable du nombre de pages après rendu.
 
 ## Décision de contrôle
 
-La copie candidate constitue une **base de mise en page et de corrections vérifiables**, mais elle ne satisfait pas encore tous les critères de validation finale. En particulier, le PDF, la pagination, les champs automatiques, le nombre de pages, le CV, les références et plusieurs informations de stage restent à traiter. Elle ne doit pas être présentée comme un rapport final prêt au dépôt tant que ces points ne sont pas résolus.
+La copie candidate constitue une **base de mise en page et de corrections vérifiables**, mais elle ne satisfait pas encore tous les critères de validation finale. En particulier, le PDF, la pagination, l’actualisation et le contrôle des champs, le nombre de pages, les informations personnelles absentes du CV, les sources externes et plusieurs informations de stage restent à traiter. Elle ne doit pas être présentée comme un rapport final prêt au dépôt tant que ces points ne sont pas résolus.

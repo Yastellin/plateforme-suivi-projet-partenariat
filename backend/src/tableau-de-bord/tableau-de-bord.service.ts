@@ -407,7 +407,6 @@ export class TableauDeBordService {
           etablissement_logo_url: etablissement?.logo_url ?? null,
         };
       });
-
     const projets = await this.projetRepo.find({
       where: {
         archive: false,

@@ -1,0 +1,11 @@
+PHASES = [
+    ("Cadrage et cahier des charges", date(2026, 8, 31), date(2026, 9, 6), "gestion"),          # à compléter
+    ("Analyse de l'existant et choix techniques", date(...), date(...), "conception"),          # à compléter
+    ("Conception UML (cas d'utilisation, classes)", date(...), date(...), "conception"),        # dates des diagrammes
+    ("Mise en place Git, Docker et environnement", date(...), date(...), "realisation"),        # étape 1
+    ("Backend : API et base de données", date(...), date(...), "realisation"),                 # étape 1
+    ("Frontend : authentification, routage, tableaux de bord", date(...), date(...), "realisation"),
+    ("Frontend : formulaires, assistants, espace public", date(...), date(...), "realisation"),
+    ("Tests et corrections", date(...), date(...), "test"),                                    # étape 1
+    ("Rédaction du mémoire", date(...), date(...), "gestion"),                                 # à compléter
+]
