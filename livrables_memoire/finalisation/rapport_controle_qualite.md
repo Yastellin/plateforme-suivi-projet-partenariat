@@ -23,6 +23,7 @@
 7. Mise à jour des versions déclarées dans la configuration et des éléments vérifiables sur les exports.
 8. Reformulation prudente de la section 8.11 « Notifications » et de la mention de l’incident de convention, sans prétendre que les alertes planifiées ou la correction historique ont été testées.
 9. Activation de l’actualisation des champs Word à l’ouverture.
+10. Suppression des marqueurs provisoires dans les présentations des moyens humains et matériels (tableaux 3.3, 3.4 et 4.1) ; versions des dépendances reportées à partir des lockfiles. Le tableau 9.1 compare désormais les besoins fonctionnels aux fonctions identifiées dans le code, sans présenter les pratiques antérieures comme des observations vérifiées.
 
 ## Résultats des contrôles techniques
 
@@ -40,7 +41,7 @@
 ### Informations personnelles et institutionnelles
 
 - Le CV est vide. Les informations de parcours nécessaires ne figurent pas dans les sources accessibles.
-- Les noms, fonctions et tâches détaillées de l’équipe technique et des encadreurs doivent être confirmés.
+- Les rôles principaux du binôme et du commanditaire sont résumés à partir des informations de stage communiquées et du code. Le nom de l’encadreur professionnel et le détail exhaustif de la répartition individuelle ne sont pas présents dans les éléments du dépôt ; aucun nom ni journal de tâches n’a été fabriqué.
 - L’auteur reste responsable de la rédaction finale du chapitre I et de la vérification de ses dates, décrets, missions et chiffres de formation. Aucun de ces faits n’a été inventé ou corrigé ici.
 - Le texte du chapitre II est fourni par ITDC MADA et n’a pas été modifié, conformément à la consigne de l’auteur.
 
