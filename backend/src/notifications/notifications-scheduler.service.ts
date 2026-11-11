@@ -16,7 +16,9 @@ export class NotificationsSchedulerService {
 
   @Cron(CronExpression.EVERY_DAY_AT_6AM)
   async executerToutesLesRegles(): Promise<void> {
-    this.logger.log('Execution des regles de notification...');
+    console.log(
+      '[NotificationsScheduler] Démarrage de la vérification quotidienne.',
+    );
     try {
       await this.conventionExpirationRule.verifier();
       await this.conventionExpireeRule.verifier();

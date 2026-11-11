@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -41,6 +42,7 @@ import { UtilisateursModule } from './utilisateurs/utilisateurs.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ...(process.env.NODE_ENV === 'test' ? [] : [ScheduleModule.forRoot()]),
     DatabaseModule,
     // Rate limiting global : 100 requetes par minute et par IP.
     // Le TTL est en millisecondes dans @nestjs/throttler v6.

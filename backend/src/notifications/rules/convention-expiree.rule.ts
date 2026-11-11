@@ -9,6 +9,8 @@ import { PrioriteNotification } from '../../common/enums/priorite-notification.e
 import { StatutConvention } from '../../common/enums/statut-convention.enum';
 import { NotificationRule } from './notification-rule.interface';
 
+const MAX_AGE_NOTIFICATION_EXPIRE_JOURS = 30;
+
 @Injectable()
 export class ConventionExpireeRule implements NotificationRule {
   constructor(
@@ -20,6 +22,10 @@ export class ConventionExpireeRule implements NotificationRule {
 
   async verifier(): Promise<void> {
     const maintenant = new Date();
+    const limiteNotification = new Date(
+      maintenant.getTime() -
+        MAX_AGE_NOTIFICATION_EXPIRE_JOURS * 24 * 60 * 60 * 1000,
+    );
     const conventions = await this.conventionRepo.find({
       where: {
         archive: false,
@@ -32,6 +38,10 @@ export class ConventionExpireeRule implements NotificationRule {
       await this.conventionRepo.update(convention.id, {
         statut: StatutConvention.EXPIREE,
       });
+
+      if (!convention.date_fin || convention.date_fin < limiteNotification) {
+        continue;
+      }
 
       const titre = `Convention expiree : ${convention.reference}`;
       const message = `La convention ${convention.reference} (${convention.titre}) a expire.`;
